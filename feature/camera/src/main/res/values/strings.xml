@@ -35,4 +35,15 @@
     <string name="series_create">Anlegen</string>
     <string name="series_cancel">Abbrechen</string>
     <string name="overlay_alpha">Overlay</string>
+    <string name="special_none">Einzelfoto</string>
+    <string name="special_clean_plate">Menschen wegrechnen</string>
+    <string name="special_long_exposure">Langzeit</string>
+    <string name="special_trigger_motion">Auslöser: Bewegung</string>
+    <string name="special_trigger_still">Auslöser: Ruhe</string>
+    <string name="special_collecting">Serie läuft, Handy ruhig halten …</string>
+    <string name="special_armed">Auslöser scharf, zum Beenden erneut tippen</string>
+    <string name="msg_stack_saved">Foto aus der Serie gespeichert</string>
+    <string name="msg_stack_shortened">Gespeichert; das Handy ist warm, die Serie wurde verkürzt.</string>
+    <string name="msg_stack_failed">Die Serie konnte nicht verarbeitet werden.</string>
+    <string name="msg_trigger_fired">Automatisch ausgelöst</string>
 </resources>

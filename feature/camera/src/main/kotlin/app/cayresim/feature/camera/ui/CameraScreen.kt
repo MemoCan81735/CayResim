@@ -62,6 +62,8 @@ import app.cayresim.feature.camera.control.CameraViewModel
 import app.cayresim.feature.camera.control.MessageKind
 import app.cayresim.feature.camera.control.ModeOption
 import app.cayresim.feature.camera.control.LookOption
+import app.cayresim.feature.camera.control.SpecialOption
+import app.cayresim.feature.camera.control.SpecialStatus
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
 
@@ -88,6 +90,7 @@ fun CameraRoute(
         state = state,
         onModeSelected = viewModel::onModeSelected,
         onNextLook = viewModel::onNextLook,
+        onNextSpecial = viewModel::onNextSpecial,
         onSeriesSelected = viewModel::onSeriesSelected,
         onCreateSeries = viewModel::onCreateSeries,
         onOverlayAlpha = viewModel::onOverlayAlpha,
@@ -109,6 +112,7 @@ fun CameraContent(
     state: CameraUiState,
     onModeSelected: (ModeOption) -> Unit,
     onNextLook: () -> Unit,
+    onNextSpecial: () -> Unit,
     onSeriesSelected: (Long?) -> Unit,
     onCreateSeries: (String) -> Unit,
     onOverlayAlpha: (Float) -> Unit,
@@ -144,6 +148,7 @@ fun CameraContent(
         var picker by remember { mutableStateOf(false) }
         Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TopChip(stringResource(lookRes(state.look)), onNextLook, "look")
+            TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
             TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
         }
@@ -153,6 +158,15 @@ fun CameraContent(
         }
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().safeDrawingPadding().padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
+            val hint = when (state.specialStatus) {
+                SpecialStatus.COLLECTING, SpecialStatus.PROCESSING -> stringResource(R.string.special_collecting)
+                SpecialStatus.ARMED -> stringResource(R.string.special_armed)
+                SpecialStatus.IDLE -> null
+            }
+            hint?.let {
+                Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.padding(8.dp).testTag("special_hint")) { Text(it, Modifier.padding(12.dp)) }
+            }
             state.fallbackFrom?.let {
                 Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
                     modifier = Modifier.padding(16.dp).testTag("fallback")) {
@@ -227,6 +241,14 @@ private fun BoxScope.SeriesPicker(state: CameraUiState, onDismiss: () -> Unit, o
     }
 }
 
+internal fun specialRes(o: SpecialOption): Int = when (o) {
+    SpecialOption.NONE -> R.string.special_none
+    SpecialOption.CLEAN_PLATE -> R.string.special_clean_plate
+    SpecialOption.LONG_EXPOSURE -> R.string.special_long_exposure
+    SpecialOption.TRIGGER_MOTION -> R.string.special_trigger_motion
+    SpecialOption.TRIGGER_STILL -> R.string.special_trigger_still
+}
+
 internal fun lookRes(l: LookOption): Int = when (l) {
     LookOption.NONE -> R.string.look_none
     LookOption.WARM -> R.string.look_warm
@@ -271,4 +293,8 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.SAVED_WITHOUT_SERIES -> R.string.msg_saved_without_series
     MessageKind.SERIES_CREATED -> R.string.msg_series_created
     MessageKind.SERIES_INVALID -> R.string.msg_series_invalid
+    MessageKind.STACK_SAVED -> R.string.msg_stack_saved
+    MessageKind.STACK_SHORTENED -> R.string.msg_stack_shortened
+    MessageKind.STACK_FAILED -> R.string.msg_stack_failed
+    MessageKind.TRIGGER_FIRED -> R.string.msg_trigger_fired
 }

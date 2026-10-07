@@ -16,6 +16,8 @@ import app.cayresim.feature.camera.control.MessageKind
 import app.cayresim.feature.camera.control.ModeOption
 import app.cayresim.feature.camera.control.LookOption
 import app.cayresim.feature.camera.control.SeriesOption
+import app.cayresim.feature.camera.control.SpecialOption
+import app.cayresim.feature.camera.control.SpecialStatus
 import androidx.compose.ui.test.performTextInput
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
@@ -50,6 +52,7 @@ class CameraContentTest {
                 state = state,
                 onModeSelected = { events += "mode:$it" },
                 onNextLook = { events += "look" },
+                onNextSpecial = { events += "special" },
                 onSeriesSelected = { events += "series:$it" },
                 onCreateSeries = { events += "create:$it" },
                 onOverlayAlpha = { },
@@ -160,6 +163,24 @@ class CameraContentTest {
         compose.onNodeWithTag("series").performClick()
         compose.onNodeWithTag("shutter").performClick()
         assertEquals(emptyList(), events, "Ausloeser darf durch das Panel nicht erreichbar sein")
+    }
+
+    @Test fun bild_ausloeser_scharf() {
+        show(running.copy(special = SpecialOption.TRIGGER_MOTION, specialStatus = SpecialStatus.ARMED))
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_trigger_armed.png")
+    }
+
+    @Test fun ausloeser_gesperrt_waehrend_serie() {
+        show(running.copy(special = SpecialOption.CLEAN_PLATE, specialStatus = SpecialStatus.COLLECTING))
+        compose.onNodeWithTag("shutter").performClick()
+        compose.onNodeWithTag("special_hint").assertIsDisplayed()
+        assertEquals(emptyList(), events)
+    }
+
+    @Test fun scharfer_ausloeser_laesst_sich_beenden() {
+        show(running.copy(special = SpecialOption.TRIGGER_STILL, specialStatus = SpecialStatus.ARMED))
+        compose.onNodeWithTag("shutter").performClick()
+        assertEquals(listOf("shutter"), events)
     }
 
     @Test fun galerie_und_einstellungen() {

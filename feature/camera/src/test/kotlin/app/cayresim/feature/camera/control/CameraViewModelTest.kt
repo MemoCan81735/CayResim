@@ -31,6 +31,7 @@ class CameraViewModelTest {
     private lateinit var vm: CameraViewModel
     private lateinit var series: FakeSeriesBoundary
     private lateinit var proc: FakeProcessingBoundary
+    private lateinit var frames: app.cayresim.core.boundary.fake.FakeFrameBoundary
 
     @Before fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -40,7 +41,9 @@ class CameraViewModelTest {
             override suspend fun applyLook(uri: String, look: app.cayresim.core.boundary.Look) = proc.also { it.known += cam.saved }.applyLook(uri, look)
         }
         var t = 0L
-        vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, procSeesCamera, series, Clock { ++t }), series, proc)
+        frames = app.cayresim.core.boundary.fake.FakeFrameBoundary(cam)
+        vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, procSeesCamera, series, Clock { ++t }), series, proc,
+            app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames)
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -203,4 +206,56 @@ class CameraViewModelTest {
     }
 
     @Test fun `Ohne Serie gibt es kein Overlay`() = assertNull(vm.uiState.value.overlay)
+
+    // ---------- Phase 3: Spezialaufnahmen ----------
+    private fun special(o: SpecialOption) { while (vm.uiState.value.special != o) vm.onNextSpecial() }
+
+    @Test fun `Menschen wegrechnen speichert das Ergebnis der Serie`() = runTest {
+        visibleAndGranted(); special(SpecialOption.CLEAN_PLATE); vm.onShutter()
+        assertEquals(MessageKind.STACK_SAVED, vm.uiState.value.message?.kind)
+        assertEquals(app.cayresim.core.boundary.StackMode.MEDIAN, proc.stacked.single().second)
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+    }
+
+    @Test fun `Langzeit nutzt den Mittelwert`() = runTest {
+        visibleAndGranted(); special(SpecialOption.LONG_EXPOSURE); vm.onShutter()
+        assertEquals(app.cayresim.core.boundary.StackMode.MEAN, proc.stacked.single().second)
+    }
+
+    @Test fun `Gekuerzte Serie wird gemeldet`() = runTest {
+        visibleAndGranted(); frames.allowed = 3; special(SpecialOption.CLEAN_PLATE); vm.onShutter()
+        assertEquals(MessageKind.STACK_SHORTENED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Serie ohne Kamera scheitert sauber`() = runTest {
+        special(SpecialOption.CLEAN_PLATE); vm.onShutter()
+        assertEquals(MessageKind.STACK_FAILED, vm.uiState.value.message?.kind)
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+    }
+
+    @Test fun `Scharfer Ausloeser fotografiert bei jedem Signal`() = runTest {
+        visibleAndGranted(); special(SpecialOption.TRIGGER_MOTION); vm.onShutter()
+        assertEquals(SpecialStatus.ARMED, vm.uiState.value.specialStatus)
+        assertEquals(app.cayresim.core.boundary.TriggerMode.MOTION, frames.lastTriggerMode)
+        frames.fires.emit(Unit); frames.fires.emit(Unit)
+        assertEquals(2, cam.saved.size); assertEquals(MessageKind.TRIGGER_FIRED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Zweites Tippen entschaerft den Ausloeser`() = runTest {
+        visibleAndGranted(); special(SpecialOption.TRIGGER_STILL); vm.onShutter(); vm.onShutter()
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+        frames.fires.emit(Unit)
+        assertEquals(0, cam.saved.size, "Entschaerfter Ausloeser darf nicht fotografieren")
+    }
+
+    @Test fun `Verlassen des Screens entschaerft`() = runTest {
+        visibleAndGranted(); special(SpecialOption.TRIGGER_MOTION); vm.onShutter(); vm.onScreenStop()
+        frames.fires.emit(Unit)
+        assertEquals(0, cam.saved.size); assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+    }
+
+    @Test fun `Moduswechsel entschaerft`() = runTest {
+        visibleAndGranted(); special(SpecialOption.TRIGGER_MOTION); vm.onShutter(); vm.onNextSpecial()
+        frames.fires.emit(Unit); assertEquals(0, cam.saved.size)
+    }
 }

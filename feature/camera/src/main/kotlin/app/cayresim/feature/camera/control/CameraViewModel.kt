@@ -16,6 +16,12 @@ import app.cayresim.core.boundary.SeriesResult
 import app.cayresim.core.boundary.SeriesSnapshot
 import app.cayresim.core.control.CaptureOutcome
 import app.cayresim.core.control.CaptureUseCase
+import app.cayresim.core.control.StackOutcome
+import app.cayresim.core.control.StackPhotoUseCase
+import app.cayresim.core.boundary.FrameBoundary
+import app.cayresim.core.boundary.StackMode
+import app.cayresim.core.boundary.TriggerMode
+import kotlinx.coroutines.Job
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +44,8 @@ class CameraViewModel @Inject constructor(
     private val capture: CaptureUseCase,
     private val seriesBoundary: SeriesBoundary,
     private val processing: ProcessingBoundary,
+    private val stackPhoto: StackPhotoUseCase,
+    private val frames: FrameBoundary,
 ) : ViewModel() {
 
     private data class Local(
@@ -49,7 +57,11 @@ class CameraViewModel @Inject constructor(
         val look: LookOption = LookOption.NONE,
         val selectedSeriesId: Long? = null,
         val overlayAlpha: Float = 0.4f,
+        val special: SpecialOption = SpecialOption.NONE,
+        val specialStatus: SpecialStatus = SpecialStatus.IDLE,
     )
+
+    private var triggerJob: Job? = null
 
     private val local = MutableStateFlow(Local())
     private val allSeries = seriesBoundary.series().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -77,7 +89,8 @@ class CameraViewModel @Inject constructor(
     }
 
     fun onScreenStop() {
-        local.update { it.copy(visible = false) }
+        disarm()
+        local.update { it.copy(visible = false, specialStatus = if (it.specialStatus == SpecialStatus.ARMED) SpecialStatus.IDLE else it.specialStatus) }
         viewModelScope.launch { camera.stop() }
     }
 
@@ -103,6 +116,7 @@ class CameraViewModel @Inject constructor(
 
     fun onShutter() {
         val l = local.value
+        if (l.special != SpecialOption.NONE) return onSpecialShutter(l.special)
         viewModelScope.launch {
             when (val r = capture(Look.valueOf(l.look.name), l.selectedSeriesId)) {
                 is CaptureOutcome.Saved -> {
@@ -122,6 +136,47 @@ class CameraViewModel @Inject constructor(
             }
         }
     }
+
+    /** Naechste Spezialaufnahme; ein scharfer Ausloeser wird dabei entschaerft. */
+    fun onNextSpecial() {
+        disarm()
+        local.update { it.copy(special = SpecialOption.entries[(it.special.ordinal + 1) % SpecialOption.entries.size], specialStatus = SpecialStatus.IDLE) }
+    }
+
+    private fun disarm() { triggerJob?.cancel(); triggerJob = null }
+
+    /** Ausloeser im Spezialmodus: Serie stapeln oder Ausloeser scharf schalten bzw. entschaerfen. */
+    private fun onSpecialShutter(special: SpecialOption) {
+        when (special) {
+            SpecialOption.CLEAN_PLATE, SpecialOption.LONG_EXPOSURE -> viewModelScope.launch {
+                local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
+                val mode = if (special == SpecialOption.CLEAN_PLATE) StackMode.MEDIAN else StackMode.MEAN
+                val r = stackPhoto(mode)
+                local.update { it.copy(specialStatus = SpecialStatus.IDLE) }
+                when (r) {
+                    is StackOutcome.Saved -> post(if (r.shortened) MessageKind.STACK_SHORTENED else MessageKind.STACK_SAVED) { it.copy(lastPhotoUri = r.uri) }
+                    is StackOutcome.Failed -> post(MessageKind.STACK_FAILED)
+                }
+            }
+            SpecialOption.TRIGGER_MOTION, SpecialOption.TRIGGER_STILL -> {
+                if (triggerJob != null) { disarm(); local.update { it.copy(specialStatus = SpecialStatus.IDLE) }; return }
+                local.update { it.copy(specialStatus = SpecialStatus.ARMED) }
+                val mode = if (special == SpecialOption.TRIGGER_MOTION) TriggerMode.MOTION else TriggerMode.STILLNESS
+                triggerJob = viewModelScope.launch {
+                    frames.trigger(mode).collect {
+                        val l = local.value
+                        when (val r = capture(Look.valueOf(l.look.name), l.selectedSeriesId)) {
+                            is CaptureOutcome.Saved -> post(MessageKind.TRIGGER_FIRED) { it.copy(lastPhotoUri = r.uri) }
+                            is CaptureOutcome.Failed -> Unit
+                        }
+                    }
+                }
+            }
+            SpecialOption.NONE -> Unit
+        }
+    }
+
+    override fun onCleared() { disarm() }
 
     fun onMessageShown(id: Long) {
         local.update { if (it.message?.id == id) it.copy(message = null) else it }
@@ -152,6 +207,8 @@ class CameraViewModel @Inject constructor(
         selectedSeriesId = l.selectedSeriesId?.takeIf { id -> series.any { it.id == id } },
         overlay = ov,
         overlayAlpha = l.overlayAlpha,
+        special = l.special,
+        specialStatus = l.specialStatus,
     )
 
     companion object { const val OVERLAY_PX = 1440 }

@@ -10,9 +10,14 @@ enum class PermissionStatus { UNKNOWN, GRANTED, DENIED }
 
 enum class ScreenStatus { IDLE, STARTING, RUNNING, ERROR }
 
-enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID }
+enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID, STACK_SAVED, STACK_SHORTENED, STACK_FAILED, TRIGGER_FIRED }
 
 enum class LookOption { NONE, WARM, COOL, FILM, MONO }
+
+/** Spezialaufnahmen der eigenen Pipeline (Phase 3). */
+enum class SpecialOption { NONE, CLEAN_PLATE, LONG_EXPOSURE, TRIGGER_MOTION, TRIGGER_STILL }
+
+enum class SpecialStatus { IDLE, COLLECTING, PROCESSING, ARMED }
 
 @Immutable
 data class SeriesOption(val id: Long, val name: String, val photoCount: Int)
@@ -40,6 +45,9 @@ data class CameraUiState(
     /** Geister-Overlay: juengstes Foto der gewaehlten Serie. */
     val overlay: ImageBitmap? = null,
     val overlayAlpha: Float = 0.4f,
+    val special: SpecialOption = SpecialOption.NONE,
+    val specialStatus: SpecialStatus = SpecialStatus.IDLE,
 ) {
-    val canShoot: Boolean get() = status == ScreenStatus.RUNNING && !capturing
+    val canShoot: Boolean get() = status == ScreenStatus.RUNNING && !capturing &&
+        (specialStatus == SpecialStatus.IDLE || specialStatus == SpecialStatus.ARMED)
 }
