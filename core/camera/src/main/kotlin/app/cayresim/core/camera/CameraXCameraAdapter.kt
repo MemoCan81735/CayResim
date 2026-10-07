@@ -106,6 +106,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var extensions: ExtensionsManager? = null
     private var imageCapture: ImageCapture? = null
     private var pendingRequest: SurfaceRequest? = null
+    /** Wie oft die Selbstheilung noetig war; Tests verlangen 0 im normalen Ablauf. */
+    @androidx.annotation.VisibleForTesting internal var selfHealCount = 0
     /** Unsichtbarer Sucher-Ersatz mit eigenem OpenGL-Abnehmer, siehe [FallbackPreviewSink]. */
     private var fallbackSink: FallbackPreviewSink? = null
     private val selector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -207,7 +209,12 @@ class CameraXCameraAdapter @Inject constructor(
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .apply { if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG) }
             .build()
+        // Alte Anfrage verwerfen: sie gehoert zur vorigen Bindung und wird nie mehr bedient
+        pendingRequest = null
         preview.setSurfaceProvider { request ->
+            request.addRequestCancellationListener(ContextCompat.getMainExecutor(context)) {
+                if (pendingRequest === request) pendingRequest = null
+            }
             pendingRequest = request
             _state.update { it.copy(preview = PreviewHandle(request)) }
         }
@@ -342,6 +349,7 @@ class CameraXCameraAdapter @Inject constructor(
                 // Selbstheilung: Sitzung haengt (z. B. Sucher-Flaeche beim Screenwechsel verloren). Neu binden, genau einmal wiederholen.
                 val p = provider; val em = extensions
                 if (p == null || em == null) return@run CaptureResult.Failed(CaptureFailure.CAMERA_CLOSED)
+                selfHealCount++
                 pendingRequest = null
                 mutex.withLock { bindCurrent(p, em) }
                 withTimeoutOrNull(3_000) { while (pendingRequest == null) delay(20) }
@@ -508,6 +516,8 @@ class CameraXCameraAdapter @Inject constructor(
      * und stellt sonst eine unsichtbare Flaeche bereit, damit die Aufnahme nicht haengt.
      */
     private suspend fun ensureSurface() {
+        // Nach einem Neubinden (z. B. Moduswechsel) kommt die neue Anfrage etwas spaeter an
+        withTimeoutOrNull(3_000) { while (pendingRequest == null) delay(20) }
         val req = pendingRequest ?: return
         repeat(10) { if (req.isServiced) return; delay(50) }
         if (req.isServiced) return

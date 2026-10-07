@@ -116,13 +116,32 @@ class CameraXAdapterContractTest {
                 adapter.start()
                 for (m in adapter.capabilities.value!!.modes) {
                     adapter.selectMode(m)
+                    val t0 = System.currentTimeMillis()
                     val r = adapter.capture()
+                    val ms = System.currentTimeMillis() - t0
                     assertIs<CaptureResult.Saved>(r, "Modus $m war $r")
+                    assertTrue(ms < CameraXCameraAdapter.CAPTURE_TIMEOUT_MS, "Modus $m brauchte $ms ms")
                     adapter.delete(r.uri)
                 }
                 adapter.stop()
             }
+            assertEquals(0, adapter.selfHealCount, "Ablauf des Selbsttests darf die Selbstheilung nie brauchen")
         }
+    }
+
+    /**
+     * Fehler vom S24+ (Selbsttest v0.1.30, je Aufnahme etwa 10 s): Moduswechsel direkt vor dem Ausloesen
+     * ohne Sucher. Der Ersatz ging an die verfallene Anfrage der vorigen Bindung.
+     */
+    @Test fun moduswechselDirektVorDemAusloesenOhneSucher() = run {
+        adapter.start()
+        repeat(3) {
+            adapter.selectMode(PhotoMode.NORMAL)
+            val r = adapter.capture()
+            assertIs<CaptureResult.Saved>(r, "Aufnahme ${it + 1} war $r")
+            adapter.delete(r.uri)
+        }
+        assertEquals(0, adapter.selfHealCount, "Selbstheilung darf hier nicht noetig sein")
     }
 
     /** Fehlerfall aus dem Selbsttest: Sucher-Flaeche geht verloren, die Aufnahme muss sich selbst heilen. */
