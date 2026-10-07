@@ -107,8 +107,24 @@ class EndToEndTest {
         compose.onNodeWithTag("shutter").assertIsDisplayed()
     }
 
-    @Test fun lautstaerketasteLoestAus() {
+    @Test fun lautstaerketasteIstAngemeldet() {
         waitForViewfinder()
+        compose.waitUntil(5_000) { compose.activity.shutterKeys.listener != null }
+    }
+
+    @Test fun lautstaerketasteUeberDieActivityLoestAus() {
+        waitForViewfinder()
+        val before = appPhotoCount()
+        compose.runOnUiThread {
+            compose.activity.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_VOLUME_DOWN))
+            compose.activity.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_VOLUME_DOWN))
+        }
+        compose.waitUntil(15_000) { appPhotoCount() > before }
+    }
+
+    @Test fun lautstaerketasteVomSystemLoestAus() {
+        waitForViewfinder()
+        compose.waitUntil(5_000) { compose.activity.shutterKeys.listener != null }
         val before = appPhotoCount()
         androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
             .sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
