@@ -12,6 +12,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -156,7 +158,9 @@ fun CameraContent(
                 alpha = state.overlayAlpha, modifier = Modifier.fillMaxSize().testTag("overlay"))
         }
         var picker by remember { mutableStateOf(false) }
-        Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Bei grosser Schrift seitlich wischbar statt abgeschnitten
+        Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TopChip(stringResource(lookRes(state.look)), onNextLook, "look")
             TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
@@ -225,7 +229,7 @@ fun CameraContent(
 private fun TopChip(text: String, onClick: () -> Unit, tag: String) {
     Surface(color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
         modifier = Modifier.testTag(tag).clickableNoRipple(onClick)) {
-        Text(text, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), maxLines = 1, softWrap = false)
     }
 }
 
