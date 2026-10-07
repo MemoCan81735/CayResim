@@ -86,7 +86,9 @@ class GlProcessingAdapter @Inject constructor(
     internal fun decodeOriented(uri: Uri, maxPx: Int): Bitmap? {
         val resolver = context.contentResolver
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return null
+        // Mit inJustDecodeBounds liefert decodeStream immer null; nur die Masse in bounds zaehlen.
+        val opened = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds); true } ?: false
+        if (!opened) return null
         if (bounds.outWidth <= 0) return null
         var sample = 1
         while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxPx && maxPx != Int.MAX_VALUE) sample *= 2

@@ -47,7 +47,7 @@ class ProcessingAdapterTest {
 
     @Test fun lookWirdAlsNeuesFotoGespeichert() = runBlocking {
         val r = adapter.applyLook(photo(Color.rgb(200, 100, 50)), Look.MONO); track(r)
-        val saved = assertIs<ProcessResult.Saved>(r)
+        val saved = assertIs<ProcessResult.Saved>(r, "Look fehlgeschlagen: $r")
         val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(saved.uri), 64))
         val c = bmp.getPixel(bmp.width / 2, bmp.height / 2)
         assertTrue(kotlin.math.abs(Color.red(c) - Color.blue(c)) <= 3, "Mono muss grau sein: ${Integer.toHexString(c)}")
