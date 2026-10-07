@@ -11,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.assertExists
 import app.cayresim.core.designsystem.CayResimTheme
 import app.cayresim.feature.camera.control.CameraUiState
 import app.cayresim.feature.camera.control.MessageKind
