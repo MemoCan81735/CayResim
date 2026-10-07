@@ -165,6 +165,8 @@ fun CameraContent(
             TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
             TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
+            // Immer erreichbar, auch nach dem ersten Foto (Selbsttest)
+            TopChip(stringResource(R.string.open_settings), onOpenSettings, "open_settings")
         }
         if (state.overlay != null && state.previewToken != null) {
             Slider(value = state.overlayAlpha, onValueChange = onOverlayAlpha, valueRange = 0f..0.9f,
@@ -214,7 +216,6 @@ fun CameraContent(
                 val last = state.lastPhotoUri
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
                     if (last != null) TextButton(onClick = { onOpenLast(last) }, modifier = Modifier.testTag("open_last")) { SideLabel(stringResource(R.string.open_last)) }
-                    else TextButton(onClick = onOpenSettings, modifier = Modifier.testTag("open_settings")) { SideLabel(stringResource(R.string.open_settings)) }
                 }
             }
         }

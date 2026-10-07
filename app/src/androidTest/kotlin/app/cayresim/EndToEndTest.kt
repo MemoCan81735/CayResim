@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -108,7 +109,7 @@ class EndToEndTest {
 
     @Test fun selbsttestLaeuftAufDemEmulatorGruen() {
         waitForViewfinder()
-        compose.onNodeWithTag("open_settings").performClick()
+        compose.onNodeWithTag("open_settings").performScrollTo().performClick()
         compose.onNodeWithTag("selftest_start").performClick()
         compose.waitUntil(60_000) { compose.onAllNodes(hasTestTag("selftest_summary")).fetchSemanticsNodes().isNotEmpty() }
         val texts = compose.onAllNodes(hasTestTag("selftest_summary").or(hasTestTagPrefix("row_")), useUnmergedTree = false)

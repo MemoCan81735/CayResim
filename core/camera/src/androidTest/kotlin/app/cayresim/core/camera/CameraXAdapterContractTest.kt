@@ -85,6 +85,23 @@ class CameraXAdapterContractTest {
         if (r is CaptureResult.Saved) adapter.delete(r.uri)
     }
 
+    /**
+     * Fehler vom S24+ (Selbsttest v0.1.17): ohne Sucher dauerte jede Aufnahme etwa 10 s, weil die
+     * Ersatz-Flaeche den Bildstrom staute und erst die Selbstheilung half. Jetzt: ohne Wartezeit-Umweg.
+     */
+    @Test fun ohneSucherKeinUmwegUeberDieSelbstheilung() = run {
+        adapter.start()
+        kotlinx.coroutines.delay(3_000) // Bildstrom laeuft eine Weile ohne Abnehmer
+        repeat(3) {
+            val t0 = System.currentTimeMillis()
+            val r = adapter.capture()
+            val ms = System.currentTimeMillis() - t0
+            assertIs<CaptureResult.Saved>(r, "Aufnahme ${it + 1} war $r")
+            assertTrue(ms < CameraXCameraAdapter.CAPTURE_TIMEOUT_MS, "Aufnahme ${it + 1} brauchte $ms ms")
+            adapter.delete(r.uri)
+        }
+    }
+
     /** Fehlerfall aus dem Selbsttest: Sucher-Flaeche geht verloren, die Aufnahme muss sich selbst heilen. */
     @Test fun aufnahmeNachVerlorenerFlaecheHeiltSich() = run {
         adapter.start()

@@ -10,6 +10,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.assertExists
 import app.cayresim.core.designsystem.CayResimTheme
 import app.cayresim.feature.camera.control.CameraUiState
 import app.cayresim.feature.camera.control.MessageKind
@@ -134,6 +136,14 @@ class CameraContentTest {
         assertEquals(listOf("last:content://x/1"), events)
     }
 
+    // Fehler vom S24+: nach dem ersten Foto waren die Einstellungen weg
+    @Test fun einstellungen_bleiben_nach_foto_erreichbar() {
+        show(running.copy(lastPhotoUri = "content://x/1"))
+        compose.onNodeWithTag("open_last").assertExists()
+        compose.onNodeWithTag("open_settings").performScrollTo().performClick()
+        assertEquals(listOf("settings"), events)
+    }
+
     @Test fun look_knopf_sendet_ereignis() {
         show(running); compose.onNodeWithTag("look").performClick()
         assertEquals(listOf("look"), events)
@@ -197,7 +207,7 @@ class CameraContentTest {
     }
 
     @Test fun galerie_und_einstellungen() {
-        show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performClick()
+        show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performScrollTo().performClick()
         assertEquals(listOf("gallery", "settings"), events)
     }
 }
