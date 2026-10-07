@@ -82,6 +82,7 @@ room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3" }
 media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
+exifinterface = { module = "androidx.exifinterface:exifinterface", version = "1.4.2" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

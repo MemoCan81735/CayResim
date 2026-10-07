@@ -4,11 +4,12 @@ set -u
 API=34; IMG="system-images;android-$API;google_apis;x86_64"
 SDK=$ANDROID_HOME; export ANDROID_AVD_HOME=$HOME/.android/avd; mkdir -p $ANDROID_AVD_HOME; export PATH=$SDK/cmdline-tools/latest/bin:$SDK/emulator:$SDK/platform-tools:$PATH
 {
+  echo "== Platz schaffen"; sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/node_modules /opt/hostedtoolcache/CodeQL 2>/dev/null; df -h $HOME | tail -1
   echo "== Systembibliotheken"; sudo apt-get update -qq >/dev/null; sudo apt-get install -y -qq libpulse0 libgl1 libnss3 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libasound2t64 >/dev/null 2>&1 || sudo apt-get install -y -qq libpulse0 libgl1 libnss3 >/dev/null 2>&1; echo ok
   echo "== KVM"; ls -l /dev/kvm; (command -v kvm-ok && kvm-ok) || true
   echo "== Pakete"; yes | sdkmanager --licenses >/dev/null 2>&1; sdkmanager --install "emulator" "platform-tools" "$IMG" > sdk.log 2>&1; tail -c 300 sdk.log
   echo "== AVD"; echo no | avdmanager create avd -n ci -k "$IMG" -d pixel_6 --force 2>&1 | tail -2
-  printf 'hw.camera.back=emulated\nhw.camera.front=none\nhw.ramSize=4096\nhw.cpu.ncore=4\ndisk.dataPartition.size=6G\n' >> ~/.android/avd/ci.avd/config.ini
+  printf 'hw.camera.back=emulated\nhw.camera.front=none\nhw.ramSize=4096\nhw.cpu.ncore=4\ndisk.dataPartition.size=2G\n' >> ~/.android/avd/ci.avd/config.ini
   echo "== Emulator-Version"; emulator -version | head -2
 } 2>&1 | tee emu-start.log
 nohup emulator -avd ci -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back emulated > emulator.log 2>&1 &
