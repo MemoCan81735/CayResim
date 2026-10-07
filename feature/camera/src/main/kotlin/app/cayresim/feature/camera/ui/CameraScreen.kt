@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Slider
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -203,25 +203,27 @@ private fun TopChip(text: String, onClick: () -> Unit, tag: String) {
     }
 }
 
+/** Serienwahl als Panel im Sucher statt Dialogfenster: bleibt im selben Fenster und ist so ohne Geraet testbar. */
 @Composable
-private fun SeriesPicker(state: CameraUiState, onDismiss: () -> Unit, onSelect: (Long?) -> Unit, onCreate: (String) -> Unit) {
+private fun BoxScope.SeriesPicker(state: CameraUiState, onDismiss: () -> Unit, onSelect: (Long?) -> Unit, onCreate: (String) -> Unit) {
     var name by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.series_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = { onSelect(null) }, modifier = Modifier.testTag("series_none")) { Text(stringResource(R.string.series_none)) }
-                state.series.forEach { s ->
-                    TextButton(onClick = { onSelect(s.id) }, modifier = Modifier.testTag("series_${s.id}")) { Text("${s.name} (${s.photoCount})") }
-                }
-                OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true,
-                    label = { Text(stringResource(R.string.series_new)) }, modifier = Modifier.testTag("series_name"))
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickableNoRipple(onDismiss))
+    Surface(shape = MaterialTheme.shapes.large, tonalElevation = 6.dp,
+        modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.85f).testTag("series_picker")) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.series_title), style = MaterialTheme.typography.titleLarge)
+            TextButton(onClick = { onSelect(null) }, modifier = Modifier.testTag("series_none")) { Text(stringResource(R.string.series_none)) }
+            state.series.forEach { s ->
+                TextButton(onClick = { onSelect(s.id) }, modifier = Modifier.testTag("series_${s.id}")) { Text("${s.name} (${s.photoCount})") }
             }
-        },
-        confirmButton = { TextButton(onClick = { onCreate(name) }, modifier = Modifier.testTag("series_create")) { Text(stringResource(R.string.series_create)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.series_cancel)) } },
-    )
+            OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true,
+                label = { Text(stringResource(R.string.series_new)) }, modifier = Modifier.fillMaxWidth().testTag("series_name"))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("series_cancel")) { Text(stringResource(R.string.series_cancel)) }
+                TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank(), modifier = Modifier.testTag("series_create")) { Text(stringResource(R.string.series_create)) }
+            }
+        }
+    }
 }
 
 internal fun lookRes(l: LookOption): Int = when (l) {
