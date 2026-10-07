@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -121,7 +123,7 @@ fun CameraContent(
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().safeDrawingPadding().padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             state.fallbackFrom?.let {
-                Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f), shape = MaterialTheme.shapes.small,
+                Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
                     modifier = Modifier.padding(16.dp).testTag("fallback")) {
                     Text(stringResource(R.string.fallback, stringResource(modeRes(it))), Modifier.padding(12.dp))
                 }
@@ -129,12 +131,18 @@ fun CameraContent(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 items(state.modes) { m ->
                     FilterChip(selected = m == state.selected, onClick = { onModeSelected(m) },
-                        label = { Text(stringResource(modeRes(m))) }, modifier = Modifier.testTag("mode_${m.name}"))
+                        label = { Text(stringResource(modeRes(m)), maxLines = 1) }, modifier = Modifier.testTag("mode_${m.name}"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Color.Black.copy(alpha = 0.55f), labelColor = Color.White,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary, selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        ))
                 }
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onOpenGallery, modifier = Modifier.testTag("open_gallery")) { Text(stringResource(R.string.open_gallery), color = Color.White) }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    TextButton(onClick = onOpenGallery, modifier = Modifier.testTag("open_gallery")) { SideLabel(stringResource(R.string.open_gallery)) }
+                }
                 val shutterLabel = stringResource(R.string.shutter)
                 Box(
                     Modifier.size(80.dp).border(4.dp, Color.White, CircleShape).padding(8.dp)
@@ -144,13 +152,19 @@ fun CameraContent(
                         .then(if (state.canShoot) Modifier.clickableNoRipple(onShutter) else Modifier),
                 )
                 val last = state.lastPhotoUri
-                if (last != null) TextButton(onClick = { onOpenLast(last) }, modifier = Modifier.testTag("open_last")) { Text(stringResource(R.string.open_last), color = Color.White) }
-                else TextButton(onClick = onOpenSettings, modifier = Modifier.testTag("open_settings")) { Text(stringResource(R.string.open_settings), color = Color.White) }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    if (last != null) TextButton(onClick = { onOpenLast(last) }, modifier = Modifier.testTag("open_last")) { SideLabel(stringResource(R.string.open_last)) }
+                    else TextButton(onClick = onOpenSettings, modifier = Modifier.testTag("open_settings")) { SideLabel(stringResource(R.string.open_settings)) }
+                }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).safeDrawingPadding().testTag("message"))
     }
 }
+
+@Composable
+private fun SideLabel(text: String) =
+    Text(text, color = Color.White, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
 
 @Composable
 private fun DefaultViewfinder(token: Any) {
