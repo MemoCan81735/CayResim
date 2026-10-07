@@ -9,6 +9,11 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.SessionConfig
+import androidx.camera.core.SurfaceRequest
+import android.graphics.SurfaceTexture
+import android.view.Surface
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionSessionConfig
 import androidx.camera.extensions.ExtensionsManager
@@ -65,6 +70,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var provider: ProcessCameraProvider? = null
     private var extensions: ExtensionsManager? = null
     private var imageCapture: ImageCapture? = null
+    private var pendingRequest: SurfaceRequest? = null
+    private var fallbackSurface: Pair<SurfaceTexture, Surface>? = null
     private val selector = CameraSelector.DEFAULT_BACK_CAMERA
 
     override suspend fun start() = withContext(dispatcher) {
@@ -92,6 +99,9 @@ class CameraXCameraAdapter @Inject constructor(
         mutex.withLock {
             provider?.unbindAll()
             owner.pause()
+            pendingRequest = null
+            fallbackSurface?.let { (t, s) -> s.release(); t.release() }
+            fallbackSurface = null
             imageCapture = null
             _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false) }
         }
@@ -141,7 +151,10 @@ class CameraXCameraAdapter @Inject constructor(
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
-        preview.setSurfaceProvider { request -> _state.update { it.copy(preview = PreviewHandle(request)) } }
+        preview.setSurfaceProvider { request ->
+            pendingRequest = request
+            _state.update { it.copy(preview = PreviewHandle(request)) }
+        }
         val ext = key.toExtensionMode()
         val config: SessionConfig =
             if (ext == ExtensionMode.NONE) SessionConfig(listOf(preview, capture))
@@ -176,6 +189,7 @@ class CameraXCameraAdapter @Inject constructor(
         if (_state.value.capturing) return@withContext CaptureResult.Failed(CaptureFailure.BUSY)
         _state.update { it.copy(capturing = true) }
         try {
+            ensureSurface()
             val name = "CAY_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ROOT).format(Date())
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
@@ -185,7 +199,7 @@ class CameraXCameraAdapter @Inject constructor(
             val options = ImageCapture.OutputFileOptions.Builder(
                 context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values,
             ).build()
-            suspendCancellableCoroutine<CaptureResult> { cont ->
+            withTimeoutOrNull(CAPTURE_TIMEOUT_MS) { suspendCancellableCoroutine<CaptureResult> { cont ->
                 ic.takePicture(options, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         val uri = output.savedUri
@@ -195,12 +209,27 @@ class CameraXCameraAdapter @Inject constructor(
                         cont.resume(CaptureResult.Failed(mapError(exception.imageCaptureError)))
                     }
                 })
-            }
+            } } ?: CaptureResult.Failed(CaptureFailure.CAMERA_CLOSED)
         } catch (e: Exception) {
             CaptureResult.Failed(CaptureFailure.UNKNOWN)
         } finally {
             _state.update { it.copy(capturing = false) }
         }
+    }
+
+    /**
+     * Ohne Sucher (Selbsttest, Hintergrund) startet die Kamera-Sitzung nicht. Wartet kurz auf den Sucher
+     * und stellt sonst eine unsichtbare Flaeche bereit, damit die Aufnahme nicht haengt.
+     */
+    private suspend fun ensureSurface() {
+        val req = pendingRequest ?: return
+        repeat(10) { if (req.isServiced) return; delay(50) }
+        if (req.isServiced) return
+        val texture = SurfaceTexture(0).apply { setDefaultBufferSize(req.resolution.width, req.resolution.height) }
+        val surface = Surface(texture)
+        fallbackSurface?.let { (t, s) -> s.release(); t.release() }
+        fallbackSurface = texture to surface
+        req.provideSurface(surface, ContextCompat.getMainExecutor(context)) { }
     }
 
     override suspend fun delete(uri: String): Boolean = withContext(dispatcher) {
@@ -209,6 +238,7 @@ class CameraXCameraAdapter @Inject constructor(
 
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
+        const val CAPTURE_TIMEOUT_MS = 15_000L
 
         internal fun mapError(code: Int): CaptureFailure = when (code) {
             ImageCapture.ERROR_FILE_IO -> CaptureFailure.STORAGE

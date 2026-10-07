@@ -14,6 +14,9 @@ import app.cayresim.core.designsystem.CayResimTheme
 import app.cayresim.feature.camera.control.CameraUiState
 import app.cayresim.feature.camera.control.MessageKind
 import app.cayresim.feature.camera.control.ModeOption
+import app.cayresim.feature.camera.control.LookOption
+import app.cayresim.feature.camera.control.SeriesOption
+import androidx.compose.ui.test.performTextInput
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
 import app.cayresim.feature.camera.control.UserMessage
@@ -46,6 +49,10 @@ class CameraContentTest {
             CameraContent(
                 state = state,
                 onModeSelected = { events += "mode:$it" },
+                onNextLook = { events += "look" },
+                onSeriesSelected = { events += "series:$it" },
+                onCreateSeries = { events += "create:$it" },
+                onOverlayAlpha = { },
                 onShutter = { events += "shutter" },
                 onMessageShown = { events += "shown:$it" },
                 onRequestPermission = { events += "permission" },
@@ -120,6 +127,32 @@ class CameraContentTest {
     @Test fun letztes_foto_knopf_oeffnet_uri() {
         show(running.copy(lastPhotoUri = "content://x/1")); compose.onNodeWithTag("open_last").performClick()
         assertEquals(listOf("last:content://x/1"), events)
+    }
+
+    @Test fun look_knopf_sendet_ereignis() {
+        show(running); compose.onNodeWithTag("look").performClick()
+        assertEquals(listOf("look"), events)
+    }
+
+    @Test fun serie_waehlen_und_anlegen() {
+        show(running.copy(series = listOf(SeriesOption(3, "Garten", 12))))
+        compose.onNodeWithTag("series").performClick()
+        compose.onNodeWithTag("series_3").performClick()
+        compose.onNodeWithTag("series").performClick()
+        compose.onNodeWithTag("series_name").performTextInput("Balkon")
+        compose.onNodeWithTag("series_create").performClick()
+        assertEquals(listOf("series:3", "create:Balkon"), events)
+    }
+
+    @Test fun bild_serie_mit_look() {
+        show(running.copy(look = LookOption.FILM, series = listOf(SeriesOption(1, "Garten", 12)), selectedSeriesId = 1))
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_series_look.png")
+    }
+
+    @Test fun bild_serienwahl() {
+        show(running.copy(series = listOf(SeriesOption(1, "Garten", 12), SeriesOption(2, "Balkon", 3))))
+        compose.onNodeWithTag("series").performClick()
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_series_picker.png")
     }
 
     @Test fun galerie_und_einstellungen() {

@@ -11,7 +11,8 @@ import android.opengl.GLUtils
 import app.cayresim.core.pure.Lut3D
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.FloatBuffer
+import java.nio.ShortBuffer
+import android.util.Half
 
 /**
  * Wendet eine 3D-LUT auf der GPU an (R20). Genau ein GL-Kontext, nur auf dem GpuDispatcher benutzen.
@@ -24,6 +25,15 @@ class GlLutRenderer {
     private var program = 0
 
     fun isReady() = program != 0
+
+    /** Letzter Fehler fuer Diagnose und Selbsttest. */
+    var lastError: String? = null; private set
+
+    private fun fail(step: String): Boolean {
+        val e = GLES30.glGetError()
+        if (e == GLES30.GL_NO_ERROR) return false
+        lastError = "$step: GL-Fehler 0x${Integer.toHexString(e)}"; return true
+    }
 
     /** Richtet den Kontext ein; false, wenn kein GLES 3 verfuegbar ist (Fehler als Wert, R24). */
     fun setUp(): Boolean {
@@ -59,14 +69,23 @@ class GlLutRenderer {
             params2d()
             val argb = if (src.config == Bitmap.Config.ARGB_8888) src else src.copy(Bitmap.Config.ARGB_8888, false)
             GLUtils.texImage2D(GLES30.GL_TEXTURE_2D, 0, argb, 0)
+            if (fail("Quelltextur")) return null
             // LUT als 3D-Textur in Gleitkomma, damit die Interpolation genau bleibt
             GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, tex[1])
             for (p in intArrayOf(GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_TEXTURE_WRAP_R))
                 GLES30.glTexParameteri(GLES30.GL_TEXTURE_3D, p, GLES30.GL_CLAMP_TO_EDGE)
             GLES30.glTexParameteri(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR)
             GLES30.glTexParameteri(GLES30.GL_TEXTURE_3D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR)
-            val fb: FloatBuffer = ByteBuffer.allocateDirect(lut.data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().put(lut.data).also { it.position(0) }
-            GLES30.glTexImage3D(GLES30.GL_TEXTURE_3D, 0, GLES30.GL_RGB16F, lut.size, lut.size, lut.size, 0, GLES30.GL_RGB, GLES30.GL_FLOAT, fb)
+            // RGBA16F mit Half-Float ist in GLES 3.0 garantiert filterbar; 16 Bit reichen fuer 8-Bit-Ausgabe.
+            val texels = lut.size * lut.size * lut.size
+            val hb: ShortBuffer = ByteBuffer.allocateDirect(texels * 4 * 2).order(ByteOrder.nativeOrder()).asShortBuffer()
+            for (i in 0 until texels) {
+                hb.put(Half.toHalf(lut.data[i * 3])); hb.put(Half.toHalf(lut.data[i * 3 + 1])); hb.put(Half.toHalf(lut.data[i * 3 + 2])); hb.put(Half.toHalf(1f))
+            }
+            hb.position(0)
+            GLES30.glPixelStorei(GLES30.GL_UNPACK_ALIGNMENT, 1)
+            GLES30.glTexImage3D(GLES30.GL_TEXTURE_3D, 0, GLES30.GL_RGBA16F, lut.size, lut.size, lut.size, 0, GLES30.GL_RGBA, GLES30.GL_HALF_FLOAT, hb)
+            if (fail("LUT-Textur")) return null
             // Ziel
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, tex[2])
             params2d()
@@ -74,7 +93,7 @@ class GlLutRenderer {
             val fbo = IntArray(1); GLES30.glGenFramebuffers(1, fbo, 0)
             GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, fbo[0])
             GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, tex[2], 0)
-            if (GLES30.glCheckFramebufferStatus(GLES30.GL_FRAMEBUFFER) != GLES30.GL_FRAMEBUFFER_COMPLETE) return null
+            if (GLES30.glCheckFramebufferStatus(GLES30.GL_FRAMEBUFFER) != GLES30.GL_FRAMEBUFFER_COMPLETE) { lastError = "Framebuffer unvollstaendig"; return null }
 
             GLES30.glViewport(0, 0, w, h)
             GLES30.glUseProgram(program)
@@ -84,12 +103,13 @@ class GlLutRenderer {
             GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uLut"), 1)
             GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uSize"), lut.size.toFloat())
             GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3)
+            if (fail("Zeichnen")) return null
 
             val buf = ByteBuffer.allocateDirect(w * h * 4).order(ByteOrder.nativeOrder())
             GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, buf)
             GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
             GLES30.glDeleteFramebuffers(1, fbo, 0)
-            if (GLES30.glGetError() != GLES30.GL_NO_ERROR) return null
+            if (fail("Auslesen")) return null
             buf.position(0)
             val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             out.copyPixelsFromBuffer(buf)
@@ -120,7 +140,7 @@ class GlLutRenderer {
         fun compile(type: Int, src: String): Int {
             val s = GLES30.glCreateShader(type); GLES30.glShaderSource(s, src); GLES30.glCompileShader(s)
             val ok = IntArray(1); GLES30.glGetShaderiv(s, GLES30.GL_COMPILE_STATUS, ok, 0)
-            if (ok[0] == 0) { GLES30.glDeleteShader(s); return 0 }
+            if (ok[0] == 0) { lastError = "Shader: " + GLES30.glGetShaderInfoLog(s); GLES30.glDeleteShader(s); return 0 }
             return s
         }
         val vs = compile(GLES30.GL_VERTEX_SHADER, VERTEX); val fs = compile(GLES30.GL_FRAGMENT_SHADER, FRAGMENT)

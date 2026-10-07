@@ -36,8 +36,8 @@ jobs:
       - name: Tests, Architektur, Abdeckung, Screenshots, APK
         run: |
           set -o pipefail
-          MODE=verifyRoborazziDebug
-          ls feature/*/src/test/screenshots/*.png >/dev/null 2>&1 || MODE=recordRoborazziDebug
+          # Vergleicht mit den Baselines; neue Bilder werden aufgenommen und abgelegt, Abweichungen lassen den Bau scheitern.
+          MODE=verifyAndRecordRoborazziDebug
           echo "Screenshot-Modus: $MODE"
           gradle --continue test $MODE koverVerify assembleDebug assembleRelease 2>&1 | tee fast.log
       - uses: actions/upload-artifact@v4

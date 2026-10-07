@@ -39,14 +39,14 @@ class GlLutRendererTest {
         val src = chart()
         for (id in LookId.entries) {
             val lut = Looks.lut(id)
-            val out = assertNotNull(r.render(src, lut), "Rendern fehlgeschlagen fuer $id")
+            val out = assertNotNull(r.render(src, lut), "Rendern fehlgeschlagen fuer $id: ${r.lastError}")
             var worst = 0
             for (y in 0 until src.height) for (x in 0 until src.width) {
                 val s = src.getPixel(x, y); val o = out.getPixel(x, y)
                 val e = lut.apply(Color.red(s), Color.green(s), Color.blue(s))
                 worst = maxOf(worst, abs(Color.red(o) - e[0]), abs(Color.green(o) - e[1]), abs(Color.blue(o) - e[2]))
             }
-            assertTrue(worst <= 1, "Look $id weicht um $worst Stufen von der Referenz ab")
+            assertTrue(worst <= 1, "Look $id weicht um $worst Stufen von der Referenz ab (Beispiel Pixel 0,0: ${Integer.toHexString(out.getPixel(0, 0))})")
         }
     }
 

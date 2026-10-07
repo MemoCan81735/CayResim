@@ -10,6 +10,7 @@ import app.cayresim.core.boundary.contract.CameraBoundaryContract
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.first
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -49,7 +50,7 @@ class CameraXAdapterContractTest {
 
     @Test fun suchlerBekommtEinenSurfaceRequest() = run {
         adapter.start()
-        val handle = adapter.state.value.preview
+        val handle = withTimeout(10_000) { adapter.state.first { it.preview != null } }.preview
         assertNotNull(handle)
         assertIs<androidx.camera.core.SurfaceRequest>(handle.token)
     }
@@ -73,6 +74,14 @@ class CameraXAdapterContractTest {
         val caps = assertNotNull(adapter.capabilities.value)
         assertEquals(PhotoMode.NORMAL, caps.modes.first())
         assertEquals(caps.modes, adapter.state.value.offeredModes)
+    }
+
+    @Test fun aufnahmeHaengtNieLaengerAlsDieZeitgrenze() = run {
+        adapter.start()
+        val t0 = System.currentTimeMillis()
+        val r = adapter.capture()
+        assertTrue(System.currentTimeMillis() - t0 < CameraXCameraAdapter.CAPTURE_TIMEOUT_MS + 2_000)
+        if (r is CaptureResult.Saved) adapter.delete(r.uri)
     }
 
     @Test fun loeschenUnbekannterUriLiefertFalse() = run {

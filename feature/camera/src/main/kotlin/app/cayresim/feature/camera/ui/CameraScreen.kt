@@ -35,6 +35,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.Slider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +61,7 @@ import app.cayresim.feature.camera.control.CameraUiState
 import app.cayresim.feature.camera.control.CameraViewModel
 import app.cayresim.feature.camera.control.MessageKind
 import app.cayresim.feature.camera.control.ModeOption
+import app.cayresim.feature.camera.control.LookOption
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
 
@@ -79,6 +87,10 @@ fun CameraRoute(
     CameraContent(
         state = state,
         onModeSelected = viewModel::onModeSelected,
+        onNextLook = viewModel::onNextLook,
+        onSeriesSelected = viewModel::onSeriesSelected,
+        onCreateSeries = viewModel::onCreateSeries,
+        onOverlayAlpha = viewModel::onOverlayAlpha,
         onShutter = viewModel::onShutter,
         onMessageShown = viewModel::onMessageShown,
         onRequestPermission = { launcher.launch(Manifest.permission.CAMERA) },
@@ -96,6 +108,10 @@ fun CameraRoute(
 fun CameraContent(
     state: CameraUiState,
     onModeSelected: (ModeOption) -> Unit,
+    onNextLook: () -> Unit,
+    onSeriesSelected: (Long?) -> Unit,
+    onCreateSeries: (String) -> Unit,
+    onOverlayAlpha: (Float) -> Unit,
     onShutter: () -> Unit,
     onMessageShown: (Long) -> Unit,
     onRequestPermission: () -> Unit,
@@ -120,6 +136,23 @@ fun CameraContent(
             state.status == ScreenStatus.ERROR -> CenterHint(stringResource(R.string.camera_error), stringResource(R.string.retry), onRetry, "camera_error")
             state.previewToken != null -> Box(Modifier.fillMaxSize().testTag("viewfinder")) { viewfinder(state.previewToken) }
         }
+        // Geister-Overlay: gleiche Beschneidung wie der Sucher (ContentScale.Crop entspricht fillCenter, R21)
+        state.overlay?.let {
+            if (state.previewToken != null) Image(it, contentDescription = null, contentScale = ContentScale.Crop,
+                alpha = state.overlayAlpha, modifier = Modifier.fillMaxSize().testTag("overlay"))
+        }
+        var picker by remember { mutableStateOf(false) }
+        Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TopChip(stringResource(lookRes(state.look)), onNextLook, "look")
+            val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
+            TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
+        }
+        if (state.overlay != null && state.previewToken != null) {
+            Slider(value = state.overlayAlpha, onValueChange = onOverlayAlpha, valueRange = 0f..0.9f,
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).fillMaxWidth(0.5f).testTag("overlay_alpha"))
+        }
+        if (picker) SeriesPicker(state, onDismiss = { picker = false }, onSelect = { onSeriesSelected(it); picker = false },
+            onCreate = { onCreateSeries(it); picker = false })
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().safeDrawingPadding().padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             state.fallbackFrom?.let {
@@ -163,6 +196,43 @@ fun CameraContent(
 }
 
 @Composable
+private fun TopChip(text: String, onClick: () -> Unit, tag: String) {
+    Surface(color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
+        modifier = Modifier.testTag(tag).clickableNoRipple(onClick)) {
+        Text(text, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun SeriesPicker(state: CameraUiState, onDismiss: () -> Unit, onSelect: (Long?) -> Unit, onCreate: (String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.series_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = { onSelect(null) }, modifier = Modifier.testTag("series_none")) { Text(stringResource(R.string.series_none)) }
+                state.series.forEach { s ->
+                    TextButton(onClick = { onSelect(s.id) }, modifier = Modifier.testTag("series_${s.id}")) { Text("${s.name} (${s.photoCount})") }
+                }
+                OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true,
+                    label = { Text(stringResource(R.string.series_new)) }, modifier = Modifier.testTag("series_name"))
+            }
+        },
+        confirmButton = { TextButton(onClick = { onCreate(name) }, modifier = Modifier.testTag("series_create")) { Text(stringResource(R.string.series_create)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.series_cancel)) } },
+    )
+}
+
+internal fun lookRes(l: LookOption): Int = when (l) {
+    LookOption.NONE -> R.string.look_none
+    LookOption.WARM -> R.string.look_warm
+    LookOption.COOL -> R.string.look_cool
+    LookOption.FILM -> R.string.look_film
+    LookOption.MONO -> R.string.look_mono
+}
+
+@Composable
 private fun SideLabel(text: String) =
     Text(text, color = Color.White, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
 
@@ -194,4 +264,8 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.FAILED_STORAGE -> R.string.msg_failed_storage
     MessageKind.FAILED_CAMERA -> R.string.msg_failed_camera
     MessageKind.FAILED_OTHER -> R.string.msg_failed_other
+    MessageKind.SAVED_WITHOUT_LOOK -> R.string.msg_saved_without_look
+    MessageKind.SAVED_WITHOUT_SERIES -> R.string.msg_saved_without_series
+    MessageKind.SERIES_CREATED -> R.string.msg_series_created
+    MessageKind.SERIES_INVALID -> R.string.msg_series_invalid
 }

@@ -7,6 +7,10 @@ import app.cayresim.core.boundary.IoDispatcher
 import app.cayresim.core.boundary.MediaBoundary
 import app.cayresim.core.camera.CameraXCameraAdapter
 import app.cayresim.core.data.MediaStoreMediaAdapter
+import app.cayresim.core.data.series.RoomSeriesAdapter
+import app.cayresim.core.processing.GlProcessingAdapter
+import app.cayresim.core.boundary.SeriesBoundary
+import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.pure.Clock
 import dagger.Binds
 import dagger.Module
@@ -25,6 +29,8 @@ import javax.inject.Singleton
 abstract class BoundaryModule {
     @Binds @Singleton abstract fun camera(a: CameraXCameraAdapter): CameraBoundary
     @Binds @Singleton abstract fun media(a: MediaStoreMediaAdapter): MediaBoundary
+    @Binds @Singleton abstract fun series(a: RoomSeriesAdapter): SeriesBoundary
+    @Binds @Singleton abstract fun processing(a: GlProcessingAdapter): ProcessingBoundary
 }
 
 @Module

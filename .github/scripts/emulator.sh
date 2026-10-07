@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Laeuft im Emulator-Schritt. Ein Fehler in einem Teil laesst den Schritt scheitern, die anderen laufen trotzdem.
 set -u
+export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
 fail=0
 adb logcat -c || true
 (adb logcat -v time > logcat.txt 2>&1 &)

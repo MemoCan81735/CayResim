@@ -19,4 +19,20 @@
     <string name="open_gallery">Galerie</string>
     <string name="open_settings">Einstellungen</string>
     <string name="open_last">Letztes Foto</string>
+    <string name="msg_saved_without_look">Foto gespeichert, der Look konnte nicht angewendet werden.</string>
+    <string name="msg_saved_without_series">Foto gespeichert, aber nicht zur Serie hinzugefügt.</string>
+    <string name="msg_series_created">Serie angelegt</string>
+    <string name="msg_series_invalid">Der Name muss 1 bis 40 Zeichen haben.</string>
+    <string name="look_none">Ohne Look</string>
+    <string name="look_warm">Warm</string>
+    <string name="look_cool">Kühl</string>
+    <string name="look_film">Film</string>
+    <string name="look_mono">S/W</string>
+    <string name="series_none">Keine Serie</string>
+    <string name="series_label">Serie: %1$s (%2$d)</string>
+    <string name="series_title">Serie wählen</string>
+    <string name="series_new">Neue Serie</string>
+    <string name="series_create">Anlegen</string>
+    <string name="series_cancel">Abbrechen</string>
+    <string name="overlay_alpha">Overlay</string>
 </resources>

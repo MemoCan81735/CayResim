@@ -6,6 +6,10 @@ import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
 import app.cayresim.core.control.TakePhotoUseCase
+import app.cayresim.core.control.CaptureUseCase
+import app.cayresim.core.boundary.fake.FakeProcessingBoundary
+import app.cayresim.core.boundary.fake.FakeSeriesBoundary
+import app.cayresim.core.pure.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -25,11 +29,18 @@ import kotlin.test.assertTrue
 class CameraViewModelTest {
     private lateinit var cam: FakeCameraBoundary
     private lateinit var vm: CameraViewModel
+    private lateinit var series: FakeSeriesBoundary
+    private lateinit var proc: FakeProcessingBoundary
 
     @Before fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         cam = FakeCameraBoundary(setOf(PhotoMode.NIGHT, PhotoMode.HDR))
-        vm = CameraViewModel(cam, TakePhotoUseCase(cam))
+        series = FakeSeriesBoundary(); proc = FakeProcessingBoundary()
+        val procSeesCamera = object : app.cayresim.core.boundary.ProcessingBoundary by proc {
+            override suspend fun applyLook(uri: String, look: app.cayresim.core.boundary.Look) = proc.also { it.known += cam.saved }.applyLook(uri, look)
+        }
+        var t = 0L
+        vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, procSeesCamera, series, Clock { ++t }), series, proc)
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -145,4 +156,51 @@ class CameraViewModelTest {
         PhotoMode.entries.forEach { ModeOption.valueOf(it.name) }
         assertEquals(PhotoMode.entries.size, ModeOption.entries.size)
     }
+
+    // ---------- Phase 2: Look und Serie ----------
+    @Test fun `Look wechselt reihum und kehrt zu NONE zurueck`() {
+        val seen = (1..LookOption.entries.size).map { vm.onNextLook(); vm.uiState.value.look }
+        assertEquals(LookOption.entries.drop(1) + LookOption.NONE, seen)
+    }
+
+    @Test fun `Foto mit Look ersetzt das Original`() = runTest {
+        visibleAndGranted(); vm.onNextLook(); vm.onShutter()
+        assertEquals(MessageKind.SAVED, vm.uiState.value.message?.kind)
+        assertTrue(vm.uiState.value.lastPhotoUri!!.contains("look"))
+    }
+
+    @Test fun `GPU-Fehler meldet Foto ohne Look`() = runTest {
+        visibleAndGranted(); proc.gpuFails = true; vm.onNextLook(); vm.onShutter()
+        assertEquals(MessageKind.SAVED_WITHOUT_LOOK, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Neue Serie wird angelegt und gewaehlt`() = runTest {
+        vm.onCreateSeries("Garten")
+        val s = vm.uiState.value
+        assertEquals(MessageKind.SERIES_CREATED, s.message?.kind)
+        assertEquals("Garten", s.series.single().name); assertEquals(s.series.single().id, s.selectedSeriesId)
+    }
+
+    @Test fun `Ungueltiger Serienname wird gemeldet`() = runTest {
+        vm.onCreateSeries("   ")
+        assertEquals(MessageKind.SERIES_INVALID, vm.uiState.value.message?.kind); assertNull(vm.uiState.value.selectedSeriesId)
+    }
+
+    @Test fun `Foto in Serie erhoeht den Zaehler`() = runTest {
+        visibleAndGranted(); vm.onCreateSeries("S"); vm.onShutter(); vm.onShutter()
+        assertEquals(2, vm.uiState.value.series.single().photoCount)
+    }
+
+    @Test fun `Geloeschte Serie ist nicht mehr gewaehlt`() = runTest {
+        vm.onCreateSeries("S"); val id = vm.uiState.value.selectedSeriesId!!
+        series.delete(id)
+        assertNull(vm.uiState.value.selectedSeriesId)
+    }
+
+    @Test fun `Overlay-Deckkraft wird begrenzt`() {
+        vm.onOverlayAlpha(2f); assertEquals(0.9f, vm.uiState.value.overlayAlpha)
+        vm.onOverlayAlpha(-1f); assertEquals(0f, vm.uiState.value.overlayAlpha)
+    }
+
+    @Test fun `Ohne Serie gibt es kein Overlay`() = assertNull(vm.uiState.value.overlay)
 }
