@@ -4,7 +4,6 @@
     <string name="gallery_empty">Noch keine Fotos mit CayResim.</string>
     <string name="back">Zurück</string>
     <string name="series_header">Serien</string>
-    <string name="series_row">%1$s · %2$d Fotos</string>
     <string name="timelapse">Zeitraffer</string>
     <string name="timelapse_running">Video wird erstellt …</string>
     <string name="msg_video_saved">Zeitraffer gespeichert</string>
@@ -12,4 +11,8 @@
     <string name="msg_video_too_few">Für einen Zeitraffer braucht die Serie mindestens 2 Fotos.</string>
     <string name="open_video">Video ansehen</string>
     <string name="photos_header">Alle Fotos</string>
+    <plurals name="series_row">
+        <item quantity="one">%1$s · %2$d Foto</item>
+        <item quantity="other">%1$s · %2$d Fotos</item>
+    </plurals>
 </resources>

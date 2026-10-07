@@ -6,3 +6,4 @@ import javax.inject.Qualifier
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class CameraDispatcher
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class GpuDispatcher
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class MainDispatcher

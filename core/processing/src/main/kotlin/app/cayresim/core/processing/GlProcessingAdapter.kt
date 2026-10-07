@@ -11,6 +11,9 @@ import androidx.exifinterface.media.ExifInterface
 import app.cayresim.core.boundary.GpuDispatcher
 import app.cayresim.core.boundary.ImageHandle
 import app.cayresim.core.boundary.IoDispatcher
+import app.cayresim.core.boundary.MainDispatcher
+import app.cayresim.core.pure.timelapsePlan
+import java.io.File
 import app.cayresim.core.boundary.Look
 import app.cayresim.core.boundary.ProcessFailure
 import app.cayresim.core.boundary.ProcessResult
@@ -32,6 +35,7 @@ class GlProcessingAdapter @Inject constructor(
     @ApplicationContext private val context: Context,
     @GpuDispatcher private val gpu: CoroutineDispatcher,
     @IoDispatcher private val io: CoroutineDispatcher,
+    @MainDispatcher private val main: CoroutineDispatcher,
 ) : ProcessingBoundary {
 
     private val renderer = GlLutRenderer()
@@ -51,8 +55,32 @@ class GlProcessingAdapter @Inject constructor(
         return withContext(io) { save(rendered, look.name.lowercase()).also { rendered.recycle() } }
     }
 
-    override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult =
-        ProcessResult.Failed(ProcessFailure.ENCODER)
+    override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {
+        if (photoUris.isEmpty() || photosPerSecond !in 1..60) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        val plan = timelapsePlan(photoUris.size, photosPerSecond)
+        // Fehlende Quellen vorher erkennen, statt den Encoder scheitern zu lassen
+        val missing = withContext(io) { photoUris.any { u -> runCatching { context.contentResolver.openInputStream(Uri.parse(u))?.use { true } ?: false }.getOrDefault(false).not() } }
+        if (missing) return ProcessResult.Failed(ProcessFailure.SOURCE_MISSING)
+        val out = File(context.cacheDir, "timelapse_${System.nanoTime()}.mp4")
+        val ok = withContext(main) { TimelapseExporter.export(context, photoUris, plan, out.absolutePath) }
+        if (!ok) { out.delete(); return ProcessResult.Failed(ProcessFailure.ENCODER) }
+        return withContext(io) { publishVideo(out).also { out.delete() } }
+    }
+
+    private fun publishVideo(file: File): ProcessResult {
+        val name = "CAY_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ROOT).format(Date()) + "_zeitraffer"
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, VIDEO_DIR)
+        }
+        val resolver = context.contentResolver
+        val target = runCatching { resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values) }.getOrNull()
+            ?: return ProcessResult.Failed(ProcessFailure.STORAGE)
+        val ok = runCatching { resolver.openOutputStream(target)?.use { o -> file.inputStream().use { it.copyTo(o) } } != null }.getOrDefault(false)
+        if (!ok) { runCatching { resolver.delete(target, null, null) }; return ProcessResult.Failed(ProcessFailure.STORAGE) }
+        return ProcessResult.Saved(target.toString())
+    }
 
     /** Dekodiert mit Ausrichtung aus EXIF, laengste Seite hoechstens [maxPx]. */
     internal fun decodeOriented(uri: Uri, maxPx: Int): Bitmap? {
@@ -89,5 +117,8 @@ class GlProcessingAdapter @Inject constructor(
         return ProcessResult.Saved(target.toString())
     }
 
-    companion object { const val PHOTO_DIR = "Pictures/CayResim" }
+    companion object {
+        const val PHOTO_DIR = "Pictures/CayResim"
+        const val VIDEO_DIR = "Movies/CayResim"
+    }
 }

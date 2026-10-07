@@ -10,4 +10,7 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.exifinterface)
     implementation(libs.core.ktx)
+    implementation(libs.media3.transformer)
+    implementation(libs.media3.effect)
+    implementation(libs.media3.common)
 }

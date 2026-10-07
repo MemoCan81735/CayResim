@@ -4,6 +4,7 @@ import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraDispatcher
 import app.cayresim.core.boundary.GpuDispatcher
 import app.cayresim.core.boundary.IoDispatcher
+import app.cayresim.core.boundary.MainDispatcher
 import app.cayresim.core.boundary.MediaBoundary
 import app.cayresim.core.camera.CameraXCameraAdapter
 import app.cayresim.core.data.MediaStoreMediaAdapter
@@ -37,6 +38,7 @@ abstract class BoundaryModule {
 @InstallIn(SingletonComponent::class)
 object PlatformModule {
     @Provides @CameraDispatcher fun cameraDispatcher(): CoroutineDispatcher = Dispatchers.Main.immediate
+    @Provides @MainDispatcher fun mainDispatcher(): CoroutineDispatcher = Dispatchers.Main
     @Provides @IoDispatcher fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
     @Provides @Singleton @GpuDispatcher
     fun gpuDispatcher(): CoroutineDispatcher = Executors.newSingleThreadExecutor { r -> Thread(r, "cayresim-gpu") }.asCoroutineDispatcher()

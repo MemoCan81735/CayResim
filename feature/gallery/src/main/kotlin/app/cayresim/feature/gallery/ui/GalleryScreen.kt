@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,7 +64,7 @@ fun GalleryContent(state: GalleryUiState, onBack: () -> Unit, onTimelapse: (Long
             if (state.series.isNotEmpty()) item { Text(stringResource(R.string.series_header), style = MaterialTheme.typography.titleMedium) }
             items(state.series, key = { "s${it.id}" }) { s ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.series_row, s.name, s.photoCount), Modifier.weight(1f))
+                    Text(pluralStringResource(R.plurals.series_row, s.photoCount, s.name, s.photoCount), Modifier.weight(1f))
                     val busy = state.renderingSeriesId == s.id
                     Button(onClick = { onTimelapse(s.id) }, enabled = state.renderingSeriesId == null, modifier = Modifier.testTag("timelapse_${s.id}")) {
                         Text(stringResource(if (busy) R.string.timelapse_running else R.string.timelapse))
