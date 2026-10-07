@@ -1,0 +1,647 @@
+=== androidx/camera/core/ImageCaptureCapabilities
+public interface androidx.camera.core.ImageCaptureCapabilities {
+  public abstract boolean isPostviewSupported();
+  public abstract boolean isCaptureProcessProgressSupported();
+  public abstract java.util.Set<java.lang.Integer> getSupportedOutputFormats();
+=== androidx/camera/core/SurfaceRequest
+public final class androidx.camera.core.SurfaceRequest {
+  public static final android.util.Range<java.lang.Integer> FRAME_RATE_RANGE_UNSPECIFIED;
+  public androidx.camera.core.SurfaceRequest(android.util.Size, androidx.camera.core.impl.CameraInternal, java.lang.Runnable);
+  public androidx.camera.core.SurfaceRequest(android.util.Size, androidx.camera.core.impl.CameraInternal, androidx.camera.core.DynamicRange, android.util.Range<java.lang.Integer>, java.lang.Runnable);
+  public androidx.camera.core.SurfaceRequest(android.util.Size, androidx.camera.core.impl.CameraInternal, boolean, androidx.camera.core.DynamicRange, int, android.util.Range<java.lang.Integer>, java.lang.Runnable);
+  public androidx.camera.core.impl.DeferrableSurface getDeferrableSurface();
+  public boolean isServiced();
+  public android.util.Size getResolution();
+  public androidx.camera.core.DynamicRange getDynamicRange();
+  public int getSessionType();
+  public android.util.Range<java.lang.Integer> getExpectedFrameRate();
+  public androidx.camera.core.impl.CameraInternal getCamera();
+  public boolean isPrimary();
+  public void provideSurface(android.view.Surface, java.util.concurrent.Executor, androidx.core.util.Consumer<androidx.camera.core.SurfaceRequest$Result>);
+  public boolean willNotProvideSurface();
+  public boolean invalidate();
+  public void addRequestCancellationListener(java.util.concurrent.Executor, java.lang.Runnable);
+  public void updateTransformationInfo(androidx.camera.core.SurfaceRequest$TransformationInfo);
+  public void setTransformationInfoListener(java.util.concurrent.Executor, androidx.camera.core.SurfaceRequest$TransformationInfoListener);
+  public void clearTransformationInfoListener();
+Compiled from "CameraXViewfinder.kt"
+public final class androidx.camera.compose.CameraXViewfinderKt {
+  public static final void CameraXViewfinder(androidx.camera.core.SurfaceRequest, androidx.compose.ui.Modifier, androidx.camera.viewfinder.core.ImplementationMode, androidx.camera.viewfinder.compose.MutableCoordinateTransformer, androidx.compose.ui.Alignment, androidx.compose.ui.layout.ContentScale, androidx.compose.runtime.Composer, int, int);
+  public static final androidx.camera.viewfinder.core.ImplementationMode access$CameraXViewfinder$lambda$0(androidx.compose.runtime.State);
+  public static final boolean access$canSupport(androidx.camera.compose.SurfaceRequestScope, androidx.camera.core.SurfaceRequest, androidx.camera.viewfinder.core.ImplementationMode);
+  public static final androidx.camera.compose.ViewfinderArgs access$CameraXViewfinder$lambda$3$0(androidx.compose.runtime.State);
+}
+##### nav3rt
+public interface androidx.navigation3.runtime.NavMetadataKey<T> {
+public interface androidx.navigation3.runtime.EntryDsl extends java.lang.annotation.Annotation {
+public interface androidx.navigation3.runtime.NavKey {
+public final class androidx.navigation3.runtime.result.ResultEventBusNavEntryDecoratorKt {
+  public static final <T> androidx.navigation3.runtime.result.ResultEventBusNavEntryDecorator<T> rememberResultEventBusNavEntryDecorator(androidx.navigation3.runtime.result.ResultEventBus, androidx.compose.runtime.Composer, int, int);
+public final class androidx.navigation3.runtime.result.LocalResultEventBus {
+  public static final androidx.navigation3.runtime.result.LocalResultEventBus INSTANCE;
+  public static final int $stable;
+  public final androidx.navigation3.runtime.result.ResultEventBus getCurrent(androidx.compose.runtime.Composer, int);
+  public final androidx.compose.runtime.ProvidedValue<androidx.navigation3.runtime.result.ResultEventBus> provides(androidx.navigation3.runtime.result.ResultEventBus);
+public final class androidx.navigation3.runtime.result.ResultEffectKt {
+  public static final <T> void ResultEffect(androidx.navigation3.runtime.result.ResultEventBus, kotlin.jvm.functions.Function2<? super T, ? super kotlin.coroutines.Continuation<? super kotlin.Unit>, ? extends java.lang.Object>, androidx.compose.runtime.Composer, int, int);
+  public static final <T> void ResultEffect(java.lang.String, androidx.navigation3.runtime.result.ResultEventBus, kotlin.jvm.functions.Function2<? super T, ? super kotlin.coroutines.Continuation<? super kotlin.Unit>, ? extends java.lang.Object>, androidx.compose.runtime.Composer, int, int);
+public final class androidx.navigation3.runtime.result.ResultEventBus {
+  public static final int $stable;
+  public androidx.navigation3.runtime.result.ResultEventBus();
+  public final androidx.compose.runtime.snapshots.SnapshotStateMap<java.lang.String, kotlinx.coroutines.channels.Channel<java.lang.Object>> getChannelMap$navigation3_runtime();
+  public final <T> androidx.compose.runtime.State<T> conflateAsState(T, androidx.compose.runtime.Composer, int);
+  public final <T> androidx.compose.runtime.State<T> conflateAsState(java.lang.String, T, androidx.compose.runtime.Composer, int);
+  public final kotlinx.coroutines.flow.Flow<java.lang.Object> getResultFlow$navigation3_runtime(java.lang.String);
+  public final <T> void sendResult(T);
+  public final <T> void sendResult(java.lang.String, T);
+  public final <T> void removeResult();
+  public final void removeResult(java.lang.String);
+public final class androidx.navigation3.runtime.result.ResultEventBusKt {
+  public static final androidx.navigation3.runtime.result.ResultEventBus rememberResultEventBus(androidx.compose.runtime.Composer, int);
+public final class androidx.navigation3.runtime.result.ResultEventBusNavEntryDecorator<T> extends androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.result.ResultEventBusNavEntryDecorator(androidx.navigation3.runtime.result.ResultEventBus);
+  public androidx.navigation3.runtime.result.ResultEventBusNavEntryDecorator(androidx.navigation3.runtime.result.ResultEventBus, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public androidx.navigation3.runtime.result.ResultEventBusNavEntryDecorator();
+public final class androidx.navigation3.runtime.SaveableStateHolderNavEntryDecoratorKt {
+  public static final <T> androidx.navigation3.runtime.SaveableStateHolderNavEntryDecorator<T> rememberSaveableStateHolderNavEntryDecorator(androidx.compose.runtime.saveable.SaveableStateHolder, androidx.compose.runtime.Composer, int, int);
+public final class androidx.navigation3.runtime.SaveableStateHolderNavEntryDecorator<T> extends androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.SaveableStateHolderNavEntryDecorator(androidx.compose.runtime.saveable.SaveableStateHolder);
+  public static final androidx.navigation3.runtime.NavBackStack<androidx.navigation3.runtime.NavKey> rememberNavBackStack(androidx.navigation3.runtime.NavKey[], androidx.compose.runtime.Composer, int);
+public final class androidx.navigation3.runtime.NavEntryKt {
+  public static final java.lang.Object defaultContentKey(java.lang.Object);
+public final class androidx.navigation3.runtime.NavMetadataKt {
+  public static final java.util.Map<java.lang.String, java.lang.Object> metadata(kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.MetadataScope, kotlin.Unit>);
+  public static final <T> T get(java.util.Map<java.lang.String, ? extends java.lang.Object>, androidx.navigation3.runtime.NavMetadataKey<T>);
+  public static final <T> boolean contains(java.util.Map<java.lang.String, ? extends java.lang.Object>, androidx.navigation3.runtime.NavMetadataKey<T>);
+public class androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.NavEntryDecorator(kotlin.jvm.functions.Function1<java.lang.Object, kotlin.Unit>, kotlin.jvm.functions.Function3<? super androidx.navigation3.runtime.NavEntry<T>, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public androidx.navigation3.runtime.NavEntryDecorator(kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final kotlin.jvm.functions.Function1<java.lang.Object, kotlin.Unit> getOnPop$navigation3_runtime();
+  public final kotlin.jvm.functions.Function3<androidx.navigation3.runtime.NavEntry<T>, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getDecorate$navigation3_runtime();
+public final class androidx.navigation3.runtime.NavBackStack<T extends androidx.navigation3.runtime.NavKey> implements java.util.List<T>, androidx.compose.runtime.snapshots.StateObject, java.util.RandomAccess, kotlin.jvm.internal.markers.KMutableList {
+  public static final androidx.navigation3.runtime.NavBackStack$Companion Companion;
+  public static final int $stable;
+  public androidx.navigation3.runtime.NavBackStack(androidx.compose.runtime.snapshots.SnapshotStateList<T>);
+  public final androidx.compose.runtime.snapshots.SnapshotStateList<T> getBase$navigation3_runtime();
+  public androidx.navigation3.runtime.NavBackStack();
+  public androidx.navigation3.runtime.NavBackStack(T...);
+  public boolean add(T);
+  public void add(int, T);
+  public boolean remove(T);
+  public boolean addAll(java.util.Collection<? extends T>);
+  public boolean addAll(int, java.util.Collection<? extends T>);
+  public boolean removeAll(java.util.Collection<?>);
+  public boolean retainAll(java.util.Collection<?>);
+  public void clear();
+  public T set(int, T);
+  public T removeAt(int);
+  public java.util.ListIterator<T> listIterator();
+  public java.util.ListIterator<T> listIterator(int);
+  public java.util.List<T> subList(int, int);
+  public boolean contains(T);
+  public boolean containsAll(java.util.Collection<?>);
+  public T get(int);
+  public int indexOf(T);
+  public boolean isEmpty();
+  public java.util.Iterator<T> iterator();
+  public int lastIndexOf(T);
+  public int getSize();
+  public void prependStateRecord(androidx.compose.runtime.snapshots.StateRecord);
+  public androidx.compose.runtime.snapshots.StateRecord mergeRecords(androidx.compose.runtime.snapshots.StateRecord, androidx.compose.runtime.snapshots.StateRecord, androidx.compose.runtime.snapshots.StateRecord);
+  public androidx.compose.runtime.snapshots.StateRecord getFirstStateRecord();
+  public boolean add(java.lang.Object);
+  public void add(int, java.lang.Object);
+  public final boolean remove(java.lang.Object);
+  public java.lang.Object set(int, java.lang.Object);
+  public final T remove(int);
+  public java.lang.Object remove(int);
+  public final boolean contains(java.lang.Object);
+  public java.lang.Object get(int);
+  public final int indexOf(java.lang.Object);
+  public final int lastIndexOf(java.lang.Object);
+  public final int size();
+  public <T> T[] toArray(T[]);
+  public java.lang.Object[] toArray();
+public final class androidx.navigation3.runtime.NavEntry<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.NavEntry(T, java.lang.Object, java.util.Map<java.lang.String, ? extends java.lang.Object>, kotlin.jvm.functions.Function3<? super T, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public androidx.navigation3.runtime.NavEntry(java.lang.Object, java.lang.Object, java.util.Map, kotlin.jvm.functions.Function3, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final java.lang.Object getContentKey();
+  public final java.util.Map<java.lang.String, java.lang.Object> getMetadata();
+  public androidx.navigation3.runtime.NavEntry(androidx.navigation3.runtime.NavEntry<T>, kotlin.jvm.functions.Function3<? super T, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public final void Content(androidx.compose.runtime.Composer, int);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  public androidx.navigation3.runtime.EntryClassProvider(kotlin.reflect.KClass<K>, kotlin.jvm.functions.Function1<? super K, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public final kotlin.reflect.KClass<K> getClazz();
+  public final kotlin.jvm.functions.Function1<K, java.lang.Object> getClazzContentKey();
+  public final kotlin.jvm.functions.Function1<K, java.util.Map<java.lang.String, java.lang.Object>> getMetadata();
+  public final kotlin.jvm.functions.Function3<K, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getContent();
+  public final kotlin.reflect.KClass<K> component1();
+  public final kotlin.jvm.functions.Function1<K, java.lang.Object> component2();
+  public final kotlin.jvm.functions.Function1<K, java.util.Map<java.lang.String, java.lang.Object>> component3();
+  public final kotlin.jvm.functions.Function3<K, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> component4();
+  public final androidx.navigation3.runtime.EntryClassProvider<K> copy(kotlin.reflect.KClass<K>, kotlin.jvm.functions.Function1<? super K, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin
+  public static androidx.navigation3.runtime.EntryClassProvider copy$default(androidx.navigation3.runtime.EntryClassProvider, kotlin.reflect.KClass, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+public interface androidx.navigation3.runtime.MetadataDsl extends java.lang.annotation.Annotation {
+public final class androidx.navigation3.runtime.DecoratedNavEntriesKt {
+  public static final <T> java.util.List<androidx.navigation3.runtime.NavEntry<T>> rememberDecoratedNavEntries(java.util.List<? extends T>, java.util.List<androidx.navigation3.runtime.NavEntryDecorator<T>>, kotlin.jvm.functions.Function1<? super T, androidx.navigation3.runtime.NavEntry<T>>, androidx.compose.runtime.Composer, int, int);
+  public static final <T> java.util.List<androidx.navigation3.runtime.NavEntry<T>> rememberDecoratedNavEntries(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, java.util.List<androidx.navigation3.runtime.NavEntryDecorator<T>>, androidx.compose.runtime.Composer, int, int);
+public final class androidx.navigation3.runtime.EntryProviderKt {
+  public static final <T> kotlin.jvm.functions.Function1<T, androidx.navigation3.runtime.NavEntry<T>> entryProvider(kotlin.jvm.functions.Function1<? super T, androidx.navigation3.runtime.NavEntry<T>>, kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.EntryProviderScope<T>, kotlin.Unit>);
+  public static kotlin.jvm.functions.Function1 entryProvider$default(kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, int, java.lang.Object);
+public final class androidx.navigation3.runtime.ListUtilsKt {
+  public static final <T, R> java.util.List<R> fastMapOrMap(java.util.List<? extends T>, kotlin.jvm.functions.Function1<? super T, ? extends R>);
+  public static final <T, R> java.util.List<R> fastMapIndexed(java.util.List<? extends T>, kotlin.jvm.functions.Function2<? super java.lang.Integer, ? super T, ? extends R>);
+  public static final <T> void fastForEachReversedOrForEachReversed(java.util.List<? extends T>, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>);
+  public static final <T> void fastForEachOrForEach(java.util.List<? extends T>, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>);
+  public static final <T> java.util.List<T> fastDistinctOrDistinct(java.util.List<? extends T>);
+  public static final <T> void fastForEachIndexed(java.util.List<? extends T>, kotlin.jvm.functions.Function2<? super java.lang.Integer, ? super T, kotlin.Unit>);
+  public static final <T> java.util.List<T> fastFilter(java.util.List<? extends T>, kotlin.jvm.functions.Function1<? super T, java.lang.Boolean>);
+public final class androidx.navigation3.runtime.MetadataScope {
+  public static final int $stable;
+  public androidx.navigation3.runtime.MetadataScope();
+  public final <K extends androidx.navigation3.runtime.NavMetadataKey<T>, T> void put(K, T);
+  public final java.util.Map<java.lang.String, java.lang.Object> build();
+public final class androidx.navigation3.runtime.RememberNavBackStackKt {
+  public static final androidx.navigation3.runtime.NavBackStack<androidx.navigation3.runtime.NavKey> rememberNavBackStack(androidx.savedstate.serialization.SavedStateConfiguration, androidx.navigation3.runtime.NavKey[], androidx.compose.runtime.Composer, int);
+  public static final androidx.navigation3.runtime.NavBackStack<androidx.navigation3.runtime.NavKey> rememberNavBackStack(androidx.navigation3.runtime.NavKey[], androidx.compose.runtime.Composer, int);
+public final class androidx.navigation3.runtime.EntryProviderScope<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.EntryProviderScope(kotlin.jvm.functions.Function1<? super T, androidx.navigation3.runtime.NavEntry<T>>);
+  public final <K extends T> void addEntryProvider(K, java.lang.Object, java.util.Map<java.lang.String, ? extends java.lang.Object>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void addEntryProvider$default(androidx.navigation3.runtime.EntryProviderScope, java.lang.Object, java.lang.Object, java.util.Map, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void addEntryProvider(K, java.lang.Object, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void addEntryProvider$default(androidx.navigation3.runtime.EntryProviderScope, java.lang.Object, java.lang.Object, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void entry(androidx.navigation3.runtime.EntryProviderScope<T>, K, java.lang.Object, java.util.Map<java.lang.String, ? extends java.lang.Object>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void entry$default(androidx.navigation3.runtime.EntryProviderScope, androidx.navigation3.runtime.EntryProviderScope, java.lang.Object, java.lang.Object, java.util.Map, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void entry(androidx.navigation3.runtime.EntryProviderScope<T>, K, java.lang.Object, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void entry$default(androidx.navigation3.runtime.EntryProviderScope, androidx.navigation3.runtime.EntryProviderScope, java.lang.Object, java.lang.Object, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void addEntryProvider(kotlin.reflect.KClass<? extends K>, kotlin.jvm.functions.Function1<K, ? extends java.lang.Object>, java.util.Map<java.lang.String, ? extends java.lang.Object>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void addEntryProvider$default(androidx.navigation3.runtime.EntryProviderScope, kotlin.reflect.KClass, kotlin.jvm.functions.Function1, java.util.Map, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void addEntryProvider(kotlin.reflect.KClass<? extends K>, kotlin.jvm.functions.Function1<K, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void addEntryProvider$default(androidx.navigation3.runtime.EntryProviderScope, kotlin.reflect.KClass, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void entry(kotlin.jvm.functions.Function1<K, ? extends java.lang.Object>, java.util.Map<java.lang.String, ? extends java.lang.Object>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void entry$default(androidx.navigation3.runtime.EntryProviderScope, kotlin.jvm.functions.Function1, java.util.Map, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final <K extends T> void entry(kotlin.jvm.functions.Function1<K, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static void entry$default(androidx.navigation3.runtime.EntryProviderScope, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public final kotlin.jvm.functions.Function1<T, androidx.navigation3.runtime.NavEntry<T>> build();
+public final class androidx.navigation3.runtime.serialization.NavBackStackSerializer<T extends androidx.navigation3.runtime.NavKey> implements kotlinx.serialization.KSerializer<androidx.navigation3.runtime.NavBackStack<T>> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.serialization.NavBackStackSerializer(kotlinx.serialization.KSerializer<T>);
+  public kotlinx.serialization.descriptors.SerialDescriptor getDescriptor();
+  public static void getDescriptor$annotations();
+  public void serialize(kotlinx.serialization.encoding.Encoder, androidx.navigation3.runtime.NavBackStack<T>);
+  public androidx.navigation3.runtime.NavBackStack<T> deserialize(kotlinx.serialization.encoding.Decoder);
+  public void serialize(kotlinx.serialization.encoding.Encoder, java.lang.Object);
+  public java.lang.Object deserialize(kotlinx.serialization.encoding.Decoder);
+public class androidx.navigation3.runtime.serialization.NavKeySerializer<T extends androidx.navigation3.runtime.NavKey> implements kotlinx.serialization.KSerializer<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.serialization.NavKeySerializer();
+  public kotlinx.serialization.descriptors.SerialDescriptor getDescriptor();
+  public T deserialize(kotlinx.serialization.encoding.Decoder);
+  public void serialize(kotlinx.serialization.encoding.Encoder, T);
+  public java.lang.Object deserialize(kotlinx.serialization.encoding.Decoder);
+  public void serialize(kotlinx.serialization.encoding.Encoder, java.lang.Object);
+public final class androidx.navigation3.runtime.serialization.NavBackStackSerializerKt {
+  public static final <T extends androidx.navigation3.runtime.NavKey> androidx.navigation3.runtime.serialization.NavBackStackSerializer<T> NavBackStackSerializer();
+public abstract class androidx.navigation3.runtime.deeplink.DeepLinkSerializer<T> implements kotlinx.serialization.KSerializer<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.DeepLinkSerializer();
+  public final kotlinx.serialization.descriptors.SerialDescriptor getDescriptor();
+  public final void serialize(kotlinx.serialization.encoding.Encoder, T);
+  public final T deserialize(kotlinx.serialization.encoding.Decoder);
+  public abstract java.lang.String getSerialName();
+  public abstract T deserialize(java.lang.String);
+  public abstract java.lang.String serialize(T);
+  public androidx.navigation3.runtime.deeplink.ParsedPattern(kotlin.Pair<kotlin.text.Regex, ? extends java.util.List<java.lang.String>>, java.util.Map<java.lang.String, androidx.navigation3.runtime.deeplink.QueryParamPattern>, kotlin.Pair<kotlin.text.Regex, ? extends java.util.List<java.lang.String>>);
+  public final kotlin.Pair<kotlin.text.Regex, java.util.List<java.lang.String>> getPath();
+  public final java.util.Map<java.lang.String, androidx.navigation3.runtime.deeplink.QueryParamPattern> getQuery();
+  public final kotlin.Pair<kotlin.text.Regex, java.util.List<java.lang.String>> getFragment();
+public interface androidx.navigation3.runtime.deeplink.RequestExtrasDsl extends java.lang.annotation.Annotation {
+public final class androidx.navigation3.runtime.deeplink.DeepLinkDecoder extends kotlinx.serialization.encoding.AbstractDecoder {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.DeepLinkDecoder(java.util.Map<java.lang.String, ? extends java.util.List<java.lang.String>>);
+  public kotlinx.serialization.modules.SerializersModule getSerializersModule();
+  public int decodeElementIndex(kotlinx.serialization.descriptors.SerialDescriptor);
+  public kotlinx.serialization.encoding.CompositeDecoder beginStructure(kotlinx.serialization.descriptors.SerialDescriptor);
+  public java.lang.String decodeString();
+  public int decodeInt();
+  public boolean decodeBoolean();
+  public long decodeLong();
+  public float decodeFloat();
+  public double decodeDouble();
+  public char decodeChar();
+  public byte decodeByte();
+  public short decodeShort();
+  public java.lang.Void decodeNull();
+  public boolean decodeNotNullMark();
+  public int decodeEnum(kotlinx.serialization.descriptors.SerialDescriptor);
+public final class androidx.navigation3.runtime.deeplink.UriPatternParser {
+  public static final androidx.navigation3.runtime.deeplink.UriPatternParser INSTANCE;
+  public static final int $stable;
+  public final kotlin.Pair<kotlin.text.Regex, java.util.List<java.lang.String>> parsePath$navigation3_runtime(android.net.Uri, java.util.Set<java.lang.String>);
+  public static kotlin.Pair parsePath$navigation3_runtime$default(androidx.navigation3.runtime.deeplink.UriPatternParser, android.net.Uri, java.util.Set, int, java.lang.Object);
+  public final java.util.Map<java.lang.String, androidx.navigation3.runtime.deeplink.QueryParamPattern> parseQuery$navigation3_runtime(android.net.Uri, java.util.Set<java.lang.String>);
+  public static java.util.Map parseQuery$navigation3_runtime$default(androidx.navigation3.runtime.deeplink.UriPatternParser, android.net.Uri, java.util.Set, int, java.lang.Object);
+  public final kotlin.Pair<kotlin.text.Regex, java.util.List<java.lang.String>> parseFragment$navigation3_runtime(android.net.Uri, java.util.Set<java.lang.String>);
+  public static kotlin.Pair parseFragment$navigation3_runtime$default(androidx.navigation3.runtime.deeplink.UriPatternParser, android.net.Uri, java.util.Set, int, java.lang.Object);
+public final class androidx.navigation3.runtime.deeplink.RequestExtrasKt {
+  public static final androidx.navigation3.runtime.deeplink.RequestExtras requestExtras(kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.deeplink.RequestExtrasScope, kotlin.Unit>);
+  public static final androidx.navigation3.runtime.deeplink.RequestExtras emptyRequestExtras();
+public final class androidx.navigation3.runtime.deeplink.DeepLinkRequest {
+  public static final androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion Companion;
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.DeepLinkRequest(android.net.Uri, androidx.navigation3.runtime.deeplink.RequestExtras);
+  public androidx.navigation3.runtime.deeplink.DeepLinkRequest(android.net.Uri, androidx.navigation3.runtime.deeplink.RequestExtras, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final android.net.Uri getUri();
+  public final androidx.navigation3.runtime.deeplink.RequestExtras getExtras();
+  public androidx.navigation3.runtime.deeplink.DeepLinkRequest(java.lang.String, androidx.navigation3.runtime.deeplink.RequestExtras);
+  public androidx.navigation3.runtime.deeplink.DeepLinkRequest(java.lang.String, androidx.navigation3.runtime.deeplink.RequestExtras, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public java.lang.String toString();
+  public androidx.navigation3.runtime.deeplink.DeepLinkRequest();
+public final class androidx.navigation3.runtime.deeplink.BackStackMatcherKt {
+  public static final <T extends K, K> androidx.navigation3.runtime.deeplink.BackStackMatcher<T, K> withBackStack(androidx.navigation3.runtime.deeplink.DeepLinkMatcher<? extends T, ? extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>>, kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>, ? extends
+public final class androidx.navigation3.runtime.deeplink.DeepLinkUriUtils {
+  public static final androidx.navigation3.runtime.deeplink.DeepLinkUriUtils INSTANCE;
+  public static final int $stable;
+  public final java.lang.String encode(java.lang.String, java.lang.String);
+  public static java.lang.String encode$default(androidx.navigation3.runtime.deeplink.DeepLinkUriUtils, java.lang.String, java.lang.String, int, java.lang.Object);
+  public final java.lang.String decode(java.lang.String);
+  public final android.net.Uri parse(java.lang.String);
+public final class androidx.navigation3.runtime.deeplink.UriDeepLinkMatcherKt {
+  public static final kotlin.text.Regex access$getEXPECTED_SCHEME_REGEX$p();
+  public static final kotlin.text.Regex access$getFILL_IN_PATTERN$p();
+  public static final kotlin.text.Regex access$getPATH_REGEX$p();
+public final class androidx.navigation3.runtime.deeplink.RequestExtras {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.RequestExtras(java.util.Map<androidx.navigation3.runtime.deeplink.RequestExtrasKey<?>, ? extends java.lang.Object>);
+  public androidx.navigation3.runtime.deeplink.RequestExtras(java.util.Map, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final int getSize();
+  public final boolean isEmpty();
+  public final boolean isNotEmpty();
+  public final <T> T get(androidx.navigation3.runtime.deeplink.RequestExtrasKey<T>);
+  public final boolean contains(androidx.navigation3.runtime.deeplink.RequestExtrasKey<?>);
+  public final androidx.navigation3.runtime.deeplink.RequestExtras plus(androidx.navigation3.runtime.deeplink.RequestExtras);
+  public final androidx.navigation3.runtime.deeplink.RequestExtras minus(androidx.navigation3.runtime.deeplink.RequestExtras);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  public androidx.navigation3.runtime.deeplink.RequestExtras();
+public final class androidx.navigation3.runtime.deeplink.DeepLinkUri_androidKt {
+  public static void DeepLinkUri$annotations();
+public class androidx.navigation3.runtime.deeplink.UriDeepLinkMatcher<T> extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher<T, androidx.navigation3.runtime.deeplink.UriMatchResult<? extends T>> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.UriDeepLinkMatcher(android.net.Uri, kotlinx.serialization.KSerializer<T>, java.util.List<? extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Filter>);
+  public androidx.navigation3.runtime.deeplink.UriDeepLinkMatcher(android.net.Uri, kotlinx.serialization.KSerializer, java.util.List, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public static androidx.navigation3.runtime.deeplink.UriMatchResult matchArguments$default(androidx.navigation3.runtime.deeplink.UriDeepLinkMatcher, java.util.Map, java.util.Map, java.util.Map, int, java.lang.Object);
+  public androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult matchRequest(androidx.navigation3.runtime.deeplink.DeepLinkRequest);
+public final class androidx.navigation3.runtime.deeplink.QueryParamPattern {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.QueryParamPattern();
+  public final java.lang.String getParamRegex();
+  public final void setParamRegex(java.lang.String);
+  public final java.util.List<java.lang.String> getArguments();
+  public final boolean isUnnamedParams();
+  public final void setUnnamedParams(boolean);
+  public final void addArgumentName(java.lang.String);
+public final class androidx.navigation3.runtime.deeplink.DeepLinkUriKt {
+  public static final android.net.Uri DeepLinkUri(java.lang.String);
+  public static final androidx.navigation3.runtime.deeplink.IntentKey INSTANCE;
+public final class androidx.navigation3.runtime.deeplink.DeepLinkRequest_androidKt {
+  public static final androidx.navigation3.runtime.deeplink.DeepLinkRequest invoke(androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion, android.content.Intent, androidx.navigation3.runtime.deeplink.RequestExtras);
+  public static androidx.navigation3.runtime.deeplink.DeepLinkRequest invoke$default(androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion, android.content.Intent, androidx.navigation3.runtime.deeplink.RequestExtras, int, java.lang.Object);
+  public static final androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Filter actionFilter(androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Companion, java.lang.String);
+  public static final androidx.navigation3.runtime.deeplink.RequestExtrasKey<java.lang.String> getActionExtrasKey(androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion);
+  public static final androidx.navigation3.runtime.deeplink.RequestExtras actionExtra(androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion, java.lang.String);
+  public static final androidx.navigation3.runtime.deeplink.RequestExtrasKey<android.os.Bundle> getIntentExtrasKey(androidx.navigation3.runtime.deeplink.DeepLinkRequest$Companion);
+public final class androidx.navigation3.runtime.deeplink.StaticKeyDeepLinkMatcher<T> extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher<T, androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.StaticKeyDeepLinkMatcher(T, java.util.List<? extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Filter>);
+  public final T getKey();
+public interface androidx.navigation3.runtime.deeplink.RequestExtrasKey<T> {
+public abstract class androidx.navigation3.runtime.deeplink.WrappedMatchResult<T> extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.WrappedMatchResult(androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>);
+  public final androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<T> getMatchResult();
+  public int compareTo(androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>);
+  public int compareTo(java.lang.Object);
+public final class androidx.navigation3.runtime.deeplink.RequestExtrasScope {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.RequestExtrasScope();
+  public final <T> void put(androidx.navigation3.runtime.deeplink.RequestExtrasKey<T>, T);
+  public final androidx.navigation3.runtime.deeplink.RequestExtras build();
+public final class androidx.navigation3.runtime.deeplink.BackStackMatchResult<T extends K, K> extends androidx.navigation3.runtime.deeplink.WrappedMatchResult<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.BackStackMatchResult(androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>, kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>, ? extends java.util.List<? extends K>>);
+  public final java.util.List<K> getBackStack();
+public final class androidx.navigation3.runtime.deeplink.BackStackMatcher<T extends K, K> extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher<T, androidx.navigation3.runtime.deeplink.BackStackMatchResult<? extends T, K>> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.BackStackMatcher(androidx.navigation3.runtime.deeplink.DeepLinkMatcher<? extends T, ? extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>>, kotlin.jvm.functions.Function1<? super androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>, ? extends java.util.List<? extends K>>);
+  public androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult matchRequest(androidx.navigation3.runtime.deeplink.DeepLinkRequest);
+public abstract class androidx.navigation3.runtime.deeplink.DeepLinkMatcher<T, R extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>> {
+  public static final androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Companion Companion;
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.DeepLinkMatcher(java.util.List<? extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$Filter>);
+  public androidx.navigation3.runtime.deeplink.DeepLinkMatcher(java.util.List, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final R match(androidx.navigation3.runtime.deeplink.DeepLinkRequest);
+  public androidx.navigation3.runtime.deeplink.DeepLinkMatcher();
+public final class androidx.navigation3.runtime.deeplink.ListDecoder extends kotlinx.serialization.encoding.AbstractDecoder {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.ListDecoder(java.util.List<java.lang.String>);
+  public kotlinx.serialization.modules.SerializersModule getSerializersModule();
+  public int decodeElementIndex(kotlinx.serialization.descriptors.SerialDescriptor);
+  public boolean decodeNotNullMark();
+  public java.lang.String decodeString();
+  public int decodeInt();
+  public boolean decodeBoolean();
+  public long decodeLong();
+  public float decodeFloat();
+  public double decodeDouble();
+  public char decodeChar();
+  public byte decodeByte();
+  public short decodeShort();
+public final class androidx.navigation3.runtime.deeplink.DeepLinkDecoderException extends kotlinx.serialization.SerializationException {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.DeepLinkDecoderException(java.lang.String);
+  public androidx.navigation3.runtime.deeplink.DeepLinkDecoderException(java.lang.String, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public androidx.navigation3.runtime.deeplink.DeepLinkDecoderException();
+public class androidx.navigation3.runtime.deeplink.UriMatchResult<T> extends androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<T> {
+  public static final int $stable;
+  public androidx.navigation3.runtime.deeplink.UriMatchResult(T, java.util.Map<java.lang.String, ? extends java.util.List<java.lang.String>>);
+  public androidx.navigation3.runtime.deeplink.UriMatchResult(java.lang.Object, java.util.Map, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final java.util.Map<java.lang.String, java.util.List<java.lang.String>> getArguments();
+  public androidx.navigation3.runtime.deeplink.UriMatchResult(T, java.util.Map<java.lang.String, ? extends java.util.List<java.lang.String>>, boolean, int);
+  public int compareTo(androidx.navigation3.runtime.deeplink.DeepLinkMatcher$MatchResult<? extends T>);
+  public int compareTo(java.lang.Object);
+public final class androidx.navigation3.runtime.deeplink.UriRequestParser {
+  public static final androidx.navigation3.runtime.deeplink.UriRequestParser INSTANCE;
+  public static final int $stable;
+  public final java.util.Map<java.lang.String, java.util.List<java.lang.String>> extractPathArgs$navigation3_runtime(kotlin.Pair<kotlin.text.Regex, ? extends java.util.List<java.lang.String>>, android.net.Uri);
+  public final java.util.Map<java.lang.String, java.util.List<java.lang.String>> extractQueryArgs$navigation3_runtime(java.util.Map<java.lang.String, androidx.navigation3.runtime.deeplink.QueryParamPattern>, android.net.Uri);
+  public final java.util.Map<java.lang.String, java.util.List<java.lang.String>> extractFragmentArgs$navigation3_runtime(kotlin.Pair<kotlin.text.Regex, ? extends java.util.List<java.lang.String>>, android.net.Uri);
+  public static final androidx.navigation3.runtime.deeplink.ActionKey INSTANCE;
+  public androidx.navigation3.runtime.EntryProvider(K, java.lang.Object, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public final K getKey();
+  public final java.lang.Object getContentKey();
+  public final kotlin.jvm.functions.Function1<K, java.util.Map<java.lang.String, java.lang.Object>> getMetadata();
+  public final kotlin.jvm.functions.Function3<K, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getContent();
+  public final K component1();
+  public final java.lang.Object component2();
+  public final kotlin.jvm.functions.Function1<K, java.util.Map<java.lang.String, java.lang.Object>> component3();
+  public final kotlin.jvm.functions.Function3<K, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> component4();
+  public final androidx.navigation3.runtime.EntryProvider<K> copy(K, java.lang.Object, kotlin.jvm.functions.Function1<? super K, ? extends java.util.Map<java.lang.String, ? extends java.lang.Object>>, kotlin.jvm.functions.Function3<? super K, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>);
+  public static androidx.navigation3.runtime.EntryProvider copy$default(androidx.navigation3.runtime.EntryProvider, java.lang.Object, java.lang.Object, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+  public static final androidx.navigation3.runtime.NavBackStack<androidx.navigation3.runtime.NavKey> rememberNavBackStack(androidx.savedstate.serialization.SavedStateConfiguration, androidx.navigation3.runtime.NavKey[], androidx.compose.runtime.Composer, int);
+##### nav3ui
+public final class androidx.navigation3.ui.NavDisplayKt {
+  public static final int DEFAULT_TRANSITION_DURATION_MILLISECOND;
+  public static final void NavDisplay(java.util.List, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, kotlin.jvm.functions.Function0, java.util.List, androidx.navigation3.scene.SceneStrategy, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function2, kotlin.jvm.functions.Function1, androidx.compose.runtime.
+  public static final <T> void NavDisplay(java.util.List<? extends T>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, kotlin.jvm.functions.Function0<kotlin.Unit>, java.util.List<? extends androidx.navigation3.runtime.NavEntryDecorator<T>>, java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, java.util.List<? extends androidx.navigation3.scene.SceneDecoratorStrategy<
+  public static final void NavDisplay(java.util.List, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, androidx.navigation3.scene.SceneStrategy, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function2, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int);
+  public static final <T> void NavDisplay(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, java.util.List<? extends androidx.navigation3.scene.SceneDecoratorStrategy<T>>, androidx.compose.animation.SharedTransitionScope, androidx.compose.animation.SizeTransfo
+  public static final <T> void NavDisplay(androidx.navigation3.scene.SceneState<T>, androidx.navigationevent.compose.NavigationEventState<androidx.navigation3.scene.SceneInfo<T>>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1<? super androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3
+  public static final <T> kotlin.jvm.functions.Function1<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, androidx.compose.animation.ContentTransform> defaultTransitionSpec();
+  public static final <T> kotlin.jvm.functions.Function1<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, androidx.compose.animation.ContentTransform> defaultPopTransitionSpec();
+  public static final <T> kotlin.jvm.functions.Function2<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, java.lang.Integer, androidx.compose.animation.ContentTransform> defaultPredictivePopTransitionSpec();
+public final class androidx.navigation3.ui.AnimatedSceneKey {
+  public static final int $stable;
+  public androidx.navigation3.ui.AnimatedSceneKey(kotlin.reflect.KClass<?>, java.lang.Object);
+  public final kotlin.reflect.KClass<?> getClazz();
+  public final java.lang.Object getKey();
+  public androidx.navigation3.ui.AnimatedSceneKey(androidx.navigation3.scene.Scene<?>);
+  public final kotlin.reflect.KClass<?> component1();
+  public final java.lang.Object component2();
+  public final androidx.navigation3.ui.AnimatedSceneKey copy(kotlin.reflect.KClass<?>, java.lang.Object);
+  public static androidx.navigation3.ui.AnimatedSceneKey copy$default(androidx.navigation3.ui.AnimatedSceneKey, kotlin.reflect.KClass, java.lang.Object, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+public final class androidx.navigation3.ui.LocalNavAnimatedContentScopeKt {
+  public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.animation.AnimatedContentScope> getLocalNavAnimatedContentScope();
+  public static final <T> kotlin.jvm.functions.Function1<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, androidx.compose.animation.ContentTransform> defaultTransitionSpec();
+  public static final <T> kotlin.jvm.functions.Function1<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, androidx.compose.animation.ContentTransform> defaultPopTransitionSpec();
+  public static final <T> kotlin.jvm.functions.Function2<androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<T>>, java.lang.Integer, androidx.compose.animation.ContentTransform> defaultPredictivePopTransitionSpec();
+  public static final void NavDisplay(java.util.List, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, kotlin.jvm.functions.Function0, java.util.List, androidx.navigation3.scene.SceneStrategy, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function2, kotlin.jvm.functions.Function1, androidx.compose.runtime.
+  public static final <T> void NavDisplay(java.util.List<? extends T>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, kotlin.jvm.functions.Function0<kotlin.Unit>, java.util.List<? extends androidx.navigation3.runtime.NavEntryDecorator<T>>, java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, java.util.List<? extends androidx.navigation3.scene.SceneDecoratorStrategy<
+  public static final void NavDisplay(java.util.List, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, androidx.navigation3.scene.SceneStrategy, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function2, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int);
+  public static final <T> void NavDisplay(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, java.util.List<? extends androidx.navigation3.scene.SceneDecoratorStrategy<T>>, androidx.compose.animation.SharedTransitionScope, androidx.compose.animation.SizeTransfo
+  public static final <T> void NavDisplay(androidx.navigation3.scene.SceneState<T>, androidx.navigationevent.compose.NavigationEventState<androidx.navigation3.scene.SceneInfo<T>>, androidx.compose.ui.Modifier, androidx.compose.ui.Alignment, androidx.compose.animation.SizeTransform, kotlin.jvm.functions.Function1<? super androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3
+public final class androidx.navigation3.ui.NavDisplay {
+  public static final androidx.navigation3.ui.NavDisplay INSTANCE;
+  public static final int $stable;
+  public final java.util.Map<java.lang.String, java.lang.Object> transitionSpec(kotlin.jvm.functions.Function1<? super androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<?>>, androidx.compose.animation.ContentTransform>);
+  public final java.util.Map<java.lang.String, java.lang.Object> popTransitionSpec(kotlin.jvm.functions.Function1<? super androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<?>>, androidx.compose.animation.ContentTransform>);
+  public final java.util.Map<java.lang.String, java.lang.Object> predictivePopTransitionSpec(kotlin.jvm.functions.Function2<? super androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation3.scene.Scene<?>>, ? super java.lang.Integer, androidx.compose.animation.ContentTransform>);
+  public final androidx.navigation3.ui.NavDisplay$TransitionKey getTRANSITION_SPEC$navigation3_ui();
+  public final androidx.navigation3.ui.NavDisplay$PopTransitionKey getPOP_TRANSITION_SPEC$navigation3_ui();
+  public final androidx.navigation3.ui.NavDisplay$PredictivePopTransitionKey getPREDICTIVE_POP_TRANSITION_SPEC$navigation3_ui();
+public final class androidx.navigation3.ListUtilsKt {
+  public static final <T> boolean fastAnyOrAny(java.util.List<? extends T>, kotlin.jvm.functions.Function1<? super T, java.lang.Boolean>);
+  public static final <T> java.util.Set<T> fastToSet(java.util.List<? extends T>);
+public final class androidx.navigation3.scene.RememberNavigationEventStateKt {
+  public static final <T> androidx.navigationevent.compose.NavigationEventState<androidx.navigation3.scene.SceneInfo<T>> rememberNavigationEventState(androidx.navigation3.scene.SceneState<T>, androidx.compose.runtime.Composer, int);
+public final class androidx.navigation3.scene.SinglePaneScene<T> implements androidx.navigation3.scene.Scene<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SinglePaneScene(java.lang.Object, androidx.navigation3.runtime.NavEntry<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+  public java.lang.Object getKey();
+  public final androidx.navigation3.runtime.NavEntry<T> getEntry();
+  public java.util.List<androidx.navigation3.runtime.NavEntry<T>> getPreviousEntries();
+  public java.util.List<androidx.navigation3.runtime.NavEntry<T>> getEntries();
+  public kotlin.jvm.functions.Function2<androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getContent();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  public final java.lang.Object component1();
+  public final androidx.navigation3.runtime.NavEntry<T> component2();
+  public final java.util.List<androidx.navigation3.runtime.NavEntry<T>> component3();
+  public final androidx.navigation3.scene.SinglePaneScene<T> copy(java.lang.Object, androidx.navigation3.runtime.NavEntry<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+  public static androidx.navigation3.scene.SinglePaneScene copy$default(androidx.navigation3.scene.SinglePaneScene, java.lang.Object, androidx.navigation3.runtime.NavEntry, java.util.List, int, java.lang.Object);
+public final class androidx.navigation3.scene.DialogSceneStrategy<T> implements androidx.navigation3.scene.SceneStrategy<T> {
+  public static final androidx.navigation3.scene.DialogSceneStrategy$Companion Companion;
+  public static final int $stable;
+  public androidx.navigation3.scene.DialogSceneStrategy();
+  public androidx.navigation3.scene.Scene<T> calculateScene(androidx.navigation3.scene.SceneStrategyScope<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+public interface androidx.navigation3.scene.SceneStrategy<T> {
+  public abstract androidx.navigation3.scene.Scene<T> calculateScene(androidx.navigation3.scene.SceneStrategyScope<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+  public default androidx.navigation3.scene.SceneStrategy<T> then(androidx.navigation3.scene.SceneStrategy<T>);
+public interface androidx.navigation3.scene.Scene<T> {
+  public abstract java.lang.Object getKey();
+  public abstract java.util.List<androidx.navigation3.runtime.NavEntry<T>> getEntries();
+  public abstract java.util.List<androidx.navigation3.runtime.NavEntry<T>> getPreviousEntries();
+  public abstract kotlin.jvm.functions.Function2<androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getContent();
+  public default java.util.Map<java.lang.String, java.lang.Object> getMetadata();
+public interface androidx.navigation3.scene.SceneDecoratorStrategy<T> {
+  public abstract androidx.navigation3.scene.Scene<T> decorateScene(androidx.navigation3.scene.SceneDecoratorStrategyScope<T>, androidx.navigation3.scene.Scene<T>);
+public final class androidx.navigation3.scene.SceneSetupNavEntryDecoratorKt {
+  public static final <T> androidx.navigation3.scene.SceneSetupNavEntryDecorator<T> rememberSceneSetupNavEntryDecorator(androidx.compose.runtime.Composer, int);
+  public static final androidx.compose.runtime.ProvidableCompositionLocal<java.util.Set<java.lang.Object>> getLocalEntriesToExcludeFromCurrentScene();
+public final class androidx.navigation3.scene.NavigationEventHandlerKt {
+  public static final <T> void NavigationBackHandler(androidx.navigation3.scene.SceneState<T>, androidx.navigationevent.compose.NavigationEventState<androidx.navigation3.scene.SceneInfo<T>>, kotlin.jvm.functions.Function0<kotlin.Unit>, kotlin.jvm.functions.Function0<kotlin.Unit>, androidx.compose.runtime.Composer, int, int);
+public final class androidx.navigation3.scene.SharedEntryInSceneNavEntryDecoratorKt {
+  public static final <T> androidx.navigation3.scene.SharedEntryInSceneNavEntryDecorator<T> rememberSharedEntryInSceneNavEntryDecorator(androidx.compose.animation.SharedTransitionScope, androidx.compose.runtime.Composer, int);
+  public static final androidx.compose.runtime.ProvidableCompositionLocal<androidx.navigation3.scene.Scene<?>> getLocalCurrentScene();
+public final class androidx.navigation3.scene.SinglePaneSceneKt {
+  public static final <T> androidx.navigation3.scene.Scene<T> calculateSceneWithSinglePaneFallback(java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, androidx.navigation3.scene.SceneStrategyScope<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+  public static final <T> androidx.navigation3.scene.Scene<T> decorateScene(androidx.navigation3.scene.SceneDecoratorStrategy<T>, androidx.navigation3.scene.SceneDecoratorStrategyScope<T>, androidx.navigation3.scene.Scene<T>);
+public final class androidx.navigation3.scene.SceneState<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SceneState(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, java.util.List<? extends androidx.navigation3.scene.OverlayScene<T>>, androidx.navigation3.scene.Scene<T>, java.util.List<? extends androidx.navigation3.scene.Scene<T>>);
+  public final java.util.List<androidx.navigation3.runtime.NavEntry<T>> getEntries();
+  public final java.util.List<androidx.navigation3.scene.OverlayScene<T>> getOverlayScenes();
+  public final androidx.navigation3.scene.Scene<T> getCurrentScene();
+  public final java.util.List<androidx.navigation3.scene.Scene<T>> getPreviousScenes();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+public final class androidx.navigation3.scene.BackStackAwareLifecycleNavEntryDecoratorKt {
+  public static final <T> androidx.navigation3.runtime.NavEntryDecorator<T> rememberBackStackAwareLifecycleNavEntryDecorator(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, androidx.compose.runtime.Composer, int);
+public final class androidx.navigation3.scene.SceneDecoratorStrategyScope<T> extends androidx.navigation3.scene.SceneStrategyScope<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SceneDecoratorStrategyScope(kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public androidx.navigation3.scene.SceneDecoratorStrategyScope();
+public final class androidx.navigation3.scene.DialogScene<T> implements androidx.navigation3.scene.OverlayScene<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.DialogScene(java.lang.Object, androidx.navigation3.runtime.NavEntry<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>, androidx.compose.ui.window.DialogProperties, kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public java.lang.Object getKey();
+  public java.util.List<androidx.navigation3.runtime.NavEntry<T>> getPreviousEntries();
+  public java.util.List<androidx.navigation3.runtime.NavEntry<T>> getOverlaidEntries();
+  public java.util.List<androidx.navigation3.runtime.NavEntry<T>> getEntries();
+  public kotlin.jvm.functions.Function2<androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit> getContent();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+public final class androidx.navigation3.scene.SinglePaneSceneStrategy<T> implements androidx.navigation3.scene.SceneStrategy<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SinglePaneSceneStrategy();
+  public androidx.navigation3.scene.Scene<T> calculateScene(androidx.navigation3.scene.SceneStrategyScope<T>, java.util.List<androidx.navigation3.runtime.NavEntry<T>>);
+public final class androidx.navigation3.scene.SharedEntryInSceneNavEntryDecorator<T> extends androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SharedEntryInSceneNavEntryDecorator(androidx.compose.animation.SharedTransitionScope);
+public class androidx.navigation3.scene.SceneStrategyScope<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SceneStrategyScope(kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public final kotlin.jvm.functions.Function0<kotlin.Unit> getOnBack();
+  public androidx.navigation3.scene.SceneStrategyScope();
+public final class androidx.navigation3.scene.SceneSetupNavEntryDecorator<T> extends androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.navigation3.scene.SceneSetupNavEntryDecorator(java.util.Map<java.lang.Object, kotlin.jvm.functions.Function3<kotlin.jvm.functions.Function2<? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit>>);
+  public androidx.navigation3.scene.SceneSetupNavEntryDecorator(java.util.Map, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final java.util.Map<java.lang.Object, kotlin.jvm.functions.Function3<kotlin.jvm.functions.Function2<? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>, androidx.compose.runtime.Composer, java.lang.Integer, kotlin.Unit>> getMovableContentMap();
+  public androidx.navigation3.scene.SceneSetupNavEntryDecorator();
+public interface androidx.navigation3.scene.OverlayScene<T> extends androidx.navigation3.scene.Scene<T> {
+  public abstract java.util.List<androidx.navigation3.runtime.NavEntry<T>> getOverlaidEntries();
+  public default java.lang.Object onRemove(kotlin.coroutines.Continuation<? super kotlin.Unit>);
+  public static <T> java.lang.Object onRemove$suspendImpl(androidx.navigation3.scene.OverlayScene<T>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+public final class androidx.navigation3.scene.SceneStateKt {
+  public static final androidx.navigation3.scene.SceneState rememberSceneState(java.util.List, androidx.navigation3.scene.SceneStrategy, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int);
+  public static final <T> androidx.navigation3.scene.SceneState<T> rememberSceneState(java.util.List<androidx.navigation3.runtime.NavEntry<T>>, java.util.List<? extends androidx.navigation3.scene.SceneStrategy<T>>, java.util.List<? extends androidx.navigation3.scene.SceneDecoratorStrategy<T>>, androidx.compose.animation.SharedTransitionScope, kotlin.jvm.functions.Function0<kotlin.Unit>, androidx.c
+public final class androidx.navigation3.scene.SceneInfo<T> extends androidx.navigationevent.NavigationEventInfo {
+  public static final int $stable;
+  public androidx.navigation3.scene.SceneInfo(androidx.navigation3.scene.Scene<T>);
+  public final androidx.navigation3.scene.Scene<T> getScene();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+##### hiltvm
+public final class androidx.hilt.lifecycle.viewmodel.compose.HiltViewModelKt {
+  public static final <VM extends androidx.lifecycle.ViewModel> VM hiltViewModel(androidx.lifecycle.ViewModelStoreOwner, java.lang.String, androidx.compose.runtime.Composer, int, int);
+  public static final <VM extends androidx.lifecycle.ViewModel, VMF> VM hiltViewModel(androidx.lifecycle.ViewModelStoreOwner, java.lang.String, kotlin.jvm.functions.Function1<? super VMF, ? extends VM>, androidx.compose.runtime.Composer, int, int);
+  public static final androidx.lifecycle.ViewModelProvider$Factory rememberHiltViewModelFactory(androidx.lifecycle.ViewModelProvider$Factory, androidx.compose.runtime.Composer, int, int);
+  public static final androidx.lifecycle.ViewModelProvider$Factory createHiltViewModelFactory(androidx.lifecycle.ViewModelStoreOwner, androidx.compose.runtime.Composer, int);
+##### vmnav3
+public final class androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> extends androidx.navigation3.runtime.NavEntryDecorator<T> {
+  public static final int $stable;
+  public androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator(androidx.lifecycle.viewmodel.ViewModelStoreProvider);
+  public androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator(androidx.lifecycle.ViewModelStore, kotlin.jvm.functions.Function0<java.lang.Boolean>);
+public final class androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecoratorKt {
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.ViewModelStoreOwner, kotlin.jvm.functions.Function0<java.lang.Boolean>, androidx.compose.runtime.Composer, int, int);
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.viewmodel.ViewModelStoreProvider, androidx.compose.runtime.Composer, int);
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.ViewModelStoreOwner, androidx.compose.runtime.Composer, int, int);
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.ViewModelStoreOwner, kotlin.jvm.functions.Function0<java.lang.Boolean>, androidx.compose.runtime.Composer, int, int);
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.viewmodel.ViewModelStoreProvider, androidx.compose.runtime.Composer, int);
+  public static final <T> androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecorator<T> rememberViewModelStoreNavEntryDecorator(androidx.lifecycle.ViewModelStoreOwner, androidx.compose.runtime.Composer, int, int);
+public final class androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecoratorDefaults {
+  public static final androidx.lifecycle.viewmodel.navigation3.ViewModelStoreNavEntryDecoratorDefaults INSTANCE;
+  public static final int $stable;
+  public final kotlin.jvm.functions.Function0<java.lang.Boolean> removeViewModelStoreOnPop(androidx.compose.runtime.Composer, int);
+##### poms
+  <artifactId>navigation3-runtime</artifactId>
+  <version>1.2.0</version>
+  <packaging>aar</packaging>
+--
+        <artifactId>navigation3-ui</artifactId>
+        <version>1.2.0</version>
+      </dependency>
+--
+      <artifactId>navigation3-runtime-android</artifactId>
+      <version>1.2.0</version>
+      <type>aar</type>
+--
+      <artifactId>runtime</artifactId>
+      <version>1.9.5</version>
+      <scope>runtime</scope>
+--
+      <artifactId>runtime-saveable</artifactId>
+      <version>1.9.5</version>
+      <scope>runtime</scope>
+--
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>2.1.20</version>
+      <scope>runtime</scope>
+--
+      <artifactId>collection</artifactId>
+      <version>1.5.0</version>
+      <scope>runtime</scope>
+--
+      <artifactId>navigationevent</artifactId>
+      <version>1.1.1</version>
+      <scope>runtime</scope>
+--
+      <artifactId>lifecycle-runtime</artifactId>
+      <version>2.10.0</version>
+      <scope>runtime</scope>
+--
+      <artifactId>kotlinx-serialization-core</artifactId>
+      <version>1.7.3</version>
+      <scope>runtime</scope>
+--
+
+<!DOCTYPE html>
+<html lang=en>
+  <meta charset=utf-8>
+  <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+  <artifactId>hilt-lifecycle-viewmodel-compose</artifactId>
+  <version>1.4.0</version>
+--
+      <artifactId>ui</artifactId>
+      <version>1.8.2</version>
+--
+      <artifactId>hilt-lifecycle-viewmodel</artifactId>
+      <version>1.4.0</version>
+--
+      <artifactId>runtime</artifactId>
+      <version>1.8.2</version>
+--
+      <artifactId>lifecycle-viewmodel-compose</artifactId>
+      <version>2.11.0</version>
+--
+      <artifactId>hilt-android</artifactId>
+      <version>2.59</version>
+--
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>2.2.20</version>
+2.12.0-alpha01
+2.12.0-alpha02
+2.12.0-alpha03
+2.12.0-alpha04
