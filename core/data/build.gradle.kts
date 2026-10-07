@@ -4,7 +4,6 @@ plugins {
 }
 android {
     namespace = "app.cayresim.core.data"
-    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
 }
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 dependencies {
