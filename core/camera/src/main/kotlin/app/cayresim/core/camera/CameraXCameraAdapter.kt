@@ -429,14 +429,15 @@ class CameraXCameraAdapter @Inject constructor(
         val cam = boundCamera ?: return
         val st = _manualState.value
         val b = CaptureRequestOptions.Builder()
-        if (st.exposureNanos != null && st.iso != null) {
+        val exp = st.exposureNanos; val iso = st.iso; val focus = st.focusDiopters
+        if (exp != null && iso != null) {
             b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
-            b.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, st.exposureNanos)
-            b.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, st.iso)
+            b.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exp)
+            b.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, iso)
         }
-        if (st.focusDiopters != null) {
+        if (focus != null) {
             b.setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
-            b.setCaptureRequestOption(CaptureRequest.LENS_FOCUS_DISTANCE, st.focusDiopters)
+            b.setCaptureRequestOption(CaptureRequest.LENS_FOCUS_DISTANCE, focus)
         }
         runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }
     }
