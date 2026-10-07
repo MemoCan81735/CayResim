@@ -1,5 +1,22 @@
 package app.cayresim.feature.camera.ui
 
+import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.delay
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -106,6 +123,10 @@ fun CameraRoute(
         onCreateSeries = viewModel::onCreateSeries,
         onOverlayAlpha = viewModel::onOverlayAlpha,
         onShutter = viewModel::onShutter,
+        onZoomPreset = viewModel::onZoomPreset,
+        onPinch = viewModel::onPinch,
+        onTapFocus = viewModel::onTapFocus,
+        onHardwareShutter = viewModel::onHardwareShutter,
         onMessageShown = viewModel::onMessageShown,
         onRequestPermission = { launcher.launch(Manifest.permission.CAMERA) },
         onRetry = viewModel::onScreenStart,
@@ -138,7 +159,11 @@ fun CameraContent(
     onOpenGallery: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenLast: (String) -> Unit,
-    viewfinder: @Composable (Any) -> Unit = { DefaultViewfinder(it) },
+    onZoomPreset: (Float) -> Unit = {},
+    onPinch: (Float) -> Unit = {},
+    onTapFocus: (Float, Float) -> Unit = { _, _ -> },
+    onHardwareShutter: () -> Unit = {},
+    viewfinder: @Composable (Any, (Float, Float) -> Unit) -> Unit = { token, tap -> DefaultViewfinder(token, tap) },
 ) {
     val snackbar = remember { SnackbarHostState() }
     val message = state.message
@@ -149,11 +174,26 @@ fun CameraContent(
             onMessageShown(message.id)
         }
     }
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    // Lautstaerketasten loesen aus (wie in der Samsung-Kamera); der Bildschirm haelt dafuer den Fokus
+    val keys = remember { FocusRequester() }
+    Box(
+        Modifier.fillMaxSize().background(Color.Black)
+            .focusRequester(keys).focusable()
+            .onPreviewKeyEvent { e ->
+                val volume = e.key == Key.VolumeUp || e.key == Key.VolumeDown
+                if (volume && e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) onHardwareShutter()
+                volume
+            }
+            .testTag("camera_root"),
+    ) {
+        LaunchedEffect(Unit) { runCatching { keys.requestFocus() } }
         when {
             state.permission == PermissionStatus.DENIED -> CenterHint(stringResource(R.string.permission_needed), stringResource(R.string.permission_grant), onRequestPermission, "permission")
             state.status == ScreenStatus.ERROR -> CenterHint(stringResource(R.string.camera_error), stringResource(R.string.retry), onRetry, "camera_error")
-            state.previewToken != null -> Box(Modifier.fillMaxSize().testTag("viewfinder")) { viewfinder(state.previewToken) }
+            state.previewToken != null -> Box(
+                Modifier.fillMaxSize().testTag("viewfinder")
+                    .pointerInput(Unit) { detectTransformGestures { _, _, zoom, _ -> if (zoom != 1f) onPinch(zoom) } },
+            ) { viewfinder(state.previewToken, onTapFocus) }
         }
         // Geister-Overlay: gleiche Beschneidung wie der Sucher (ContentScale.Crop entspricht fillCenter, R21)
         state.overlay?.let {
@@ -161,6 +201,7 @@ fun CameraContent(
                 alpha = state.overlayAlpha, modifier = Modifier.fillMaxSize().testTag("overlay"))
         }
         var picker by remember { mutableStateOf(false) }
+        LaunchedEffect(picker) { if (!picker) runCatching { keys.requestFocus() } }
         // Bei grosser Schrift seitlich wischbar statt abgeschnitten
         Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp).padding(end = 56.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -198,6 +239,7 @@ fun CameraContent(
                     Text(stringResource(R.string.fallback, stringResource(modeRes(it))), Modifier.padding(12.dp))
                 }
             }
+            if (state.zoomPresets.isNotEmpty() && state.previewToken != null) ZoomRow(state, onZoomPreset)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 items(state.modes) { m ->
                     FilterChip(selected = m == state.selected, onClick = { onModeSelected(m) },
@@ -319,8 +361,68 @@ private fun SideLabel(text: String) =
     Text(text, color = Color.White, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
 
 @Composable
-private fun DefaultViewfinder(token: Any) {
-    if (token is SurfaceRequest) CameraXViewfinder(surfaceRequest = token, modifier = Modifier.fillMaxSize())
+private fun DefaultViewfinder(token: Any, onTap: (Float, Float) -> Unit) {
+    if (token !is SurfaceRequest) return
+    // Wandelt Bildschirm-Koordinaten in Koordinaten des Kamerabilds um (beruecksichtigt Drehung und Beschnitt)
+    val transformer = remember { MutableCoordinateTransformer() }
+    var ring by remember { mutableStateOf<Offset?>(null) }
+    LaunchedEffect(ring) { if (ring != null) { delay(FOCUS_RING_MS); ring = null } }
+    Box(Modifier.fillMaxSize()) {
+        CameraXViewfinder(
+            surfaceRequest = token,
+            coordinateTransformer = transformer,
+            modifier = Modifier.fillMaxSize().pointerInput(token) {
+                detectTapGestures { offset ->
+                    ring = offset
+                    val p = with(transformer) { offset.transform() }
+                    val res = token.resolution
+                    onTap(p.x / res.width, p.y / res.height)
+                }
+            },
+        )
+        ring?.let { FocusRing(it) }
+    }
+}
+
+private const val FOCUS_RING_MS = 1_200L
+
+/** Kreis an der angetippten Stelle als Rueckmeldung. */
+@Composable
+internal fun FocusRing(at: Offset) {
+    val density = LocalDensity.current
+    val r = 36.dp
+    val px = with(density) { r.toPx() }
+    Box(
+        Modifier.offset { IntOffset((at.x - px).toInt(), (at.y - px).toInt()) }
+            .size(r * 2).border(2.dp, Color.White, CircleShape).testTag("focus_ring"),
+    )
+}
+
+/**
+ * Zoom-Schnellwahl wie bei Samsung: die Stufe, in deren Bereich der Zoom gerade liegt, zeigt den
+ * genauen Wert (z. B. "2,4x") und ist hervorgehoben.
+ */
+@Composable
+private fun ZoomRow(state: CameraUiState, onZoomPreset: (Float) -> Unit) {
+    val current = state.zoomPresets.lastOrNull { it.ratio <= state.zoomRatio + 0.05f } ?: state.zoomPresets.first()
+    Row(
+        Modifier.padding(bottom = 12.dp).background(Color.Black.copy(alpha = 0.45f), CircleShape).padding(4.dp).testTag("zoom_row"),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        state.zoomPresets.forEach { p ->
+            val selected = p == current
+            val label = if (selected) state.zoomLabel else p.label
+            Surface(
+                onClick = { onZoomPreset(p.ratio) },
+                shape = CircleShape,
+                color = if (selected) Color.White.copy(alpha = 0.25f) else Color.Transparent,
+                contentColor = if (selected) Color(0xFFFFD54F) else Color.White,
+                modifier = Modifier.size(if (selected) 48.dp else 40.dp).testTag("zoom_${p.label}"),
+            ) {
+                Box(contentAlignment = Alignment.Center) { Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1) }
+            }
+        }
+    }
 }
 
 @Composable

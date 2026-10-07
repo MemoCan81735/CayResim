@@ -1,5 +1,12 @@
 package app.cayresim.feature.camera.ui
 
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.geometry.Offset
+import app.cayresim.feature.camera.control.ZoomPresetUi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +45,7 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+@OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 class CameraContentTest {
     @get:Rule val compose = createComposeRule()
 
@@ -66,7 +74,11 @@ class CameraContentTest {
                 onOpenGallery = { events += "gallery" },
                 onOpenSettings = { events += "settings" },
                 onOpenLast = { events += "last:$it" },
-                viewfinder = { Box(Modifier.fillMaxSize().background(Color(0xFF335544))) },
+                onZoomPreset = { events += "zoom:$it" },
+                onPinch = { events += "pinch" },
+                onTapFocus = { x, y -> events += "focus:$x,$y" },
+                onHardwareShutter = { events += "volume" },
+                viewfinder = { _, _ -> Box(Modifier.fillMaxSize().background(Color(0xFF335544))) },
             )
         }
     }
@@ -208,5 +220,46 @@ class CameraContentTest {
     @Test fun galerie_und_einstellungen() {
         show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performClick()
         assertEquals(listOf("gallery", "settings"), events)
+    }
+
+    // ---------- Zoom, Fokus, Lautstaerketaste ----------
+
+    private val zoomed = running.copy(zoomRatio = 2.4f, zoomPresets = listOf(
+        ZoomPresetUi(0.6f, "0,6x", false), ZoomPresetUi(1f, "1x", false), ZoomPresetUi(3f, "3x", false)))
+
+    @Test fun bild_zoom_zwischen_den_stufen() {
+        show(zoomed); compose.onRoot().captureRoboImage("src/test/screenshots/camera_zoom.png")
+    }
+
+    @Test fun zoom_stufe_zeigt_genauen_wert_und_sendet() {
+        show(zoomed)
+        compose.onNodeWithText("2,4x").assertIsDisplayed() // 1x-Stufe zeigt den aktuellen Wert
+        compose.onNodeWithTag("zoom_3x").performClick(); compose.onNodeWithTag("zoom_0,6x").performClick()
+        assertEquals(listOf("zoom:3.0", "zoom:0.6"), events)
+    }
+
+    @Test fun ohne_zoom_stufen_keine_leiste() {
+        show(running); compose.onAllNodesWithTag("zoom_row").assertCountEquals(0)
+    }
+
+    @Test fun lautstaerketaste_loest_aus() {
+        show(running)
+        compose.onNodeWithTag("camera_root").requestFocus()
+        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.VolumeDown) }
+        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.VolumeUp) }
+        assertEquals(listOf("volume", "volume"), events)
+    }
+
+    @Test fun andere_tasten_loesen_nicht_aus() {
+        show(running)
+        compose.onNodeWithTag("camera_root").requestFocus()
+        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.A) }
+        assertEquals(emptyList<String>(), events)
+    }
+
+    @Test fun bild_fokusring() {
+        compose.setContent { CayResimTheme { Box(Modifier.fillMaxSize().background(Color(0xFF335544))) { FocusRing(Offset(500f, 900f)) } } }
+        compose.onNodeWithTag("focus_ring").assertIsDisplayed()
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_focus_ring.png")
     }
 }

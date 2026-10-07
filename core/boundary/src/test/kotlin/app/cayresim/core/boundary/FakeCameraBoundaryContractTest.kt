@@ -9,6 +9,7 @@ import kotlin.test.Test
 class FakeCameraBoundaryContractTest {
     @Test fun `Fake erfuellt den ganzen Vertrag`() = runTest {
         CameraBoundaryContract.all.forEach { (_, case) -> case(FakeCameraBoundary()) }
+        CameraBoundaryContract.all.forEach { (_, case) -> case(FakeCameraBoundary().apply { zoomRange = 0.6f..10f }) }
     }
 
     @Test fun `Fake faellt bei fehlender Extension zurueck`() = runTest {

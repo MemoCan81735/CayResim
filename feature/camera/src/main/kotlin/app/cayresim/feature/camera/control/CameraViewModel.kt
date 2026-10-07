@@ -128,6 +128,21 @@ class CameraViewModel @Inject constructor(
         viewModelScope.launch { manual.setFocus(slider?.let { (1f - it.coerceIn(0f, 1f)) * max }) }
     }
 
+    /** Schnellwahl 0,6x, 1x, 3x. */
+    fun onZoomPreset(ratio: Float) { viewModelScope.launch { camera.setZoom(ratio) } }
+
+    /** Zwei-Finger-Zoom: [scale] ist der Spreizfaktor seit dem letzten Ereignis; die Kamera begrenzt. */
+    fun onPinch(scale: Float) {
+        if (!scale.isFinite() || scale <= 0f) return
+        viewModelScope.launch { camera.setZoom(camera.state.value.zoom.ratio * scale) }
+    }
+
+    /** Antippen im Sucher: [x], [y] normiert auf das Kamerabild (0..1). */
+    fun onTapFocus(x: Float, y: Float) { viewModelScope.launch { camera.focusAt(x, y) } }
+
+    /** Lautstaerketaste: loest aus wie der runde Knopf, aber nur wenn gerade ausgeloest werden darf. */
+    fun onHardwareShutter() { if (uiState.value.canShoot) onShutter() }
+
     fun onRaw(enabled: Boolean) { viewModelScope.launch { manual.setRaw(enabled) } }
 
     fun onPermissionResult(granted: Boolean) {
@@ -271,6 +286,11 @@ class CameraViewModel @Inject constructor(
         overlayAlpha = l.overlayAlpha,
         special = l.special,
         specialStatus = l.specialStatus,
+        zoomRatio = s.zoom.ratio,
+        zoomPresets = s.zoom.presets.map { r ->
+            // Hervorheben nur, wenn der Zoom nahe an der Stufe liegt (wie bei Samsung)
+            ZoomPresetUi(r, zoomLabel(r), kotlin.math.abs(r - s.zoom.ratio) < 0.05f)
+        },
     )
 
     companion object { const val OVERLAY_PX = 1440 }

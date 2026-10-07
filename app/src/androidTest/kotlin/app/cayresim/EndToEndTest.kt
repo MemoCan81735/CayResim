@@ -107,6 +107,14 @@ class EndToEndTest {
         compose.onNodeWithTag("shutter").assertIsDisplayed()
     }
 
+    @Test fun lautstaerketasteLoestAus() {
+        waitForViewfinder()
+        val before = appPhotoCount()
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+            .sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+        compose.waitUntil(15_000) { appPhotoCount() > before }
+    }
+
     @Test fun anleitungIstUeberDasZahnradErreichbar() {
         waitForViewfinder()
         compose.onNodeWithTag("open_settings").performClick()

@@ -40,6 +40,16 @@ data class SeriesOption(val id: Long, val name: String, val photoCount: Int)
 @Immutable
 data class UserMessage(val id: Long, val kind: MessageKind)
 
+/** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
+@Immutable
+data class ZoomPresetUi(val ratio: Float, val label: String, val active: Boolean)
+
+/** Anzeige wie "0,6x", "1x", "2,4x" (deutsches Komma). */
+fun zoomLabel(ratio: Float): String {
+    val tenths = Math.round(ratio * 10)
+    return if (tenths % 10 == 0) "${tenths / 10}x" else "${tenths / 10},${tenths % 10}x"
+}
+
 @Immutable
 data class CameraUiState(
     val permission: PermissionStatus = PermissionStatus.UNKNOWN,
@@ -62,7 +72,11 @@ data class CameraUiState(
     val special: SpecialOption = SpecialOption.NONE,
     val specialStatus: SpecialStatus = SpecialStatus.IDLE,
     val pro: ProUi = ProUi(),
+    val zoomRatio: Float = 1f,
+    val zoomPresets: List<ZoomPresetUi> = emptyList(),
 ) {
+    val zoomLabel: String get() = zoomLabel(zoomRatio)
+
     val canShoot: Boolean get() = status == ScreenStatus.RUNNING && !capturing &&
         (specialStatus == SpecialStatus.IDLE || specialStatus == SpecialStatus.ARMED)
 }

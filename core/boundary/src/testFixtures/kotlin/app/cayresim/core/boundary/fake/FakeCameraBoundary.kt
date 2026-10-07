@@ -9,6 +9,7 @@ import app.cayresim.core.boundary.CaptureFailure
 import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.PreviewHandle
+import app.cayresim.core.boundary.ZoomSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -26,6 +27,10 @@ class FakeCameraBoundary(
     var startError: CameraError? = null
     var nextCapture: CaptureResult? = null
     val saved = mutableListOf<String>()
+    /** Zoomgrenzen der simulierten Kamera; letzter Fokuspunkt. */
+    var zoomRange: ClosedFloatingPointRange<Float> = 1f..1f
+    var zoomPresets: List<Float> = emptyList()
+    var lastFocus: Pair<Float, Float>? = null; private set
     var startCalls = 0; private set
     var stopCalls = 0; private set
     private var counter = 0
@@ -37,7 +42,8 @@ class FakeCameraBoundary(
         val err = startError
         _state.update {
             if (err != null) it.copy(status = CameraStatus.ERROR, error = err, preview = null)
-            else it.copy(status = CameraStatus.RUNNING, error = null, offeredModes = modes, preview = PreviewHandle("fake"))
+            else it.copy(status = CameraStatus.RUNNING, error = null, offeredModes = modes, preview = PreviewHandle("fake"),
+                zoom = ZoomSnapshot(it.zoom.ratio.coerceIn(zoomRange.start, zoomRange.endInclusive), zoomRange.start, zoomRange.endInclusive, zoomPresets))
         }
         if (err == null) applyMode(_state.value.requestedMode)
     }
@@ -63,4 +69,16 @@ class FakeCameraBoundary(
     }
 
     override suspend fun delete(uri: String): Boolean = saved.remove(uri)
+
+    override suspend fun setZoom(ratio: Float): Boolean {
+        if (_state.value.status != CameraStatus.RUNNING || !ratio.isFinite()) return false
+        _state.update { it.copy(zoom = it.zoom.copy(ratio = ratio.coerceIn(zoomRange.start, zoomRange.endInclusive))) }
+        return true
+    }
+
+    override suspend fun focusAt(x: Float, y: Float): Boolean {
+        if (_state.value.status != CameraStatus.RUNNING || x !in 0f..1f || y !in 0f..1f) return false
+        lastFocus = x to y
+        return true
+    }
 }

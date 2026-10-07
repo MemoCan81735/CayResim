@@ -31,6 +31,7 @@ import app.cayresim.core.pure.Stacking
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
@@ -60,6 +61,8 @@ import app.cayresim.core.boundary.CameraCapabilitiesSnapshot
 import app.cayresim.core.boundary.CameraDispatcher
 import app.cayresim.core.boundary.CameraError
 import app.cayresim.core.boundary.CameraStateSnapshot
+import app.cayresim.core.boundary.ZoomSnapshot
+import app.cayresim.core.entity.ZoomEntity
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureFailure
 import app.cayresim.core.boundary.CaptureResult
@@ -201,6 +204,49 @@ class CameraXCameraAdapter @Inject constructor(
         }
         _state.update { it.copy(status = CameraStatus.RUNNING, error = null) }
         publishMode()
+        restoreZoom()
+    }
+
+    // ---------- Zoom und Fokus ----------
+
+    /** Wunsch-Zoom des Nutzers; CameraX setzt den Zoom bei jedem Neubinden auf 1x zurueck. */
+    private var wantedZoom = 1f
+    private var currentPreview: Preview? = null
+
+    private fun zoomEntity(): ZoomEntity? {
+        val zs = boundCamera?.cameraInfo?.zoomState?.value ?: return null
+        return ZoomEntity(zs.minZoomRatio, zs.maxZoomRatio)
+    }
+
+    private fun restoreZoom() {
+        val z = zoomEntity() ?: return
+        val ratio = z.clamp(wantedZoom)
+        runCatching { boundCamera?.cameraControl?.setZoomRatio(ratio) }
+        _state.update { it.copy(zoom = ZoomSnapshot(ratio, z.min, z.max, z.presets)) }
+    }
+
+    override suspend fun setZoom(ratio: Float): Boolean = withContext(dispatcher) {
+        if (_state.value.status != CameraStatus.RUNNING || !ratio.isFinite()) return@withContext false
+        val z = zoomEntity() ?: return@withContext false
+        val target = z.clamp(ratio)
+        wantedZoom = target
+        // Sofort im Zustand, damit die Anzeige der Geste folgt; die Kamera zieht nach
+        _state.update { it.copy(zoom = ZoomSnapshot(target, z.min, z.max, z.presets)) }
+        runCatching { boundCamera?.cameraControl?.setZoomRatio(target) }.isSuccess
+    }
+
+    override suspend fun focusAt(x: Float, y: Float): Boolean = withContext(dispatcher) {
+        if (_state.value.status != CameraStatus.RUNNING || x !in 0f..1f || y !in 0f..1f) return@withContext false
+        val cam = boundCamera ?: return@withContext false
+        val preview = currentPreview ?: return@withContext false
+        runCatching {
+            val point = androidx.camera.core.SurfaceOrientedMeteringPointFactory(1f, 1f, preview).createPoint(x, y)
+            val action = androidx.camera.core.FocusMeteringAction.Builder(point,
+                androidx.camera.core.FocusMeteringAction.FLAG_AF or androidx.camera.core.FocusMeteringAction.FLAG_AE)
+                .setAutoCancelDuration(FOCUS_HOLD_S, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+            withTimeoutOrNull(FOCUS_TIMEOUT_MS) { cam.cameraControl.startFocusAndMetering(action).await().isFocusSuccessful }
+        }.getOrNull() == true
     }
 
     private fun tryBind(p: ProcessCameraProvider, em: ExtensionsManager, key: ModeKey): Boolean = try {
@@ -234,6 +280,7 @@ class CameraXCameraAdapter @Inject constructor(
         } else {
             boundCamera = p.bindToLifecycle(owner, selector, config)
             imageCapture = capture
+            currentPreview = preview
             if (ext == ExtensionMode.NONE) applyManualOptions()
             true
         }
@@ -542,6 +589,9 @@ class CameraXCameraAdapter @Inject constructor(
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
         const val CAPTURE_TIMEOUT_MS = 8_000L
+        const val FOCUS_TIMEOUT_MS = 3_000L
+        /** So lange bleibt der angetippte Punkt scharf, danach wieder Automatik. */
+        const val FOCUS_HOLD_S = 5L
         val ANALYSIS_SIZE = Size(1440, 1080)
         const val FOCUS_SETTLE_MS = 350L
 

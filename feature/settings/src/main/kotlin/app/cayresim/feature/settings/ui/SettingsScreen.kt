@@ -50,6 +50,7 @@ private fun Entry(@StringRes title: Int, @StringRes hint: Int, onClick: () -> Un
 /** Abschnitte der Anleitung in Lesereihenfolge; Tests pruefen, dass jeder angezeigt wird. */
 internal val guideSections: List<Pair<Int, Int>> = listOf(
     R.string.guide_shoot_title to R.string.guide_shoot_body,
+    R.string.guide_zoom_title to R.string.guide_zoom_body,
     R.string.guide_modes_title to R.string.guide_modes_body,
     R.string.guide_look_title to R.string.guide_look_body,
     R.string.guide_special_title to R.string.guide_special_body,

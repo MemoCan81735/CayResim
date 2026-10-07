@@ -311,4 +311,58 @@ class CameraViewModelTest {
         assertEquals(r.first, ProScale.fromSlider(-1f, r)); assertEquals(r.last, ProScale.fromSlider(5f, r))
         assertEquals("1/250 s", ProScale.exposureText(4_000_000)); assertEquals("30 s", ProScale.exposureText(30_000_000_000))
     }
+
+    // ---------- Zoom, Fokus, Lautstaerketaste ----------
+
+    private fun s24Zoom() { cam.zoomRange = 0.6f..10f; cam.zoomPresets = listOf(0.6f, 1f, 3f) }
+
+    @Test fun `Guter Fall Schnellwahl 3x und Anzeige`() = runTest {
+        s24Zoom(); visibleAndGranted(); vm.onZoomPreset(3f)
+        val s = vm.uiState.value
+        assertEquals(3f, s.zoomRatio); assertEquals("3x", s.zoomLabel)
+        assertEquals(listOf("0,6x", "1x", "3x"), s.zoomPresets.map { it.label })
+        assertEquals(listOf(false, false, true), s.zoomPresets.map { it.active })
+    }
+
+    @Test fun `Guter Fall Zwei-Finger-Zoom summiert die Gesten`() = runTest {
+        s24Zoom(); visibleAndGranted()
+        vm.onPinch(2f); vm.onPinch(1.2f)
+        assertEquals(2.4f, vm.uiState.value.zoomRatio, 0.001f)
+        assertEquals("2,4x", vm.uiState.value.zoomLabel)
+        assertTrue(vm.uiState.value.zoomPresets.none { it.active }, "zwischen den Stufen ist keine hervorgehoben")
+    }
+
+    @Test fun `Randfall Zoom bleibt in den Grenzen`() = runTest {
+        s24Zoom(); visibleAndGranted()
+        repeat(20) { vm.onPinch(3f) }; assertEquals(10f, vm.uiState.value.zoomRatio)
+        repeat(20) { vm.onPinch(0.2f) }; assertEquals(0.6f, vm.uiState.value.zoomRatio)
+    }
+
+    @Test fun `Fehlerfall unsinnige Geste aendert nichts`() = runTest {
+        s24Zoom(); visibleAndGranted(); vm.onZoomPreset(3f)
+        vm.onPinch(Float.NaN); vm.onPinch(0f); vm.onPinch(-2f)
+        assertEquals(3f, vm.uiState.value.zoomRatio)
+    }
+
+    @Test fun `Randfall Kamera ohne Zoom zeigt keine Schnellwahl`() = runTest {
+        visibleAndGranted(); assertEquals(emptyList(), vm.uiState.value.zoomPresets)
+    }
+
+    @Test fun `Antippen stellt auf den Punkt scharf`() = runTest {
+        visibleAndGranted(); vm.onTapFocus(0.25f, 0.75f)
+        assertEquals(0.25f to 0.75f, cam.lastFocus)
+    }
+
+    @Test fun `Fehlerfall Antippen ohne Kamera passiert nichts`() = runTest {
+        vm.onTapFocus(0.5f, 0.5f); assertNull(cam.lastFocus)
+    }
+
+    @Test fun `Lautstaerketaste loest aus wie der Knopf`() = runTest {
+        visibleAndGranted(); vm.onHardwareShutter()
+        assertEquals(1, cam.saved.size); assertEquals(MessageKind.SAVED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Fehlerfall Lautstaerketaste ohne laufende Kamera loest nicht aus`() = runTest {
+        vm.onHardwareShutter(); assertEquals(0, cam.saved.size); assertNull(vm.uiState.value.message)
+    }
 }

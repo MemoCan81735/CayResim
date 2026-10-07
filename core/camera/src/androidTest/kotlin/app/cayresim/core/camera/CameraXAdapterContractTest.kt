@@ -39,6 +39,25 @@ class CameraXAdapterContractTest {
     @Test fun vertragStoppUndNeustart() = run { CameraBoundaryContract.stopReleasesAndRestartWorks(adapter) }
     @Test fun vertragDoppeltesStopp() = run { CameraBoundaryContract.stopTwiceIsHarmless(adapter) }
     @Test fun vertragModusUeberstehtNeustart() = run { CameraBoundaryContract.modeSurvivesRestart(adapter) }
+    @Test fun vertragZoomUndFokusVorStart() = run { CameraBoundaryContract.zoomAndFocusBeforeStartAreRejected(adapter) }
+    @Test fun vertragZoomInDenGrenzen() = run { CameraBoundaryContract.zoomStaysWithinLimits(adapter) }
+    @Test fun vertragFokusAusserhalb() = run { CameraBoundaryContract.focusOutsideTheImageIsRejected(adapter) }
+
+    /** Fokus auf die Bildmitte bricht nie ab und haengt nicht (Emulator: Fixfokus darf false liefern). */
+    @Test fun fokusAufDieMitteHaengtNicht() = run {
+        adapter.start()
+        withTimeout(6_000) { adapter.focusAt(0.5f, 0.5f) }
+    }
+
+    /** Der Zoom bleibt nach einem Moduswechsel erhalten (CameraX setzt ihn beim Neubinden zurueck). */
+    @Test fun zoomUeberstehtModuswechsel() = run {
+        adapter.start()
+        val z = adapter.state.value.zoom
+        val target = (z.min + z.max) / 2
+        adapter.setZoom(target)
+        adapter.selectMode(PhotoMode.NORMAL)
+        assertEquals(target, adapter.state.value.zoom.ratio, 0.05f)
+    }
 
     /** Der Emulator hat keine Extensions: jeder Extension-Modus muss sauber zurueckfallen (R14). */
     @Test fun jederExtensionModusFaelltZurueck() = run {

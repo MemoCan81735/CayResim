@@ -21,6 +21,9 @@ data class CameraCapabilitiesSnapshot(
  */
 class PreviewHandle(val token: Any)
 
+/** Aktueller Zoom, die Grenzen der Kamera (S24+: 0,6x bis 10x) und die Schnellwahl-Stufen. */
+data class ZoomSnapshot(val ratio: Float = 1f, val min: Float = 1f, val max: Float = 1f, val presets: List<Float> = emptyList())
+
 data class CameraStateSnapshot(
     val status: CameraStatus = CameraStatus.IDLE,
     val requestedMode: PhotoMode = PhotoMode.NORMAL,
@@ -30,6 +33,7 @@ data class CameraStateSnapshot(
     val preview: PreviewHandle? = null,
     val capturing: Boolean = false,
     val error: CameraError? = null,
+    val zoom: ZoomSnapshot = ZoomSnapshot(),
 )
 
 enum class CameraError { NO_CAMERA, IN_USE, BIND_FAILED, UNKNOWN }
@@ -58,6 +62,15 @@ interface CameraBoundary {
     suspend fun selectMode(mode: PhotoMode)
 
     suspend fun capture(): CaptureResult
+
+    /** Zoom setzen; Werte ausserhalb der Grenzen werden begrenzt. false, wenn die Kamera nicht laeuft. */
+    suspend fun setZoom(ratio: Float): Boolean
+
+    /**
+     * Scharfstellen und Belichten auf einen Punkt des Sucherbilds, normiert auf 0..1
+     * (0,0 = oben links des Kamerabilds). false bei ungueltigem Punkt oder ohne laufende Kamera.
+     */
+    suspend fun focusAt(x: Float, y: Float): Boolean
 
     /** Gespeicherte Aufnahme loeschen (Selbsttest raeumt damit auf). */
     suspend fun delete(uri: String): Boolean
