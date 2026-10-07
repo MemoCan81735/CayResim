@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 /**
  * Protokoll als Textdatei im App-Speicher. Jede Zeile wird mit fsync geschrieben, damit sie
- * einen harten Neustart des Geraets uebersteht. Zeilen: "step <name>", "photo <uri>", "done".
+ * einen harten Neustart des Geraets uebersteht. Zeilen: "begin", "step <name>", "photo <uri>", "done".
  */
 @Singleton
 class FileSelfTestJournalAdapter internal constructor(
@@ -33,7 +33,7 @@ class FileSelfTestJournalAdapter internal constructor(
         )
     }
 
-    override suspend fun begin() = withContext(io) { write("", append = false) }
+    override suspend fun begin() = withContext(io) { write(BEGIN + "\n", append = false) }
     override suspend fun step(name: String) = withContext(io) { write(STEP + name.replace('\n', ' ') + "\n") }
     override suspend fun photo(uri: String) = withContext(io) { write(PHOTO + uri + "\n") }
     override suspend fun finish() = withContext(io) { write(DONE + "\n") }
@@ -51,5 +51,6 @@ class FileSelfTestJournalAdapter internal constructor(
         const val STEP = "step "
         const val PHOTO = "photo "
         const val DONE = "done"
+        const val BEGIN = "begin"
     }
 }
