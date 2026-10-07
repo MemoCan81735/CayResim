@@ -28,7 +28,11 @@ fun AppRoot() {
         ),
         entryProvider = entryProvider {
             entry<CameraKey> {
-                CameraRoute(onOpenGallery = { control.open(GalleryKey) }, onOpenSettings = { control.open(SettingsKey) })
+                CameraRoute(
+                    onOpenGallery = { control.open(GalleryKey) },
+                    onOpenSettings = { control.open(SettingsKey) },
+                    setShutterKeyListener = { (activity as? MainActivity)?.shutterKeys?.listener = it },
+                )
             }
             entry<GalleryKey> { GalleryRoute(onBack = { control.back() }) }
             entry<SettingsKey> {

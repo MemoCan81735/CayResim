@@ -1,18 +1,10 @@
 package app.cayresim.feature.camera.ui
 
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -95,6 +87,8 @@ import app.cayresim.feature.camera.control.ScreenStatus
 fun CameraRoute(
     onOpenGallery: () -> Unit,
     onOpenSettings: () -> Unit,
+    /** Meldet den Ausloeser fuer die Lautstaerketasten an (null = abmelden); die Shell faengt die Tasten ab. */
+    setShutterKeyListener: ((() -> Unit)?) -> Unit = {},
     viewModel: CameraViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,7 +102,8 @@ fun CameraRoute(
     }
     LifecycleStartEffect(Unit) {
         viewModel.onScreenStart()
-        onStopOrDispose { viewModel.onScreenStop() }
+        setShutterKeyListener(viewModel::onHardwareShutter)
+        onStopOrDispose { setShutterKeyListener(null); viewModel.onScreenStop() }
     }
     CameraContent(
         state = state,
@@ -126,7 +121,6 @@ fun CameraRoute(
         onZoomPreset = viewModel::onZoomPreset,
         onPinch = viewModel::onPinch,
         onTapFocus = viewModel::onTapFocus,
-        onHardwareShutter = viewModel::onHardwareShutter,
         onMessageShown = viewModel::onMessageShown,
         onRequestPermission = { launcher.launch(Manifest.permission.CAMERA) },
         onRetry = viewModel::onScreenStart,
@@ -162,7 +156,6 @@ fun CameraContent(
     onZoomPreset: (Float) -> Unit = {},
     onPinch: (Float) -> Unit = {},
     onTapFocus: (Float, Float) -> Unit = { _, _ -> },
-    onHardwareShutter: () -> Unit = {},
     viewfinder: @Composable (Any, (Float, Float) -> Unit) -> Unit = { token, tap -> DefaultViewfinder(token, tap) },
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -174,19 +167,7 @@ fun CameraContent(
             onMessageShown(message.id)
         }
     }
-    // Lautstaerketasten loesen aus (wie in der Samsung-Kamera); der Bildschirm haelt dafuer den Fokus
-    val keys = remember { FocusRequester() }
-    Box(
-        Modifier.fillMaxSize().background(Color.Black)
-            .focusRequester(keys).focusable()
-            .onPreviewKeyEvent { e ->
-                val volume = e.key == Key.VolumeUp || e.key == Key.VolumeDown
-                if (volume && e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) onHardwareShutter()
-                volume
-            }
-            .testTag("camera_root"),
-    ) {
-        LaunchedEffect(Unit) { runCatching { keys.requestFocus() } }
+    Box(Modifier.fillMaxSize().background(Color.Black).testTag("camera_root")) {
         when {
             state.permission == PermissionStatus.DENIED -> CenterHint(stringResource(R.string.permission_needed), stringResource(R.string.permission_grant), onRequestPermission, "permission")
             state.status == ScreenStatus.ERROR -> CenterHint(stringResource(R.string.camera_error), stringResource(R.string.retry), onRetry, "camera_error")
@@ -201,7 +182,6 @@ fun CameraContent(
                 alpha = state.overlayAlpha, modifier = Modifier.fillMaxSize().testTag("overlay"))
         }
         var picker by remember { mutableStateOf(false) }
-        LaunchedEffect(picker) { if (!picker) runCatching { keys.requestFocus() } }
         // Bei grosser Schrift seitlich wischbar statt abgeschnitten
         Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp).padding(end = 56.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {

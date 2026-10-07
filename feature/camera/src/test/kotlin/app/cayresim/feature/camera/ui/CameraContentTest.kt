@@ -1,10 +1,6 @@
 package app.cayresim.feature.camera.ui
 
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.test.requestFocus
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.geometry.Offset
 import app.cayresim.feature.camera.control.ZoomPresetUi
 import androidx.compose.foundation.background
@@ -45,7 +41,6 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
-@OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
 class CameraContentTest {
     @get:Rule val compose = createComposeRule()
 
@@ -77,7 +72,6 @@ class CameraContentTest {
                 onZoomPreset = { events += "zoom:$it" },
                 onPinch = { events += "pinch" },
                 onTapFocus = { x, y -> events += "focus:$x,$y" },
-                onHardwareShutter = { events += "volume" },
                 viewfinder = { _, _ -> Box(Modifier.fillMaxSize().background(Color(0xFF335544))) },
             )
         }
@@ -240,21 +234,6 @@ class CameraContentTest {
 
     @Test fun ohne_zoom_stufen_keine_leiste() {
         show(running); compose.onAllNodesWithTag("zoom_row").assertCountEquals(0)
-    }
-
-    @Test fun lautstaerketaste_loest_aus() {
-        show(running)
-        compose.onNodeWithTag("camera_root").requestFocus()
-        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.VolumeDown) }
-        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.VolumeUp) }
-        assertEquals(listOf("volume", "volume"), events)
-    }
-
-    @Test fun andere_tasten_loesen_nicht_aus() {
-        show(running)
-        compose.onNodeWithTag("camera_root").requestFocus()
-        compose.onNodeWithTag("camera_root").performKeyInput { pressKey(Key.A) }
-        assertEquals(emptyList<String>(), events)
     }
 
     @Test fun bild_fokusring() {
