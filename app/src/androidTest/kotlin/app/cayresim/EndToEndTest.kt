@@ -126,8 +126,9 @@ class EndToEndTest {
         waitForViewfinder()
         compose.waitUntil(5_000) { compose.activity.shutterKeys.listener != null }
         val before = appPhotoCount()
-        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
-            .sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+        // Wie eine echte Taste: ueber den Eingabedienst des Systems statt direkt in die App
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+            .executeShellCommand("input keyevent KEYCODE_VOLUME_DOWN").close()
         compose.waitUntil(15_000) { appPhotoCount() > before }
     }
 
