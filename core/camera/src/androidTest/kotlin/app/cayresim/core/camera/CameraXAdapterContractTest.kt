@@ -80,8 +80,22 @@ class CameraXAdapterContractTest {
         adapter.start()
         val t0 = System.currentTimeMillis()
         val r = adapter.capture()
-        assertTrue(System.currentTimeMillis() - t0 < CameraXCameraAdapter.CAPTURE_TIMEOUT_MS + 2_000)
+        assertTrue(System.currentTimeMillis() - t0 < 2 * CameraXCameraAdapter.CAPTURE_TIMEOUT_MS + 5_000)
         if (r is CaptureResult.Saved) adapter.delete(r.uri)
+    }
+
+    /** Fehlerfall aus dem Selbsttest: Sucher-Flaeche geht verloren, die Aufnahme muss sich selbst heilen. */
+    @Test fun aufnahmeNachVerlorenerFlaecheHeiltSich() = run {
+        adapter.start()
+        val req = withTimeout(10_000) { adapter.state.first { it.preview != null } }.preview!!.token as androidx.camera.core.SurfaceRequest
+        val tex = android.graphics.SurfaceTexture(0).apply { setDefaultBufferSize(req.resolution.width, req.resolution.height) }
+        val surface = android.view.Surface(tex)
+        req.provideSurface(surface, androidx.core.content.ContextCompat.getMainExecutor(context)) { }
+        kotlinx.coroutines.delay(500)
+        surface.release(); tex.release() // Sucher verschwindet ohne Abmeldung
+        val r = adapter.capture()
+        assertIs<CaptureResult.Saved>(r, "Aufnahme muss nach Neubindung klappen, war $r")
+        adapter.delete(r.uri)
     }
 
     @Test fun loeschenUnbekannterUriLiefertFalse() = run {

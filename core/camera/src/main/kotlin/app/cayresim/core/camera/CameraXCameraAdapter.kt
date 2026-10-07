@@ -184,36 +184,52 @@ class CameraXCameraAdapter @Inject constructor(
     }
 
     override suspend fun capture(): CaptureResult = withContext(dispatcher) {
-        val ic = imageCapture
-        if (ic == null || _state.value.status != CameraStatus.RUNNING) return@withContext CaptureResult.Failed(CaptureFailure.NOT_READY)
+        if (imageCapture == null || _state.value.status != CameraStatus.RUNNING) return@withContext CaptureResult.Failed(CaptureFailure.NOT_READY)
         if (_state.value.capturing) return@withContext CaptureResult.Failed(CaptureFailure.BUSY)
         _state.update { it.copy(capturing = true) }
         try {
             ensureSurface()
-            val name = "CAY_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ROOT).format(Date())
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, PHOTO_DIR)
+            takeOnce() ?: run {
+                // Selbstheilung: Sitzung haengt (z. B. Sucher-Flaeche beim Screenwechsel verloren). Neu binden, genau einmal wiederholen.
+                val p = provider; val em = extensions
+                if (p == null || em == null) return@run CaptureResult.Failed(CaptureFailure.CAMERA_CLOSED)
+                pendingRequest = null
+                mutex.withLock { bindCurrent(p, em) }
+                withTimeoutOrNull(3_000) { while (pendingRequest == null) delay(20) }
+                ensureSurface()
+                takeOnce() ?: CaptureResult.Failed(CaptureFailure.CAMERA_CLOSED)
             }
-            val options = ImageCapture.OutputFileOptions.Builder(
-                context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values,
-            ).build()
-            withTimeoutOrNull(CAPTURE_TIMEOUT_MS) { suspendCancellableCoroutine<CaptureResult> { cont ->
-                ic.takePicture(options, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
-                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                        val uri = output.savedUri
-                        cont.resume(if (uri != null) CaptureResult.Saved(uri.toString()) else CaptureResult.Failed(CaptureFailure.STORAGE))
-                    }
-                    override fun onError(exception: ImageCaptureException) {
-                        cont.resume(CaptureResult.Failed(mapError(exception.imageCaptureError)))
-                    }
-                })
-            } } ?: CaptureResult.Failed(CaptureFailure.CAMERA_CLOSED)
         } catch (e: Exception) {
             CaptureResult.Failed(CaptureFailure.UNKNOWN)
         } finally {
             _state.update { it.copy(capturing = false) }
+        }
+    }
+
+    /** Eine Aufnahme mit Zeitgrenze; null heisst: keine Antwort der Kamera. */
+    private suspend fun takeOnce(): CaptureResult? {
+        val ic = imageCapture ?: return CaptureResult.Failed(CaptureFailure.NOT_READY)
+        val name = "CAY_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ROOT).format(Date())
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, PHOTO_DIR)
+        }
+        val options = ImageCapture.OutputFileOptions.Builder(
+            context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values,
+        ).build()
+        return withTimeoutOrNull(CAPTURE_TIMEOUT_MS) {
+            suspendCancellableCoroutine<CaptureResult> { cont ->
+                ic.takePicture(options, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
+                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                        val uri = output.savedUri
+                        if (cont.isActive) cont.resume(if (uri != null) CaptureResult.Saved(uri.toString()) else CaptureResult.Failed(CaptureFailure.STORAGE))
+                    }
+                    override fun onError(exception: ImageCaptureException) {
+                        if (cont.isActive) cont.resume(CaptureResult.Failed(mapError(exception.imageCaptureError)))
+                    }
+                })
+            }
         }
     }
 
@@ -238,7 +254,7 @@ class CameraXCameraAdapter @Inject constructor(
 
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
-        const val CAPTURE_TIMEOUT_MS = 15_000L
+        const val CAPTURE_TIMEOUT_MS = 8_000L
 
         internal fun mapError(code: Int): CaptureFailure = when (code) {
             ImageCapture.ERROR_FILE_IO -> CaptureFailure.STORAGE
