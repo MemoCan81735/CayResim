@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import app.cayresim.core.boundary.CameraError
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
+import app.cayresim.core.boundary.fake.FakeSelfTestJournalBoundary
 import app.cayresim.core.control.SelfTestCheck
 import app.cayresim.core.control.SelfTestUseCase
 import app.cayresim.core.designsystem.CayResimTheme
@@ -45,14 +46,14 @@ class SelfTestTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     @Test fun viewmodel_guter_fall() {
-        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary(setOf(PhotoMode.NIGHT)), clock))
+        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary(setOf(PhotoMode.NIGHT)), clock, FakeSelfTestJournalBoundary()))
         vm.onStart()
         assertTrue(vm.uiState.value.allPassed)
         assertEquals(2, vm.uiState.value.rows.count { it.kind == CheckKind.MODE_CAPTURE })
     }
 
     @Test fun viewmodel_kamera_belegt() {
-        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { startError = CameraError.IN_USE }, clock))
+        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { startError = CameraError.IN_USE }, clock, FakeSelfTestJournalBoundary()))
         vm.onStart()
         assertTrue(vm.uiState.value.finished); assertFalse(vm.uiState.value.allPassed)
     }

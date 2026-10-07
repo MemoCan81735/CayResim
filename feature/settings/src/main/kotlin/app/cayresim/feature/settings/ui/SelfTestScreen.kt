@@ -77,6 +77,7 @@ private fun CheckLine(row: CheckRow, modifier: Modifier) {
 
 @Composable
 private fun label(row: CheckRow): String = when (row.kind) {
+    CheckKind.LAST_RUN -> stringResource(R.string.check_last_run)
     CheckKind.CAMERA_START -> stringResource(R.string.check_camera_start)
     CheckKind.CAPABILITIES -> stringResource(R.string.check_capabilities)
     CheckKind.MODE_CAPTURE -> stringResource(R.string.check_mode_capture, row.modeName ?: "")

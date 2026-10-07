@@ -46,10 +46,6 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.SessionConfig
 import androidx.camera.core.SurfaceRequest
-import android.graphics.ImageFormat
-import android.media.ImageReader
-import android.os.Handler
-import android.os.HandlerThread
 import android.view.Surface
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -110,9 +106,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var extensions: ExtensionsManager? = null
     private var imageCapture: ImageCapture? = null
     private var pendingRequest: SurfaceRequest? = null
-    /** Unsichtbarer Sucher-Ersatz. Ein ImageReader gibt jedes Bild sofort frei; eine nie geleerte SurfaceTexture staut auf echten Geraeten den Bildstrom und blockiert die Aufnahme. */
-    private var fallbackReader: ImageReader? = null
-    private val fallbackThread by lazy { HandlerThread("cayresim-fallback").apply { start() } }
+    /** Unsichtbarer Sucher-Ersatz mit eigenem OpenGL-Abnehmer, siehe [FallbackPreviewSink]. */
+    private var fallbackSink: FallbackPreviewSink? = null
     private val selector = CameraSelector.DEFAULT_BACK_CAMERA
 
     // ---------- Eigene Pipeline (Phase 3) ----------
@@ -157,8 +152,8 @@ class CameraXCameraAdapter @Inject constructor(
             provider?.unbindAll()
             owner.pause()
             pendingRequest = null
-            fallbackReader?.close()
-            fallbackReader = null
+            // Den Sucher-Ersatz gibt CameraX ueber den Ergebnis-Rueckruf frei, sobald die Sitzung ihn losgelassen hat
+            fallbackSink = null
             imageCapture = null
             _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false) }
         }
@@ -516,12 +511,13 @@ class CameraXCameraAdapter @Inject constructor(
         val req = pendingRequest ?: return
         repeat(10) { if (req.isServiced) return; delay(50) }
         if (req.isServiced) return
-        val reader = ImageReader.newInstance(req.resolution.width, req.resolution.height, ImageFormat.PRIVATE, 4)
-        reader.setOnImageAvailableListener({ r -> runCatching { r.acquireLatestImage()?.close() } }, Handler(fallbackThread.looper))
-        val surface = reader.surface
-        fallbackReader = reader
-        // Alte Flaeche erst schliessen, wenn CameraX sie freigegeben hat
-        req.provideSurface(surface, ContextCompat.getMainExecutor(context)) { if (fallbackReader !== reader) reader.close() }
+        val sink = FallbackPreviewSink.create(req.resolution) ?: return
+        fallbackSink = sink
+        // Freigabe erst, wenn CameraX die Flaeche zurueckgibt
+        req.provideSurface(sink.surface, ContextCompat.getMainExecutor(context)) {
+            sink.release()
+            if (fallbackSink === sink) fallbackSink = null
+        }
     }
 
     override suspend fun delete(uri: String): Boolean = withContext(dispatcher) {

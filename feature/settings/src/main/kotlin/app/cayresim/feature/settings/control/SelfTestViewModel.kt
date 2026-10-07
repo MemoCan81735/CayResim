@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class CheckKind { CAMERA_START, CAPABILITIES, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
+enum class CheckKind { LAST_RUN, CAMERA_START, CAPABILITIES, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
 
 @Immutable
 data class CheckRow(val kind: CheckKind, val modeName: String?, val passed: Boolean, val durationMillis: Long, val detail: String)

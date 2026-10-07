@@ -102,6 +102,29 @@ class CameraXAdapterContractTest {
         }
     }
 
+    /** Der Sucher-Ersatz nimmt Bilder ab wie ein echter Sucher und laesst sich mehrfach gefahrlos freigeben. */
+    @Test fun sucherErsatzLaesstSichAnlegenUndFreigeben() {
+        val sink = assertNotNull(FallbackPreviewSink.create(android.util.Size(640, 480)))
+        assertTrue(sink.surface.isValid)
+        sink.release(); sink.release()
+    }
+
+    /** Wechsel durch alle Modi ohne Sucher, mehrfach: kein Haenger, kein Leck (Ablauf des Selbsttests). */
+    @Test fun selbsttestAblaufOhneSucherMehrfach() = runBlocking {
+        withTimeout(90_000) {
+            repeat(2) {
+                adapter.start()
+                for (m in adapter.capabilities.value!!.modes) {
+                    adapter.selectMode(m)
+                    val r = adapter.capture()
+                    assertIs<CaptureResult.Saved>(r, "Modus $m war $r")
+                    adapter.delete(r.uri)
+                }
+                adapter.stop()
+            }
+        }
+    }
+
     /** Fehlerfall aus dem Selbsttest: Sucher-Flaeche geht verloren, die Aufnahme muss sich selbst heilen. */
     @Test fun aufnahmeNachVerlorenerFlaecheHeiltSich() = run {
         adapter.start()

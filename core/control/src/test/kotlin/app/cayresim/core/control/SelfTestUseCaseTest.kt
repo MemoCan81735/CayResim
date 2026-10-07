@@ -5,6 +5,8 @@ import app.cayresim.core.boundary.CaptureFailure
 import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
+import app.cayresim.core.boundary.fake.FakeSelfTestJournalBoundary
+import kotlin.test.assertFailsWith
 import app.cayresim.core.pure.Clock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -17,7 +19,7 @@ class SelfTestUseCaseTest {
 
     @Test fun `Guter Fall prueft jeden Modus und raeumt auf`() = runTest {
         val cam = FakeCameraBoundary(setOf(PhotoMode.NIGHT, PhotoMode.HDR))
-        val report = SelfTestUseCase(cam, StepClock())()
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
         assertTrue(report.passed, report.toString())
         val modes = report.items.filter { it.check == SelfTestCheck.MODE_CAPTURE }.map { it.mode }
         assertEquals(listOf(PhotoMode.NORMAL, PhotoMode.NIGHT, PhotoMode.HDR), modes)
@@ -27,7 +29,7 @@ class SelfTestUseCaseTest {
 
     @Test fun `Kamera startet nicht, Bericht endet rot und frueh`() = runTest {
         val cam = FakeCameraBoundary().apply { startError = CameraError.IN_USE }
-        val report = SelfTestUseCase(cam, StepClock())()
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
         assertFalse(report.passed)
         assertEquals(1, report.items.size)
         assertEquals("IN_USE", report.items.single().detail)
@@ -35,20 +37,68 @@ class SelfTestUseCaseTest {
 
     @Test fun `Fehlgeschlagene Aufnahme wird rot gemeldet`() = runTest {
         val cam = FakeCameraBoundary(emptySet()).apply { nextCapture = CaptureResult.Failed(CaptureFailure.STORAGE) }
-        val report = SelfTestUseCase(cam, StepClock())()
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
         assertFalse(report.passed)
         assertEquals("STORAGE", report.items.single { it.check == SelfTestCheck.MODE_CAPTURE }.detail)
     }
 
     @Test fun `Ohne Extensions wird nur NORMAL geprueft`() = runTest {
-        val report = SelfTestUseCase(FakeCameraBoundary(emptySet()), StepClock())()
+        val report = SelfTestUseCase(FakeCameraBoundary(emptySet()), StepClock(), FakeSelfTestJournalBoundary())()
         assertTrue(report.passed)
         assertEquals(1, report.items.count { it.check == SelfTestCheck.MODE_CAPTURE })
     }
 
     @Test fun `Vorheriger Modus wird wiederhergestellt`() = runTest {
         val cam = FakeCameraBoundary(setOf(PhotoMode.HDR)); cam.start(); cam.selectMode(PhotoMode.HDR)
-        SelfTestUseCase(cam, StepClock())()
+        SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
         assertEquals(PhotoMode.HDR, cam.state.value.requestedMode)
+    }
+
+    // ---------- Neustart des Geraets mitten im Test (Fehler vom S24+, v0.1.27) ----------
+
+    @Test fun `Guter Fall protokolliert jeden Schritt und schliesst ab`() = runTest {
+        val journal = FakeSelfTestJournalBoundary()
+        SelfTestUseCase(FakeCameraBoundary(setOf(PhotoMode.NIGHT)), StepClock(), journal)()
+        assertEquals(listOf("Kamera starten", "Aufnahme NORMAL", "Aufnahme NIGHT", "Aufraeumen"), journal.steps)
+        assertEquals(null, journal.unfinished(), "vollstaendiger Lauf hinterlaesst nichts")
+    }
+
+    @Test fun `Fehlerfall Neustart wird beim naechsten Lauf rot gemeldet und Testfotos geloescht`() = runTest {
+        val cam = FakeCameraBoundary(setOf(PhotoMode.NIGHT, PhotoMode.BOKEH))
+        val journal = FakeSelfTestJournalBoundary().apply { crashAtStep = "Aufnahme NIGHT" }
+        assertFailsWith<FakeSelfTestJournalBoundary.SimulatedReboot> { SelfTestUseCase(cam, StepClock(), journal)() }
+        assertEquals(1, cam.saved.size, "Foto aus NORMAL liegt nach dem Neustart noch da")
+
+        journal.crashAtStep = null
+        val report = SelfTestUseCase(cam, StepClock(), journal)()
+        val last = report.items.first()
+        assertEquals(SelfTestCheck.LAST_RUN, last.check)
+        assertFalse(last.passed)
+        assertTrue("Aufnahme NIGHT" in last.detail, last.detail)
+        assertTrue("1/1" in last.detail, last.detail)
+        assertEquals(0, cam.saved.size, "alle Testfotos geloescht, auch die aus dem abgebrochenen Lauf")
+    }
+
+    @Test fun `Randfall der abgebrochene Schritt wird genau einmal uebersprungen`() = runTest {
+        val cam = FakeCameraBoundary(setOf(PhotoMode.NIGHT, PhotoMode.BOKEH))
+        val journal = FakeSelfTestJournalBoundary().apply { crashAtStep = "Aufnahme NIGHT" }
+        runCatching { SelfTestUseCase(cam, StepClock(), journal)() }
+        journal.crashAtStep = null
+        val second = SelfTestUseCase(cam, StepClock(), journal)()
+        val night = second.items.single { it.mode == PhotoMode.NIGHT }
+        assertFalse(night.passed); assertEquals(0, night.durationMillis)
+        assertTrue(second.items.single { it.mode == PhotoMode.BOKEH }.passed, "die Schritte danach laufen weiter")
+        val third = SelfTestUseCase(cam, StepClock(), journal)()
+        assertTrue(third.passed, "dritter Lauf prueft NIGHT wieder: $third")
+    }
+
+    @Test fun `Randfall Neustart beim Kamerastart wird nicht uebersprungen`() = runTest {
+        val cam = FakeCameraBoundary(emptySet())
+        val journal = FakeSelfTestJournalBoundary().apply { crashAtStep = "Kamera starten" }
+        runCatching { SelfTestUseCase(cam, StepClock(), journal)() }
+        journal.crashAtStep = null
+        val report = SelfTestUseCase(cam, StepClock(), journal)()
+        assertTrue(report.items.any { it.check == SelfTestCheck.CAMERA_START && it.passed })
+        assertEquals(1, report.items.count { it.check == SelfTestCheck.MODE_CAPTURE && it.passed })
     }
 }

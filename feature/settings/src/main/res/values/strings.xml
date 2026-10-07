@@ -6,6 +6,7 @@
     <string name="selftest_running">Läuft …</string>
     <string name="selftest_all_ok">Alles grün. Bitte einen Screenshot an Claude schicken.</string>
     <string name="selftest_some_failed">Es gibt rote Punkte. Bitte einen Screenshot an Claude schicken.</string>
+    <string name="check_last_run">Letzter Selbsttest</string>
     <string name="check_camera_start">Kamera starten</string>
     <string name="check_capabilities">Verfügbare Modi</string>
     <string name="check_mode_capture">Aufnahme %1$s</string>

@@ -11,6 +11,8 @@ import app.cayresim.core.boundary.ManualCameraBoundary
 import app.cayresim.core.boundary.MediaBoundary
 import app.cayresim.core.camera.CameraXCameraAdapter
 import app.cayresim.core.data.MediaStoreMediaAdapter
+import app.cayresim.core.data.FileSelfTestJournalAdapter
+import app.cayresim.core.boundary.SelfTestJournalBoundary
 import app.cayresim.core.data.series.RoomSeriesAdapter
 import app.cayresim.core.processing.GlProcessingAdapter
 import app.cayresim.core.boundary.SeriesBoundary
@@ -37,6 +39,7 @@ abstract class BoundaryModule {
     @Binds @Singleton abstract fun media(a: MediaStoreMediaAdapter): MediaBoundary
     @Binds @Singleton abstract fun series(a: RoomSeriesAdapter): SeriesBoundary
     @Binds @Singleton abstract fun processing(a: GlProcessingAdapter): ProcessingBoundary
+    @Binds @Singleton abstract fun selfTestJournal(a: FileSelfTestJournalAdapter): SelfTestJournalBoundary
 }
 
 @Module

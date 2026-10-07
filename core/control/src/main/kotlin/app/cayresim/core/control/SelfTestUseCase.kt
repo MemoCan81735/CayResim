@@ -4,10 +4,11 @@ import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.PhotoMode
+import app.cayresim.core.boundary.SelfTestJournalBoundary
 import app.cayresim.core.pure.Clock
 import javax.inject.Inject
 
-enum class SelfTestCheck { CAMERA_START, CAPABILITIES, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
+enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
 
 /** Ein Ergebnis des Selbsttests. [mode] ist bei MODE_CAPTURE gesetzt. */
 data class SelfTestItem(
@@ -27,20 +28,36 @@ data class SelfTestReport(val items: List<SelfTestItem>) {
  * angebotenen Modus ein Foto auf, misst die Zeit und loescht die Testfotos wieder.
  * Faehigkeiten wie Low Light Boost gelten als bestanden, wenn sie gemeldet werden koennen;
  * ihr Wert steht im Detail.
+ *
+ * Jeder Schritt wird vorher dauerhaft protokolliert. Brach der letzte Lauf ab (etwa weil das Geraet
+ * neu gestartet ist), meldet der naechste Lauf den Schritt rot (LAST_RUN), loescht die liegen
+ * gebliebenen Testfotos und ueberspringt genau diesen Schritt einmal, damit sich der Absturz
+ * nicht sofort wiederholt.
  */
 class SelfTestUseCase @Inject constructor(
     private val camera: CameraBoundary,
     private val clock: Clock,
+    private val journal: SelfTestJournalBoundary,
 ) {
     suspend operator fun invoke(): SelfTestReport {
         val items = mutableListOf<SelfTestItem>()
         val created = mutableListOf<String>()
+        val aborted = journal.unfinished()
+        if (aborted != null) {
+            val leftovers = aborted.photoUris.count { camera.delete(it) }
+            items += SelfTestItem(SelfTestCheck.LAST_RUN, false, 0,
+                detail = "abgebrochen bei " + (aborted.lastStep ?: "Start") +
+                    if (aborted.photoUris.isEmpty()) "" else ", $leftovers/${aborted.photoUris.size} Testfotos nachtraeglich geloescht")
+        }
+        val skip = aborted?.lastStep
+        journal.begin()
         var t = clock.nowMillis()
+        journal.step(STEP_START)
         camera.start()
         val started = camera.state.value.status == CameraStatus.RUNNING
         items += SelfTestItem(SelfTestCheck.CAMERA_START, started, clock.nowMillis() - t,
             detail = camera.state.value.error?.name ?: "")
-        if (!started) return SelfTestReport(items)
+        if (!started) { journal.finish(); return SelfTestReport(items) }
 
         val caps = camera.capabilities.value
         items += SelfTestItem(SelfTestCheck.CAPABILITIES, caps != null, 0,
@@ -53,6 +70,12 @@ class SelfTestUseCase @Inject constructor(
 
         val previous = camera.state.value.requestedMode
         for (mode in caps?.modes ?: listOf(PhotoMode.NORMAL)) {
+            val step = STEP_CAPTURE + mode.name
+            if (step == skip) {
+                items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, 0, mode, "uebersprungen, der letzte Lauf brach hier ab")
+                continue
+            }
+            journal.step(step)
             camera.selectMode(mode)
             val active = camera.state.value.activeMode
             t = clock.nowMillis()
@@ -60,14 +83,22 @@ class SelfTestUseCase @Inject constructor(
             val ms = clock.nowMillis() - t
             when {
                 active != mode -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, "Rueckfall auf ${active.name}")
-                r is CaptureResult.Saved -> { created += r.uri; items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, true, ms, mode) }
+                r is CaptureResult.Saved -> { created += r.uri; journal.photo(r.uri); items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, true, ms, mode) }
                 r is CaptureResult.Failed -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, r.reason.name)
             }
         }
+        journal.step(STEP_CLEANUP)
         camera.selectMode(previous)
 
         val deleted = created.count { camera.delete(it) }
         items += SelfTestItem(SelfTestCheck.CLEANUP, deleted == created.size, 0, detail = "$deleted/${created.size}")
+        journal.finish()
         return SelfTestReport(items)
+    }
+
+    internal companion object {
+        const val STEP_START = "Kamera starten"
+        const val STEP_CAPTURE = "Aufnahme "
+        const val STEP_CLEANUP = "Aufraeumen"
     }
 }
