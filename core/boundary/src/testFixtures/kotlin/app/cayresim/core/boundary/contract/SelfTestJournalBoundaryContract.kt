@@ -2,11 +2,11 @@ package app.cayresim.core.boundary.contract
 
 import app.cayresim.core.boundary.JournalSnapshot
 import app.cayresim.core.boundary.SelfTestJournalBoundary
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 /** Gemeinsamer Vertrag fuer Fake und Datei-Adapter (Testebene 3). Jeder Fall bekommt ein frisches Protokoll. */
 object SelfTestJournalBoundaryContract {
+    private fun assertEquals(expected: Any?, actual: Any?) { if (expected != actual) throw AssertionError("erwartet $expected, war $actual") }
+    private fun assertNull(actual: Any?) = assertEquals(null, actual)
     val all: List<Pair<String, suspend (SelfTestJournalBoundary) -> Unit>> = listOf(
         "leeres Protokoll meldet keinen Abbruch" to { j -> assertNull(j.unfinished()) },
         "offener Lauf meldet letzten Schritt und Fotos" to { j ->
