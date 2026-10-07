@@ -61,3 +61,14 @@ class MutationProbesTest {
     @Test fun `DI-Modul darf Dispatchers nutzen`() =
         assertEquals(emptyList(), rulesFor("app/src/main/kotlin/app/cayresim/shell/di/AppModule.kt", "fun f() = Dispatchers.IO"))
 }
+
+class NamingFalsePositiveTest {
+    @Test fun `Datenklasse vor dem ViewModel wird nicht als ViewModel gezaehlt`() {
+        val code = "data class PhotoItem(val uri: String)\n\nclass GalleryViewModel @Inject constructor(m: MediaBoundary) : ViewModel() {\n}"
+        assertEquals(emptyList(), ArchitectureRules.checkFile(SourceFile("feature/gallery/src/main/kotlin/app/cayresim/feature/gallery/control/G.kt", code)))
+    }
+    @Test fun `Falsch benanntes ViewModel nach Datenklasse wird erkannt`() {
+        val code = "data class PhotoItem(val uri: String)\n\nclass Gallery @Inject constructor() : ViewModel() {\n}"
+        assertTrue(ArchitectureRules.checkFile(SourceFile("feature/gallery/src/main/kotlin/app/cayresim/feature/gallery/control/G.kt", code)).any { it.rule == "Namen" })
+    }
+}

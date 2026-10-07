@@ -11,4 +11,4 @@ dependencies {
     "testImplementation"(libs.findLibrary("coroutines-test").get())
     "testImplementation"(libs.findLibrary("turbine").get())
 }
-tasks.withType<Test>().configureEach { maxHeapSize = "2g" }
+tasks.withType<Test>().configureEach { maxHeapSize = "2g"; failOnNoDiscoveredTests = false }

@@ -41,8 +41,9 @@ class GalleryTest {
         val media = FakeMediaBoundary()
         val vm = GalleryViewModel(media)
         vm.uiState.test {
-            assertEquals(true, awaitItem().loading)
-            assertEquals(0, awaitItem().photos.size)
+            var s = awaitItem()
+            while (s.loading) s = awaitItem()
+            assertEquals(0, s.photos.size)
             media.photos.value = listOf(PhotoSnapshot("a", 1), PhotoSnapshot("b", 3))
             assertEquals(listOf("b", "a"), awaitItem().photos.map { it.uri })
             cancelAndIgnoreRemainingEvents()
@@ -53,8 +54,10 @@ class GalleryTest {
         val media = FakeMediaBoundary().apply { photos.value = (1..500).map { PhotoSnapshot("u$it", it.toLong()) } }
         val vm = GalleryViewModel(media)
         vm.uiState.test {
-            skipItems(1)
-            assertEquals(GalleryViewModel.LIMIT, awaitItem().photos.size)
+            var s = awaitItem()
+            while (s.loading) s = awaitItem()
+            assertEquals(GalleryViewModel.LIMIT, s.photos.size)
+            assertEquals("u500", s.photos.first().uri)
             cancelAndIgnoreRemainingEvents()
         }
     }

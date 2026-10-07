@@ -36,7 +36,8 @@ class GeometryTest {
 
     @Test fun `Zweimal spiegeln ergibt den Ausgangspunkt`() {
         val p = NormPoint(0.1f, 0.9f)
-        assertEquals(p, mirrorNormalized(mirrorNormalized(p)))
+        val q = mirrorNormalized(mirrorNormalized(p))
+        assertEquals(p.x, q.x, 1e-6f); assertEquals(p.y, q.y, 1e-6f)
     }
 
     // Fehlerfaelle

@@ -185,7 +185,7 @@ class CameraXCameraAdapter @Inject constructor(
             val options = ImageCapture.OutputFileOptions.Builder(
                 context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values,
             ).build()
-            suspendCancellableCoroutine { cont ->
+            suspendCancellableCoroutine<CaptureResult> { cont ->
                 ic.takePicture(options, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         val uri = output.savedUri

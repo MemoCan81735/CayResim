@@ -132,15 +132,15 @@ object ArchitectureRules {
                 .forEach { out += Violation("Namen", f.path, "Klasse in :core:entity muss auf Entity enden: $it") }
             Layer.BOUNDARY -> Regex("""(?m)^(?:public\s+)?interface\s+(\w+)""").findAll(code).map { it.groupValues[1] }
                 .filterNot { it.endsWith("Boundary") }.forEach { out += Violation("Namen", f.path, "Schnittstelle muss auf Boundary enden: $it") }
-            Layer.ADAPTER -> Regex("""class\s+(\w+)[^{]*:\s*[^{]*\b(\w+Boundary)\b""").findAll(code).map { it.groupValues[1] }
+            Layer.ADAPTER -> Regex("""class\s+(\w+)(?:(?!\bclass\b)[^{])*:\s*(?:(?!\bclass\b)[^{])*\b(\w+Boundary)\b""").findAll(code).map { it.groupValues[1] }
                 .filterNot { it.endsWith("Adapter") }.forEach { out += Violation("Namen", f.path, "Boundary-Implementierung muss auf Adapter enden: $it") }
-            Layer.FEATURE_CONTROL, Layer.FEATURE_UI -> Regex("""class\s+(\w+)[^{]*:\s*ViewModel\(""").findAll(code).map { it.groupValues[1] }
+            Layer.FEATURE_CONTROL, Layer.FEATURE_UI -> Regex("""class\s+(\w+)(?:(?!\bclass\b)[^{])*:\s*ViewModel\(""").findAll(code).map { it.groupValues[1] }
                 .filterNot { it.endsWith("ViewModel") }.forEach { out += Violation("Namen", f.path, "ViewModel muss auf ViewModel enden: $it") }
             Layer.CONTROL_CORE -> plainClass.findAll(code).map { it.groupValues[1] }.filter { it.startsWith("Take") || it.startsWith("SelfTest") && !it.contains("Item") && !it.contains("Report") }
                 .filterNot { it.endsWith("UseCase") }.forEach { out += Violation("Namen", f.path, "UseCase muss auf UseCase enden: $it") }
             else -> Unit
         }
-        if (layer == Layer.FEATURE_UI && Regex("""class\s+\w+[^{]*:\s*ViewModel\(""").containsMatchIn(code))
+        if (layer == Layer.FEATURE_UI && Regex("""class\s+\w+(?:(?!\bclass\b)[^{])*:\s*ViewModel\(""").containsMatchIn(code))
             out += Violation("Namen", f.path, "ViewModel gehoert ins Paket control, nicht ui")
         return out
     }

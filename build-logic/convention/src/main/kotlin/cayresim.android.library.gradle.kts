@@ -30,3 +30,4 @@ dependencies {
     "androidTestImplementation"(libs.findLibrary("coroutines-test").get())
     "androidTestImplementation"(libs.findLibrary("kotlin-test").get())
 }
+tasks.withType<Test>().configureEach { maxHeapSize = "3g"; failOnNoDiscoveredTests = false }

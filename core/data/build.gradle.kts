@@ -9,3 +9,7 @@ dependencies {
     implementation(project(":core:pure"))
     implementation(libs.coroutines.android)
 }
+dependencies {
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+}
