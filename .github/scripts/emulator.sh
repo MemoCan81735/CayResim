@@ -57,5 +57,7 @@ mkdir -p screens
 adb shell am start -n app.cayresim/.shell.MainActivity >/dev/null; sleep 6
 adb exec-out screencap -p > screens/camera.png || true
 adb shell input keyevent KEYCODE_BACK; sleep 1
-grep -E "FATAL EXCEPTION|StrictMode-Verstoss" logcat.txt && fail=1
+# Nur Abstuerze von CayResim selbst zaehlen; fremde Apps des Emulators (z. B. Gmail) sind kein Befund
+grep -A1 "FATAL EXCEPTION" logcat.txt | grep -q "Process: app.cayresim" && { echo "App-Absturz in den Geraetetests"; fail=1; }
+grep -E "StrictMode-Verstoss" logcat.txt && fail=1
 exit $fail
