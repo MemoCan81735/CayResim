@@ -16,6 +16,8 @@ import app.cayresim.core.boundary.ComputeDispatcher
 import app.cayresim.core.boundary.FrameBurst
 import app.cayresim.core.boundary.StackMode
 import app.cayresim.core.pure.Stacking
+import app.cayresim.core.pure.FocusStacking
+import app.cayresim.core.pure.StarAlignment
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -81,14 +83,21 @@ class GlProcessingAdapter @Inject constructor(
         if (burst.frames.isEmpty() || burst.width <= 0 || burst.height <= 0 || burst.frames.any { it.size != burst.pixels * 3 })
             return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         val rgb = try {
-            withContext(compute) { parallelStack(burst, mode == StackMode.MEDIAN) }
+            withContext(compute) {
+                when (mode) {
+                    StackMode.MEDIAN -> parallelStack(burst, median = true)
+                    StackMode.MEAN -> parallelStack(burst, median = false)
+                    StackMode.FOCUS -> FocusStacking.stack(burst.frames, burst.width, burst.height) { ensureActive() }.second
+                    StackMode.STARS -> StarAlignment.alignAndMean(burst.frames, burst.width, burst.height, maxShift = minOf(16, burst.width / 4, burst.height / 4))
+                }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         }
         val bitmap = withContext(compute) { rgbToBitmap(rgb, burst.width, burst.height, burst.rotationDegrees) }
-        return withContext(io) { save(bitmap, if (mode == StackMode.MEDIAN) "ohne_bewegung" else "langzeit").also { bitmap.recycle() } }
+        return withContext(io) { save(bitmap, when (mode) { StackMode.MEDIAN -> "ohne_bewegung"; StackMode.MEAN -> "langzeit"; StackMode.FOCUS -> "fokus"; StackMode.STARS -> "sterne" }).also { bitmap.recycle() } }
     }
 
     /** Teilt das Bild in Baender, jedes Band rechnet ein eigener Kern; zwischen den Kacheln wird auf Abbruch geprueft (R17). */

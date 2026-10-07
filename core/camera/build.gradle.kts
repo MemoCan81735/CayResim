@@ -15,4 +15,5 @@ dependencies {
     implementation(libs.coroutines.guava)
     implementation(libs.core.ktx)
     androidTestImplementation(testFixtures(project(":core:boundary")))
+    androidTestImplementation(libs.exifinterface)
 }

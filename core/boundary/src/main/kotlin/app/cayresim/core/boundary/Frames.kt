@@ -28,5 +28,6 @@ interface FrameBoundary {
     fun trigger(mode: TriggerMode): Flow<Unit>
 }
 
-enum class StackMode { MEDIAN, MEAN }
+/** MEDIAN: Bewegtes verschwindet, MEAN: Langzeit, FOCUS: Fokus-Stacking, STARS: ausrichten und mitteln. */
+enum class StackMode { MEDIAN, MEAN, FOCUS, STARS }
 

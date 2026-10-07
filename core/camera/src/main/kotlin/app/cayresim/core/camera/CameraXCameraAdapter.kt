@@ -1,6 +1,17 @@
 package app.cayresim.core.camera
 
 import android.content.ContentValues
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CaptureRequest
+import androidx.camera.camera2.interop.Camera2CameraControl
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.CaptureRequestOptions
+import androidx.camera.core.Camera
+import app.cayresim.core.boundary.ManualCameraBoundary
+import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
+import app.cayresim.core.boundary.ManualStateSnapshot
+import app.cayresim.core.entity.ManualLimits
+import app.cayresim.core.entity.ManualSettingsEntity
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Size
@@ -82,7 +93,7 @@ import kotlin.coroutines.resume
 class CameraXCameraAdapter @Inject constructor(
     @ApplicationContext private val context: Context,
     @CameraDispatcher private val dispatcher: CoroutineDispatcher,
-) : CameraBoundary, FrameBoundary {
+) : CameraBoundary, FrameBoundary, ManualCameraBoundary {
 
     private val owner = AdapterLifecycleOwner()
     private val selection = ModeSelectionEntity()
@@ -106,6 +117,14 @@ class CameraXCameraAdapter @Inject constructor(
     private val frameListeners = CopyOnWriteArrayList<(ByteArray, Int, Int, Int) -> Unit>()
     /** Wiederverwendeter Puffer des Analyse-Threads (R19): keine Allokation pro Frame. */
     private var analysisBuffer = ByteArray(0)
+
+    // ---------- Manuelle Kamera (Phase 4) ----------
+    private var boundCamera: Camera? = null
+    private val _manualCaps = MutableStateFlow<ManualCapabilitiesSnapshot?>(null)
+    private val _manualState = MutableStateFlow(ManualStateSnapshot())
+    override val manualCapabilities: StateFlow<ManualCapabilitiesSnapshot?> = _manualCaps
+    override val manualState: StateFlow<ManualStateSnapshot> = _manualState
+    private var manualEntity: ManualSettingsEntity? = null
 
     override suspend fun start() = withContext(dispatcher) {
         mutex.withLock {
@@ -155,6 +174,8 @@ class CameraXCameraAdapter @Inject constructor(
         selection.updateAvailable(available)
         val info = p.getCameraInfo(selector)
         val formats = runCatching { ImageCapture.getImageCaptureCapabilities(info).supportedOutputFormats }.getOrDefault(emptySet())
+        _manualCaps.value = readManualCapabilities(info, ImageCapture.OUTPUT_FORMAT_RAW_JPEG in formats)
+        manualEntity = _manualCaps.value?.let { c -> ManualSettingsEntity(ManualLimits(c.exposureRangeNanos, c.isoRange, c.maxFocusDiopters)) }
         return CameraCapabilitiesSnapshot(
             modes = selection.offeredModes.map { it.toPhotoMode() },
             lowLightBoost = runCatching { info.isLowLightBoostSupported }.getOrDefault(false),
@@ -181,8 +202,10 @@ class CameraXCameraAdapter @Inject constructor(
     private fun tryBind(p: ProcessCameraProvider, em: ExtensionsManager, key: ModeKey): Boolean = try {
         p.unbindAll()
         val preview = Preview.Builder().build()
+        val rawWanted = _manualState.value.raw && pipelineUsers == 0 && key == ModeKey.NORMAL
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .apply { if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG) }
             .build()
         preview.setSurfaceProvider { request ->
             pendingRequest = request
@@ -197,8 +220,9 @@ class CameraXCameraAdapter @Inject constructor(
         if (ext == ExtensionMode.NONE && !p.getCameraInfo(selector).isSessionConfigSupported(config)) {
             false
         } else {
-            p.bindToLifecycle(owner, selector, config)
+            boundCamera = p.bindToLifecycle(owner, selector, config)
             imageCapture = capture
+            if (ext == ExtensionMode.NONE) applyManualOptions()
             true
         }
     } catch (e: Exception) {
@@ -343,6 +367,7 @@ class CameraXCameraAdapter @Inject constructor(
         val options = ImageCapture.OutputFileOptions.Builder(
             context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values,
         ).build()
+        if (ic.outputFormat == ImageCapture.OUTPUT_FORMAT_RAW_JPEG) return takeRawAndJpeg(ic, name, options)
         return withTimeoutOrNull(CAPTURE_TIMEOUT_MS) {
             suspendCancellableCoroutine<CaptureResult> { cont ->
                 ic.takePicture(options, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
@@ -355,6 +380,125 @@ class CameraXCameraAdapter @Inject constructor(
                     }
                 })
             }
+        }
+    }
+
+    /** RAW (DNG) und JPEG in einem Ausloesen; beide landen in Pictures/CayResim. */
+    private suspend fun takeRawAndJpeg(ic: ImageCapture, name: String, jpegOptions: ImageCapture.OutputFileOptions): CaptureResult? {
+        val rawValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "$name.dng")
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/x-adobe-dng")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, PHOTO_DIR)
+        }
+        val rawOptions = ImageCapture.OutputFileOptions.Builder(context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, rawValues).build()
+        var raw: String? = null; var jpeg: String? = null
+        return withTimeoutOrNull(CAPTURE_TIMEOUT_MS * 2) {
+            suspendCancellableCoroutine<CaptureResult> { cont ->
+                ic.takePicture(rawOptions, jpegOptions, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
+                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                        val uri = output.savedUri?.toString() ?: return
+                        if (output.imageFormat == android.graphics.ImageFormat.RAW_SENSOR) raw = uri else jpeg = uri
+                        val j = jpeg
+                        if (j != null && raw != null && cont.isActive) cont.resume(CaptureResult.Saved(j, raw))
+                    }
+                    override fun onError(exception: ImageCaptureException) {
+                        if (cont.isActive) cont.resume(jpeg?.let { CaptureResult.Saved(it, raw) } ?: CaptureResult.Failed(mapError(exception.imageCaptureError)))
+                    }
+                })
+            }
+        }
+    }
+
+    private fun readManualCapabilities(info: androidx.camera.core.CameraInfo, raw: Boolean): ManualCapabilitiesSnapshot? = runCatching {
+        val c2 = Camera2CameraInfo.from(info)
+        val caps = c2.getCameraCharacteristic(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
+        val manualSensor = CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR in caps
+        val exp = if (manualSensor) c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) else null
+        val iso = if (manualSensor) c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE) else null
+        val focus = c2.getCameraCharacteristic(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE)
+        ManualCapabilitiesSnapshot(
+            exposureRangeNanos = exp?.let { it.lower..it.upper },
+            isoRange = iso?.let { it.lower..it.upper },
+            maxFocusDiopters = focus?.takeIf { it > 0f },
+            raw = raw,
+        )
+    }.getOrNull()
+
+    /** Wendet die manuellen Werte ueber Camera2-Interop an; nur im normalen Modus (R11, R12). */
+    private fun applyManualOptions() {
+        val cam = boundCamera ?: return
+        val st = _manualState.value
+        val b = CaptureRequestOptions.Builder()
+        if (st.exposureNanos != null && st.iso != null) {
+            b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+            b.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, st.exposureNanos)
+            b.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, st.iso)
+        }
+        if (st.focusDiopters != null) {
+            b.setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
+            b.setCaptureRequestOption(CaptureRequest.LENS_FOCUS_DISTANCE, st.focusDiopters)
+        }
+        runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }
+    }
+
+    override suspend fun setExposure(nanos: Long?, iso: Int?): Boolean = withContext(dispatcher) {
+        val e = manualEntity
+        val ok = when {
+            nanos == null || iso == null -> { _manualState.update { it.copy(exposureNanos = null, iso = null) }; true }
+            e == null || !e.setExposure(nanos, iso) -> false
+            else -> { _manualState.update { it.copy(exposureNanos = e.exposureNanos, iso = e.iso) }; true }
+        }
+        if (ok) applyManualOptions()
+        ok
+    }
+
+    override suspend fun setFocus(diopters: Float?): Boolean = withContext(dispatcher) {
+        val e = manualEntity
+        val ok = when {
+            diopters == null -> { _manualState.update { it.copy(focusDiopters = null) }; true }
+            e == null || !e.setFocus(diopters) -> false
+            else -> { _manualState.update { it.copy(focusDiopters = e.focusDiopters) }; true }
+        }
+        if (ok) applyManualOptions()
+        ok
+    }
+
+    override suspend fun setRaw(enabled: Boolean): Boolean = withContext(dispatcher) {
+        if (enabled && _manualCaps.value?.raw != true) return@withContext false
+        mutex.withLock {
+            _manualState.update { it.copy(raw = enabled) }
+            val p = provider; val em = extensions
+            if (owner.isActive && p != null && em != null) bindCurrent(p, em)
+        }
+        true
+    }
+
+    override suspend fun focusBracket(steps: Int): BurstResult {
+        if (_state.value.status != CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
+        val e = manualEntity ?: return BurstResult.Failed(BurstFailure.NOT_READY)
+        val distances = e.focusBracket(steps).ifEmpty { return BurstResult.Failed(BurstFailure.NOT_READY) }
+        val previous = _manualState.value.focusDiopters
+        acquirePipeline()
+        val received = Channel<Pair<ByteArray, IntArray>>(Channel.CONFLATED)
+        val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot -> received.trySend(bytes.copyOf() to intArrayOf(w, h, rot)) }
+        return try {
+            withContext(dispatcher) { ensureSurface() }
+            frameListeners += listener
+            val frames = withTimeoutOrNull(5_000L + distances.size * 1_500L) {
+                distances.map { d ->
+                    setFocus(d)
+                    delay(FOCUS_SETTLE_MS)
+                    received.tryReceive() // veraltetes Bild verwerfen
+                    received.receive()
+                }
+            } ?: return BurstResult.Failed(BurstFailure.TIMEOUT)
+            val (w, h, rot) = frames.first().second.let { Triple(it[0], it[1], it[2]) }
+            BurstResult.Ok(FrameBurst(w, h, frames.filter { it.second[0] == w && it.second[1] == h }.map { it.first }, rot), distances.size)
+        } finally {
+            frameListeners -= listener
+            received.close()
+            withContext(NonCancellable) { setFocus(previous) }
+            releasePipeline()
         }
     }
 
@@ -381,6 +525,7 @@ class CameraXCameraAdapter @Inject constructor(
         const val PHOTO_DIR = "Pictures/CayResim"
         const val CAPTURE_TIMEOUT_MS = 8_000L
         val ANALYSIS_SIZE = Size(1440, 1080)
+        const val FOCUS_SETTLE_MS = 350L
 
         internal fun mapError(code: Int): CaptureFailure = when (code) {
             ImageCapture.ERROR_FILE_IO -> CaptureFailure.STORAGE

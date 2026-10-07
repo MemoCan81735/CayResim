@@ -38,7 +38,8 @@ enum class CaptureFailure { NOT_READY, BUSY, CAMERA_CLOSED, STORAGE, UNKNOWN }
 
 /** Ergebnis einer Aufnahme als Wert, nie als Exception (R24). */
 sealed interface CaptureResult {
-    data class Saved(val uri: String) : CaptureResult
+    /** [rawUri]: zusaetzliche DNG-Datei, wenn RAW eingeschaltet ist. */
+    data class Saved(val uri: String, val rawUri: String? = null) : CaptureResult
     data class Failed(val reason: CaptureFailure) : CaptureResult
 }
 

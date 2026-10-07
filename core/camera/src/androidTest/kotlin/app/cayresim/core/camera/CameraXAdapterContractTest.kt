@@ -129,6 +129,56 @@ class CameraXAdapterContractTest {
         val r = adapter.capture(); assertIs<CaptureResult.Saved>(r, "Nach dem Ausloeser muss normal fotografiert werden, war $r"); adapter.delete(r.uri)
     }
 
+    // ---------- Phase 4: manuelle Kamera ----------
+    @Test fun manuelleFaehigkeitenSindBekannt() = run {
+        adapter.start()
+        assertNotNull(adapter.manualCapabilities.value, "Camera2-Faehigkeiten muessen lesbar sein")
+    }
+
+    @Test fun belichtungUndIsoKommenInDerAufnahmeAn() = run {
+        adapter.start()
+        val caps = assertNotNull(adapter.manualCapabilities.value)
+        if (!caps.canExpose) return@run // Kamera ohne manuelle Belichtung: Rueckfall ist im Unit-Test abgedeckt
+        val exp = 10_000_000L.coerceIn(caps.exposureRangeNanos!!); val iso = 400.coerceIn(caps.isoRange!!)
+        assertTrue(adapter.setExposure(exp, iso))
+        kotlinx.coroutines.delay(800)
+        val r = assertIs<CaptureResult.Saved>(adapter.capture())
+        val exif = context.contentResolver.openInputStream(android.net.Uri.parse(r.uri))!!.use { androidx.exifinterface.media.ExifInterface(it) }
+        val t = exif.getAttributeDouble(androidx.exifinterface.media.ExifInterface.TAG_EXPOSURE_TIME, -1.0)
+        val s = exif.getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY, -1)
+        adapter.delete(r.uri); adapter.setExposure(null, null)
+        assertTrue(kotlin.math.abs(t - exp / 1e9) < exp / 1e9 * 0.25, "Belichtungszeit in EXIF $t statt ${exp / 1e9}")
+        assertEquals(iso, s, "ISO in EXIF")
+    }
+
+    @Test fun rawErzeugtGueltigesDngUndJpeg() = run {
+        adapter.start()
+        if (adapter.manualCapabilities.value?.raw != true) { assertEquals(false, adapter.setRaw(true)); return@run }
+        assertTrue(adapter.setRaw(true))
+        val r = assertIs<CaptureResult.Saved>(adapter.capture())
+        val raw = assertNotNull(r.rawUri, "DNG fehlt")
+        val head = context.contentResolver.openInputStream(android.net.Uri.parse(raw))!!.use { it.readNBytes(4) }
+        assertTrue(head.contentEquals(byteArrayOf(0x49, 0x49, 0x2A, 0x00)) || head.contentEquals(byteArrayOf(0x4D, 0x4D, 0x00, 0x2A)), "Kein TIFF/DNG-Kopf")
+        adapter.delete(r.uri); adapter.delete(raw); adapter.setRaw(false)
+    }
+
+    @Test fun fokusreiheBeiFixfokusWirdAbgelehnt() = run {
+        adapter.start()
+        val caps = assertNotNull(adapter.manualCapabilities.value)
+        val r = adapter.focusBracket(4)
+        if (caps.canFocus) assertIs<app.cayresim.core.boundary.BurstResult.Ok>(r)
+        else assertEquals(app.cayresim.core.boundary.BurstResult.Failed(app.cayresim.core.boundary.BurstFailure.NOT_READY), r)
+    }
+
+    @Test fun ungueltigeManuelleWerteWerdenBegrenzt() = run {
+        adapter.start()
+        val caps = assertNotNull(adapter.manualCapabilities.value)
+        if (!caps.canExpose) { assertEquals(false, adapter.setExposure(1, 1)); return@run }
+        assertTrue(adapter.setExposure(Long.MAX_VALUE, Int.MAX_VALUE))
+        assertEquals(caps.exposureRangeNanos!!.last, adapter.manualState.value.exposureNanos)
+        adapter.setExposure(null, null)
+    }
+
     @Test fun loeschenUnbekannterUriLiefertFalse() = run {
         assertEquals(false, adapter.delete("content://media/external/images/media/999999999"))
         assertEquals(false, adapter.delete("kein-uri"))
