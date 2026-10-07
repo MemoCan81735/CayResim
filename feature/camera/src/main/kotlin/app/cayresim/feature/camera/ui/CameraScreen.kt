@@ -1,5 +1,8 @@
 package app.cayresim.feature.camera.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -159,14 +162,19 @@ fun CameraContent(
         }
         var picker by remember { mutableStateOf(false) }
         // Bei grosser Schrift seitlich wischbar statt abgeschnitten
-        Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+        Row(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 8.dp).padding(end = 56.dp).horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TopChip(stringResource(lookRes(state.look)), onNextLook, "look")
             TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
             TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
-            // Immer erreichbar, auch nach dem ersten Foto (Selbsttest)
-            TopChip(stringResource(R.string.open_settings), onOpenSettings, "open_settings")
+        }
+        // Immer sichtbar und nie abgeschnitten, auch nach dem ersten Foto (Selbsttest)
+        val settingsLabel = stringResource(R.string.open_settings)
+        Surface(onClick = onOpenSettings, color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White, shape = CircleShape,
+            modifier = Modifier.align(Alignment.TopEnd).safeDrawingPadding().padding(top = 8.dp, end = 8.dp).size(40.dp)
+                .semantics { contentDescription = settingsLabel }.testTag("open_settings")) {
+            Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Settings, contentDescription = null) }
         }
         if (state.overlay != null && state.previewToken != null) {
             Slider(value = state.overlayAlpha, onValueChange = onOverlayAlpha, valueRange = 0f..0.9f,

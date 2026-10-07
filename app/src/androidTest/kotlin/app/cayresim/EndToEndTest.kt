@@ -109,7 +109,7 @@ class EndToEndTest {
 
     @Test fun selbsttestLaeuftAufDemEmulatorGruen() {
         waitForViewfinder()
-        compose.onNodeWithTag("open_settings").performScrollTo().performClick()
+        compose.onNodeWithTag("open_settings").performClick()
         compose.onNodeWithTag("selftest_start").performClick()
         compose.waitUntil(60_000) { compose.onAllNodes(hasTestTag("selftest_summary")).fetchSemanticsNodes().isNotEmpty() }
         val texts = compose.onAllNodes(hasTestTag("selftest_summary").or(hasTestTagPrefix("row_")), useUnmergedTree = false)

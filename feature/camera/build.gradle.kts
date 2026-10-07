@@ -6,4 +6,5 @@ dependencies {
     implementation(libs.camerax.core)
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)
+    implementation(libs.compose.material.icons)
 }

@@ -139,7 +139,7 @@ class CameraContentTest {
     @Test fun einstellungen_bleiben_nach_foto_erreichbar() {
         show(running.copy(lastPhotoUri = "content://x/1"))
         compose.onNodeWithTag("open_last").assertExists()
-        compose.onNodeWithTag("open_settings").performScrollTo().performClick()
+        compose.onNodeWithTag("open_settings").performClick()
         assertEquals(listOf("settings"), events)
     }
 
@@ -206,7 +206,7 @@ class CameraContentTest {
     }
 
     @Test fun galerie_und_einstellungen() {
-        show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performScrollTo().performClick()
+        show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performClick()
         assertEquals(listOf("gallery", "settings"), events)
     }
 }
