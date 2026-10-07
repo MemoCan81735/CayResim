@@ -106,6 +106,7 @@ class CameraXCameraAdapter @Inject constructor(
     private var extensions: ExtensionsManager? = null
     private var imageCapture: ImageCapture? = null
     private var pendingRequest: SurfaceRequest? = null
+    private var bindGeneration = 0
     /** Wie oft die Selbstheilung noetig war; Tests verlangen 0 im normalen Ablauf. */
     @androidx.annotation.VisibleForTesting internal var selfHealCount = 0
     /** Unsichtbarer Sucher-Ersatz mit eigenem OpenGL-Abnehmer, siehe [FallbackPreviewSink]. */
@@ -152,6 +153,7 @@ class CameraXCameraAdapter @Inject constructor(
     override suspend fun stop() = withContext(dispatcher) {
         mutex.withLock {
             provider?.unbindAll()
+            bindGeneration++
             owner.pause()
             pendingRequest = null
             // Den Sucher-Ersatz gibt CameraX ueber den Ergebnis-Rueckruf frei, sobald die Sitzung ihn losgelassen hat
@@ -209,9 +211,12 @@ class CameraXCameraAdapter @Inject constructor(
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .apply { if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG) }
             .build()
-        // Alte Anfrage verwerfen: sie gehoert zur vorigen Bindung und wird nie mehr bedient
+        // Alte Anfrage verwerfen: sie gehoert zur vorigen Bindung und wird nie mehr bedient.
+        // Jede Bindung bekommt eine Nummer; spaet eintreffende Anfragen frueherer Bindungen werden ignoriert.
         pendingRequest = null
+        val generation = ++bindGeneration
         preview.setSurfaceProvider { request ->
+            if (generation != bindGeneration) { request.willNotProvideSurface(); return@setSurfaceProvider }
             request.addRequestCancellationListener(ContextCompat.getMainExecutor(context)) {
                 if (pendingRequest === request) pendingRequest = null
             }
