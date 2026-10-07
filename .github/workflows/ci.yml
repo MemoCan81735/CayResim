@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 17 }
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with: { gradle-version: "9.8.0" }
       - name: Versionen (Info)
         run: |
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 17 }
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with: { gradle-version: "9.8.0" }
       - name: KVM freischalten
         run: |
@@ -76,23 +76,15 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Bauen
         run: gradle assembleDebug assembleDebugAndroidTest :core:camera:assembleDebugAndroidTest 2>&1 | tee build.log
+      - name: Emulator starten
+        run: bash .github/scripts/start-emulator.sh
       - name: Geraetetests und Zufallsbedienung
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          disable-animations: true
-          cores: 4
-          ram-size: 4096M
-          emulator-boot-timeout: 1200
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated -camera-front none
-          script: bash .github/scripts/emulator.sh
+        run: bash .github/scripts/emulator.sh
       - name: Protokoll ablegen
         if: always()
         run: |
           mkdir -p out/results
-          cp build.log emu.log monkey.log logcat.txt out/ 2>/dev/null || true
+          cp build.log emu-start.log emulator.log emu.log monkey.log logcat.txt out/ 2>/dev/null || true
           cp -r screens out/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/outputs/androidTest-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
           cd out && git init -q && git checkout -q -b ci-logs-emu
