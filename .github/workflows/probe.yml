@@ -1,11 +1,14 @@
 name: Versionen ermitteln
-on: [push, workflow_dispatch]
+on: [workflow_dispatch, push]
+permissions:
+  contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
       - name: Neueste stabile Versionen
         run: |
+          exec > >(tee probe.log) 2>&1
           latest() { curl -s "$1/maven-metadata.xml" | grep -oP '(?<=<version>)[^<]+' | grep -viE 'alpha|beta|rc|dev|-M' | sort -V | tail -1; }
           G=https://dl.google.com/dl/android/maven2
           C=https://repo1.maven.org/maven2
@@ -37,3 +40,11 @@ jobs:
           echo "Gradle $(curl -s https://services.gradle.org/versions/current | grep -oP '(?<="version" : ")[^"]+')"
           echo "ComposePluginCheck $(curl -s -o /dev/null -w '%{http_code}' $C/org/jetbrains/kotlin/plugin/compose/org.jetbrains.kotlin.plugin.compose.gradle.plugin/maven-metadata.xml)"
           ls $ANDROID_HOME/platforms; ls $ANDROID_HOME/build-tools
+      - name: Log ablegen
+        if: always()
+        run: |
+          mkdir out && cp probe.log out/ && cd out
+          git init -q && git checkout -q -b ci-logs
+          git config user.name ci && git config user.email ci@local
+          git add . && git commit -qm "log $GITHUB_RUN_ID"
+          git push -f -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} ci-logs
