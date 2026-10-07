@@ -155,6 +155,13 @@ class CameraContentTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_series_picker.png")
     }
 
+    @Test fun ausloeser_unter_der_serienwahl_ist_gesperrt() {
+        show(running.copy(series = listOf(SeriesOption(1, "Garten", 2))))
+        compose.onNodeWithTag("series").performClick()
+        compose.onNodeWithTag("shutter").performClick()
+        assertEquals(emptyList(), events, "Ausloeser darf durch das Panel nicht erreichbar sein")
+    }
+
     @Test fun galerie_und_einstellungen() {
         show(running); compose.onNodeWithTag("open_gallery").performClick(); compose.onNodeWithTag("open_settings").performClick()
         assertEquals(listOf("gallery", "settings"), events)

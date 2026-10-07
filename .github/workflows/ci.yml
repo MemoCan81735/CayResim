@@ -33,6 +33,12 @@ jobs:
             echo "test-rules $(m $G/androidx/test/rules)"; echo "test-ext $(m $G/androidx/test/ext/junit-ktx)"
             echo "uiautomator $(m $G/androidx/test/uiautomator/uiautomator)"; echo "core-ktx $(m $G/androidx/core/core-ktx)"
             echo "leakcanary $(m $C/com/squareup/leakcanary/leakcanary-android-instrumentation)"; } | tee versions.log
+          # API-Signaturen fuer Media3 (Zeitraffer), einmalig zur Orientierung
+          mkdir -p x && cd x
+          for a in media3-transformer media3-common media3-effect; do curl -sfL "$G/androidx/media3/$a/1.11.1/$a-1.11.1.aar" -o $a.aar && mkdir -p $a && (cd $a && unzip -qo ../$a.aar classes.jar && unzip -qo classes.jar); done
+          for k in transformer:androidx.media3.transformer.EditedMediaItem\$Builder transformer:androidx.media3.transformer.EditedMediaItemSequence transformer:androidx.media3.transformer.EditedMediaItemSequence\$Builder transformer:androidx.media3.transformer.Composition\$Builder transformer:androidx.media3.transformer.Transformer\$Builder transformer:androidx.media3.transformer.Transformer transformer:androidx.media3.transformer.Transformer\$Listener transformer:androidx.media3.transformer.ExportResult common:androidx.media3.common.MediaItem\$Builder; do
+            d=media3-${k%%:*}; c=${k#*:}; echo "=== $c" >> ../versions.log; javap -cp $d "$c" 2>&1 | grep public | head -40 >> ../versions.log; done
+          cd ..
       - name: Tests, Architektur, Abdeckung, Screenshots, APK
         run: |
           set -o pipefail

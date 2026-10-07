@@ -151,8 +151,6 @@ fun CameraContent(
             Slider(value = state.overlayAlpha, onValueChange = onOverlayAlpha, valueRange = 0f..0.9f,
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).fillMaxWidth(0.5f).testTag("overlay_alpha"))
         }
-        if (picker) SeriesPicker(state, onDismiss = { picker = false }, onSelect = { onSeriesSelected(it); picker = false },
-            onCreate = { onCreateSeries(it); picker = false })
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().safeDrawingPadding().padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             state.fallbackFrom?.let {
@@ -191,6 +189,9 @@ fun CameraContent(
                 }
             }
         }
+        // Serienwahl zuoberst, damit nichts darunter bedienbar bleibt
+        if (picker) SeriesPicker(state, onDismiss = { picker = false }, onSelect = { onSeriesSelected(it); picker = false },
+            onCreate = { onCreateSeries(it); picker = false })
         SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).safeDrawingPadding().testTag("message"))
     }
 }
