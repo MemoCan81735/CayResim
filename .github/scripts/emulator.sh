@@ -11,6 +11,8 @@ grep -q "BUILD SUCCESSFUL" emu.log || fail=1
 # Zufallsbedienung (Testebene 6): 5000 Schritte, Kamera-Erlaubnis vorher erteilt.
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant app.cayresim android.permission.CAMERA || true
+# Die Zufallsbedienung laeuft bei ANR oder Absturz fremder Systemprozesse weiter; gewertet werden nur
+# Abstuerze und ANRs der App selbst (Absturzpuffer und logcat).
 # Systemdialoge (z. B. "System UI reagiert nicht") ausblenden, damit die Zufallsbedienung sie nicht
 # antippt und dabei die System-UI beendet. Abstuerze und ANRs werden weiter erkannt und protokolliert.
 adb shell settings put global hide_error_dialogs 1 || true
@@ -27,7 +29,7 @@ run_monkey() {
   adb logcat -c || true
   adb logcat -b crash -c || true
   adb shell am force-stop app.cayresim || true
-  adb shell monkey -p app.cayresim --pct-syskeys 0 --pct-appswitch 0 --throttle 50 -s 4711 -v 5000 > monkey.log 2>&1 || true
+  adb shell monkey -p app.cayresim --ignore-timeouts --ignore-crashes --pct-syskeys 0 --pct-appswitch 0 --pct-trackball 0 --throttle 50 -s 4711 -v 5000 > monkey.log 2>&1 || true
   adb logcat -d -b crash > crash.txt 2>&1 || true
   adb logcat -d > logcat-monkey.txt 2>&1 || true
   adb shell dumpsys meminfo app.cayresim > meminfo.txt 2>&1 || true
@@ -35,7 +37,7 @@ run_monkey() {
 monkey_failed() {
   grep -q "Process: app.cayresim" crash.txt && return 0
   grep -q "ANR in app.cayresim" logcat-monkey.txt && return 0
-  grep -q "System appears to have crashed" monkey.log && return 0
+  grep -q "Monkey finished" monkey.log || return 0
   return 1
 }
 run_monkey
@@ -48,7 +50,7 @@ if monkey_failed && grep -q "Process com.android.systemui (pid [0-9]*) has died"
 fi
 grep -q "Process: app.cayresim" crash.txt && { echo "App-Absturz in der Zufallsbedienung"; fail=1; }
 grep -q "ANR in app.cayresim" logcat-monkey.txt && { echo "App-ANR in der Zufallsbedienung"; fail=1; }
-grep -q "System appears to have crashed" monkey.log && { echo "Abbruch der Zufallsbedienung"; fail=1; }
+grep -q "Monkey finished" monkey.log || { echo "Zufallsbedienung nicht vollstaendig durchgelaufen"; fail=1; }
 
 # Bildschirmfotos fuer die Sichtpruefung durch Claude
 mkdir -p screens
