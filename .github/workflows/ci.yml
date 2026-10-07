@@ -92,7 +92,7 @@ jobs:
         if: always()
         run: |
           mkdir -p out/results
-          cp build.log emu-start.log emulator.log emu.log monkey.log logcat.txt out/ 2>/dev/null || true
+          cp build.log emu-start.log emulator.log emu.log monkey.log logcat.txt crash.txt logcat-monkey.txt meminfo.txt out/ 2>/dev/null || true
           cp -r screens out/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/outputs/androidTest-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
           cd out && git init -q && git checkout -q -b ci-logs-emu
