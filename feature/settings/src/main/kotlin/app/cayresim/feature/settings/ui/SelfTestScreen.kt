@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cayresim.feature.settings.R
@@ -56,7 +57,7 @@ fun SelfTestContent(state: SelfTestUiState, onStart: () -> Unit, onBack: () -> U
                 )
             }
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                itemsIndexed(state.rows) { i, row -> CheckLine(row, Modifier.testTag("row_$i")) }
+                itemsIndexed(state.rows) { i, row -> CheckLine(row, Modifier.testTag("row_$i").semantics(mergeDescendants = true) {}) }
             }
         }
     }

@@ -4,6 +4,10 @@ import android.Manifest
 import android.provider.MediaStore
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -28,6 +32,10 @@ import kotlin.test.assertTrue
  * Testebene 5 und 6 auf dem Emulator: die ganze App mit echter Emulator-Kamera,
  * echten Adaptern und Speicherleck-Pruefung nach jedem Test.
  */
+private fun hasTestTagPrefix(p: String) = SemanticsMatcher("Tag beginnt mit $p") { n ->
+    n.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(p) == true
+}
+
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class EndToEndTest {
@@ -64,8 +72,8 @@ class EndToEndTest {
     @Test fun sucherStartetUndAusloesenSpeichert() {
         waitForViewfinder()
         shootAndWait()
-        compose.onNodeWithText("Foto gespeichert").assertIsDisplayed()
-        compose.onNodeWithTag("open_last").assertIsDisplayed()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Foto gespeichert")).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10_000) { compose.onAllNodes(hasTestTag("open_last")).fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test fun ohneExtensionFaelltNachtZurueckUndFotografiertTrotzdem() {
@@ -103,7 +111,10 @@ class EndToEndTest {
         compose.onNodeWithTag("open_settings").performClick()
         compose.onNodeWithTag("selftest_start").performClick()
         compose.waitUntil(60_000) { compose.onAllNodes(hasTestTag("selftest_summary")).fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Alles grün", substring = true).assertIsDisplayed()
+        val texts = compose.onAllNodes(hasTestTag("selftest_summary").or(hasTestTagPrefix("row_")), useUnmergedTree = false)
+            .fetchSemanticsNodes().map { n -> n.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") ?: n.config.toString() }
+        assertTrue(compose.onAllNodes(hasText("Alles grün", substring = true)).fetchSemanticsNodes().isNotEmpty(),
+            "Selbsttest nicht gruen:\n" + texts.joinToString("\n"))
         assertTrue(appPhotoCount() == 0, "Selbsttest muss seine Fotos loeschen")
     }
 
