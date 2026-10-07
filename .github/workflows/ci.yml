@@ -21,6 +21,18 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "9.8.0" }
+      - name: Versionen (Info)
+        run: |
+          m(){ curl -s "$1/maven-metadata.xml" | grep -oP '(?<=<version>)[^<]+' | tail -${2:-4} | tr '\n' ' '; echo; }
+          G=https://dl.google.com/dl/android/maven2; C=https://repo1.maven.org/maven2
+          { echo "roborazzi $(m $C/io/github/takahirom/roborazzi/roborazzi-gradle-plugin 6)"
+            echo "robolectric $(m $C/org/robolectric/robolectric)"
+            echo "kover $(m $C/org/jetbrains/kotlinx/kover-gradle-plugin)"
+            echo "serialization $(m $C/org/jetbrains/kotlinx/kotlinx-serialization-core)"
+            echo "test-core $(m $G/androidx/test/core-ktx)"; echo "test-runner $(m $G/androidx/test/runner)"
+            echo "test-rules $(m $G/androidx/test/rules)"; echo "test-ext $(m $G/androidx/test/ext/junit-ktx)"
+            echo "uiautomator $(m $G/androidx/test/uiautomator/uiautomator)"; echo "core-ktx $(m $G/androidx/core/core-ktx)"
+            echo "leakcanary $(m $C/com/squareup/leakcanary/leakcanary-android-instrumentation)"; } | tee versions.log
       - name: Tests, Architektur, Abdeckung, Screenshots, APK
         run: |
           set -o pipefail
@@ -39,7 +51,7 @@ jobs:
         if: always()
         run: |
           mkdir -p out/results out/screenshots out/roborazzi
-          cp fast.log out/ 2>/dev/null || true
+          cp fast.log versions.log out/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/test-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
           cp feature/*/src/test/screenshots/*.png out/screenshots/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/outputs/roborazzi/*' -name '*.png' -print -exec cp {} out/roborazzi/ \; >/dev/null 2>&1 || true
