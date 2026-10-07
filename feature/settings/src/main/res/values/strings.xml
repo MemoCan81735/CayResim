@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="selftest_title">Selbsttest</string>
+    <string name="selftest_intro">Prüft die Kamera dieses Geräts in jedem verfügbaren Modus. Testfotos werden danach gelöscht.</string>
+    <string name="selftest_start">Selbsttest starten</string>
+    <string name="selftest_running">Läuft …</string>
+    <string name="selftest_all_ok">Alles grün. Bitte einen Screenshot an Claude schicken.</string>
+    <string name="selftest_some_failed">Es gibt rote Punkte. Bitte einen Screenshot an Claude schicken.</string>
+    <string name="check_camera_start">Kamera starten</string>
+    <string name="check_capabilities">Verfügbare Modi</string>
+    <string name="check_mode_capture">Aufnahme %1$s</string>
+    <string name="check_low_light_boost">Low Light Boost</string>
+    <string name="check_ultra_hdr">Ultra HDR</string>
+    <string name="check_raw">RAW</string>
+    <string name="check_cleanup">Testfotos gelöscht</string>
+    <string name="back">Zurück</string>
+</resources>

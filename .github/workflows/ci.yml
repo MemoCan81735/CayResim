@@ -1,0 +1,102 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+jobs:
+  fast:
+    name: Schnell (JVM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "9.8.0" }
+      - name: Tests, Architektur, Abdeckung, Screenshots, APK
+        run: |
+          set -o pipefail
+          MODE=verifyRoborazziDebug
+          ls feature/*/src/test/screenshots/*.png >/dev/null 2>&1 || MODE=recordRoborazziDebug
+          echo "Screenshot-Modus: $MODE"
+          gradle --continue test $MODE koverVerify assembleDebug assembleRelease 2>&1 | tee fast.log
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+      - name: Protokoll ablegen
+        if: always()
+        run: |
+          mkdir -p out/results out/screenshots out/roborazzi
+          cp fast.log out/ 2>/dev/null || true
+          find . -path ./out -prune -o -path '*/build/test-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
+          cp feature/*/src/test/screenshots/*.png out/screenshots/ 2>/dev/null || true
+          find . -path ./out -prune -o -path '*/build/outputs/roborazzi/*' -name '*.png' -print -exec cp {} out/roborazzi/ \; >/dev/null 2>&1 || true
+          cd out && git init -q && git checkout -q -b ci-logs-fast
+          git config user.name ci && git config user.email ci@local
+          git add . && git commit -qm "fast $GITHUB_RUN_ID $GITHUB_SHA"
+          git push -f -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} ci-logs-fast
+
+  emulator:
+    name: Emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "9.8.0" }
+      - name: KVM freischalten
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Bauen
+        run: gradle assembleDebug assembleDebugAndroidTest :core:camera:assembleDebugAndroidTest 2>&1 | tee build.log
+      - name: Geraetetests und Zufallsbedienung
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated -camera-front none
+          script: bash .github/scripts/emulator.sh
+      - name: Protokoll ablegen
+        if: always()
+        run: |
+          mkdir -p out/results
+          cp build.log emu.log monkey.log logcat.txt out/ 2>/dev/null || true
+          cp -r screens out/ 2>/dev/null || true
+          find . -path ./out -prune -o -path '*/build/outputs/androidTest-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
+          cd out && git init -q && git checkout -q -b ci-logs-emu
+          git config user.name ci && git config user.email ci@local
+          git add . && git commit -qm "emu $GITHUB_RUN_ID $GITHUB_SHA"
+          git push -f -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} ci-logs-emu
+
+  release:
+    name: Release
+    needs: [fast, emulator]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: apk, path: apk }
+      - name: Release mit APK
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          APK=$(find apk -name '*release*.apk' | head -1)
+          cp "$APK" CayResim-0.1.${{ github.run_number }}.apk
+          gh release create v0.1.${{ github.run_number }} CayResim-0.1.${{ github.run_number }}.apk \
+            --repo ${{ github.repository }} --title "CayResim 0.1.${{ github.run_number }}" \
+            --notes "Automatisch gebaut, alle Tests gruen (JVM und Emulator). Commit ${{ github.sha }}"

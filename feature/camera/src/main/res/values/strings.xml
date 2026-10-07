@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mode_normal">Foto</string>
+    <string name="mode_auto">Auto</string>
+    <string name="mode_night">Nacht</string>
+    <string name="mode_hdr">HDR</string>
+    <string name="mode_bokeh">Porträt</string>
+    <string name="mode_face_retouch">Retusche</string>
+    <string name="shutter">Auslösen</string>
+    <string name="msg_saved">Foto gespeichert</string>
+    <string name="msg_failed_storage">Speichern fehlgeschlagen. Ist der Speicher voll?</string>
+    <string name="msg_failed_camera">Die Kamera ist gerade nicht bereit.</string>
+    <string name="msg_failed_other">Aufnahme fehlgeschlagen.</string>
+    <string name="fallback">%1$s ist auf diesem Gerät nicht verfügbar, es wird normal fotografiert.</string>
+    <string name="permission_needed">CayResim braucht Zugriff auf die Kamera.</string>
+    <string name="permission_grant">Zugriff erlauben</string>
+    <string name="camera_error">Die Kamera konnte nicht gestartet werden. Wird sie von einer anderen App benutzt?</string>
+    <string name="retry">Erneut versuchen</string>
+    <string name="open_gallery">Galerie</string>
+    <string name="open_settings">Einstellungen</string>
+    <string name="open_last">Letztes Foto</string>
+</resources>

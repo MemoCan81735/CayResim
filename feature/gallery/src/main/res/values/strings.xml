@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gallery_title">Meine Fotos</string>
+    <string name="gallery_empty">Noch keine Fotos mit CayResim.</string>
+    <string name="back">Zurück</string>
+</resources>
