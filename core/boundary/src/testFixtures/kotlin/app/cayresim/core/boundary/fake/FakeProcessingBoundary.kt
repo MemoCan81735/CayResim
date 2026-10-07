@@ -24,6 +24,16 @@ class FakeProcessingBoundary : ProcessingBoundary {
         return ProcessResult.Saved(out)
     }
 
+    val stacked = mutableListOf<Pair<Int, app.cayresim.core.boundary.StackMode>>()
+
+    override suspend fun stack(burst: app.cayresim.core.boundary.FrameBurst, mode: app.cayresim.core.boundary.StackMode): ProcessResult {
+        if (burst.frames.isEmpty()) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        if (gpuFails) return ProcessResult.Failed(ProcessFailure.GPU)
+        stacked += burst.frames.size to mode
+        val out = "content://fake/stack/${++n}"; known += out
+        return ProcessResult.Saved(out)
+    }
+
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {
         if (photoUris.isEmpty() || photosPerSecond !in 1..60) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         if (photoUris.any { it !in known }) return ProcessResult.Failed(ProcessFailure.SOURCE_MISSING)

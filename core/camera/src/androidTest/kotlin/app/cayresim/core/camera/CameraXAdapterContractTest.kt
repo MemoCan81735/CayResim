@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -96,6 +97,36 @@ class CameraXAdapterContractTest {
         val r = adapter.capture()
         assertIs<CaptureResult.Saved>(r, "Aufnahme muss nach Neubindung klappen, war $r")
         adapter.delete(r.uri)
+    }
+
+    // ---------- Phase 3: eigene Pipeline ----------
+    @Test fun serieAusDemFrameStrom() = run {
+        adapter.start()
+        val r = assertIs<app.cayresim.core.boundary.BurstResult.Ok>(adapter.collect(5))
+        assertTrue(r.burst.frames.size in 3..5)
+        assertTrue(r.burst.width > 0 && r.burst.height > 0)
+        r.burst.frames.forEach { assertEquals(r.burst.pixels * 3, it.size) }
+        assertTrue(r.burst.frames.zipWithNext().any { (a, b) -> !a.contentEquals(b) } || r.burst.frames.size == 1, "Bilder muessen echte Kopien sein")
+    }
+
+    @Test fun serieOhneKameraIstNichtBereit() = run {
+        assertEquals(app.cayresim.core.boundary.BurstResult.Failed(app.cayresim.core.boundary.BurstFailure.NOT_READY), adapter.collect(5))
+    }
+
+    @Test fun nachDerSerieFotografiertDieKameraNormalWeiter() = run {
+        adapter.start(); adapter.collect(3)
+        val r = adapter.capture(); assertIs<CaptureResult.Saved>(r); adapter.delete(r.uri)
+        assertEquals(CameraStatus.RUNNING, adapter.state.value.status)
+    }
+
+    @Test fun ausloeserLaesstSichStartenUndBeenden() = run {
+        adapter.start()
+        val job = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+            adapter.trigger(app.cayresim.core.boundary.TriggerMode.MOTION).collect { }
+        }
+        kotlinx.coroutines.delay(2_000); job.cancel(); job.join()
+        kotlinx.coroutines.delay(500)
+        val r = adapter.capture(); assertIs<CaptureResult.Saved>(r, "Nach dem Ausloeser muss normal fotografiert werden, war $r"); adapter.delete(r.uri)
     }
 
     @Test fun loeschenUnbekannterUriLiefertFalse() = run {

@@ -1,6 +1,31 @@
 package app.cayresim.core.camera
 
 import android.content.ContentValues
+import android.os.PowerManager
+import android.os.SystemClock
+import android.util.Size
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
+import app.cayresim.core.boundary.BurstFailure
+import app.cayresim.core.boundary.BurstResult
+import app.cayresim.core.boundary.FrameBoundary
+import app.cayresim.core.boundary.FrameBurst
+import app.cayresim.core.boundary.TriggerMode
+import app.cayresim.core.entity.ThermalBudgetEntity
+import app.cayresim.core.entity.TriggerEntity
+import app.cayresim.core.entity.TriggerKind
+import app.cayresim.core.pure.Stacking
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
@@ -57,7 +82,7 @@ import kotlin.coroutines.resume
 class CameraXCameraAdapter @Inject constructor(
     @ApplicationContext private val context: Context,
     @CameraDispatcher private val dispatcher: CoroutineDispatcher,
-) : CameraBoundary {
+) : CameraBoundary, FrameBoundary {
 
     private val owner = AdapterLifecycleOwner()
     private val selection = ModeSelectionEntity()
@@ -73,6 +98,14 @@ class CameraXCameraAdapter @Inject constructor(
     private var pendingRequest: SurfaceRequest? = null
     private var fallbackSurface: Pair<SurfaceTexture, Surface>? = null
     private val selector = CameraSelector.DEFAULT_BACK_CAMERA
+
+    // ---------- Eigene Pipeline (Phase 3) ----------
+    private val thermal = ThermalBudgetEntity()
+    private var pipelineUsers = 0
+    private val analysisExecutor = Executors.newSingleThreadExecutor { r -> Thread(r, "cayresim-analysis") }
+    private val frameListeners = CopyOnWriteArrayList<(ByteArray, Int, Int, Int) -> Unit>()
+    /** Wiederverwendeter Puffer des Analyse-Threads (R19): keine Allokation pro Frame. */
+    private var analysisBuffer = ByteArray(0)
 
     override suspend fun start() = withContext(dispatcher) {
         mutex.withLock {
@@ -155,10 +188,12 @@ class CameraXCameraAdapter @Inject constructor(
             pendingRequest = request
             _state.update { it.copy(preview = PreviewHandle(request)) }
         }
-        val ext = key.toExtensionMode()
+        val ext = if (pipelineUsers > 0) ExtensionMode.NONE else key.toExtensionMode()
+        val useCases = mutableListOf(preview, capture)
+        if (pipelineUsers > 0) useCases += buildAnalysis()
         val config: SessionConfig =
-            if (ext == ExtensionMode.NONE) SessionConfig(listOf(preview, capture))
-            else ExtensionSessionConfig(ext, em, listOf(preview, capture))
+            if (ext == ExtensionMode.NONE) SessionConfig(useCases)
+            else ExtensionSessionConfig(ext, em, useCases)
         if (ext == ExtensionMode.NONE && !p.getCameraInfo(selector).isSessionConfigSupported(config)) {
             false
         } else {
@@ -171,11 +206,101 @@ class CameraXCameraAdapter @Inject constructor(
         false
     }
 
+    private fun buildAnalysis(): ImageAnalysis {
+        val analysis = ImageAnalysis.Builder()
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setResolutionStrategy(ResolutionStrategy(ANALYSIS_SIZE, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER))
+                    .build(),
+            ).build()
+        analysis.setAnalyzer(analysisExecutor) { image -> image.use { onFrame(it) } }
+        return analysis
+    }
+
+    /** RGBA der Analyse in den wiederverwendeten RGB-Puffer, dann an alle Zuhoerer. */
+    private fun onFrame(image: ImageProxy) {
+        if (frameListeners.isEmpty()) return
+        val w = image.width; val h = image.height
+        val plane = image.planes[0]; val buf = plane.buffer; val row = plane.rowStride; val pix = plane.pixelStride
+        if (analysisBuffer.size != w * h * 3) analysisBuffer = ByteArray(w * h * 3)
+        val out = analysisBuffer
+        var o = 0
+        for (y in 0 until h) {
+            var i = y * row
+            for (x in 0 until w) {
+                out[o] = buf.get(i); out[o + 1] = buf.get(i + 1); out[o + 2] = buf.get(i + 2)
+                o += 3; i += pix
+            }
+        }
+        val rot = image.imageInfo.rotationDegrees
+        frameListeners.forEach { it(out, w, h, rot) }
+    }
+
+    private suspend fun acquirePipeline() = withContext(dispatcher) {
+        mutex.withLock {
+            pipelineUsers++
+            if (pipelineUsers == 1) { val p = provider; val em = extensions; if (owner.isActive && p != null && em != null) bindCurrent(p, em) }
+        }
+    }
+
+    private suspend fun releasePipeline() = withContext(NonCancellable + dispatcher) {
+        mutex.withLock {
+            pipelineUsers = (pipelineUsers - 1).coerceAtLeast(0)
+            if (pipelineUsers == 0) { val p = provider; val em = extensions; if (owner.isActive && p != null && em != null) bindCurrent(p, em) }
+        }
+    }
+
+    private fun headroom(): Float? = runCatching {
+        (context.getSystemService(Context.POWER_SERVICE) as PowerManager).getThermalHeadroom(10).takeUnless { it.isNaN() }
+    }.getOrNull()
+
+    override suspend fun collect(count: Int): BurstResult {
+        if (_state.value.status != CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
+        val n = thermal.framesFor(count, headroom())
+        acquirePipeline()
+        val received = Channel<Pair<ByteArray, IntArray>>(Channel.UNLIMITED)
+        var taken = 0
+        val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot ->
+            // Kopie nur fuer die angeforderten Bilder; jede Kopie wird Teil der Serie
+            if (taken < n) { taken++; received.trySend(bytes.copyOf() to intArrayOf(w, h, rot)) }
+        }
+        return try {
+            withContext(dispatcher) { ensureSurface() }
+            frameListeners += listener
+            val frames = withTimeoutOrNull(5_000L + n * 400L) { List(n) { received.receive() } }
+                ?: return BurstResult.Failed(BurstFailure.TIMEOUT)
+            val (w, h, rot) = frames.first().second.let { Triple(it[0], it[1], it[2]) }
+            BurstResult.Ok(FrameBurst(w, h, frames.filter { it.second[0] == w && it.second[1] == h }.map { it.first }, rot), count)
+        } finally {
+            frameListeners -= listener
+            received.close()
+            releasePipeline()
+        }
+    }
+
+    override fun trigger(mode: TriggerMode): Flow<Unit> = callbackFlow {
+        val entity = TriggerEntity(if (mode == TriggerMode.MOTION) TriggerKind.MOTION else TriggerKind.STILLNESS)
+        var previous = ByteArray(0)
+        val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, _ ->
+            if (previous.size == bytes.size) {
+                val score = Stacking.motionScore(previous, bytes, w * h)
+                if (entity.onScore(score, SystemClock.elapsedRealtime())) trySend(Unit)
+                System.arraycopy(bytes, 0, previous, 0, bytes.size)
+            } else previous = bytes.copyOf()
+        }
+        acquirePipeline()
+        withContext(dispatcher) { ensureSurface() }
+        frameListeners += listener
+        awaitClose { frameListeners -= listener; launch(NonCancellable) { releasePipeline() } }
+    }.buffer(Channel.CONFLATED)
+
     private fun publishMode() {
         _state.update {
             it.copy(
                 requestedMode = selection.requestedMode.toPhotoMode(),
-                activeMode = selection.effectiveMode.toPhotoMode(),
+                activeMode = if (pipelineUsers > 0) PhotoMode.NORMAL else selection.effectiveMode.toPhotoMode(),
                 fallbackFrom = selection.fallbackFrom?.toPhotoMode(),
                 offeredModes = selection.offeredModes.map { m -> m.toPhotoMode() },
             )
@@ -255,6 +380,7 @@ class CameraXCameraAdapter @Inject constructor(
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
         const val CAPTURE_TIMEOUT_MS = 8_000L
+        val ANALYSIS_SIZE = Size(1440, 1080)
 
         internal fun mapError(code: Int): CaptureFailure = when (code) {
             ImageCapture.ERROR_FILE_IO -> CaptureFailure.STORAGE

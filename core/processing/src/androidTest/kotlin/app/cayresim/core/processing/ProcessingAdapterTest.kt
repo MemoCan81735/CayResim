@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 class ProcessingAdapterTest {
     private val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     private val gpu = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private val adapter = GlProcessingAdapter(ctx, gpu, Dispatchers.IO, Dispatchers.Main)
+    private val adapter = GlProcessingAdapter(ctx, gpu, Dispatchers.IO, Dispatchers.Main, Dispatchers.Default)
     private val created = mutableListOf<Uri>()
 
     @After fun cleanUp() { created.forEach { runCatching { ctx.contentResolver.delete(it, null, null) } }; gpu.close() }
@@ -81,5 +81,29 @@ class ProcessingAdapterTest {
     @Test fun zeitrafferOhneFotos() = runBlocking {
         assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.timelapse(emptyList(), 10))
         assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.timelapse(listOf("x"), 0))
+    }
+
+    @Test fun stapelMitMedianEntferntBewegtesUndWirdGespeichert() = runBlocking {
+        val w = 120; val h = 90
+        val bg = ByteArray(w * h * 3) { ((it * 7) % 256).toByte() }
+        val frames = (0 until 9).map { k -> bg.copyOf().also { f -> for (y in 20 until 60) for (x in k * 10 until k * 10 + 15) { val i = (y * w + x) * 3; f[i] = 0; f[i + 1] = 0; f[i + 2] = 0 } } }
+        val r = adapter.stack(app.cayresim.core.boundary.FrameBurst(w, h, frames), app.cayresim.core.boundary.StackMode.MEDIAN); track(r)
+        val saved = assertIs<ProcessResult.Saved>(r, "Stapeln fehlgeschlagen: $r")
+        val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(saved.uri), 1000))
+        assertEquals(w, bmp.width); assertEquals(h, bmp.height)
+        // Hintergrund bleibt (JPEG erlaubt kleine Abweichungen), kein schwarzer Fleck uebrig
+        val c = bmp.getPixel(50, 40); val i = (40 * w + 50) * 3
+        assertTrue(kotlin.math.abs(Color.red(c) - (bg[i].toInt() and 0xFF)) < 40, "Bewegtes Objekt ist noch sichtbar")
+    }
+
+    @Test fun stapelMitUngleichenBildernWirdAbgelehnt() = runBlocking {
+        val r = adapter.stack(app.cayresim.core.boundary.FrameBurst(10, 10, listOf(ByteArray(300), ByteArray(299))), app.cayresim.core.boundary.StackMode.MEAN)
+        assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), r)
+    }
+
+    @Test fun stapelDreht() = runBlocking {
+        val r = adapter.stack(app.cayresim.core.boundary.FrameBurst(40, 20, listOf(ByteArray(40 * 20 * 3) { 100 }), rotationDegrees = 90), app.cayresim.core.boundary.StackMode.MEAN); track(r)
+        val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(assertIs<ProcessResult.Saved>(r).uri), 1000))
+        assertEquals(20, bmp.width); assertEquals(40, bmp.height)
     }
 }

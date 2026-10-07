@@ -43,4 +43,7 @@ interface ProcessingBoundary {
 
     /** Erzeugt ein Zeitraffer-Video aus den Fotos (aelteste zuerst). */
     suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult
+
+    /** Stapelt eine Serie (Median: Bewegtes verschwindet, Mittelwert: Langzeitbelichtung) und speichert das Ergebnis. */
+    suspend fun stack(burst: FrameBurst, mode: StackMode): ProcessResult
 }

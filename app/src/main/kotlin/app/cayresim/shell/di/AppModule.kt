@@ -5,6 +5,8 @@ import app.cayresim.core.boundary.CameraDispatcher
 import app.cayresim.core.boundary.GpuDispatcher
 import app.cayresim.core.boundary.IoDispatcher
 import app.cayresim.core.boundary.MainDispatcher
+import app.cayresim.core.boundary.ComputeDispatcher
+import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.MediaBoundary
 import app.cayresim.core.camera.CameraXCameraAdapter
 import app.cayresim.core.data.MediaStoreMediaAdapter
@@ -29,6 +31,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class BoundaryModule {
     @Binds @Singleton abstract fun camera(a: CameraXCameraAdapter): CameraBoundary
+    @Binds @Singleton abstract fun frames(a: CameraXCameraAdapter): FrameBoundary
     @Binds @Singleton abstract fun media(a: MediaStoreMediaAdapter): MediaBoundary
     @Binds @Singleton abstract fun series(a: RoomSeriesAdapter): SeriesBoundary
     @Binds @Singleton abstract fun processing(a: GlProcessingAdapter): ProcessingBoundary
@@ -38,6 +41,7 @@ abstract class BoundaryModule {
 @InstallIn(SingletonComponent::class)
 object PlatformModule {
     @Provides @CameraDispatcher fun cameraDispatcher(): CoroutineDispatcher = Dispatchers.Main.immediate
+    @Provides @ComputeDispatcher fun computeDispatcher(): CoroutineDispatcher = Dispatchers.Default
     @Provides @MainDispatcher fun mainDispatcher(): CoroutineDispatcher = Dispatchers.Main
     @Provides @IoDispatcher fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
     @Provides @Singleton @GpuDispatcher

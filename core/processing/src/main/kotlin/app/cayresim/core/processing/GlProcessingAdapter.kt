@@ -12,6 +12,15 @@ import app.cayresim.core.boundary.GpuDispatcher
 import app.cayresim.core.boundary.ImageHandle
 import app.cayresim.core.boundary.IoDispatcher
 import app.cayresim.core.boundary.MainDispatcher
+import app.cayresim.core.boundary.ComputeDispatcher
+import app.cayresim.core.boundary.FrameBurst
+import app.cayresim.core.boundary.StackMode
+import app.cayresim.core.pure.Stacking
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import app.cayresim.core.pure.timelapsePlan
 import java.io.File
 import app.cayresim.core.boundary.Look
@@ -36,6 +45,7 @@ class GlProcessingAdapter @Inject constructor(
     @GpuDispatcher private val gpu: CoroutineDispatcher,
     @IoDispatcher private val io: CoroutineDispatcher,
     @MainDispatcher private val main: CoroutineDispatcher,
+    @ComputeDispatcher private val compute: CoroutineDispatcher,
 ) : ProcessingBoundary {
 
     private val renderer = GlLutRenderer()
@@ -65,6 +75,48 @@ class GlProcessingAdapter @Inject constructor(
         val ok = withContext(main) { TimelapseExporter.export(context, photoUris, plan, out.absolutePath) }
         if (!ok) { out.delete(); return ProcessResult.Failed(ProcessFailure.ENCODER) }
         return withContext(io) { publishVideo(out).also { out.delete() } }
+    }
+
+    override suspend fun stack(burst: FrameBurst, mode: StackMode): ProcessResult {
+        if (burst.frames.isEmpty() || burst.width <= 0 || burst.height <= 0 || burst.frames.any { it.size != burst.pixels * 3 })
+            return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        val rgb = try {
+            withContext(compute) { parallelStack(burst, mode == StackMode.MEDIAN) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        }
+        val bitmap = withContext(compute) { rgbToBitmap(rgb, burst.width, burst.height, burst.rotationDegrees) }
+        return withContext(io) { save(bitmap, if (mode == StackMode.MEDIAN) "ohne_bewegung" else "langzeit").also { bitmap.recycle() } }
+    }
+
+    /** Teilt das Bild in Baender, jedes Band rechnet ein eigener Kern; zwischen den Kacheln wird auf Abbruch geprueft (R17). */
+    private suspend fun parallelStack(burst: FrameBurst, median: Boolean): ByteArray = coroutineScope {
+        val out = ByteArray(burst.pixels * 3)
+        val bands = Runtime.getRuntime().availableProcessors().coerceIn(1, 8)
+        val per = (burst.pixels + bands - 1) / bands
+        (0 until bands).map { b ->
+            async {
+                var p = b * per; val end = minOf(burst.pixels, p + per)
+                while (p < end) {
+                    ensureActive()
+                    val e = minOf(end, p + TILE)
+                    if (median) Stacking.medianRange(burst.frames, out, p, e) else Stacking.meanRange(burst.frames, out, p, e)
+                    p = e
+                }
+            }
+        }.awaitAll()
+        out
+    }
+
+    private fun rgbToBitmap(rgb: ByteArray, w: Int, h: Int, rotation: Int): Bitmap {
+        val px = IntArray(w * h)
+        for (i in px.indices) px[i] = (0xFF shl 24) or ((rgb[i * 3].toInt() and 0xFF) shl 16) or ((rgb[i * 3 + 1].toInt() and 0xFF) shl 8) or (rgb[i * 3 + 2].toInt() and 0xFF)
+        val bmp = Bitmap.createBitmap(px, w, h, Bitmap.Config.ARGB_8888)
+        if (rotation % 360 == 0) return bmp
+        val m = Matrix().apply { postRotate(rotation.toFloat()) }
+        return Bitmap.createBitmap(bmp, 0, 0, w, h, m, true).also { if (it !== bmp) bmp.recycle() }
     }
 
     private fun publishVideo(file: File): ProcessResult {
@@ -122,5 +174,6 @@ class GlProcessingAdapter @Inject constructor(
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
         const val VIDEO_DIR = "Movies/CayResim"
+        const val TILE = 16_384
     }
 }
