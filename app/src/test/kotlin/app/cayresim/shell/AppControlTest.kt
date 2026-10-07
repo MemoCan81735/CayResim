@@ -43,14 +43,14 @@ class AppControlRootTest {
     }
 
     @Test fun `Zahnrad, Anleitung und zweimal zurueck fuehren zur Kamera`() {
-        val c = control(); c.open(SettingsKey); c.open(GuideKey)
+        val c = AppControl(NavBackStack<NavKey>(CameraKey)); c.open(SettingsKey); c.open(GuideKey)
         assertEquals(listOf(CameraKey, SettingsKey, GuideKey), c.backStack.toList())
         assertTrue(c.back()); assertTrue(c.back())
         assertEquals(listOf<NavKey>(CameraKey), c.backStack.toList())
     }
 
     @Test fun `Von der Anleitung direkt zum Selbsttest`() {
-        val c = control(); c.open(SettingsKey); c.open(GuideKey); c.back(); c.open(SelfTestKey)
+        val c = AppControl(NavBackStack<NavKey>(CameraKey)); c.open(SettingsKey); c.open(GuideKey); c.back(); c.open(SelfTestKey)
         assertEquals(listOf(CameraKey, SettingsKey, SelfTestKey), c.backStack.toList())
     }
 }

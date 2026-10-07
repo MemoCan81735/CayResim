@@ -79,5 +79,8 @@ class SettingsAndGuideTest {
             assertFalse('–' in text || '—' in text, "Gedankenstrich in: $text")
         }
         assertEquals(guideSections.size, guideSections.map { it.first }.toSet().size, "Abschnitte doppelt")
+        // Fehler aus der Sichtpruefung: Zeilenumbrueche und Anfuehrungszeichen gingen in der Ressource verloren
+        assertTrue("\n• Nacht" in ctx.getString(R.string.guide_modes_body), "Aufzaehlung ohne Zeilenumbruch")
+        assertTrue("\"Ohne Look\"" in ctx.getString(R.string.guide_look_body), "Anfuehrungszeichen fehlen")
     }
 }
