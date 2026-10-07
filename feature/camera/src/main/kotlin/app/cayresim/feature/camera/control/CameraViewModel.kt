@@ -18,6 +18,11 @@ import app.cayresim.core.control.CaptureOutcome
 import app.cayresim.core.control.CaptureUseCase
 import app.cayresim.core.control.StackOutcome
 import app.cayresim.core.control.StackPhotoUseCase
+import app.cayresim.core.control.FocusStackUseCase
+import app.cayresim.core.control.AstroUseCase
+import app.cayresim.core.boundary.ManualCameraBoundary
+import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
+import app.cayresim.core.boundary.ManualStateSnapshot
 import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.StackMode
 import app.cayresim.core.boundary.TriggerMode
@@ -46,6 +51,9 @@ class CameraViewModel @Inject constructor(
     private val processing: ProcessingBoundary,
     private val stackPhoto: StackPhotoUseCase,
     private val frames: FrameBoundary,
+    private val manual: ManualCameraBoundary,
+    private val focusStack: FocusStackUseCase,
+    private val astro: AstroUseCase,
 ) : ViewModel() {
 
     private data class Local(
@@ -75,8 +83,51 @@ class CameraViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val uiState: StateFlow<CameraUiState> = combine(camera.state, local, allSeries, overlay) { s, l, series, ov -> toUi(s, l, series, ov) }
+    private val pro = combine(manual.manualCapabilities, manual.manualState) { c, m -> toPro(c, m) }
+
+    val uiState: StateFlow<CameraUiState> = combine(camera.state, local, allSeries, overlay, pro) { s, l, series, ov, p -> toUi(s, l, series, ov).copy(pro = p) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, CameraUiState())
+
+    /** Regler 0..1 logarithmisch auf die Belichtungszeit, linear auf ISO und Fokus. */
+    private fun toPro(c: ManualCapabilitiesSnapshot?, m: ManualStateSnapshot): ProUi {
+        if (c == null) return ProUi()
+        val e = c.exposureRangeNanos; val i = c.isoRange
+        return ProUi(
+            canExpose = c.canExpose, canFocus = c.canFocus, canRaw = c.raw,
+            exposure = if (e != null && m.exposureNanos != null) ProScale.toSlider(m.exposureNanos, e) else null,
+            iso = if (i != null && m.iso != null) (m.iso - i.first).toFloat() / maxOf(1, i.last - i.first) else null,
+            focus = c.maxFocusDiopters?.let { max -> m.focusDiopters?.let { 1f - it / max } },
+            raw = m.raw,
+            exposureLabel = m.exposureNanos?.let { ProScale.exposureText(it) } ?: "Auto",
+            isoLabel = m.iso?.let { "ISO $it" } ?: "Auto",
+        )
+    }
+
+    fun onExposure(slider: Float?) {
+        val c = manual.manualCapabilities.value ?: return
+        viewModelScope.launch {
+            if (slider == null) { manual.setExposure(null, null); return@launch }
+            val e = c.exposureRangeNanos ?: return@launch; val i = c.isoRange ?: return@launch
+            val iso = manual.manualState.value.iso ?: i.first.coerceAtLeast(100).coerceAtMost(i.last)
+            manual.setExposure(ProScale.fromSlider(slider, e), iso)
+        }
+    }
+
+    fun onIso(slider: Float) {
+        val c = manual.manualCapabilities.value ?: return
+        val i = c.isoRange ?: return; val e = c.exposureRangeNanos ?: return
+        viewModelScope.launch {
+            val exp = manual.manualState.value.exposureNanos ?: ProScale.fromSlider(0.5f, e)
+            manual.setExposure(exp, (i.first + slider.coerceIn(0f, 1f) * (i.last - i.first)).toInt())
+        }
+    }
+
+    fun onFocus(slider: Float?) {
+        val max = manual.manualCapabilities.value?.maxFocusDiopters ?: return
+        viewModelScope.launch { manual.setFocus(slider?.let { (1f - it.coerceIn(0f, 1f)) * max }) }
+    }
+
+    fun onRaw(enabled: Boolean) { viewModelScope.launch { manual.setRaw(enabled) } }
 
     fun onPermissionResult(granted: Boolean) {
         local.update { it.copy(permission = if (granted) PermissionStatus.GRANTED else PermissionStatus.DENIED) }
@@ -116,11 +167,12 @@ class CameraViewModel @Inject constructor(
 
     fun onShutter() {
         val l = local.value
-        if (l.special != SpecialOption.NONE) return onSpecialShutter(l.special)
+        if (l.special != SpecialOption.NONE && l.special != SpecialOption.PRO) return onSpecialShutter(l.special)
         viewModelScope.launch {
             when (val r = capture(Look.valueOf(l.look.name), l.selectedSeriesId)) {
                 is CaptureOutcome.Saved -> {
                     val kind = when {
+                        r.rawUri != null -> MessageKind.SAVED_WITH_RAW
                         r.lookFailed -> MessageKind.SAVED_WITHOUT_LOOK
                         r.seriesFailed -> MessageKind.SAVED_WITHOUT_SERIES
                         else -> MessageKind.SAVED
@@ -172,7 +224,16 @@ class CameraViewModel @Inject constructor(
                     }
                 }
             }
-            SpecialOption.NONE -> Unit
+            SpecialOption.FOCUS_STACK, SpecialOption.ASTRO -> viewModelScope.launch {
+                local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
+                val r = if (special == SpecialOption.FOCUS_STACK) focusStack() else astro()
+                local.update { it.copy(specialStatus = SpecialStatus.IDLE) }
+                when (r) {
+                    is StackOutcome.Saved -> post(if (r.shortened) MessageKind.STACK_SHORTENED else MessageKind.STACK_SAVED) { it.copy(lastPhotoUri = r.uri) }
+                    is StackOutcome.Failed -> post(when (r.detail) { "FIXED_FOCUS" -> MessageKind.FIXED_FOCUS; "NO_MANUAL_EXPOSURE" -> MessageKind.NO_MANUAL; else -> MessageKind.STACK_FAILED })
+                }
+            }
+            SpecialOption.PRO, SpecialOption.NONE -> Unit
         }
     }
 

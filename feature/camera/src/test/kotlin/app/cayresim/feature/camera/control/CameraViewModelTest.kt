@@ -32,6 +32,7 @@ class CameraViewModelTest {
     private lateinit var series: FakeSeriesBoundary
     private lateinit var proc: FakeProcessingBoundary
     private lateinit var frames: app.cayresim.core.boundary.fake.FakeFrameBoundary
+    private lateinit var manual: app.cayresim.core.boundary.fake.FakeManualCameraBoundary
 
     @Before fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -42,8 +43,10 @@ class CameraViewModelTest {
         }
         var t = 0L
         frames = app.cayresim.core.boundary.fake.FakeFrameBoundary(cam)
+        manual = app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam)
         vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, procSeesCamera, series, Clock { ++t }), series, proc,
-            app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames)
+            app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames, manual,
+            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc))
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -257,5 +260,55 @@ class CameraViewModelTest {
     @Test fun `Moduswechsel entschaerft`() = runTest {
         visibleAndGranted(); special(SpecialOption.TRIGGER_MOTION); vm.onShutter(); vm.onNextSpecial()
         frames.fires.emit(Unit); assertEquals(0, cam.saved.size)
+    }
+
+    // ---------- Phase 4: Pro, Fokus-Stacking, Sterne ----------
+    @Test fun `Pro-Regler setzen Belichtung, ISO und Fokus`() = runTest {
+        visibleAndGranted(); special(SpecialOption.PRO)
+        vm.onExposure(1f); vm.onIso(1f); vm.onFocus(0f)
+        val m = manual.manualState.value
+        assertEquals(2_000_000_000L, m.exposureNanos); assertEquals(3200, m.iso); assertEquals(10f, m.focusDiopters)
+        assertEquals("2,0 s", vm.uiState.value.pro.exposureLabel); assertEquals("ISO 3200", vm.uiState.value.pro.isoLabel)
+    }
+
+    @Test fun `Auto setzt die Automatik zurueck`() = runTest {
+        vm.onExposure(0.3f); vm.onExposure(null); vm.onFocus(0.5f); vm.onFocus(null)
+        assertNull(manual.manualState.value.exposureNanos); assertNull(manual.manualState.value.focusDiopters)
+        assertNull(vm.uiState.value.pro.exposure); assertEquals("Auto", vm.uiState.value.pro.exposureLabel)
+    }
+
+    @Test fun `Im Pro-Modus loest der Ausloeser ein normales Foto aus`() = runTest {
+        visibleAndGranted(); special(SpecialOption.PRO); vm.onShutter()
+        assertEquals(1, cam.saved.size); assertEquals(MessageKind.SAVED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `RAW-Schalter`() = runTest {
+        vm.onRaw(true); assertTrue(vm.uiState.value.pro.raw); vm.onRaw(false); assertFalse(vm.uiState.value.pro.raw)
+    }
+
+    @Test fun `Fokus-Stacking und Sterne speichern`() = runTest {
+        visibleAndGranted(); special(SpecialOption.FOCUS_STACK); vm.onShutter()
+        assertEquals(MessageKind.STACK_SAVED, vm.uiState.value.message?.kind)
+        special(SpecialOption.ASTRO); vm.onShutter()
+        assertEquals(listOf(app.cayresim.core.boundary.StackMode.FOCUS, app.cayresim.core.boundary.StackMode.STARS), proc.stacked.map { it.second })
+    }
+
+    @Test fun `Fokus-Stacking bei Fixfokus meldet das klar`() = runTest {
+        manual = app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam, app.cayresim.core.boundary.ManualCapabilitiesSnapshot(null, null, null, false))
+        vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, proc, series, Clock { 1 }), series, proc,
+            app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames, manual,
+            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc))
+        visibleAndGranted(); special(SpecialOption.FOCUS_STACK); vm.onShutter()
+        assertEquals(MessageKind.FIXED_FOCUS, vm.uiState.value.message?.kind)
+        special(SpecialOption.ASTRO); vm.onShutter()
+        assertEquals(MessageKind.NO_MANUAL, vm.uiState.value.message?.kind)
+        assertFalse(vm.uiState.value.pro.canExpose)
+    }
+
+    @Test fun `Pro-Skala ist umkehrbar und begrenzt`() {
+        val r = 100_000L..30_000_000_000L
+        for (v in listOf(0f, 0.25f, 0.5f, 0.99f, 1f)) assertEquals(v, ProScale.toSlider(ProScale.fromSlider(v, r), r), 0.001f)
+        assertEquals(r.first, ProScale.fromSlider(-1f, r)); assertEquals(r.last, ProScale.fromSlider(5f, r))
+        assertEquals("1/250 s", ProScale.exposureText(4_000_000)); assertEquals("30 s", ProScale.exposureText(30_000_000_000))
     }
 }

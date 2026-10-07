@@ -10,12 +10,26 @@ enum class PermissionStatus { UNKNOWN, GRANTED, DENIED }
 
 enum class ScreenStatus { IDLE, STARTING, RUNNING, ERROR }
 
-enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID, STACK_SAVED, STACK_SHORTENED, STACK_FAILED, TRIGGER_FIRED }
+enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID, STACK_SAVED, STACK_SHORTENED, STACK_FAILED, TRIGGER_FIRED, FIXED_FOCUS, NO_MANUAL, SAVED_WITH_RAW }
 
 enum class LookOption { NONE, WARM, COOL, FILM, MONO }
 
 /** Spezialaufnahmen der eigenen Pipeline (Phase 3). */
-enum class SpecialOption { NONE, CLEAN_PLATE, LONG_EXPOSURE, TRIGGER_MOTION, TRIGGER_STILL }
+enum class SpecialOption { NONE, CLEAN_PLATE, LONG_EXPOSURE, TRIGGER_MOTION, TRIGGER_STILL, PRO, FOCUS_STACK, ASTRO }
+
+/** Manuelle Werte fuer das Pro-Panel; Regler laufen von 0 bis 1, null = Automatik. */
+@Immutable
+data class ProUi(
+    val canExpose: Boolean = false,
+    val canFocus: Boolean = false,
+    val canRaw: Boolean = false,
+    val exposure: Float? = null,
+    val iso: Float? = null,
+    val focus: Float? = null,
+    val raw: Boolean = false,
+    val exposureLabel: String = "Auto",
+    val isoLabel: String = "Auto",
+)
 
 enum class SpecialStatus { IDLE, COLLECTING, PROCESSING, ARMED }
 
@@ -47,6 +61,7 @@ data class CameraUiState(
     val overlayAlpha: Float = 0.4f,
     val special: SpecialOption = SpecialOption.NONE,
     val specialStatus: SpecialStatus = SpecialStatus.IDLE,
+    val pro: ProUi = ProUi(),
 ) {
     val canShoot: Boolean get() = status == ScreenStatus.RUNNING && !capturing &&
         (specialStatus == SpecialStatus.IDLE || specialStatus == SpecialStatus.ARMED)

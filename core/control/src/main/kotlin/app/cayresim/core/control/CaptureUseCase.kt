@@ -14,7 +14,7 @@ import javax.inject.Inject
 /** Ergebnis einer Aufnahme mit Look und Serie. Teilerfolge werden benannt, nie verschluckt. */
 sealed interface CaptureOutcome {
     /** [lookFailed]: Look konnte nicht angewendet werden, das Original ist gespeichert. [seriesFailed]: Foto ist da, aber nicht in der Serie. */
-    data class Saved(val uri: String, val lookFailed: Boolean = false, val seriesFailed: Boolean = false) : CaptureOutcome
+    data class Saved(val uri: String, val lookFailed: Boolean = false, val seriesFailed: Boolean = false, val rawUri: String? = null) : CaptureOutcome
     data class Failed(val reason: CaptureFailure) : CaptureOutcome
 }
 
@@ -44,6 +44,6 @@ class CaptureUseCase @Inject constructor(
         if (seriesId != null) {
             seriesFailed = series.addPhoto(seriesId, uri, clock.nowMillis()) !is SeriesResult.Ok
         }
-        return CaptureOutcome.Saved(uri, lookFailed, seriesFailed)
+        return CaptureOutcome.Saved(uri, lookFailed, seriesFailed, shot.rawUri)
     }
 }

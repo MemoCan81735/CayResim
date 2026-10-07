@@ -64,6 +64,8 @@ import app.cayresim.feature.camera.control.ModeOption
 import app.cayresim.feature.camera.control.LookOption
 import app.cayresim.feature.camera.control.SpecialOption
 import app.cayresim.feature.camera.control.SpecialStatus
+import app.cayresim.feature.camera.control.ProUi
+import androidx.compose.material3.Switch
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
 
@@ -91,6 +93,10 @@ fun CameraRoute(
         onModeSelected = viewModel::onModeSelected,
         onNextLook = viewModel::onNextLook,
         onNextSpecial = viewModel::onNextSpecial,
+        onExposure = viewModel::onExposure,
+        onIso = viewModel::onIso,
+        onFocus = viewModel::onFocus,
+        onRaw = viewModel::onRaw,
         onSeriesSelected = viewModel::onSeriesSelected,
         onCreateSeries = viewModel::onCreateSeries,
         onOverlayAlpha = viewModel::onOverlayAlpha,
@@ -113,6 +119,10 @@ fun CameraContent(
     onModeSelected: (ModeOption) -> Unit,
     onNextLook: () -> Unit,
     onNextSpecial: () -> Unit,
+    onExposure: (Float?) -> Unit = {},
+    onIso: (Float) -> Unit = {},
+    onFocus: (Float?) -> Unit = {},
+    onRaw: (Boolean) -> Unit = {},
     onSeriesSelected: (Long?) -> Unit,
     onCreateSeries: (String) -> Unit,
     onOverlayAlpha: (Float) -> Unit,
@@ -167,6 +177,7 @@ fun CameraContent(
                 Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
                     modifier = Modifier.padding(8.dp).testTag("special_hint")) { Text(it, Modifier.padding(12.dp)) }
             }
+            if (state.special == SpecialOption.PRO) ProPanel(state.pro, onExposure, onIso, onFocus, onRaw)
             state.fallbackFrom?.let {
                 Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,
                     modifier = Modifier.padding(16.dp).testTag("fallback")) {
@@ -241,12 +252,45 @@ private fun BoxScope.SeriesPicker(state: CameraUiState, onDismiss: () -> Unit, o
     }
 }
 
+@Composable
+private fun ProPanel(pro: ProUi, onExposure: (Float?) -> Unit, onIso: (Float) -> Unit, onFocus: (Float?) -> Unit, onRaw: (Boolean) -> Unit) {
+    Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().testTag("pro_panel")) {
+        Column(Modifier.padding(12.dp)) {
+            if (!pro.canExpose && !pro.canFocus && !pro.canRaw) { Text(stringResource(R.string.pro_not_available)); return@Column }
+            if (pro.canExpose) {
+                ProRow(stringResource(R.string.pro_exposure), pro.exposureLabel, pro.exposure, { onExposure(it) }, { onExposure(null) }, "pro_exposure")
+                ProRow(stringResource(R.string.pro_iso), pro.isoLabel, pro.iso, { onIso(it) }, { onExposure(null) }, "pro_iso")
+            }
+            if (pro.canFocus) ProRow(stringResource(R.string.pro_focus), if (pro.focus == null) stringResource(R.string.pro_auto) else "", pro.focus, { onFocus(it) }, { onFocus(null) }, "pro_focus")
+            if (pro.canRaw) Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.pro_raw), Modifier.weight(1f))
+                Switch(checked = pro.raw, onCheckedChange = onRaw, modifier = Modifier.testTag("pro_raw"))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProRow(label: String, value: String, slider: Float?, onChange: (Float) -> Unit, onAuto: () -> Unit, tag: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(0.28f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Slider(value = slider ?: 0.5f, onValueChange = onChange, modifier = Modifier.weight(0.5f).testTag(tag))
+        TextButton(onClick = onAuto, modifier = Modifier.weight(0.22f).testTag("${tag}_auto")) {
+            Text(if (slider == null) stringResource(R.string.pro_auto) else value, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
 internal fun specialRes(o: SpecialOption): Int = when (o) {
     SpecialOption.NONE -> R.string.special_none
     SpecialOption.CLEAN_PLATE -> R.string.special_clean_plate
     SpecialOption.LONG_EXPOSURE -> R.string.special_long_exposure
     SpecialOption.TRIGGER_MOTION -> R.string.special_trigger_motion
     SpecialOption.TRIGGER_STILL -> R.string.special_trigger_still
+    SpecialOption.PRO -> R.string.special_pro
+    SpecialOption.FOCUS_STACK -> R.string.special_focus_stack
+    SpecialOption.ASTRO -> R.string.special_astro
 }
 
 internal fun lookRes(l: LookOption): Int = when (l) {
@@ -297,4 +341,7 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.STACK_SHORTENED -> R.string.msg_stack_shortened
     MessageKind.STACK_FAILED -> R.string.msg_stack_failed
     MessageKind.TRIGGER_FIRED -> R.string.msg_trigger_fired
+    MessageKind.FIXED_FOCUS -> R.string.msg_fixed_focus
+    MessageKind.NO_MANUAL -> R.string.msg_no_manual
+    MessageKind.SAVED_WITH_RAW -> R.string.msg_saved_with_raw
 }

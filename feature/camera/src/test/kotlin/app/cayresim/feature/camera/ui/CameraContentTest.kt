@@ -19,6 +19,8 @@ import app.cayresim.feature.camera.control.SeriesOption
 import app.cayresim.feature.camera.control.SpecialOption
 import app.cayresim.feature.camera.control.SpecialStatus
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.assertCountEquals
 import app.cayresim.feature.camera.control.PermissionStatus
 import app.cayresim.feature.camera.control.ScreenStatus
 import app.cayresim.feature.camera.control.UserMessage
@@ -181,6 +183,17 @@ class CameraContentTest {
         show(running.copy(special = SpecialOption.TRIGGER_STILL, specialStatus = SpecialStatus.ARMED))
         compose.onNodeWithTag("shutter").performClick()
         assertEquals(listOf("shutter"), events)
+    }
+
+    @Test fun bild_pro_panel() {
+        show(running.copy(special = SpecialOption.PRO, pro = app.cayresim.feature.camera.control.ProUi(true, true, true, 0.4f, 0.2f, null, true, "1/60 s", "ISO 400")))
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_pro.png")
+    }
+
+    @Test fun pro_ohne_faehigkeiten_zeigt_hinweis() {
+        show(running.copy(special = SpecialOption.PRO))
+        compose.onNodeWithTag("pro_panel").assertIsDisplayed()
+        compose.onAllNodesWithTag("pro_exposure").assertCountEquals(0)
     }
 
     @Test fun galerie_und_einstellungen() {
