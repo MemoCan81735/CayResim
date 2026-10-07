@@ -125,6 +125,8 @@ class EndToEndTest {
     @Test fun lautstaerketasteVomSystemLoestAus() {
         waitForViewfinder()
         compose.waitUntil(5_000) { compose.activity.shutterKeys.listener != null }
+        // Tasten gehen nur an ein Fenster mit Eingabefokus; der Emulator vergibt ihn manchmal spaet
+        compose.waitUntil(20_000) { compose.activity.hasWindowFocus() }
         val before = appPhotoCount()
         // Wie eine echte Taste: ueber den Eingabedienst des Systems statt direkt in die App
         androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
