@@ -83,7 +83,12 @@ class SelfTestUseCase @Inject constructor(
             val ms = clock.nowMillis() - t
             when {
                 active != mode -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, "Rueckfall auf ${active.name}")
-                r is CaptureResult.Saved -> { created += r.uri; journal.photo(r.uri); items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, true, ms, mode) }
+                r is CaptureResult.Saved -> {
+                    created += r.uri; journal.photo(r.uri)
+                    // Ein gespeichertes, aber zu langsames Foto ist ein Fehler (Fall v0.1.27: 10 s je Aufnahme blieb gruen)
+                    val fast = ms <= MAX_CAPTURE_MS
+                    items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, fast, ms, mode, if (fast) "" else "langsamer als ${MAX_CAPTURE_MS / 1000} s")
+                }
                 r is CaptureResult.Failed -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, r.reason.name)
             }
         }
@@ -100,5 +105,7 @@ class SelfTestUseCase @Inject constructor(
         const val STEP_START = "Kamera starten"
         const val STEP_CAPTURE = "Aufnahme "
         const val STEP_CLEANUP = "Aufraeumen"
+        /** Obergrenze je Aufnahme; Nacht und Portraet brauchen auf dem S24+ etwa 2 s. */
+        const val MAX_CAPTURE_MS = 5_000L
     }
 }

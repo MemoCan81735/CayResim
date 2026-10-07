@@ -101,4 +101,38 @@ class SelfTestUseCaseTest {
         assertTrue(report.items.any { it.check == SelfTestCheck.CAMERA_START && it.passed })
         assertEquals(1, report.items.count { it.check == SelfTestCheck.MODE_CAPTURE && it.passed })
     }
+
+    // ---------- Zeitgrenze je Aufnahme ----------
+
+    /** Uhr, die nur waehrend capture() die angegebene Zeit vergehen laesst. */
+    private class CaptureClock(private val cam: FakeCameraBoundary, private val captureMs: Long) : Clock {
+        var t = 0L; private var lastCount = -1
+        override fun nowMillis(): Long {
+            val n = cam.saved.size
+            if (lastCount >= 0 && n != lastCount) t += captureMs
+            lastCount = n
+            return t
+        }
+    }
+
+    @Test fun `Fehlerfall gespeichert aber langsamer als 5 s ist rot`() = runTest {
+        val cam = FakeCameraBoundary(emptySet())
+        val report = SelfTestUseCase(cam, CaptureClock(cam, 9_410), FakeSelfTestJournalBoundary())()
+        val shot = report.items.single { it.check == SelfTestCheck.MODE_CAPTURE }
+        assertFalse(shot.passed); assertFalse(report.passed)
+        assertEquals("langsamer als 5 s", shot.detail)
+        assertEquals(0, cam.saved.size, "langsames Foto wird trotzdem geloescht")
+    }
+
+    @Test fun `Randfall genau 5 s ist noch gruen, 5001 ms rot`() = runTest {
+        val ok = FakeCameraBoundary(emptySet())
+        assertTrue(SelfTestUseCase(ok, CaptureClock(ok, 5_000), FakeSelfTestJournalBoundary())().passed)
+        val slow = FakeCameraBoundary(emptySet())
+        assertFalse(SelfTestUseCase(slow, CaptureClock(slow, 5_001), FakeSelfTestJournalBoundary())().passed)
+    }
+
+    @Test fun `Guter Fall Werte vom S24+ sind gruen`() = runTest {
+        val cam = FakeCameraBoundary(emptySet())
+        assertTrue(SelfTestUseCase(cam, CaptureClock(cam, 2_272), FakeSelfTestJournalBoundary())().passed)
+    }
 }

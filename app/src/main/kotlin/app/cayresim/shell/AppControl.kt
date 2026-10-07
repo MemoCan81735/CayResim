@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object CameraKey : NavKey
 @Serializable data object GalleryKey : NavKey
+@Serializable data object SettingsKey : NavKey
+@Serializable data object GuideKey : NavKey
 @Serializable data object SelfTestKey : NavKey
 
 /**

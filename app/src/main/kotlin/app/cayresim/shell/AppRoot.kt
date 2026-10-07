@@ -11,6 +11,8 @@ import androidx.navigation3.ui.NavDisplay
 import app.cayresim.feature.camera.ui.CameraRoute
 import app.cayresim.feature.gallery.ui.GalleryRoute
 import app.cayresim.feature.settings.ui.SelfTestRoute
+import app.cayresim.feature.settings.ui.SettingsContent
+import app.cayresim.feature.settings.ui.GuideContent
 
 @Composable
 fun AppRoot() {
@@ -26,9 +28,13 @@ fun AppRoot() {
         ),
         entryProvider = entryProvider {
             entry<CameraKey> {
-                CameraRoute(onOpenGallery = { control.open(GalleryKey) }, onOpenSettings = { control.open(SelfTestKey) })
+                CameraRoute(onOpenGallery = { control.open(GalleryKey) }, onOpenSettings = { control.open(SettingsKey) })
             }
             entry<GalleryKey> { GalleryRoute(onBack = { control.back() }) }
+            entry<SettingsKey> {
+                SettingsContent(onGuide = { control.open(GuideKey) }, onSelfTest = { control.open(SelfTestKey) }, onBack = { control.back() })
+            }
+            entry<GuideKey> { GuideContent(onBack = { control.back() }) }
             entry<SelfTestKey> { SelfTestRoute(onBack = { control.back() }) }
         },
     )

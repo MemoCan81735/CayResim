@@ -107,9 +107,19 @@ class EndToEndTest {
         compose.onNodeWithTag("shutter").assertIsDisplayed()
     }
 
+    @Test fun anleitungIstUeberDasZahnradErreichbar() {
+        waitForViewfinder()
+        compose.onNodeWithTag("open_settings").performClick()
+        compose.onNodeWithTag("settings_guide").performClick()
+        compose.onNodeWithTag("guide").assertIsDisplayed()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("settings_selftest").assertIsDisplayed()
+    }
+
     @Test fun selbsttestLaeuftAufDemEmulatorGruen() {
         waitForViewfinder()
         compose.onNodeWithTag("open_settings").performClick()
+        compose.onNodeWithTag("settings_selftest").performClick()
         compose.onNodeWithTag("selftest_start").performClick()
         compose.waitUntil(60_000) { compose.onAllNodes(hasTestTag("selftest_summary")).fetchSemanticsNodes().isNotEmpty() }
         val texts = compose.onAllNodes(hasTestTag("selftest_summary").or(hasTestTagPrefix("row_")), useUnmergedTree = false)

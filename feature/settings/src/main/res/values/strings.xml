@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_guide">Anleitung</string>
+    <string name="settings_guide_hint">So nutzt du alle Funktionen von CayResim</string>
+    <string name="settings_selftest_hint">Prüft die Kamera, etwa eine Minute</string>
+    <string name="guide_title">Anleitung</string>
+    <string name="guide_intro">CayResim macht gute Fotos ohne Einstellen: Kamera öffnen, auf den großen runden Knopf tippen, fertig. Alles Weitere ist freiwillig.</string>
+    <string name="guide_shoot_title">Fotografieren</string>
+    <string name="guide_shoot_body">Tippe auf den großen runden Knopf unten. Das Foto landet in deiner Galerie im Ordner Pictures/CayResim. Unten rechts erscheint danach "Letztes Foto", damit kannst du es sofort ansehen.</string>
+    <string name="guide_modes_title">Modi: Foto, Nacht, HDR, Porträt, Retusche</string>
+    <string name="guide_modes_body">Die Knöpfe über dem Auslöser wählen den Modus.
+• Foto: für fast alles.
+• Nacht: bei wenig Licht, Handy dabei kurz ruhig halten.
+• HDR: bei Gegenlicht, damit Himmel und Schatten beide gut aussehen.
+• Porträt: Person scharf, Hintergrund weich.
+• Retusche: glättet Haut bei Selfies und Porträts.
+Kann dein Handy einen Modus nicht, fotografiert CayResim normal und sagt dir das.</string>
+    <string name="guide_look_title">Look: Farbstimmung</string>
+    <string name="guide_look_body">Der erste Knopf oben ("Ohne Look") wechselt bei jedem Tippen die Farbstimmung: Warm, Kühl, Film, S/W. Der Look wird beim Speichern auf das Foto gelegt.</string>
+    <string name="guide_special_title">Spezialaufnahmen</string>
+    <string name="guide_special_body">Der zweite Knopf oben ("Einzelfoto") wechselt bei jedem Tippen die Art der Aufnahme. Für die meisten davon nimmt CayResim etwa 20 Bilder hintereinander auf und rechnet sie zusammen. Stelle das Handy dafür am besten ab oder lehne es an.
+• Menschen wegrechnen: Passanten, die durchs Bild laufen, verschwinden.
+• Langzeit: Wasser und Wolken werden weich und fließend.
+• Auslöser Bewegung: nach dem Tippen auf den Auslöser wartet CayResim und fotografiert, sobald sich etwas bewegt, zum Beispiel ein Vogel. Erneut tippen beendet das Warten.
+• Auslöser Ruhe: fotografiert, sobald das Bild still wird. Praktisch als Selbstauslöser für Gruppenfotos.
+• Pro: Belichtung, ISO und Fokus selbst einstellen, auf Wunsch zusätzlich eine RAW-Datei (DNG) zum Nachbearbeiten.
+• Fokus-Stacking: für Nahaufnahmen. Mehrere Bilder mit unterschiedlichem Fokus werden zu einem durchgehend scharfen Bild.
+• Sterne: für den Nachthimmel. Handy unbedingt fest auflegen.
+Ist das Handy sehr warm, nimmt CayResim weniger Bilder auf und sagt dir das.</string>
+    <string name="guide_series_title">Serien und Zeitraffer</string>
+    <string name="guide_series_body">Mit einer Serie fotografierst du dasselbe Motiv immer wieder, zum Beispiel deinen Garten über ein Jahr.
+1. Tippe oben auf "Keine Serie" und lege eine neue Serie an, etwa "Garten".
+2. Sobald die Serie ein Foto hat, liegt ihr letztes Foto halb durchsichtig über dem Sucher. Richte das Handy so aus, dass beide Bilder übereinander passen. Der Regler rechts ändert, wie stark das alte Foto zu sehen ist.
+3. In der Galerie machst du aus einer Serie mit "Zeitraffer" ein kurzes Video. Dafür braucht die Serie mindestens 2 Fotos.</string>
+    <string name="guide_gallery_title">Galerie</string>
+    <string name="guide_gallery_body">"Galerie" unten links zeigt deine Serien und alle Fotos, die du mit CayResim gemacht hast.</string>
+    <string name="guide_selftest_title">Selbsttest</string>
+    <string name="guide_selftest_body">Unter Einstellungen (Zahnrad oben rechts) und dann "Selbsttest" prüft CayResim nach einem Update die Kamera in jedem Modus. Testfotos werden danach gelöscht. Ist etwas rot, schicke einen Screenshot an Claude.</string>
     <string name="selftest_title">Selbsttest</string>
     <string name="selftest_intro">Prüft die Kamera dieses Geräts in jedem verfügbaren Modus. Testfotos werden danach gelöscht.</string>
     <string name="selftest_start">Selbsttest starten</string>
