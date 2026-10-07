@@ -1,4 +1,4 @@
-name: Versionen ermitteln
+name: API-Probe
 on: [workflow_dispatch, push]
 permissions:
   contents: write
@@ -6,40 +6,21 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Neueste stabile Versionen
+      - name: Signaturen auslesen
         run: |
           exec > >(tee probe.log) 2>&1
-          latest() { curl -s "$1/maven-metadata.xml" | grep -oP '(?<=<version>)[^<]+' | grep -viE 'alpha|beta|rc|dev|-M' | sort -V | tail -1; }
           G=https://dl.google.com/dl/android/maven2
-          C=https://repo1.maven.org/maven2
-          P=https://plugins.gradle.org/m2
-          echo "AGP $(latest $G/com/android/tools/build/gradle)"
-          echo "Kotlin $(latest $C/org/jetbrains/kotlin/kotlin-gradle-plugin)"
-          echo "KSP $(curl -s $C/com/google/devtools/ksp/symbol-processing-gradle-plugin/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | tail -5 | tr '\n' ' ')"
-          echo "Hilt $(latest $C/com/google/dagger/hilt-android)"
-          echo "ComposeBOM $(latest $G/androidx/compose/compose-bom)"
-          echo "CameraX $(latest $G/androidx/camera/camera-core)"
-          echo "CameraCompose $(latest $G/androidx/camera/camera-compose)"
-          echo "Viewfinder $(latest $G/androidx/camera/viewfinder/viewfinder-compose)"
-          echo "CameraMedia3 $(curl -s $G/androidx/camera/media3/media3-effect/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | tail -3 | tr '\n' ' ')"
-          echo "Media3 $(latest $G/androidx/media3/media3-transformer)"
-          echo "Room $(latest $G/androidx/room/room-runtime)"
-          echo "DataStore $(latest $G/androidx/datastore/datastore-preferences)"
-          echo "Lifecycle $(latest $G/androidx/lifecycle/lifecycle-runtime-compose)"
-          echo "Activity $(latest $G/androidx/activity/activity-compose)"
-          echo "Nav3 $(latest $G/androidx/navigation3/navigation3-runtime)"
-          echo "HiltNav $(latest $G/androidx/hilt/hilt-navigation-compose)"
-          echo "HiltLifecycleVM $(curl -s $G/androidx/hilt/hilt-lifecycle-viewmodel-compose/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | tail -3 | tr '\n' ' ')"
-          echo "Coroutines $(latest $C/org/jetbrains/kotlinx/kotlinx-coroutines-core)"
-          echo "ImmutableColl $(curl -s $C/org/jetbrains/kotlinx/kotlinx-collections-immutable/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | tail -3 | tr '\n' ' ')"
-          echo "Konsist $(latest $C/com/lemonappdev/konsist)"
-          echo "Turbine $(latest $C/app/cash/turbine/turbine)"
-          echo "LeakCanary $(latest $C/com/squareup/leakcanary/leakcanary-android)"
-          echo "MLKitSubject $(curl -s $G/com/google/android/gms/play-services-mlkit-subject-segmentation/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | tail -3 | tr '\n' ' ')"
-          echo "Exif $(latest $G/androidx/exifinterface/exifinterface)"
-          echo "Gradle $(curl -s https://services.gradle.org/versions/current | grep -oP '(?<="version" : ")[^"]+')"
-          echo "ComposePluginCheck $(curl -s -o /dev/null -w '%{http_code}' $C/org/jetbrains/kotlin/plugin/compose/org.jetbrains.kotlin.plugin.compose.gradle.plugin/maven-metadata.xml)"
-          ls $ANDROID_HOME/platforms; ls $ANDROID_HOME/build-tools
+          get() { mkdir -p "x/$2"; curl -sL "$G/$1" -o "x/$2.aar"; (cd "x/$2" && unzip -qo "../$2.aar" classes.jar && unzip -qo classes.jar); }
+          get androidx/camera/camera-core/1.6.2/camera-core-1.6.2.aar core
+          get androidx/camera/camera-lifecycle/1.6.2/camera-lifecycle-1.6.2.aar lifecycle
+          get androidx/camera/camera-extensions/1.6.2/camera-extensions-1.6.2.aar ext
+          get androidx/camera/camera-compose/1.6.2/camera-compose-1.6.2.aar compose
+          get androidx/camera/camera-camera2/1.6.2/camera-camera2-1.6.2.aar c2
+          for c in core:androidx/camera/core/SessionConfig core:androidx/camera/core/SessionConfig\$Builder core:androidx/camera/core/CameraInfo core:androidx/camera/core/ImageCapture core:androidx/camera/core/ImageCapture\$Builder core:androidx/camera/core/ImageCapture\$OutputFileOptions\$Builder core:androidx/camera/core/Preview core:androidx/camera/core/Preview\$Builder core:androidx/camera/core/CameraControl core:androidx/camera/core/ImageAnalysis\$Builder lifecycle:androidx/camera/lifecycle/ProcessCameraProvider lifecycle:androidx/camera/lifecycle/ProcessCameraProvider\$Companion lifecycle:androidx/camera/lifecycle/ProcessCameraProviderExtKt ext:androidx/camera/extensions/ExtensionsManager ext:androidx/camera/extensions/ExtensionSessionConfig ext:androidx/camera/extensions/ExtensionMode c2:androidx/camera/camera2/interop/Camera2Interop\$Extender c2:androidx/camera/camera2/interop/Camera2CameraControl; do
+            d=${c%%:*}; k=${c#*:}; echo "=== $k"; javap -cp x/$d "$k" 2>&1 | head -80; done
+          echo "=== compose classes"; (cd x/compose && find . -name '*.class' | head -30)
+          for k in $(cd x/compose && find . -name 'CameraXViewfinder*Kt.class' | sed 's|^\./||;s|\.class$||'); do echo "=== $k"; javap -cp x/compose "$k"; done
+          echo "=== ext classes"; (cd x/ext && find . -name '*.class' | grep -v '/impl/\|/internal/' | head -40)
       - name: Log ablegen
         if: always()
         run: |
