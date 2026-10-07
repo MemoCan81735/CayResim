@@ -77,8 +77,10 @@ jobs:
       - name: Bauen
         run: gradle assembleDebug assembleDebugAndroidTest :core:camera:assembleDebugAndroidTest 2>&1 | tee build.log
       - name: Emulator starten
+        timeout-minutes: 20
         run: bash .github/scripts/start-emulator.sh
       - name: Geraetetests und Zufallsbedienung
+        timeout-minutes: 40
         run: bash .github/scripts/emulator.sh
       - name: Protokoll ablegen
         if: always()

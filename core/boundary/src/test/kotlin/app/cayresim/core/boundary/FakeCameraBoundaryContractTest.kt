@@ -15,3 +15,9 @@ class FakeCameraBoundaryContractTest {
         CameraBoundaryContract.unavailableModeFallsBack(FakeCameraBoundary(availableModes = emptySet()), PhotoMode.NIGHT)
     }
 }
+
+class FakeSeriesBoundaryContractTest {
+    @Test fun `Fake erfuellt den Serien-Vertrag`() = runTest {
+        app.cayresim.core.boundary.contract.SeriesBoundaryContract.all.forEach { (_, case) -> case(app.cayresim.core.boundary.fake.FakeSeriesBoundary()) }
+    }
+}
