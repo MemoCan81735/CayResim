@@ -92,14 +92,15 @@ class CameraViewModel @Inject constructor(
     private fun toPro(c: ManualCapabilitiesSnapshot?, m: ManualStateSnapshot): ProUi {
         if (c == null) return ProUi()
         val e = c.exposureRangeNanos; val i = c.isoRange
+        val exp = m.exposureNanos; val iso = m.iso; val focus = m.focusDiopters
         return ProUi(
             canExpose = c.canExpose, canFocus = c.canFocus, canRaw = c.raw,
-            exposure = if (e != null && m.exposureNanos != null) ProScale.toSlider(m.exposureNanos, e) else null,
-            iso = if (i != null && m.iso != null) (m.iso - i.first).toFloat() / maxOf(1, i.last - i.first) else null,
-            focus = c.maxFocusDiopters?.let { max -> m.focusDiopters?.let { 1f - it / max } },
+            exposure = if (e != null && exp != null) ProScale.toSlider(exp, e) else null,
+            iso = if (i != null && iso != null) (iso - i.first).toFloat() / maxOf(1, i.last - i.first) else null,
+            focus = c.maxFocusDiopters?.let { max -> focus?.let { 1f - it / max } },
             raw = m.raw,
-            exposureLabel = m.exposureNanos?.let { ProScale.exposureText(it) } ?: "Auto",
-            isoLabel = m.iso?.let { "ISO $it" } ?: "Auto",
+            exposureLabel = exp?.let { ProScale.exposureText(it) } ?: "Auto",
+            isoLabel = iso?.let { "ISO $it" } ?: "Auto",
         )
     }
 
