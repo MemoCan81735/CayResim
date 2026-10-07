@@ -1,11 +1,5 @@
-plugins {
-    id("cayresim.android.library")
-    id("org.jetbrains.kotlin.plugin.compose")
-}
-android {
-    namespace = "app.cayresim.core.designsystem"
-    buildFeatures { compose = true }
-}
+plugins { id("cayresim.android.compose") }
+android { namespace = "app.cayresim.core.designsystem" }
 dependencies {
     implementation(project(":core:pure"))
     api(platform(libs.compose.bom))
