@@ -247,5 +247,12 @@ class CameraContentTest {
         show(running.copy(message = UserMessage(3, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 34, 2, 6f))))
         compose.waitUntil(5_000) { compose.onAllNodesWithText("1/10 s, ISO 3200, 34 Bilder, 2 verworfen, Aufhellung x6,0", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("gekürzt", substring = true).assertCountEquals(0)
+    }
+
+    @Test fun nacht_hinweis_meldet_gekuerzte_serie() {
+        show(running.copy(message = UserMessage(4, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 23, 0, 16f, shortened = true))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("23 Bilder, 0 verworfen, Aufhellung x16,0, Serie gekürzt", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 }

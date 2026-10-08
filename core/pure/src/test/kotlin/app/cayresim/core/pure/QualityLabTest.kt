@@ -85,6 +85,8 @@ class QualityLabTest {
             scenario("Dunkel, freihand", 0.0006, shake = 10, passer = false),
             scenario("Dunkel, freihand, Passant", 0.0006, shake = 10, passer = true),
             scenario("Daemmerung, freihand", 0.004, shake = 6, passer = false),
+            // Nachttest S24+ am 8. Oktober: Einzelbilder im Mittel bei Stufe 1 bis 2, nur 23 Bilder
+            scenario("Sehr dunkel, freihand, 23 Bilder", 0.00045, shake = 10, passer = false, count = 23),
         )
         val rows = mutableListOf<Row>()
         for (s in scenarios) {
@@ -110,7 +112,9 @@ class QualityLabTest {
         assertTrue(row(shaky, "Mittel ohne Ausrichtung").edge > 2 * row(shaky, "Nacht-Kern").edge, "Ausrichtung bringt keinen Vorteil")
         val passer = row("Dunkel, freihand, Passant", "Nacht-Kern")
         assertTrue(passer.ghost!! < 3.0, "Geisterbild ${passer.ghost} Stufen")
-        assertTrue(row("Dunkel, freihand", "Nacht-Kern").bright >= 10.0, "Nacht-Kern zu dunkel")
+        // Nachttest S24+: Samsung lag bei Stufe 35, wir bei 20 (Aufhellung am Anschlag 16)
+        for (s in listOf("Dunkel, freihand", "Sehr dunkel, freihand, 23 Bilder"))
+            assertTrue(row(s, "Nacht-Kern").bright >= 30.0, "$s: Nacht-Kern zu dunkel (${row(s, "Nacht-Kern").bright})")
     }
 
     private fun writeReport(rows: List<Row>) {

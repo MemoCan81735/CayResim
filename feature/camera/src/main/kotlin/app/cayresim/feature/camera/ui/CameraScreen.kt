@@ -451,5 +451,6 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
         stringResource(R.string.night_exposure, (1_000_000_000L / n.exposureNs.coerceAtLeast(1)).toInt(), n.iso)
     else stringResource(R.string.night_exposure_auto)
     val gain = String.format(java.util.Locale.GERMANY, "%.1f", n.gain)
-    return stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
+    val detail = stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
+    return if (n.shortened) detail + stringResource(R.string.night_shortened) else detail
 }

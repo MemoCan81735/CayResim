@@ -66,6 +66,19 @@ class TriggerEntityTest {
         assertEquals(3, b.framesFor(4, 0.85f))
     }
 
+    @Test fun `Nachttest S24+ Bildstrom wird nicht auf 30 begrenzt`() {
+        // Fehler vom 8. Oktober: 43 angefordert (4 Messen, 3 Einschwingen, 36 Nacht), 30 geliefert, 23 im Bild
+        assertEquals(43, ThermalBudgetEntity().streamFramesFor(43, null))
+        assertEquals(43, ThermalBudgetEntity().streamFramesFor(43, 0.5f))
+        assertEquals(43, ThermalBudgetEntity().streamFramesFor(43, Float.NaN))
+    }
+
+    @Test fun `Waerme kuerzt einen Bildstrom hoechstens auf drei Viertel`() {
+        val b = ThermalBudgetEntity()
+        assertEquals(33, b.streamFramesFor(43, 0.85f)); assertEquals(33, b.streamFramesFor(43, 0.99f))
+        assertEquals(1, b.streamFramesFor(1, 0.99f)); assertEquals(0, b.streamFramesFor(0, null))
+    }
+
     // ---------- Robustheit (Dossier: Rauschen im Dunkeln, Helligkeitsspruenge) ----------
 
     @Test fun `Fehlerfall ein einzelner Helligkeitssprung loest nicht aus`() {

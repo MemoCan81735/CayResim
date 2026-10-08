@@ -384,6 +384,15 @@ class CameraViewModelTest {
         assertNotNull(vm.uiState.value.lastPhotoUri)
     }
 
+    @Test fun `Nacht mit gekuerzter Serie sagt es im Hinweis`() = runTest {
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
+        cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        frames.allowed = 4 + 3 + 10
+        vm.onShutter()
+        val n = vm.uiState.value.message!!.night!!
+        assertEquals(10, n.used); assertTrue(n.shortened)
+    }
+
     @Test fun `Nacht bei hellem Licht nutzt Samsungs Modus`() = runTest {
         visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
         cam.measure(app.cayresim.core.boundary.LightSnapshot(5_000_000, 50))

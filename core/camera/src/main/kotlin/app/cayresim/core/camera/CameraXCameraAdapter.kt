@@ -446,7 +446,8 @@ class CameraXCameraAdapter @Inject constructor(
 
     private fun frameStream(maxCount: Int, inFlight: java.util.concurrent.atomic.AtomicInteger): Flow<Frame> = callbackFlow {
         if (_state.value.status != CameraStatus.RUNNING || maxCount <= 0) { close(); return@callbackFlow }
-        val n = thermal.framesFor(maxCount, headroom())
+        // Gefunden im Nachttest auf dem S24+: framesFor begrenzte auf 30, die Nachtserie bekam 23 statt 36 Bilder
+        val n = thermal.streamFramesFor(maxCount, headroom())
         val sent = java.util.concurrent.atomic.AtomicInteger(0)
         val lastFrame = java.util.concurrent.atomic.AtomicLong(SystemClock.elapsedRealtime())
         val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot ->

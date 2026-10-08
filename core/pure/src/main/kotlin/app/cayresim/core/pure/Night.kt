@@ -19,6 +19,12 @@ object NightPlan {
     /** Obergrenze je Bild freihand; das Geraet erlaubt Drittanbietern ohnehin hoechstens 1/10 s. */
     const val MAX_FRAME_NS = 100_000_000L
 
+    /**
+     * Ab dieser Belichtungszeit gilt die Automatik als am Anschlag: sie belichtet dann zu knapp (Messung auf dem
+     * S24+: 1/15 s bei ISO um 1300 in einer dunklen Kueche). Dann wird die hoechste ISO genommen statt nur das 1,5-fache.
+     */
+    const val AE_LIMIT_NS = 50_000_000L
+
     /** Bildzahl fuer etwa 4 s Licht bei 1/10 s je Bild. */
     const val FRAMES = 36
 
@@ -38,6 +44,7 @@ object NightPlan {
         require(aeExposureNs > 0 && aeIso > 0 && maxExposureNs > 0 && isoMin in 1..isoMax) { "Ungueltige Messwerte" }
         val target = aeExposureNs.toDouble() * aeIso * BRIGHTER
         val exp = minOf(maxExposureNs, MAX_FRAME_NS)
+        if (aeExposureNs >= AE_LIMIT_NS) return Exposure(exp, isoMax)
         val iso = Math.round(target / exp).toInt()
         return when {
             iso > isoMax -> Exposure(exp, isoMax)
@@ -155,7 +162,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             val inv = 1f / weight[t]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
-        return NightTone.brighten(mean, width)
+        return NightTone.brighten(mean, width, NightTone.maxGainFor(used))
     }
 
     /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */

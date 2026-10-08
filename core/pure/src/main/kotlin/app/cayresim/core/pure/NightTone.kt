@@ -18,8 +18,18 @@ object NightTone {
     /** Ziel fuer den Median der Helligkeit, linear (entspricht etwa sRGB 40 von 255). */
     const val TARGET_MEDIAN = 0.021f
 
-    /** Hoechste Verstaerkung (4 Blenden); mehr macht bei 8-Bit-Eingang nur Rauschen sichtbar. */
+    /** Hoechste Verstaerkung fuer ein Einzelbild (4 Blenden); mehr macht bei 8-Bit-Eingang nur Rauschen sichtbar. */
     const val MAX_GAIN = 16f
+
+    /** Hoechste Verstaerkung ueberhaupt (6 Blenden), erst ab 36 gemittelten Bildern. */
+    const val MAX_STACK_GAIN = 64f
+
+    /**
+     * Mittelt man n Bilder, sinkt das Rauschen um Wurzel(n); um so viel darf die Verstaerkung steigen, ohne dass
+     * das Ergebnis mehr rauscht als ein Einzelbild mit [MAX_GAIN]. 1 Bild: 16, 23 Bilder: etwa 51, 36 Bilder: 64.
+     */
+    fun maxGainFor(frames: Int): Float =
+        (MAX_GAIN * kotlin.math.sqrt(frames.coerceAtLeast(1).toFloat()) / 1.5f).coerceIn(MAX_GAIN, MAX_STACK_GAIN)
 
     /** Ab hier werden Lichter weich zusammengedrueckt statt hart abgeschnitten (linear). */
     const val SHOULDER = 0.6f
@@ -90,11 +100,11 @@ object NightTone {
     fun brightenBytes(rgb: ByteArray, width: Int): Result =
         brighten(FloatArray(rgb.size) { decode[rgb[it].toInt() and 0xFF] }, width)
 
-    /** Verstaerkung, die den Median der Helligkeit auf [TARGET_MEDIAN] hebt, begrenzt auf 1 bis [MAX_GAIN]. */
-    fun gainFor(linear: FloatArray): Float {
+    /** Verstaerkung, die den Median der Helligkeit auf [TARGET_MEDIAN] hebt, begrenzt auf 1 bis [maxGain]. */
+    fun gainFor(linear: FloatArray, maxGain: Float = MAX_GAIN): Float {
         val median = lumaPercentile(linear, 0.5f)
-        if (median <= 0f) return MAX_GAIN
-        return (TARGET_MEDIAN / median).coerceIn(1f, MAX_GAIN)
+        if (median <= 0f) return maxGain
+        return (TARGET_MEDIAN / median).coerceIn(1f, maxGain)
     }
 
     /** Perzentil der linearen Helligkeit ueber ein Histogramm (4096 Stufen, schnell und speicherarm). */
@@ -127,9 +137,9 @@ object NightTone {
      * Verstaerken, Schulter, zurueck nach sRGB mit geordnetem 4x4-Dithering (deterministisch).
      * Bei kleiner Verstaerkung nur zurueckwandeln, ohne die Tonwerte zu aendern.
      */
-    fun brighten(linear: FloatArray, width: Int): Result {
+    fun brighten(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN): Result {
         require(width > 0 && linear.size % 3 == 0 && (linear.size / 3) % width == 0) { "Ungueltige Bildgroesse" }
-        val gain = gainFor(linear)
+        val gain = gainFor(linear, maxGain)
         val apply = gain >= MIN_GAIN
         val out = ByteArray(linear.size)
         val pixels = linear.size / 3

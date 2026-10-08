@@ -61,6 +61,7 @@
     <string name="night_exposure">1/%1$d s, ISO %2$d</string>
     <string name="night_exposure_auto">Belichtung automatisch</string>
     <string name="night_detail">%1$s, %2$d Bilder, %3$d verworfen, Aufhellung x%4$s</string>
+    <string name="night_shortened">, Serie gekürzt</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>
     <string name="msg_night_failed">Die Nachtaufnahme hat nicht geklappt.</string>
     <string name="msg_saved_with_raw">Foto und RAW-Datei gespeichert</string>

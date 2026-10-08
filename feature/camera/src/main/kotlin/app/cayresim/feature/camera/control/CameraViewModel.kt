@@ -240,7 +240,7 @@ class CameraViewModel @Inject constructor(
         nightJob = viewModelScope.launch {
             val r = try { night() } finally { local.update { it.copy(specialStatus = SpecialStatus.IDLE) } }
             when (r) {
-                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain) }) { it.copy(lastPhotoUri = r.uri) }
+                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened) }) { it.copy(lastPhotoUri = r.uri) }
                 is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED)
             }
         }

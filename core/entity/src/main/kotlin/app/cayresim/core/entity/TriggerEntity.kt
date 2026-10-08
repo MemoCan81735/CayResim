@@ -73,5 +73,18 @@ class ThermalBudgetEntity(private val minFrames: Int = 3) {
         }
     }
 
-    companion object { const val MAX_FRAMES = 30 }
+    /**
+     * Fuer Bildstroeme (Nacht-Kern): der Speicher waechst nicht mit der Bildzahl, deshalb keine Obergrenze von
+     * [MAX_FRAMES]. Bei Waerme wird hoechstens auf [STREAM_MIN_SHARE] gekuerzt, weil jedes Bild Licht bringt.
+     */
+    fun streamFramesFor(requested: Int, headroom: Float?): Int {
+        if (requested <= 0) return 0
+        val h = headroom ?: return requested
+        return if (h.isNaN() || h < 0.8f) requested else maxOf(1, kotlin.math.ceil(requested * STREAM_MIN_SHARE).toInt())
+    }
+
+    companion object {
+        const val MAX_FRAMES = 30
+        const val STREAM_MIN_SHARE = 0.75
+    }
 }

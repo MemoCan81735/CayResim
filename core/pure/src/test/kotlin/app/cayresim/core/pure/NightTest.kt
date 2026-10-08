@@ -33,6 +33,15 @@ class NightPlanTest {
     @Test fun `Randfall Geraet erlaubt mehr als 1 durch 10 s, Serie bleibt freihand bei 1 durch 10 s`() =
         assertEquals(100_000_000L, NightPlan.plan(66_666_666, 3200, 500_000_000, 25, 3200).exposureNs)
 
+    @Test fun `Nachttest S24+ Automatik am Anschlag nimmt die volle ISO`() {
+        // Gemessen am 8. Oktober: Automatik etwa 1/15 s bei ISO 1279, der alte Plan ergab nur ISO 1919
+        val e = NightPlan.plan(66_666_666, 1279, s24Max, 25, 3200)
+        assertEquals(100_000_000L, e.exposureNs); assertEquals(3200, e.iso)
+    }
+
+    @Test fun `Randfall knapp unter dem Anschlag bleibt beim 1,5-fachen`() =
+        assertEquals(1200, NightPlan.plan(40_000_000, 2000, s24Max, 25, 3200).iso)
+
     @Test fun `Dunkel oder nicht`() {
         assertEquals(true, NightPlan.isDark(66_666_666, 3200))
         assertEquals(false, NightPlan.isDark(10_000_000, 100))
@@ -104,6 +113,17 @@ class NightMergeTest {
         val blurred = ByteArray(w * h * 3) { 9 } // keine Kanten
         assertFalse(m.add(blurred))
         assertEquals(1, m.dropped); assertEquals(1, m.used)
+    }
+
+    @Test fun `Aufhellung waechst mit der Bildzahl`() {
+        assertEquals(16f, NightTone.maxGainFor(1)); assertEquals(16f, NightTone.maxGainFor(0))
+        assertEquals(64f, NightTone.maxGainFor(36)); assertEquals(64f, NightTone.maxGainFor(100))
+        assertTrue(NightTone.maxGainFor(23) in 50f..52f, "${NightTone.maxGainFor(23)}")
+        // Fast schwarze Serie: ein Einzelbild bleibt bei 16, viele Bilder duerfen weiter aufhellen
+        val dark = ByteArray(w * h * 3) { 2 }
+        val one = NightMerge(w, h).apply { add(dark) }.finish()
+        val many = NightMerge(w, h).apply { repeat(36) { add(dark) } }.finish()
+        assertEquals(16f, one.gain); assertTrue(many.gain > 16f, "Verstaerkung ${many.gain}")
     }
 
     @Test fun `Randfall nur ein Bild ergibt ein gueltiges Ergebnis`() {
