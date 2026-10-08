@@ -108,8 +108,10 @@ class QualityLabTest {
             // Grenzwerte: werden sie verletzt, ist eine Aenderung eine Verschlechterung
             assertTrue(k.relNoise <= 0.4 * one.relNoise, "$s: Rauschen ${k.relNoise} statt hoechstens 40 % von ${one.relNoise}")
             assertTrue(k.edge <= 1.5, "$s: Kante ${k.edge} px, zu weich (Wahrheit 0,8 px)")
-            // D: Entrauschen im Bild, nicht nur durch Mitteln (vorher etwa 13 % des Einzelbilds)
-            assertTrue(k.relNoise <= 0.1 * one.relNoise, "$s: Korn ${k.relNoise}, hoechstens 10 % von ${one.relNoise}")
+            // D: Entrauschen im Bild, nicht nur durch Mitteln (vorher etwa 13 % des Einzelbilds). Untergrenze 0,015:
+            // das absichtliche Dithering der Ausgabe allein ergibt bei Helligkeit 40 schon etwa 0,008
+            val grain = maxOf(0.1 * one.relNoise, 0.015)
+            assertTrue(k.relNoise <= grain, "$s: Korn ${k.relNoise}, hoechstens $grain (Einzelbild ${one.relNoise})")
         }
         val shaky = "Dunkel, freihand"
         assertTrue(row(shaky, "Mittel ohne Ausrichtung").edge > 2 * row(shaky, "Nacht-Kern").edge, "Ausrichtung bringt keinen Vorteil")
