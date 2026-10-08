@@ -379,7 +379,7 @@ class CameraViewModelTest {
         assertEquals(0, cam.saved.size, "kein Foto ueber Samsungs Extension")
         val m = vm.uiState.value.message!!
         assertEquals(MessageKind.NIGHT_SAVED, m.kind)
-        assertTrue(m.detail!!.contains("ISO"), m.detail)
+        assertEquals(3200, m.night!!.iso); assertEquals(100_000_000L, m.night!!.exposureNs)
         assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
         assertNotNull(vm.uiState.value.lastPhotoUri)
     }

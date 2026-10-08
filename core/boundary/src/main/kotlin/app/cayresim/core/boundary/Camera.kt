@@ -13,8 +13,29 @@ data class CameraCapabilitiesSnapshot(
     val lowLightBoost: Boolean,
     val ultraHdr: Boolean,
     val raw: Boolean,
-    /** Geraetewerte fuer die Diagnose im Selbsttest (Name, Wert), z. B. Belichtungsbereich. */
-    val device: List<Pair<String, String>> = emptyList(),
+    /** Geraetewerte fuer die Diagnose im Selbsttest; null, wenn nicht lesbar. */
+    val device: DeviceReport? = null,
+)
+
+enum class HardwareLevel { LEGACY, LIMITED, FULL, LEVEL_3, EXTERNAL, UNKNOWN }
+
+/** Was das Geraet Drittanbieter-Apps erlaubt; nur Zahlen und Schluessel, den Text baut die UI (R23). */
+data class DeviceReport(
+    val hardwareLevel: HardwareLevel = HardwareLevel.UNKNOWN,
+    val exposureNs: LongRange? = null,
+    val iso: IntRange? = null,
+    val maxFrameNs: Long? = null,
+    val slowestFps: IntRange? = null,
+    val raw: Boolean = false,
+    val burst: Boolean = false,
+    val sensorWidth: Int? = null,
+    val sensorHeight: Int? = null,
+    val zsl: Boolean? = null,
+    val zoomMin: Float? = null,
+    val zoomMax: Float? = null,
+    val physicalCameras: Int? = null,
+    val chip: String = "",
+    val system: String = "",
 )
 
 /**

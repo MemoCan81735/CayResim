@@ -139,11 +139,12 @@ class SelfTestUseCaseTest {
     // ---------- Geraetewerte ----------
 
     @Test fun `Geraetewerte erscheinen als eigene Zeile`() = runTest {
-        val cam = FakeCameraBoundary(emptySet()).apply { deviceReport = listOf("Belichtung" to "1/100000 s bis 0,5 s", "ISO" to "50 bis 3200") }
+        val dev = app.cayresim.core.boundary.DeviceReport(exposureNs = 85_000L..100_000_000L, iso = 25..3200)
+        val cam = FakeCameraBoundary(emptySet()).apply { deviceReport = dev }
         val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
         val d = report.items.single { it.check == SelfTestCheck.DEVICE }
         assertTrue(d.passed)
-        assertEquals("Belichtung: 1/100000 s bis 0,5 s\nISO: 50 bis 3200", d.detail)
+        assertEquals(dev, d.device)
     }
 
     @Test fun `Randfall ohne Geraetewerte keine leere Zeile`() = runTest {

@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.CheckKind
 import app.cayresim.feature.settings.control.CheckRow
+import app.cayresim.feature.settings.control.DeviceInfoUi
 import app.cayresim.feature.settings.control.SelfTestUiState
 import app.cayresim.feature.settings.control.SelfTestViewModel
 
@@ -71,6 +72,7 @@ private fun CheckLine(row: CheckRow, modifier: Modifier) {
             Text(label(row))
             val extra = listOfNotNull(row.detail.ifBlank { null }, if (row.durationMillis > 0) "${row.durationMillis} ms" else null)
             if (extra.isNotEmpty()) Text(extra.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+            row.device?.let { DeviceLines(it) }
         }
     }
 }
@@ -86,4 +88,31 @@ private fun label(row: CheckRow): String = when (row.kind) {
     CheckKind.ULTRA_HDR -> stringResource(R.string.check_ultra_hdr)
     CheckKind.RAW -> stringResource(R.string.check_raw)
     CheckKind.CLEANUP -> stringResource(R.string.check_cleanup)
+}
+
+/** Belichtungszeit lesbar: unter 1 s als Bruch (1/x s), sonst in Sekunden. */
+internal fun exposureText(ns: Long): String =
+    if (ns >= 1_000_000_000L) "%.1f s".format(ns / 1e9) else "1/${Math.round(1e9 / ns)} s"
+
+@Composable
+private fun DeviceLines(d: DeviceInfoUi) {
+    val yes = stringResource(R.string.device_yes); val no = stringResource(R.string.device_no)
+    fun yn(b: Boolean) = if (b) yes else no
+    val lines = buildList {
+        add(stringResource(R.string.device_level, d.hardwareLevel))
+        if (d.exposureMinNs != null && d.exposureMaxNs != null)
+            add(stringResource(R.string.device_exposure, exposureText(d.exposureMinNs), exposureText(d.exposureMaxNs)))
+        if (d.isoMin != null && d.isoMax != null) add(stringResource(R.string.device_iso, d.isoMin, d.isoMax))
+        d.maxFrameNs?.let { add(stringResource(R.string.device_max_frame, exposureText(it))) }
+        if (d.slowestFpsMin != null && d.slowestFpsMax != null) add(stringResource(R.string.device_fps, d.slowestFpsMin, d.slowestFpsMax))
+        add(stringResource(R.string.device_raw_burst, yn(d.raw), yn(d.burst)))
+        if (d.sensorWidth != null && d.sensorHeight != null)
+            add(stringResource(R.string.device_sensor, d.sensorWidth, d.sensorHeight, "%.1f".format(d.sensorWidth.toLong() * d.sensorHeight / 1e6)))
+        d.zsl?.let { add(stringResource(R.string.device_zsl, yn(it))) }
+        if (d.zoomMin != null && d.zoomMax != null) add(stringResource(R.string.device_zoom, "%.1f".format(d.zoomMin), "%.1f".format(d.zoomMax)))
+        d.physicalCameras?.let { add(stringResource(R.string.device_cameras, it)) }
+        if (d.chip.isNotBlank()) add(stringResource(R.string.device_chip, d.chip))
+        if (d.system.isNotBlank()) add(stringResource(R.string.device_system, d.system))
+    }
+    lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
 }

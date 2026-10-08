@@ -3,9 +3,12 @@ package app.cayresim.feature.settings
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import app.cayresim.core.boundary.CameraError
+import app.cayresim.core.boundary.DeviceReport
+import app.cayresim.core.boundary.HardwareLevel
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
 import app.cayresim.core.boundary.fake.FakeSelfTestJournalBoundary
@@ -17,6 +20,7 @@ import app.cayresim.feature.settings.control.CheckRow
 import app.cayresim.feature.settings.control.SelfTestUiState
 import app.cayresim.feature.settings.control.SelfTestViewModel
 import app.cayresim.feature.settings.ui.SelfTestContent
+import app.cayresim.feature.settings.ui.exposureText
 import com.github.takahirom.roborazzi.captureRoboImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -61,6 +65,39 @@ class SelfTestTest {
     @Test fun viewmodel_jede_pruefung_hat_eine_anzeige() {
         SelfTestCheck.entries.forEach { CheckKind.valueOf(it.name) }
         assertEquals(SelfTestCheck.entries.size, CheckKind.entries.size)
+    }
+
+    /** Gemessene Werte des S24+ (Selbsttest vom Geraet). */
+    private val s24 = DeviceReport(
+        HardwareLevel.FULL, 85_000L..100_000_000L, 25..3200, 142_857_142L, 15..15,
+        raw = true, burst = true, sensorWidth = 4080, sensorHeight = 3060, zsl = false,
+        zoomMin = 0.6f, zoomMax = 10f, physicalCameras = 3, chip = "s5e9945", system = "Android 16",
+    )
+
+    @Test fun viewmodel_reicht_geraetewerte_als_zahlen_weiter() {
+        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { deviceReport = s24 }, clock, FakeSelfTestJournalBoundary()))
+        vm.onStart()
+        val d = vm.uiState.value.rows.single { it.kind == CheckKind.DEVICE }.device!!
+        assertEquals("FULL", d.hardwareLevel)
+        assertEquals(100_000_000L, d.exposureMaxNs); assertEquals(3200, d.isoMax); assertEquals(4080, d.sensorWidth)
+    }
+
+    @Test fun belichtung_lesbar() {
+        assertEquals("1/10 s", exposureText(100_000_000L))
+        assertEquals("1/7 s", exposureText(142_857_142L))
+        assertEquals("1/11765 s", exposureText(85_000L))
+        assertEquals("2.0 s", exposureText(2_000_000_000L).replace(',', '.'))
+    }
+
+    @Test fun bild_geraetewerte() {
+        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { deviceReport = s24 }, clock, FakeSelfTestJournalBoundary()))
+        vm.onStart()
+        val state = vm.uiState.value.copy(rows = vm.uiState.value.rows.filter { it.kind == CheckKind.DEVICE })
+        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(state, {}, {}) } }
+        compose.onNodeWithText("Belichtung: 1/11765 s bis 1/10 s", substring = true).assertExists()
+        compose.onNodeWithText("ISO: 25 bis 3200", substring = true).assertExists()
+        compose.onNodeWithText("RAW: ja, Serienbilder: ja", substring = true).assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/selftest_device.png")
     }
 
     @Test fun leerer_zustand_ist_nicht_gruen() = assertFalse(SelfTestUiState(finished = true).allPassed)

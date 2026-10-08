@@ -26,9 +26,12 @@ class ImageHandle(val token: Any, val width: Int, val height: Int)
 
 enum class Look { NONE, WARM, COOL, FILM, MONO }
 
+/** Kennzahlen einer Nachtaufnahme: genutzte und verworfene Bilder, Aufhellung. */
+data class NightStats(val used: Int, val dropped: Int, val gain: Float)
+
 sealed interface ProcessResult {
-    /** [info]: kurze Angaben zur Verarbeitung fuer die Diagnose, z. B. Bildzahl und Verstaerkung. */
-    data class Saved(val uri: String, val info: String? = null) : ProcessResult
+    /** [night]: Kennzahlen des Nacht-Kerns (nur Zahlen, Text baut die UI, R23). */
+    data class Saved(val uri: String, val night: NightStats? = null) : ProcessResult
     data class Failed(val reason: ProcessFailure) : ProcessResult
 }
 

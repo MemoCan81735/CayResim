@@ -7,8 +7,11 @@ import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.boundary.StackMode
 import javax.inject.Inject
 
+/** Was eine Nachtaufnahme tatsaechlich getan hat; [exposureNs] und [iso] null, wenn die Automatik blieb. */
+data class NightReport(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float)
+
 sealed interface StackOutcome {
-    data class Saved(val uri: String, val frames: Int, val shortened: Boolean, val info: String? = null) : StackOutcome
+    data class Saved(val uri: String, val frames: Int, val shortened: Boolean, val night: NightReport? = null) : StackOutcome
     data class Failed(val stage: Stage, val detail: String) : StackOutcome
     enum class Stage { COLLECT, PROCESS }
 }

@@ -136,11 +136,16 @@ class ProcessingAdapterTest {
         }
         val r = adapter.night(frames); track(r)
         val saved = assertIs<ProcessResult.Saved>(r, "Nacht fehlgeschlagen: $r")
-        val used = saved.info!!.substringBefore(" Bilder").toInt()
-        assertTrue(used >= 25, "Zu viele Bilder verworfen: ${saved.info}")
+        val used = saved.night!!.used
+        assertTrue(used >= 25, "Zu viele Bilder verworfen: ${saved.night}")
         val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(saved.uri), 1000))
         assertEquals(w, bmp.width)
         assertTrue(Color.green(bmp.getPixel(w / 2, h / 2)) >= 12, "Ergebnis zu dunkel")
+    }
+
+    @Test fun nachtKernMitZuWenigBildernSpeichertNichts() = runBlocking {
+        val two = kotlinx.coroutines.flow.flowOf(*Array(2) { app.cayresim.core.boundary.Frame(64, 48, ByteArray(64 * 48 * 3) { 5 }) })
+        assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.night(two))
     }
 
     @Test fun nachtKernOhneBilderScheitertSauber() = runBlocking {

@@ -30,7 +30,7 @@ class FakeCameraBoundary(
     /** Zoomgrenzen der simulierten Kamera; letzter Fokuspunkt. */
     var zoomRange: ClosedFloatingPointRange<Float> = 1f..1f
     var zoomPresets: List<Float> = emptyList()
-    var deviceReport: List<Pair<String, String>> = emptyList()
+    var deviceReport: app.cayresim.core.boundary.DeviceReport? = null
     var lastFocus: Pair<Float, Float>? = null; private set
     var startCalls = 0; private set
     var stopCalls = 0; private set

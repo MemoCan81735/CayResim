@@ -1,6 +1,7 @@
 package app.cayresim.feature.camera.ui
 
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.geometry.Offset
 import app.cayresim.feature.camera.control.ZoomPresetUi
 import androidx.compose.foundation.background
@@ -240,5 +241,11 @@ class CameraContentTest {
         compose.setContent { CayResimTheme { Box(Modifier.fillMaxSize().background(Color(0xFF335544))) { FocusRing(Offset(500f, 900f)) } } }
         compose.onNodeWithTag("focus_ring").assertIsDisplayed()
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_focus_ring.png")
+    }
+
+    @Test fun nacht_hinweis_zeigt_die_werte() {
+        show(running.copy(message = UserMessage(3, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 34, 2, 6f))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1/10 s, ISO 3200, 34 Bilder, 2 verworfen, Aufhellung x6,0", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 }

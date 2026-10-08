@@ -160,7 +160,8 @@ fun CameraContent(
 ) {
     val snackbar = remember { SnackbarHostState() }
     val message = state.message
-    val text = message?.let { m -> stringResource(messageRes(m.kind)) + (m.detail?.let { "\n$it" } ?: "") }
+    val nightText = message?.night?.let { nightDetail(it) }
+    val text = message?.let { m -> stringResource(messageRes(m.kind)) + (nightText?.let { "\n$it" } ?: "") }
     LaunchedEffect(message?.id) {
         if (message != null && text != null) {
             snackbar.showSnackbar(text)
@@ -441,4 +442,14 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.SAVED_WITH_RAW -> R.string.msg_saved_with_raw
     MessageKind.NIGHT_SAVED -> R.string.msg_night_saved
     MessageKind.NIGHT_FAILED -> R.string.msg_night_failed
+}
+
+/** Hinweis nach der Nachtaufnahme, z. B. "1/10 s, ISO 3200, 34 Bilder, 2 verworfen, Aufhellung x6,0". */
+@Composable
+internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): String {
+    val exposure = if (n.exposureNs != null && n.iso != null)
+        stringResource(R.string.night_exposure, (1_000_000_000L / n.exposureNs.coerceAtLeast(1)).toInt(), n.iso)
+    else stringResource(R.string.night_exposure_auto)
+    val gain = String.format(java.util.Locale.GERMANY, "%.1f", n.gain)
+    return stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
 }

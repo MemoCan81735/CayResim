@@ -37,5 +37,19 @@
     <string name="check_ultra_hdr">Ultra HDR</string>
     <string name="check_raw">RAW</string>
     <string name="check_cleanup">Testfotos gelöscht</string>
+    <string name="device_yes">ja</string>
+    <string name="device_no">nein</string>
+    <string name="device_level">Hardware-Stufe: %1$s</string>
+    <string name="device_exposure">Belichtung: %1$s bis %2$s</string>
+    <string name="device_iso">ISO: %1$d bis %2$d</string>
+    <string name="device_max_frame">Längste Bilddauer: %1$s</string>
+    <string name="device_fps">Langsamste Bildrate: %1$d bis %2$d fps</string>
+    <string name="device_raw_burst">RAW: %1$s, Serienbilder: %2$s</string>
+    <string name="device_sensor">Sensor: %1$d x %2$d (%3$s MP)</string>
+    <string name="device_zsl">Verzögerungsfrei (ZSL): %1$s</string>
+    <string name="device_zoom">Zoom: %1$s bis %2$s</string>
+    <string name="device_cameras">Kameras: %1$d</string>
+    <string name="device_chip">Chip: %1$s</string>
+    <string name="device_system">System: %1$s</string>
     <string name="back">Zurück</string>
 </resources>

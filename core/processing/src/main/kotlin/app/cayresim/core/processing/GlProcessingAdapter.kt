@@ -134,11 +134,13 @@ class GlProcessingAdapter @Inject constructor(
             return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         } ?: return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         val m = merge!!
+        // Befund M6: zu wenige brauchbare Bilder ergeben kein Nachtbild, sondern einen ehrlichen Fehler
+        if (m.used < MIN_NIGHT_FRAMES) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         val bitmap = withContext(compute) { rgbToBitmap(result.rgb, w, h, rot) }
-        val info = "${m.used} Bilder, ${m.dropped} verworfen, Aufhellung x${"%.1f".format(java.util.Locale.GERMANY, result.gain)}"
+        val stats = app.cayresim.core.boundary.NightStats(m.used, m.dropped, result.gain)
         return withContext(io) {
             when (val saved = save(bitmap, "nacht")) {
-                is ProcessResult.Saved -> saved.copy(info = info)
+                is ProcessResult.Saved -> saved.copy(night = stats)
                 else -> saved
             }.also { bitmap.recycle() }
         }
@@ -247,5 +249,7 @@ class GlProcessingAdapter @Inject constructor(
         const val PHOTO_DIR = "Pictures/CayResim"
         const val VIDEO_DIR = "Movies/CayResim"
         const val TILE = 16_384
+        /** Darunter lohnt das Zusammenfuehren nicht (Rauschen kaum besser als ein Einzelbild). */
+        const val MIN_NIGHT_FRAMES = 3
     }
 }

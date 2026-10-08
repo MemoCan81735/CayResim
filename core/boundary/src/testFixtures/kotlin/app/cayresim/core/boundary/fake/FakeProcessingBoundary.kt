@@ -46,11 +46,11 @@ class FakeProcessingBoundary : ProcessingBoundary {
         nightGate?.await()
         var count = 0
         frames.collect { count++ }
-        if (count == 0) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        if (count < 3) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         if (gpuFails) return ProcessResult.Failed(ProcessFailure.GPU)
         nightRuns += count
         val out = "content://fake/night/${++n}"; known += out
-        return ProcessResult.Saved(out, "$count Bilder")
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f))
     }
 
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {

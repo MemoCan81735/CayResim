@@ -240,8 +240,8 @@ class CameraViewModel @Inject constructor(
         nightJob = viewModelScope.launch {
             val r = try { night() } finally { local.update { it.copy(specialStatus = SpecialStatus.IDLE) } }
             when (r) {
-                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.info) { it.copy(lastPhotoUri = r.uri) }
-                is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED, r.detail)
+                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain) }) { it.copy(lastPhotoUri = r.uri) }
+                is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED)
             }
         }
     }
@@ -300,8 +300,8 @@ class CameraViewModel @Inject constructor(
         local.update { if (it.message?.id == id) it.copy(message = null) else it }
     }
 
-    private fun post(kind: MessageKind, detail: String? = null, extra: (Local) -> Local = { it }) {
-        local.update { l -> extra(l).copy(message = UserMessage(l.nextMessageId, kind, detail), nextMessageId = l.nextMessageId + 1) }
+    private fun post(kind: MessageKind, night: NightInfo? = null, extra: (Local) -> Local = { it }) {
+        local.update { l -> extra(l).copy(message = UserMessage(l.nextMessageId, kind, night), nextMessageId = l.nextMessageId + 1) }
     }
 
     private fun toUi(s: CameraStateSnapshot, l: Local, series: List<SeriesSnapshot>, ov: androidx.compose.ui.graphics.ImageBitmap?) = CameraUiState(

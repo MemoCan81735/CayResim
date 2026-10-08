@@ -17,6 +17,7 @@ data class SelfTestItem(
     val durationMillis: Long,
     val mode: PhotoMode? = null,
     val detail: String = "",
+    val device: app.cayresim.core.boundary.DeviceReport? = null,
 )
 
 data class SelfTestReport(val items: List<SelfTestItem>) {
@@ -66,8 +67,7 @@ class SelfTestUseCase @Inject constructor(
             items += SelfTestItem(SelfTestCheck.LOW_LIGHT_BOOST, true, 0, detail = if (caps.lowLightBoost) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.ULTRA_HDR, true, 0, detail = if (caps.ultraHdr) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.RAW, true, 0, detail = if (caps.raw) "ja" else "nein")
-            if (caps.device.isNotEmpty())
-                items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, detail = caps.device.joinToString("\n") { (k, v) -> "$k: $v" })
+            caps.device?.let { items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = it) }
         }
 
         val previous = camera.state.value.requestedMode

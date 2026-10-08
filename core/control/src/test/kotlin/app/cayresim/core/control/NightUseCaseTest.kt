@@ -30,7 +30,8 @@ class NightUseCaseTest {
         assertEquals(listOf(20), proc.nightRuns, "Messbilder und Einschwingbilder gehen nicht in die Verarbeitung")
         assertEquals(100_000_000L, manual.history.first().exposureNanos)
         assertEquals(3200, manual.history.first().iso)
-        assertTrue(r.info!!.contains("ISO 3200"), r.info)
+        assertEquals(3200, r.night!!.iso); assertEquals(100_000_000L, r.night!!.exposureNs); assertEquals(20, r.night!!.used)
+        kotlin.test.assertFalse(r.shortened)
     }
 
     @Test fun `Danach ist die Automatik wieder da`() = runTest {
@@ -91,5 +92,21 @@ class NightUseCaseTest {
         assertEquals(100_000_000L, manual.manualState.value.exposureNanos)
         job.cancel(); job.join()
         assertNull(manual.manualState.value.exposureNanos, "Nachtbelichtung blieb nach dem Abbruch stehen")
+    }
+
+    @Test fun `M6 Waerme kuerzt die Serie, das Ergebnis meldet es ehrlich`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        frames.allowed = NightUseCase.METER + NightUseCase.SETTLE + 8
+        val r = assertIs<StackOutcome.Saved>(night(20))
+        assertEquals(8, r.frames); assertTrue(r.shortened)
+    }
+
+    @Test fun `M6 laesst sich die Belichtung nicht setzen, meldet das Ergebnis die Automatik`() = runTest {
+        cam.start()
+        val stubborn = object : app.cayresim.core.boundary.ManualCameraBoundary by manual {
+            override suspend fun setExposure(nanos: Long?, iso: Int?): Boolean = if (nanos == null) manual.setExposure(null, null) else false
+        }
+        val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, stubborn, frames, proc)(10))
+        assertNull(r.night!!.exposureNs); assertNull(r.night!!.iso)
     }
 }

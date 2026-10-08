@@ -54,15 +54,18 @@ class NightUseCase @Inject constructor(
                         val l = camera.state.value.light
                         // Ohne Messung: wie bei voller Dunkelheit
                         val p = NightPlan.plan(l?.exposureNs ?: FALLBACK_NS, l?.iso ?: isoRange.last, expRange.last, isoRange.first, isoRange.last)
-                        plan = p
-                        manual.setExposure(p.exposureNs, p.iso)
+                        // Befund M6: nur melden, was wirklich eingestellt wurde
+                        plan = if (manual.setExposure(p.exposureNs, p.iso)) p else null
                     }
                 }
                 .filter { it.index >= METER + SETTLE }
                 .map { it.value }
             return when (val r = processing.night(stream)) {
-                is ProcessResult.Saved -> StackOutcome.Saved(r.uri, count, false,
-                    listOfNotNull(plan?.let { "1/${1_000_000_000L / it.exposureNs.coerceAtLeast(1)} s, ISO ${it.iso}" }, r.info).joinToString(", "))
+                is ProcessResult.Saved -> {
+                    val used = r.night?.used ?: count
+                    StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
+                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f))
+                }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
         } finally {

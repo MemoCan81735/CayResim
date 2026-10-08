@@ -38,7 +38,11 @@ data class SeriesOption(val id: Long, val name: String, val photoCount: Int)
 
 /** Einmalige Meldung als Teil des Zustands; die UI bestaetigt sie mit [CameraViewModel.onMessageShown] (R22). */
 @Immutable
-data class UserMessage(val id: Long, val kind: MessageKind, val detail: String? = null)
+data class UserMessage(val id: Long, val kind: MessageKind, val night: NightInfo? = null)
+
+/** Kennzahlen einer Nachtaufnahme fuer den Hinweis; den Text baut die Oberflaeche (R23). */
+@Immutable
+data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable
