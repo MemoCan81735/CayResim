@@ -58,6 +58,7 @@ jobs:
         run: |
           mkdir -p out/results out/screenshots out/roborazzi
           cp fast.log versions.log out/ 2>/dev/null || true
+          cp core/pure/build/quality-report.md out/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/test-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
           cp feature/*/src/test/screenshots/*.png out/screenshots/ 2>/dev/null || true
           find . -path ./out -prune -o -path '*/build/outputs/roborazzi/*' -name '*.png' -print -exec cp {} out/roborazzi/ \; >/dev/null 2>&1 || true
