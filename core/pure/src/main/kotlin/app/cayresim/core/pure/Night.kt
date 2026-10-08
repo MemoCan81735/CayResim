@@ -84,8 +84,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         // Verwackelte Bilder (deutlich weniger Kanten als die Referenz) verschlechtern das Ergebnis
         if (refSharpness > 0 && sharpness(small) < BLUR_LIMIT * refSharpness) { dropped++; return false }
         val (sdx, sdy) = if (maxShift > 0) StarAlignment.estimateShift(ref, small, sw, sh, maxShift) else 0 to 0
-        val dx = sdx * SCALE; val dy = sdy * SCALE
         val rl = refLuma!!
+        // Feinausrichtung in voller Aufloesung um die Grobschaetzung herum (die Grobstufe trifft nur auf 4 Pixel genau)
+        val (dx, dy) = refine(rl, frame, sdx * SCALE, sdy * SCALE)
         // Abweichung je Kachel nach dem Ausrichten
         val diff = FloatArray(weight.size)
         val count = IntArray(weight.size)
@@ -120,6 +121,29 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         for (t in weight.indices) weight[t] += w[t]
         used++
         return true
+    }
+
+    /** Sucht im Umkreis von [SCALE] - 1 Pixeln die beste Verschiebung auf der vollen Helligkeit (jedes 2. Pixel). */
+    private fun refine(ref: ByteArray, frame: ByteArray, cx: Int, cy: Int): Pair<Int, Int> {
+        val r = SCALE - 1
+        val m = minOf(width, height) / 8
+        var best = cx to cy; var bestErr = Long.MAX_VALUE
+        for (dy in cy - r..cy + r) for (dx in cx - r..cx + r) {
+            var err = 0L
+            var y = m
+            while (y < height - m) {
+                val sy = (y + dy).coerceIn(0, height - 1)
+                var x = m
+                while (x < width - m) {
+                    val sx = (x + dx).coerceIn(0, width - 1)
+                    err += abs(lumaAt(frame, (sy * width + sx) * 3) - (ref[y * width + x].toInt() and 0xFF))
+                    x += 2
+                }
+                y += 2
+            }
+            if (err < bestErr) { bestErr = err; best = dx to dy }
+        }
+        return best
     }
 
     /** Gewichtetes Mittel in linearem Licht, dann Aufhellen mit Nacht-Look. */

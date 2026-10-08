@@ -104,7 +104,7 @@ class QualityLabTest {
             val one = row(s, "Einzelbild"); val k = row(s, "Nacht-Kern")
             // Grenzwerte: werden sie verletzt, ist eine Aenderung eine Verschlechterung
             assertTrue(k.relNoise <= 0.4 * one.relNoise, "$s: Rauschen ${k.relNoise} statt hoechstens 40 % von ${one.relNoise}")
-            assertTrue(k.edge <= 3.0, "$s: Kante ${k.edge} px, zu weich")
+            assertTrue(k.edge <= 1.5, "$s: Kante ${k.edge} px, zu weich (Wahrheit 0,8 px)")
         }
         val shaky = "Dunkel, freihand"
         assertTrue(row(shaky, "Mittel ohne Ausrichtung").edge > 2 * row(shaky, "Nacht-Kern").edge, "Ausrichtung bringt keinen Vorteil")

@@ -392,7 +392,7 @@ class CameraViewModelTest {
     }
 
     @Test fun `Normaler Modus im Dunkeln bleibt ein normales Foto`() = runTest {
-        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NORMAL); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
         vm.onShutter()
         assertEquals(0, proc.nightRuns.size); assertEquals(1, cam.saved.size)
     }
