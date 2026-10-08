@@ -39,6 +39,12 @@ class NightPlanTest {
         assertEquals(100_000_000L, e.exposureNs); assertEquals(3200, e.iso)
     }
 
+    @Test fun `Nachttest S24+ zweiter Versuch Automatik mit voller ISO bei 1 durch 25 s`() {
+        // Hinweis am Geraet zweimal "1/10 s, ISO 1919": Automatik stand bei knapp 1/25 s und ISO 3200
+        val e = NightPlan.plan(39_990_000, 3200, s24Max, 25, 3200)
+        assertEquals(100_000_000L, e.exposureNs); assertEquals(3200, e.iso)
+    }
+
     @Test fun `Randfall knapp unter dem Anschlag bleibt beim 1,5-fachen`() =
         assertEquals(1200, NightPlan.plan(40_000_000, 2000, s24Max, 25, 3200).iso)
 
