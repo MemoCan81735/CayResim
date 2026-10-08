@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Neue APK veroeffentlichen (voller Lauf mit Emulator)"
+        type: boolean
+        default: true
 permissions:
   contents: write
 concurrency:
@@ -11,6 +16,36 @@ concurrency:
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false
 jobs:
+  # Minuten sparen: Emulator nur bei Aenderungen, die er pruefen kann; Release nur auf Wunsch
+  # ("[release]" in einer Commit-Nachricht oder "Run workflow" auf GitHub).
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    outputs:
+      emulator: ${{ steps.p.outputs.emulator }}
+      release: ${{ steps.p.outputs.release }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - id: p
+        env:
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+          DISPATCH_RELEASE: ${{ inputs.release }}
+        run: |
+          REL=false; EMU=false
+          if [ "$EVENT" = workflow_dispatch ]; then EMU=true; [ "$DISPATCH_RELEASE" = true ] && REL=true; fi
+          if [ "$EVENT" = push ]; then
+            if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then EMU=true; RANGE="-1 $GITHUB_SHA"
+            else RANGE="$BEFORE..$GITHUB_SHA"; fi
+            git log --format=%B $RANGE | grep -qF '[release]' && REL=true
+            if [ "$EMU" = false ] && git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -qE \
+              '^(core/(camera|processing|data)/|app/|feature/[^/]+/src/androidTest/|\.github/|gradle/|build-logic/|[^/]*\.gradle\.kts$|gradle\.properties$)'; then EMU=true; fi
+          fi
+          [ "$REL" = true ] && EMU=true
+          echo "emulator=$EMU" >> "$GITHUB_OUTPUT"; echo "release=$REL" >> "$GITHUB_OUTPUT"
+          echo "Emulator: $EMU, Release: $REL"
+
   fast:
     name: Schnell (JVM)
     runs-on: ubuntu-latest
@@ -69,6 +104,8 @@ jobs:
 
   emulator:
     name: Emulator
+    needs: plan
+    if: needs.plan.outputs.emulator == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
@@ -88,6 +125,9 @@ jobs:
         run: bash .github/scripts/start-emulator.sh
       - name: Geraetetests und Zufallsbedienung
         timeout-minutes: 40
+        env:
+          # Volle Zufallsbedienung nur vor einem Release
+          MONKEY_EVENTS: ${{ needs.plan.outputs.release == 'true' && '5000' || '2000' }}
         run: bash .github/scripts/emulator.sh
       - name: Protokoll ablegen
         if: always()
@@ -103,7 +143,8 @@ jobs:
 
   release:
     name: Release
-    needs: [fast, emulator]
+    needs: [plan, fast, emulator]
+    if: needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4

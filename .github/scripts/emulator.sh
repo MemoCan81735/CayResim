@@ -8,7 +8,7 @@ adb logcat -c || true
 gradle --continue connectedDebugAndroidTest 2>&1 | tee emu.log || fail=1
 grep -q "BUILD SUCCESSFUL" emu.log || fail=1
 
-# Zufallsbedienung (Testebene 6): 5000 Schritte, Kamera-Erlaubnis vorher erteilt.
+# Zufallsbedienung (Testebene 6): MONKEY_EVENTS Schritte (2000 normal, 5000 vor einem Release), Kamera-Erlaubnis vorher erteilt.
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant app.cayresim android.permission.CAMERA || true
 # Die Zufallsbedienung laeuft bei ANR oder Absturz fremder Systemprozesse weiter; gewertet werden nur
@@ -29,7 +29,7 @@ run_monkey() {
   adb logcat -c || true
   adb logcat -b crash -c || true
   adb shell am force-stop app.cayresim || true
-  adb shell monkey -p app.cayresim --ignore-timeouts --ignore-crashes --pct-syskeys 0 --pct-appswitch 0 --pct-trackball 0 --throttle 50 -s 4711 -v 5000 > monkey.log 2>&1 || true
+  adb shell monkey -p app.cayresim --ignore-timeouts --ignore-crashes --pct-syskeys 0 --pct-appswitch 0 --pct-trackball 0 --throttle 50 -s 4711 -v "${MONKEY_EVENTS:-5000}" > monkey.log 2>&1 || true
   adb logcat -d -b crash > crash.txt 2>&1 || true
   adb logcat -d > logcat-monkey.txt 2>&1 || true
   adb shell dumpsys meminfo app.cayresim > meminfo.txt 2>&1 || true
