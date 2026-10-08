@@ -91,7 +91,7 @@ class GlProcessingAdapter @Inject constructor(
                 when (mode) {
                     // Dunkle Serien werden linear gemittelt und aufgehellt (NightTone); helle bleiben unveraendert
                     StackMode.MEDIAN -> NightTone.brightenBytes(parallelStack(burst, median = true), burst.width).rgb
-                    StackMode.MEAN -> NightTone.meanAndBrighten(burst.frames, burst.pixels, burst.width).rgb
+                    StackMode.MEAN -> NightTone.softGammaMeanAndBrighten(burst.frames, burst.pixels, burst.width).rgb
                     StackMode.FOCUS -> FocusStacking.stack(burst.frames, burst.width, burst.height) { ensureActive() }.second
                     StackMode.STARS -> {
                         val maxShift = minOf(16, burst.width / 4, burst.height / 4)
@@ -155,7 +155,7 @@ class GlProcessingAdapter @Inject constructor(
                 while (p < end) {
                     ensureActive()
                     val e = minOf(end, p + TILE)
-                    if (median) Stacking.medianRange(burst.frames, out, p, e) else Stacking.meanRange(burst.frames, out, p, e)
+                    if (median) Stacking.lumaMedianRange(burst.frames, out, p, e) else Stacking.meanRange(burst.frames, out, p, e)
                     p = e
                 }
             }

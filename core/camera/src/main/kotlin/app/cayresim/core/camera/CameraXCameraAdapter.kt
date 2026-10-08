@@ -112,6 +112,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var imageCapture: ImageCapture? = null
     private var pendingRequest: SurfaceRequest? = null
     private var bindGeneration = 0
+    /** Belichtung waehrend einer Serie festgehalten (Menschen wegrechnen, Langzeit, Sterne). */
+    private var aeLocked = false
     /** Ob die aktuelle Bindung Ultra HDR speichert (fuer Tests und Diagnose). */
     @androidx.annotation.VisibleForTesting internal var ultraHdrActive = false
     /** Wie oft die Selbstheilung noetig war; Tests verlangen 0 im normalen Ablauf. */
@@ -366,7 +368,12 @@ class CameraXCameraAdapter @Inject constructor(
             if (taken < n) { taken++; received.trySend(bytes.copyOf() to intArrayOf(w, h, rot)) }
         }
         return try {
-            withContext(dispatcher) { ensureSurface() }
+            withContext(dispatcher) {
+                ensureSurface()
+                // Belichtung kurz einschwingen lassen, dann festhalten: innerhalb der Serie springt die Helligkeit nicht
+                delay(AE_SETTLE_MS)
+                aeLocked = true; applyManualOptions()
+            }
             frameListeners += listener
             val frames = withTimeoutOrNull(5_000L + n * 400L) { List(n) { received.receive() } }
                 ?: return BurstResult.Failed(BurstFailure.TIMEOUT)
@@ -375,6 +382,7 @@ class CameraXCameraAdapter @Inject constructor(
         } finally {
             frameListeners -= listener
             received.close()
+            withContext(NonCancellable + dispatcher) { aeLocked = false; applyManualOptions() }
             releasePipeline()
         }
     }
@@ -573,6 +581,7 @@ class CameraXCameraAdapter @Inject constructor(
         val st = _manualState.value
         val b = CaptureRequestOptions.Builder()
         val exp = st.exposureNanos; val iso = st.iso; val focus = st.focusDiopters
+        if (exp == null && aeLocked) b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
         if (exp != null && iso != null) {
             b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
             b.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exp)
@@ -673,6 +682,7 @@ class CameraXCameraAdapter @Inject constructor(
         const val PHOTO_DIR = "Pictures/CayResim"
         const val CAPTURE_TIMEOUT_MS = 8_000L
         const val FOCUS_TIMEOUT_MS = 3_000L
+        const val AE_SETTLE_MS = 300L
         /** So lange bleibt der angetippte Punkt scharf, danach wieder Automatik. */
         const val FOCUS_HOLD_S = 5L
         val ANALYSIS_SIZE = Size(1440, 1080)

@@ -95,3 +95,52 @@ class StackingTest {
         }
     }
 }
+
+class LumaMedianAndSoftGammaTest {
+    private val px = 4
+
+    @Test fun `Median ueber Helligkeit uebernimmt die Farbe eines echten Bildes`() {
+        // drei Bilder: rot, gruen, grau gleicher Helligkeitsreihenfolge; Kanalmedian wuerde Farben mischen
+        val red = ByteArray(px * 3) { if (it % 3 == 0) 200.toByte() else 20.toByte() }
+        val gray = ByteArray(px * 3) { 90.toByte() }
+        val green = ByteArray(px * 3) { if (it % 3 == 1) 220.toByte() else 30.toByte() }
+        val out = ByteArray(px * 3)
+        Stacking.lumaMedianRange(listOf(red, gray, green), out, 0, px)
+        // Helligkeiten: rot ~58, grau 90, gruen ~163 -> Median ist grau, und zwar ganz
+        kotlin.test.assertContentEquals(gray, out)
+    }
+
+    @Test fun `Median ueber Helligkeit entfernt einen Passanten`() {
+        val bg = ByteArray(px * 3) { 50.toByte() }
+        val person = ByteArray(px * 3) { 240.toByte() }
+        val out = ByteArray(px * 3)
+        Stacking.lumaMedianRange(listOf(bg, person, bg, bg, person), out, 0, px)
+        kotlin.test.assertContentEquals(bg, out)
+    }
+
+    @Test fun `Weiches Gamma laesst Lichtspuren heller als der Mittelwert`() {
+        val w = 4; val n = 10
+        // ein Licht zieht durch: in 1 von 10 Bildern hell (200), sonst dunkel (10)
+        val frames = List(n) { k -> ByteArray(px * 3) { if (k == 0) 200.toByte() else 10.toByte() } }
+        val mean = NightTone.meanAndBrighten(frames, px, w).rgb[0].toInt() and 0xFF
+        val soft = NightTone.softGammaMeanAndBrighten(frames, px, w).rgb[0].toInt() and 0xFF
+        assertTrue(soft > mean + 20, "Lichtspur $soft statt deutlich ueber $mean")
+    }
+
+    @Test fun `Weiches Gamma aendert ruhige Flaechen nicht`() {
+        val w = 4
+        val frames = List(8) { ByteArray(px * 3) { 120.toByte() } }
+        kotlin.test.assertContentEquals(frames[0], NightTone.softGammaMeanAndBrighten(frames, px, w).rgb)
+    }
+
+    @Test fun `Weiches Gamma mit k gleich 1 ist der Mittelwert`() {
+        val w = 4; val rng = SeededRng(2)
+        val frames = List(6) { ByteArray(px * 3) { (60 + rng.nextInt(100)).toByte() } }
+        kotlin.test.assertContentEquals(NightTone.meanAndBrighten(frames, px, w).rgb, NightTone.softGammaMeanAndBrighten(frames, px, w, k = 1f).rgb)
+    }
+
+    @Test fun `Fehlerfall ungueltiges k und leere Serie`() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> { NightTone.softGammaMeanAndBrighten(emptyList(), px, 4) }
+        kotlin.test.assertFailsWith<IllegalArgumentException> { NightTone.softGammaMeanAndBrighten(listOf(ByteArray(px * 3)), px, 4, k = 0.5f) }
+    }
+}

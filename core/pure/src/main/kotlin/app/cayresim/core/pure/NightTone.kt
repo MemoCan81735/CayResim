@@ -66,6 +66,26 @@ object NightTone {
         return brighten(acc.mean(), width)
     }
 
+    /**
+     * Langzeit mit hellen Lichtspuren: Potenzmittel in linearem Licht, (Summe x^k / n)^(1/k).
+     * Mit k = 3 (wie Googles Long Exposure, "soft gamma") verblassen bewegte Lichter nicht zu grauen
+     * Schlieren; ruhige Flaechen bleiben wie beim normalen Mittel. k = 1 ist der normale Mittelwert.
+     */
+    fun softGammaMeanAndBrighten(frames: List<ByteArray>, pixels: Int, width: Int, k: Float = SOFT_GAMMA): Result {
+        require(frames.isNotEmpty()) { "Mindestens ein Bild" }
+        require(k >= 1f) { "k muss mindestens 1 sein" }
+        val acc = FloatArray(pixels * 3)
+        for (f in frames) {
+            require(f.size == pixels * 3) { "Bild hat die falsche Groesse" }
+            for (i in acc.indices) acc[i] += decode[f[i].toInt() and 0xFF].pow(k)
+        }
+        val inv = 1f / frames.size; val ik = 1f / k
+        for (i in acc.indices) acc[i] = (acc[i] * inv).pow(ik)
+        return brighten(acc, width)
+    }
+
+    const val SOFT_GAMMA = 3f
+
     /** Ein fertiges 8-Bit-Bild (z. B. Median) bei Bedarf aufhellen. */
     fun brightenBytes(rgb: ByteArray, width: Int): Result =
         brighten(FloatArray(rgb.size) { decode[rgb[it].toInt() and 0xFF] }, width)

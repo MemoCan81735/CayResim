@@ -18,6 +18,29 @@ object Stacking {
         }
     }
 
+    /**
+     * Median ueber die Helligkeit: je Pixel das Bild mit der mittleren Helligkeit, dessen Farbe ganz
+     * uebernommen wird. Anders als der Median je Kanal mischt das keine Farben verschiedener Bilder
+     * (keine Farbsaeume an Kanten von Passanten).
+     */
+    fun lumaMedianRange(frames: List<ByteArray>, out: ByteArray, fromPixel: Int, toPixel: Int) {
+        val n = frames.size
+        require(n >= 1) { "Mindestens ein Bild" }
+        val l = IntArray(n); val idx = IntArray(n)
+        for (p in fromPixel until toPixel) {
+            val i = p * 3
+            for (k in 0 until n) { l[k] = luma(frames[k], i); idx[k] = k }
+            // Einfuegesortierung der Indizes nach Helligkeit (n ist klein)
+            for (a in 1 until n) {
+                val v = idx[a]; var b = a - 1
+                while (b >= 0 && l[idx[b]] > l[v]) { idx[b + 1] = idx[b]; b-- }
+                idx[b + 1] = v
+            }
+            val src = frames[idx[(n - 1) / 2]]
+            out[i] = src[i]; out[i + 1] = src[i + 1]; out[i + 2] = src[i + 2]
+        }
+    }
+
     /** Gerundeter Mittelwert je Kanal fuer die Pixel [fromPixel, toPixel). */
     fun meanRange(frames: List<ByteArray>, out: ByteArray, fromPixel: Int, toPixel: Int) {
         val n = frames.size
