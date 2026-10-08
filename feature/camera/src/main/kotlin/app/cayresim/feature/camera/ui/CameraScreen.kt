@@ -88,7 +88,7 @@ fun CameraRoute(
     onOpenGallery: () -> Unit,
     onOpenSettings: () -> Unit,
     /** Meldet den Ausloeser fuer die Lautstaerketasten an (null = abmelden); die Shell faengt die Tasten ab. */
-    setShutterKeyListener: ((() -> Unit)?) -> Unit = {},
+    setShutterKeyListener: ((() -> Boolean)?) -> Unit = {},
     viewModel: CameraViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

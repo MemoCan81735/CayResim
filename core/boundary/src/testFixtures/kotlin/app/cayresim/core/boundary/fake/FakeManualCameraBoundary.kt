@@ -22,6 +22,8 @@ class FakeManualCameraBoundary(
     val history = mutableListOf<ManualStateSnapshot>()
 
     override suspend fun setExposure(nanos: Long?, iso: Int?): Boolean {
+        // Wie der echte Adapter (withContext): in einer abgebrochenen Coroutine wirft der Aufruf sofort
+        kotlinx.coroutines.yield()
         val c = _caps.value
         if (nanos == null || iso == null) { _state.update { it.copy(exposureNanos = null, iso = null) }; history += _state.value; return true }
         if (c?.canExpose != true) return false

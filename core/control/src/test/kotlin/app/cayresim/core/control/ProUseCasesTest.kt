@@ -8,6 +8,8 @@ import app.cayresim.core.boundary.fake.FakeFrameBoundary
 import app.cayresim.core.boundary.fake.FakeManualCameraBoundary
 import app.cayresim.core.boundary.fake.FakeProcessingBoundary
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -61,5 +63,16 @@ class ProUseCasesTest {
         cam.start(); val manual = FakeManualCameraBoundary(cam, ManualCapabilitiesSnapshot(1_000L..100_000_000L, 100..800, null, false))
         AstroUseCase(manual, frames, proc)()
         assertEquals(100_000_000L, manual.history.first().exposureNanos); assertEquals(800, manual.history.first().iso)
+    }
+
+    @Test fun `Astro Abbruch stellt die Automatik trotzdem wieder her`() = runTest {
+        cam.start(); val manual = FakeManualCameraBoundary(cam)
+        val slowFrames = object : app.cayresim.core.boundary.FrameBoundary by frames {
+            override suspend fun collect(count: Int): app.cayresim.core.boundary.BurstResult { kotlinx.coroutines.delay(5_000); return frames.collect(count) }
+        }
+        val job = launch { AstroUseCase(manual, slowFrames, proc)(10) }
+        advanceTimeBy(1_000)
+        job.cancel(); job.join()
+        assertNull(manual.manualState.value.exposureNanos)
     }
 }

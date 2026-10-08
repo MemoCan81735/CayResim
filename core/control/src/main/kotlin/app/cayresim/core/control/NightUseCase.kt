@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.withIndex
 import javax.inject.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /**
  * Eigener Nacht-Kern statt Samsungs Night-Extension, wenn es dunkel ist (Bildqualitaets-Dossier N-P1).
@@ -64,7 +66,8 @@ class NightUseCase @Inject constructor(
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
         } finally {
-            manual.setExposure(before.exposureNanos, before.iso)
+            // Auch bei Abbruch (Zurueck, Home): sonst bliebe die Nachtbelichtung im Singleton-Adapter haengen
+            withContext(NonCancellable) { manual.setExposure(before.exposureNanos, before.iso) }
         }
     }
 

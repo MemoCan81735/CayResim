@@ -37,7 +37,13 @@ class FakeProcessingBoundary : ProcessingBoundary {
     /** Bildzahl je Nachtaufnahme. */
     val nightRuns = mutableListOf<Int>()
 
+    /** Haelt Nachtaufnahmen an, bis der Test sie freigibt; zaehlt jeden Start. */
+    var nightGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+    var nightStarts = 0; private set
+
     override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>): ProcessResult {
+        nightStarts++
+        nightGate?.await()
         var count = 0
         frames.collect { count++ }
         if (count == 0) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)

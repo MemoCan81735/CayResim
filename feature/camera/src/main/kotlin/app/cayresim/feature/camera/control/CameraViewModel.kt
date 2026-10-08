@@ -75,6 +75,8 @@ class CameraViewModel @Inject constructor(
     )
 
     private var triggerJob: Job? = null
+    /** Laufende Nachtaufnahme; wird beim Verlassen des Screens abgebrochen (Befund C2). */
+    private var nightJob: Job? = null
 
     private val local = MutableStateFlow(Local())
     private val allSeries = seriesBoundary.series().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -146,22 +148,35 @@ class CameraViewModel @Inject constructor(
     fun onTapFocus(x: Float, y: Float) { viewModelScope.launch { camera.focusAt(x, y) } }
 
     /** Lautstaerketaste: loest aus wie der runde Knopf, aber nur wenn gerade ausgeloest werden darf. */
-    fun onHardwareShutter() { if (uiState.value.canShoot) onShutter() }
+    /**
+     * Lautstaerketaste. true = Taste verbraucht. Laeuft die Kamera nicht (Fehler, keine Erlaubnis),
+     * regelt die Taste wie gewohnt die Lautstaerke (Befund L1).
+     */
+    fun onHardwareShutter(): Boolean {
+        val s = uiState.value
+        if (s.status != ScreenStatus.RUNNING) return false
+        if (s.canShoot) onShutter()
+        return true
+    }
 
     fun onRaw(enabled: Boolean) { viewModelScope.launch { manual.setRaw(enabled) } }
 
     fun onPermissionResult(granted: Boolean) {
         local.update { it.copy(permission = if (granted) PermissionStatus.GRANTED else PermissionStatus.DENIED) }
-        if (granted && local.value.visible) viewModelScope.launch { camera.start() }
+        if (granted && local.value.visible) viewModelScope.launch { syncAuto(); camera.start() }
     }
 
     fun onScreenStart() {
         local.update { it.copy(visible = true) }
-        if (local.value.permission == PermissionStatus.GRANTED) viewModelScope.launch { camera.start() }
+        if (local.value.permission == PermissionStatus.GRANTED) viewModelScope.launch { syncAuto(); camera.start() }
     }
+
+    /** Befund M8: die Automatik braucht den normalen Modus, auch wenn der Adapter noch einen anderen haelt. */
+    private suspend fun syncAuto() { if (local.value.auto) camera.selectMode(PhotoMode.NORMAL) }
 
     fun onScreenStop() {
         disarm()
+        nightJob?.cancel(); nightJob = null
         local.update { it.copy(visible = false, specialStatus = if (it.specialStatus == SpecialStatus.ARMED) SpecialStatus.IDLE else it.specialStatus) }
         viewModelScope.launch { camera.stop() }
     }
@@ -191,6 +206,8 @@ class CameraViewModel @Inject constructor(
 
     fun onShutter() {
         val l = local.value
+        // Befund H2: waehrend eine Serie laeuft, loest ein weiterer Druck nichts aus (synchron geprueft, nicht ueber den UI-Zustand)
+        if (l.specialStatus == SpecialStatus.COLLECTING || l.specialStatus == SpecialStatus.PROCESSING) return
         if (l.special != SpecialOption.NONE && l.special != SpecialOption.PRO) return onSpecialShutter(l.special)
         // "Nacht" im Dunkeln: eigener Nacht-Kern statt Samsungs schwacher Night-Extension
         if (l.special == SpecialOption.NONE && camera.state.value.requestedMode == PhotoMode.NIGHT && night.shouldUseOwn()) return onNightShutter()
@@ -218,10 +235,10 @@ class CameraViewModel @Inject constructor(
     }
 
     private fun onNightShutter() {
-        viewModelScope.launch {
-            local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
-            val r = night()
-            local.update { it.copy(specialStatus = SpecialStatus.IDLE) }
+        if (nightJob?.isActive == true) return // Befund H2: nie zwei Nachtaufnahmen zugleich
+        local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
+        nightJob = viewModelScope.launch {
+            val r = try { night() } finally { local.update { it.copy(specialStatus = SpecialStatus.IDLE) } }
             when (r) {
                 is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.info) { it.copy(lastPhotoUri = r.uri) }
                 is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED, r.detail)

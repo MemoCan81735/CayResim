@@ -11,6 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Rule
@@ -42,6 +45,38 @@ class CameraXAdapterContractTest {
     @Test fun vertragZoomUndFokusVorStart() = run { CameraBoundaryContract.zoomAndFocusBeforeStartAreRejected(adapter) }
     @Test fun vertragZoomInDenGrenzen() = run { CameraBoundaryContract.zoomStaysWithinLimits(adapter) }
     @Test fun vertragFokusAusserhalb() = run { CameraBoundaryContract.focusOutsideTheImageIsRejected(adapter) }
+
+    // ---------- Bildstrom fuer den Nacht-Kern (Befunde C2, H1, T2) ----------
+
+    @Test fun bildstromLiefertHoechstensNBilderUndGibtFrei() = run {
+        adapter.start()
+        val got = withTimeout(20_000) { adapter.frames(5).toList() }
+        assertTrue(got.size in 1..5, "${got.size} Bilder")
+        assertTrue(got.all { it.rgb.size == it.width * it.height * 3 })
+        assertEquals(0, adapter.pipelineUserCount, "Pipeline nicht freigegeben")
+        val r = assertIs<CaptureResult.Saved>(adapter.capture()); adapter.delete(r.uri)
+    }
+
+    @Test fun bildstromEndetWennDieKameraStoppt() = run {
+        adapter.start()
+        val job = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).async { adapter.frames(1_000).count() }
+        kotlinx.coroutines.delay(2_000)
+        adapter.stop()
+        val n = withTimeout(10_000) { job.await() }
+        assertTrue(n < 1_000, "Strom lief nach dem Stopp weiter")
+        assertEquals(0, adapter.pipelineUserCount)
+    }
+
+    @Test fun abbruchWaehrendDesStartsGibtDiePipelineFrei() = run {
+        adapter.start()
+        repeat(3) {
+            val job = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch { adapter.frames(50).collect { } }
+            kotlinx.coroutines.delay(50L + it * 150L) // mal waehrend des Startens, mal danach
+            job.cancel(); job.join()
+        }
+        kotlinx.coroutines.delay(500)
+        assertEquals(0, adapter.pipelineUserCount, "Zaehler blieb nach Abbruch stehen")
+    }
 
     /** Ultra HDR im normalen Modus, wenn die Kamera es kann; sonst normales JPEG ohne Ausfall. */
     @Test fun ultraHdrNurWennUnterstuetzt() = run {

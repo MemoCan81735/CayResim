@@ -35,6 +35,9 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
@@ -114,6 +117,10 @@ class CameraXCameraAdapter @Inject constructor(
     private var bindGeneration = 0
     /** Belichtung waehrend einer Serie festgehalten (Menschen wegrechnen, Langzeit, Sterne). */
     private var aeLocked = false
+    /** Letzter Zustand der Belichtungsautomatik (vom Kamera-Thread geschrieben). */
+    @Volatile private var aeState: Int? = null
+    /** Fuer Tests: wie viele Stroeme gerade die eigene Pipeline brauchen (muss nach jedem Ende 0 sein). */
+    @androidx.annotation.VisibleForTesting internal val pipelineUserCount: Int get() = pipelineUsers
     /** Ob die aktuelle Bindung Ultra HDR speichert (fuer Tests und Diagnose). */
     @androidx.annotation.VisibleForTesting internal var ultraHdrActive = false
     /** Wie oft die Selbstheilung noetig war; Tests verlangen 0 im normalen Ablauf. */
@@ -168,7 +175,8 @@ class CameraXCameraAdapter @Inject constructor(
             // Den Sucher-Ersatz gibt CameraX ueber den Ergebnis-Rueckruf frei, sobald die Sitzung ihn losgelassen hat
             fallbackSink = null
             imageCapture = null
-            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false) }
+            // Befund H4: alte Lichtmessung gilt nach dem Stopp nicht mehr (z. B. Wiederoeffnen bei Tageslicht)
+            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, light = null) }
         }
     }
 
@@ -339,7 +347,8 @@ class CameraXCameraAdapter @Inject constructor(
         frameListeners.forEach { it(out, w, h, rot) }
     }
 
-    private suspend fun acquirePipeline() = withContext(dispatcher) {
+    /** Nicht abbrechbar: sonst koennte der Zaehler erhoeht sein, ohne dass der Aufrufer davon weiss (Befund H1). */
+    private suspend fun acquirePipeline() = withContext(NonCancellable + dispatcher) {
         mutex.withLock {
             pipelineUsers++
             if (pipelineUsers == 1) { val p = provider; val em = extensions; if (owner.isActive && p != null && em != null) bindCurrent(p, em) }
@@ -370,8 +379,12 @@ class CameraXCameraAdapter @Inject constructor(
         return try {
             withContext(dispatcher) {
                 ensureSurface()
-                // Belichtung kurz einschwingen lassen, dann festhalten: innerhalb der Serie springt die Helligkeit nicht
+                // Befund M2: erst festhalten, wenn die Automatik eingeschwungen ist (hoechstens 1,5 s warten)
+                aeState = null
                 delay(AE_SETTLE_MS)
+                withTimeoutOrNull(AE_CONVERGE_TIMEOUT_MS) {
+                    while (aeState != CaptureRequest.CONTROL_AE_STATE_CONVERGED && aeState != CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) delay(50)
+                }
                 aeLocked = true; applyManualOptions()
             }
             frameListeners += listener
@@ -395,7 +408,13 @@ class CameraXCameraAdapter @Inject constructor(
             request: CaptureRequest,
             result: android.hardware.camera2.TotalCaptureResult,
         ) {
-            if (n++ % 10 != 0) return
+            val ae = result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE)
+            aeState = ae
+            // Befund H4: nur echte Messungen der Automatik zaehlen, keine manuellen oder festgehaltenen Werte
+            if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_MODE) == CaptureRequest.CONTROL_AE_MODE_OFF) return
+            if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_LOCK) == true) return
+            if (ae != null && ae != CaptureRequest.CONTROL_AE_STATE_CONVERGED && ae != CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) return
+            if (_state.value.light != null && n++ % 10 != 0) return
             val exp = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: return
             val iso = result.get(android.hardware.camera2.CaptureResult.SENSOR_SENSITIVITY) ?: return
             val l = LightSnapshot(exp, iso)
@@ -403,20 +422,47 @@ class CameraXCameraAdapter @Inject constructor(
         }
     }
 
-    override fun frames(maxCount: Int): Flow<Frame> = callbackFlow {
+    override fun frames(maxCount: Int): Flow<Frame> = kotlinx.coroutines.flow.flow {
+        // Je Sammlung ein eigener Zaehler der Bilder in der Warteschlange (Befund M7)
+        val inFlight = java.util.concurrent.atomic.AtomicInteger(0)
+        emitAll(frameStream(maxCount, inFlight).buffer(STREAM_BUFFER).onEach { inFlight.decrementAndGet() })
+    }
+
+    private fun frameStream(maxCount: Int, inFlight: java.util.concurrent.atomic.AtomicInteger): Flow<Frame> = callbackFlow {
         if (_state.value.status != CameraStatus.RUNNING || maxCount <= 0) { close(); return@callbackFlow }
         val n = thermal.framesFor(maxCount, headroom())
-        var sent = 0
+        val sent = java.util.concurrent.atomic.AtomicInteger(0)
+        val lastFrame = java.util.concurrent.atomic.AtomicLong(SystemClock.elapsedRealtime())
         val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot ->
-            // Kopie je Bild; der Empfaenger verarbeitet sofort, gespeichert wird nichts
-            if (sent < n && trySend(Frame(w, h, bytes.copyOf(), rot)).isSuccess) sent++
-            if (sent >= n) channel.close()
+            lastFrame.set(SystemClock.elapsedRealtime())
+            // Nur kopieren, wenn Platz ist (Befund M7): sonst Bild auslassen statt Speicher zu verschwenden
+            if (sent.get() < n && inFlight.get() < STREAM_BUFFER) {
+                inFlight.incrementAndGet()
+                if (trySend(Frame(w, h, bytes.copyOf(), rot)).isSuccess) sent.incrementAndGet() else inFlight.decrementAndGet()
+            }
+            if (sent.get() >= n) channel.close()
         }
+        val watchers = mutableListOf<kotlinx.coroutines.Job>()
         acquirePipeline()
-        withContext(dispatcher) { ensureSurface() }
-        frameListeners += listener
-        awaitClose { frameListeners -= listener; launch(NonCancellable) { releasePipeline() } }
-    }.buffer(2) // volle Warteschlange: Bild auslassen statt Speicher fuellen; gezaehlt wird nur, was ankommt
+        try {
+            withContext(dispatcher) { ensureSurface() }
+            frameListeners += listener
+            // Befund C2: Strom endet, wenn die Kamera stoppt oder zu lange kein Bild kommt
+            watchers += launch { _state.first { it.status != CameraStatus.RUNNING }; channel.close() }
+            watchers += launch {
+                while (true) {
+                    delay(STREAM_FRAME_TIMEOUT_MS / 2)
+                    if (SystemClock.elapsedRealtime() - lastFrame.get() > STREAM_FRAME_TIMEOUT_MS) { channel.close(); break }
+                }
+            }
+            awaitClose { frameListeners -= listener }
+        } finally {
+            // Waechter beenden, sonst wartet der Strom ewig auf seine Kinder
+            watchers.forEach { it.cancel() }
+            frameListeners -= listener
+            releasePipeline()
+        }
+    }
 
     override fun trigger(mode: TriggerMode): Flow<Unit> = callbackFlow {
         val entity = TriggerEntity(if (mode == TriggerMode.MOTION) TriggerKind.MOTION else TriggerKind.STILLNESS)
@@ -429,9 +475,14 @@ class CameraXCameraAdapter @Inject constructor(
             } else previous = bytes.copyOf()
         }
         acquirePipeline()
-        withContext(dispatcher) { ensureSurface() }
-        frameListeners += listener
-        awaitClose { frameListeners -= listener; launch(NonCancellable) { releasePipeline() } }
+        try {
+            withContext(dispatcher) { ensureSurface() }
+            frameListeners += listener
+            awaitClose { frameListeners -= listener }
+        } finally {
+            frameListeners -= listener
+            releasePipeline()
+        }
     }.buffer(Channel.CONFLATED)
 
     private fun publishMode() {
@@ -683,6 +734,11 @@ class CameraXCameraAdapter @Inject constructor(
         const val CAPTURE_TIMEOUT_MS = 8_000L
         const val FOCUS_TIMEOUT_MS = 3_000L
         const val AE_SETTLE_MS = 300L
+        const val AE_CONVERGE_TIMEOUT_MS = 1_500L
+        /** Hoechstens so viele Bilder warten auf die Verarbeitung (Befund M7). */
+        const val STREAM_BUFFER = 2
+        /** Kommt so lange kein Bild, endet der Strom (Befund C2). */
+        const val STREAM_FRAME_TIMEOUT_MS = 3_000L
         /** So lange bleibt der angetippte Punkt scharf, danach wieder Automatik. */
         const val FOCUS_HOLD_S = 5L
         val ANALYSIS_SIZE = Size(1440, 1080)

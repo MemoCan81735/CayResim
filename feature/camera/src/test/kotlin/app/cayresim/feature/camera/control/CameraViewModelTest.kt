@@ -441,4 +441,40 @@ class CameraViewModelTest {
         assertFalse(vm.uiState.value.autoNight)
         vm.onShutter(); assertEquals(0, proc.nightRuns.size); assertEquals(1, proc.stacked.size)
     }
+
+    // ---------- Befunde der Architekturpruefung ----------
+
+    @Test fun `H2 doppelter Druck waehrend der Nachtaufnahme startet keine zweite`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        proc.nightGate = kotlinx.coroutines.CompletableDeferred()
+        vm.onShutter(); vm.onShutter(); vm.onHardwareShutter()
+        assertEquals(1, proc.nightStarts)
+        proc.nightGate!!.complete(Unit)
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+        assertEquals(1, proc.nightRuns.size)
+    }
+
+    @Test fun `C2 Verlassen des Screens bricht die Nachtaufnahme ab und gibt den Ausloeser frei`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        proc.nightGate = kotlinx.coroutines.CompletableDeferred()
+        vm.onShutter()
+        assertEquals(SpecialStatus.COLLECTING, vm.uiState.value.specialStatus)
+        vm.onScreenStop()
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+        assertNull(manual.manualState.value.exposureNanos, "Nachtbelichtung blieb stehen")
+        vm.onScreenStart()
+        assertEquals(0, proc.nightRuns.size)
+    }
+
+    @Test fun `L1 Lautstaerketaste ohne laufende Kamera bleibt Lautstaerke`() = runTest {
+        assertFalse(vm.onHardwareShutter())
+        visibleAndGranted(); assertTrue(vm.onHardwareShutter())
+    }
+
+    @Test fun `M8 Automatik setzt den Adapter beim Start auf den normalen Modus`() = runTest {
+        cam.start(); cam.selectMode(app.cayresim.core.boundary.PhotoMode.HDR); cam.stop()
+        visibleAndGranted()
+        assertEquals(app.cayresim.core.boundary.PhotoMode.NORMAL, cam.state.value.requestedMode)
+        assertEquals(ModeOption.AUTO, vm.uiState.value.selected)
+    }
 }

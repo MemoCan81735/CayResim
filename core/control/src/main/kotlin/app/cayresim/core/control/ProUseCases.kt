@@ -7,6 +7,8 @@ import app.cayresim.core.boundary.ProcessResult
 import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.boundary.StackMode
 import javax.inject.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 /** Fokus-Stacking: Fokusreihe aufnehmen, je Bereich das schaerfste Bild nehmen. */
 class FocusStackUseCase @Inject constructor(
@@ -50,7 +52,7 @@ class AstroUseCase @Inject constructor(
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
         } finally {
-            manual.setExposure(before.exposureNanos, before.iso)
+            withContext(NonCancellable) { manual.setExposure(before.exposureNanos, before.iso) }
         }
     }
 

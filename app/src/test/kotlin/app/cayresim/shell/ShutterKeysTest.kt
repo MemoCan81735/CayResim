@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 
 class ShutterKeysTest {
     private var shots = 0
-    private val keys = ShutterKeys().apply { listener = { shots++ } }
+    private val keys = ShutterKeys().apply { listener = { shots++; true } }
 
     @Test fun `Guter Fall beide Lautstaerketasten loesen einmal aus`() {
         assertTrue(keys.handle(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.ACTION_DOWN, 0))
@@ -32,5 +32,11 @@ class ShutterKeysTest {
         keys.listener = null
         assertFalse(keys.handle(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.ACTION_DOWN, 0))
         assertEquals(0, shots)
+    }
+
+    @Test fun `Kamera laeuft nicht, Tasten regeln die Lautstaerke`() {
+        keys.listener = { false }
+        assertFalse(keys.handle(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.ACTION_DOWN, 0))
+        assertFalse(keys.handle(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.ACTION_UP, 0))
     }
 }

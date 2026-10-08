@@ -8,13 +8,16 @@ import android.view.KeyEvent
  * Ohne angemeldeten Empfaenger (z. B. in der Galerie) regeln die Tasten wie gewohnt die Lautstaerke.
  */
 class ShutterKeys {
-    var listener: (() -> Unit)? = null
+    /** Empfaenger; liefert true, wenn er die Taste nutzt (Kamera laeuft), sonst regelt sie die Lautstaerke. */
+    var listener: (() -> Boolean)? = null
+    private var consuming = false
 
     /** true = Taste verbraucht. Ausgeloest wird nur beim ersten Druck, nicht beim Gedrueckthalten. */
     fun handle(keyCode: Int, action: Int, repeatCount: Int): Boolean {
         val l = listener ?: return false
         if (keyCode != KeyEvent.KEYCODE_VOLUME_UP && keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) return false
-        if (action == KeyEvent.ACTION_DOWN && repeatCount == 0) l()
-        return true
+        if (action == KeyEvent.ACTION_DOWN && repeatCount == 0) consuming = l()
+        // Wiederholungen und Loslassen folgen der Entscheidung beim ersten Druck
+        return consuming
     }
 }

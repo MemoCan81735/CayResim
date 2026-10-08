@@ -7,6 +7,9 @@ import app.cayresim.core.boundary.fake.FakeFrameBoundary
 import app.cayresim.core.boundary.fake.FakeManualCameraBoundary
 import app.cayresim.core.boundary.fake.FakeProcessingBoundary
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEach
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -73,5 +76,20 @@ class NightUseCaseTest {
         cam.start(); proc.gpuFails = true
         assertEquals(StackOutcome.Failed(StackOutcome.Stage.PROCESS, "GPU"), night(5))
         assertNull(manual.manualState.value.exposureNanos)
+    }
+
+    // ---------- Abbruch (Befund C1 der Architekturpruefung) ----------
+
+    @Test fun `Fehlerfall Abbruch mitten in der Serie stellt die Automatik trotzdem wieder her`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        val slow = object : app.cayresim.core.boundary.ProcessingBoundary by proc {
+            override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>) =
+                proc.night(frames.onEach { kotlinx.coroutines.delay(1_000) })
+        }
+        val job = launch { NightUseCase(cam, manual, frames, slow)(20) }
+        advanceTimeBy(10_500) // mitten in der Serie: Nachtbelichtung ist gesetzt
+        assertEquals(100_000_000L, manual.manualState.value.exposureNanos)
+        job.cancel(); job.join()
+        assertNull(manual.manualState.value.exposureNanos, "Nachtbelichtung blieb nach dem Abbruch stehen")
     }
 }
