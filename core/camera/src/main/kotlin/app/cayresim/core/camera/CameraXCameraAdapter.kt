@@ -479,7 +479,7 @@ class CameraXCameraAdapter @Inject constructor(
             val c2 = Camera2CameraInfo.from(info)
             fun <T> ch(k: CameraCharacteristics.Key<T>): T? = runCatching { c2.getCameraCharacteristic(k) }.getOrNull()
             val level = when (ch(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)) {
-                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEVEL_3 -> "LEVEL_3"
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> "LEVEL_3"
                 CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL -> "FULL"
                 CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED -> "LIMITED"
                 CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY -> "LEGACY"

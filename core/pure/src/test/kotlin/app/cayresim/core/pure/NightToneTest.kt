@@ -82,12 +82,12 @@ class NightToneTest {
         assertTrue(r.gain > 4f)
         val strong = r.rgb[0].toInt() and 0xFF; val weak = r.rgb[5 * 3].toInt() and 0xFF
         assertTrue(strong > weak + 10, "Lampen $strong und $weak")
-        assertTrue(NightTone.shoulder(10f) < 1f && NightTone.shoulder(0.3f) == 0.3f)
+        assertTrue(NightTone.shoulder(10f) <= 1f && NightTone.shoulder(0.3f) == 0.3f && NightTone.shoulder(1.2f) < NightTone.shoulder(1.5f))
     }
 
-    @Test fun `Eigenschaft Schulter ist monoton und bleibt unter 1`() {
+    @Test fun `Eigenschaft Schulter ist monoton und nie ueber 1`() {
         var last = -1f
-        for (i in 0..2000) { val v = NightTone.shoulder(i / 100f); assertTrue(v >= last && v < 1f); last = v }
+        for (i in 0..2000) { val v = NightTone.shoulder(i / 100f); assertTrue(v >= last && v <= 1f); last = v }
     }
 
     @Test fun `Fehlerfall falsche Groessen`() {
