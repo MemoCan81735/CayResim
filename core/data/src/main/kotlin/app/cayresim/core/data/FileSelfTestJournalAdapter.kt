@@ -18,11 +18,16 @@ import javax.inject.Singleton
  */
 @Singleton
 class FileSelfTestJournalAdapter internal constructor(
-    private val file: File,
+    fileProvider: () -> File,
     private val io: CoroutineDispatcher,
 ) : SelfTestJournalBoundary {
+    internal constructor(file: File, io: CoroutineDispatcher) : this({ file }, io)
+
+    /** R18: `filesDir` greift auf den Speicher zu; Hilt baut den Adapter auf dem Main-Thread, deshalb erst auf [io] aufloesen. */
     @Inject constructor(@ApplicationContext context: Context, @IoDispatcher io: CoroutineDispatcher) :
-        this(File(context.filesDir, "selftest-journal.txt"), io)
+        this({ File(context.filesDir, "selftest-journal.txt") }, io)
+
+    private val file by lazy(fileProvider)
 
     override suspend fun unfinished(): JournalSnapshot? = withContext(io) {
         val lines = runCatching { if (file.exists()) file.readLines() else emptyList() }.getOrDefault(emptyList())

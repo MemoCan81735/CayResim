@@ -30,6 +30,15 @@ class FileSelfTestJournalAdapterTest {
         assertEquals(JournalSnapshot("Aufnahme NIGHT", listOf("content://x/1")), adapter(file).unfinished())
     }
 
+    @Test fun `R18 Erzeugen greift nicht auf den Speicher zu`() = runTest {
+        // Fehler aus dem Emulatorlauf: filesDir im Konstruktor, Hilt baut ihn auf dem Main-Thread (StrictMode)
+        var resolved = 0
+        val f = File(tmp.newFolder(), "j.txt")
+        val a = FileSelfTestJournalAdapter({ resolved++; f }, Dispatchers.Unconfined)
+        assertEquals(0, resolved, "Datei schon beim Erzeugen aufgeloest")
+        a.begin(); a.step("x"); assertEquals(1, resolved)
+    }
+
     @Test fun `Fehlerfall kaputte Datei fuehrt nicht zum Absturz`() = runTest {
         val file = File(tmp.newFolder(), "j.txt").apply { writeBytes(byteArrayOf(0, -1, 10, 65)) }
         adapter(file).unfinished() // darf nicht werfen
