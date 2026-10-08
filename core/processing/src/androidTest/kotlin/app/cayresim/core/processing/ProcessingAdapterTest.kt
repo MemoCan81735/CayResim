@@ -96,6 +96,17 @@ class ProcessingAdapterTest {
         assertTrue(kotlin.math.abs(Color.red(c) - (bg[i].toInt() and 0xFF)) < 40, "Bewegtes Objekt ist noch sichtbar")
     }
 
+    /** Fehler vom S24+: "Langzeit" im Dunkeln blieb schwarz (Mittel 1,5 von 255). Jetzt wird aufgehellt. */
+    @Test fun dunkleLangzeitSerieWirdAufgehellt() = runBlocking {
+        val w = 64; val h = 48
+        val rng = java.util.Random(4711)
+        val frames = List(20) { ByteArray(w * h * 3) { (1 + rng.nextInt(3) - 1).toByte() } }
+        val r = adapter.stack(app.cayresim.core.boundary.FrameBurst(w, h, frames), app.cayresim.core.boundary.StackMode.MEAN); track(r)
+        val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(assertIs<ProcessResult.Saved>(r).uri), 1000))
+        val c = bmp.getPixel(w / 2, h / 2)
+        assertTrue(Color.red(c) >= 8, "Ergebnis muss heller sein als die Einzelbilder (1), war ${Color.red(c)}")
+    }
+
     @Test fun stapelMitUngleichenBildernWirdAbgelehnt() = runBlocking {
         val r = adapter.stack(app.cayresim.core.boundary.FrameBurst(10, 10, listOf(ByteArray(300), ByteArray(299))), app.cayresim.core.boundary.StackMode.MEAN)
         assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), r)

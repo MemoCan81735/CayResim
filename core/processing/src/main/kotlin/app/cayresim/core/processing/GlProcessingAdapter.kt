@@ -18,6 +18,7 @@ import app.cayresim.core.boundary.StackMode
 import app.cayresim.core.pure.Stacking
 import app.cayresim.core.pure.FocusStacking
 import app.cayresim.core.pure.StarAlignment
+import app.cayresim.core.pure.NightTone
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -85,10 +86,21 @@ class GlProcessingAdapter @Inject constructor(
         val rgb = try {
             withContext(compute) {
                 when (mode) {
-                    StackMode.MEDIAN -> parallelStack(burst, median = true)
-                    StackMode.MEAN -> parallelStack(burst, median = false)
+                    // Dunkle Serien werden linear gemittelt und aufgehellt (NightTone); helle bleiben unveraendert
+                    StackMode.MEDIAN -> NightTone.brightenBytes(parallelStack(burst, median = true), burst.width).rgb
+                    StackMode.MEAN -> NightTone.meanAndBrighten(burst.frames, burst.pixels, burst.width).rgb
                     StackMode.FOCUS -> FocusStacking.stack(burst.frames, burst.width, burst.height) { ensureActive() }.second
-                    StackMode.STARS -> StarAlignment.alignAndMean(burst.frames, burst.width, burst.height, maxShift = minOf(16, burst.width / 4, burst.height / 4))
+                    StackMode.STARS -> {
+                        val maxShift = minOf(16, burst.width / 4, burst.height / 4)
+                        val ref = burst.frames.first()
+                        val aligned = burst.frames.mapIndexed { i, f ->
+                            ensureActive()
+                            if (i == 0) f else StarAlignment.estimateShift(ref, f, burst.width, burst.height, maxShift).let { (dx, dy) ->
+                                StarAlignment.shift(f, burst.width, burst.height, dx, dy)
+                            }
+                        }
+                        NightTone.meanAndBrighten(aligned, burst.pixels, burst.width).rgb
+                    }
                 }
             }
         } catch (e: CancellationException) {
