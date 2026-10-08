@@ -354,10 +354,15 @@ class CameraXCameraAdapter @Inject constructor(
         frameListeners.forEach { it(out, w, h, rot) }
     }
 
-    /** Nicht abbrechbar: sonst koennte der Zaehler erhoeht sein, ohne dass der Aufrufer davon weiss (Befund H1). */
-    private suspend fun acquirePipeline() = withContext(NonCancellable + dispatcher) {
+    /**
+     * Nicht abbrechbar, und [onAcquired] meldet die Erhoehung noch im Lock (Befund H1): withContext wirft nach dem
+     * Ende trotzdem, wenn der Aufrufer inzwischen abgebrochen wurde. Deshalb steht der Aufruf im try und das
+     * finally gibt nur frei, was wirklich belegt wurde.
+     */
+    private suspend fun acquirePipeline(onAcquired: () -> Unit) = withContext(NonCancellable + dispatcher) {
         mutex.withLock {
             pipelineUsers++
+            onAcquired()
             if (pipelineUsers == 1) { val p = provider; val em = extensions; if (owner.isActive && p != null && em != null) bindCurrent(p, em) }
         }
     }
@@ -376,7 +381,7 @@ class CameraXCameraAdapter @Inject constructor(
     override suspend fun collect(count: Int): BurstResult {
         if (_state.value.status != CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
         val n = thermal.framesFor(count, headroom())
-        acquirePipeline()
+        var acquired = false
         val received = Channel<Pair<ByteArray, IntArray>>(Channel.UNLIMITED)
         var taken = 0
         val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot ->
@@ -384,6 +389,7 @@ class CameraXCameraAdapter @Inject constructor(
             if (taken < n) { taken++; received.trySend(bytes.copyOf() to intArrayOf(w, h, rot)) }
         }
         return try {
+            acquirePipeline { acquired = true }
             withContext(dispatcher) {
                 ensureSurface()
                 // Befund M2: erst festhalten, wenn die Automatik eingeschwungen ist (hoechstens 1,5 s warten)
@@ -402,8 +408,11 @@ class CameraXCameraAdapter @Inject constructor(
         } finally {
             frameListeners -= listener
             received.close()
-            withContext(NonCancellable + dispatcher) { aeLocked = false; applyManualOptions() }
-            releasePipeline()
+            // Ein Block fuer alles: ein zweites withContext koennte nach Abbruch werfen und die Freigabe ueberspringen
+            withContext(NonCancellable + dispatcher) {
+                aeLocked = false; applyManualOptions()
+                if (acquired) releasePipeline()
+            }
         }
     }
 
@@ -450,8 +459,9 @@ class CameraXCameraAdapter @Inject constructor(
             if (sent.get() >= n) channel.close()
         }
         val watchers = mutableListOf<kotlinx.coroutines.Job>()
-        acquirePipeline()
+        var acquired = false
         try {
+            acquirePipeline { acquired = true }
             withContext(dispatcher) { ensureSurface() }
             frameListeners += listener
             // Befund C2: Strom endet, wenn die Kamera stoppt oder zu lange kein Bild kommt
@@ -467,7 +477,7 @@ class CameraXCameraAdapter @Inject constructor(
             // Waechter beenden, sonst wartet der Strom ewig auf seine Kinder
             watchers.forEach { it.cancel() }
             frameListeners -= listener
-            releasePipeline()
+            if (acquired) releasePipeline()
         }
     }
 
@@ -481,14 +491,15 @@ class CameraXCameraAdapter @Inject constructor(
                 System.arraycopy(bytes, 0, previous, 0, bytes.size)
             } else previous = bytes.copyOf()
         }
-        acquirePipeline()
+        var acquired = false
         try {
+            acquirePipeline { acquired = true }
             withContext(dispatcher) { ensureSurface() }
             frameListeners += listener
             awaitClose { frameListeners -= listener }
         } finally {
             frameListeners -= listener
-            releasePipeline()
+            if (acquired) releasePipeline()
         }
     }.buffer(Channel.CONFLATED)
 
@@ -687,10 +698,11 @@ class CameraXCameraAdapter @Inject constructor(
         val e = manualEntity ?: return BurstResult.Failed(BurstFailure.NOT_READY)
         val distances = e.focusBracket(steps).ifEmpty { return BurstResult.Failed(BurstFailure.NOT_READY) }
         val previous = _manualState.value.focusDiopters
-        acquirePipeline()
+        var acquired = false
         val received = Channel<Pair<ByteArray, IntArray>>(Channel.CONFLATED)
         val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot -> received.trySend(bytes.copyOf() to intArrayOf(w, h, rot)) }
         return try {
+            acquirePipeline { acquired = true }
             withContext(dispatcher) { ensureSurface() }
             frameListeners += listener
             val frames = withTimeoutOrNull(5_000L + distances.size * 1_500L) {
@@ -706,8 +718,10 @@ class CameraXCameraAdapter @Inject constructor(
         } finally {
             frameListeners -= listener
             received.close()
-            withContext(NonCancellable) { setFocus(previous) }
-            releasePipeline()
+            withContext(NonCancellable) {
+                setFocus(previous)
+                if (acquired) releasePipeline()
+            }
         }
     }
 
