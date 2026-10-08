@@ -2,6 +2,7 @@ package app.cayresim.core.pure
 
 import kotlin.math.exp
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * Mitteln in hoher Genauigkeit und Aufhellen dunkler Serien (Bildqualitaets-Dossier, Stufe P0).
@@ -154,6 +155,118 @@ object NightTone {
             }
         }
         return Result(out, if (apply) gain else 1f)
+    }
+
+    // ---------- Nacht-Look (Nachttest S24+ vom 8. Oktober: flau, grauer Schleier, grobes Korn) ----------
+
+    /** A: Schwarzpunkt aus dem dunkelsten halben Prozent, hoechstens ein Viertel des Medians (sonst kippen flache Szenen). */
+    const val BLACK_QUANTILE = 0.005f
+    const val BLACK_MAX_SHARE = 0.25f
+
+    /** B: Lichter sollen bis hierhin reichen (linear, etwa sRGB 188); der Kontrast steigt dafuer hoechstens um [MAX_CONTRAST]. */
+    const val WHITE_TARGET = 0.5f
+    const val MAX_CONTRAST = 1.6f
+
+    /** C: Radius fuer das Glaetten des Farbrauschens (zweimal angewendet). */
+    const val CHROMA_RADIUS = 3
+
+    /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
+    const val LUMA_RADIUS = 3
+    const val DENOISE_STRENGTH = 2.5f
+
+    /**
+     * Fertigstellen eines gemittelten Nachtbilds (linear): A Schwarzpunkt abziehen, C Farbrauschen glaetten,
+     * D Helligkeit kantenerhaltend entrauschen (gefuehrter Filter auf der Wurzel, dort ist Photonenrauschen
+     * etwa gleich stark), dann verstaerken, B Kontrastkurve um den Ziel-Median, Schulter, Dithering.
+     * Die Farben werden nicht kuenstlich verstaerkt: im Testlabor blieben sie ohne das am naechsten an der Wahrheit.
+     */
+    fun finishNight(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN): Result {
+        require(width > 0 && linear.size % 3 == 0 && (linear.size / 3) % width == 0) { "Ungueltige Bildgroesse" }
+        val n = linear.size / 3
+        val height = n / width
+        val y = FloatArray(n) { lumaOf(linear, it * 3) }
+        val bp = minOf(quantile(y, BLACK_QUANTILE), BLACK_MAX_SHARE * quantile(y, 0.5f)).coerceAtLeast(0f)
+        val rgb = FloatArray(linear.size) { (linear[it] - bp).coerceAtLeast(0f) }
+        for (p in 0 until n) y[p] = lumaOf(rgb, p * 3)
+        val chroma = Array(3) { c -> FloatArray(n) { rgb[it * 3 + c] - y[it] } }
+        for (d in chroma) { boxBlur(d, width, height, CHROMA_RADIUS); boxBlur(d, width, height, CHROMA_RADIUS) }
+        val base = guidedSelf(FloatArray(n) { kotlin.math.sqrt(y[it]) }, width, height, LUMA_RADIUS, DENOISE_STRENGTH)
+        for (p in 0 until n) { val v = base[p].coerceAtLeast(0f); base[p] = v * v }
+        val median = quantile(base, 0.5f)
+        val gain = if (median <= 0f) maxGain else (TARGET_MEDIAN / median).coerceIn(1f, maxGain)
+        val high = quantile(base, 0.995f) * gain
+        val contrast = if (high > TARGET_MEDIAN * 1.01f)
+            (kotlin.math.ln(WHITE_TARGET / TARGET_MEDIAN) / kotlin.math.ln(high / TARGET_MEDIAN)).coerceIn(1f, MAX_CONTRAST) else 1f
+        val out = ByteArray(linear.size)
+        for (p in 0 until n) {
+            val x = p % width; val row = p / width
+            val dither = (BAYER[(row and 3) * 4 + (x and 3)] + 0.5f) / 16f - 0.5f
+            val b0 = base[p]
+            val toned = shoulder(TARGET_MEDIAN * (b0 * gain / TARGET_MEDIAN).pow(contrast))
+            for (c in 0 until 3) {
+                val v = if (b0 > 1e-9f) (b0 + chroma[c][p]).coerceAtLeast(0f) * (toned / b0) else toned
+                out[p * 3 + c] = (linearToSrgb(v) * 255f + dither + 0.5f).toInt().coerceIn(0, 255).toByte()
+            }
+        }
+        return Result(out, gain)
+    }
+
+    private fun lumaOf(a: FloatArray, i: Int) = 0.2126f * a[i] + 0.7152f * a[i + 1] + 0.0722f * a[i + 2]
+
+    /** Quantil ueber hoechstens 65.536 gleichmaessig verteilte Stichproben (genau genug, schnell, speicherarm). */
+    internal fun quantile(values: FloatArray, q: Float): Float {
+        if (values.isEmpty()) return 0f
+        val stride = maxOf(1, values.size / 65_536)
+        val sample = FloatArray((values.size + stride - 1) / stride) { values[it * stride] }
+        sample.sort()
+        return sample[(q.coerceIn(0f, 1f) * (sample.size - 1)).roundToInt()]
+    }
+
+    /** Kastenfilter in place, getrennt nach Zeilen und Spalten, Raender wiederholt. Laufzeit unabhaengig vom Radius. */
+    internal fun boxBlur(a: FloatArray, w: Int, h: Int, r: Int) {
+        if (r <= 0) return
+        require(a.size == w * h) { "Falsche Groesse" }
+        val tmp = FloatArray(maxOf(w, h))
+        val inv = 1.0 / (2 * r + 1)
+        for (y in 0 until h) {
+            val o = y * w
+            var s = 0.0
+            for (k in -r..r) s += a[o + k.coerceIn(0, w - 1)]
+            for (x in 0 until w) {
+                tmp[x] = (s * inv).toFloat()
+                s += a[o + (x + r + 1).coerceAtMost(w - 1)] - a[o + (x - r).coerceAtLeast(0)]
+            }
+            tmp.copyInto(a, o, 0, w)
+        }
+        for (x in 0 until w) {
+            var s = 0.0
+            for (k in -r..r) s += a[k.coerceIn(0, h - 1) * w + x]
+            for (y in 0 until h) {
+                tmp[y] = (s * inv).toFloat()
+                s += a[(y + r + 1).coerceAtMost(h - 1) * w + x] - a[(y - r).coerceAtLeast(0) * w + x]
+            }
+            for (y in 0 until h) a[y * w + x] = tmp[y]
+        }
+    }
+
+    /**
+     * Gefuehrter Filter mit dem Bild selbst als Fuehrung (He et al.): Flaechen werden geglaettet, Kanten bleiben,
+     * weil dort die oertliche Streuung weit ueber dem Rauschen liegt. Rauschen geschaetzt aus dem Median der
+     * Abweichung vom 3x3-Mittel. Liefert ein neues Feld.
+     */
+    internal fun guidedSelf(img: FloatArray, w: Int, h: Int, r: Int, strength: Float): FloatArray {
+        val n = img.size
+        val hp = img.copyOf(); boxBlur(hp, w, h, 1)
+        for (i in 0 until n) hp[i] = kotlin.math.abs(img[i] - hp[i])
+        val sigma = 1.4826f * quantile(hp, 0.5f)
+        val eps = (strength * sigma).let { it * it }
+        if (eps <= 0f) return img.copyOf()
+        val mean = img.copyOf(); boxBlur(mean, w, h, r)
+        val sq = FloatArray(n) { img[it] * img[it] }; boxBlur(sq, w, h, r)
+        val a = FloatArray(n) { val v = (sq[it] - mean[it] * mean[it]).coerceAtLeast(0f); v / (v + eps) }
+        for (i in 0 until n) mean[i] = mean[i] - a[i] * mean[i] // wird b
+        boxBlur(a, w, h, r); boxBlur(mean, w, h, r)
+        return FloatArray(n) { a[it] * img[it] + mean[it] }
     }
 
     private const val BINS = 4096

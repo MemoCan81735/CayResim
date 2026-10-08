@@ -155,7 +155,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         return best
     }
 
-    /** Gewichtetes Mittel in linearem Licht, dann Aufhellen mit Nacht-Look. */
+    /** Gewichtetes Mittel in linearem Licht, dann Nacht-Look (Schwarzpunkt, Entrauschen, Kontrast, Aufhellen). */
     fun finish(): NightTone.Result {
         check(used > 0) { "Kein Bild" }
         val mean = FloatArray(sum.size)
@@ -164,7 +164,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             val inv = 1f / weight[t]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
-        return NightTone.brighten(mean, width, NightTone.maxGainFor(used))
+        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used))
     }
 
     /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */

@@ -6,6 +6,7 @@ import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -107,6 +108,8 @@ class QualityLabTest {
             // Grenzwerte: werden sie verletzt, ist eine Aenderung eine Verschlechterung
             assertTrue(k.relNoise <= 0.4 * one.relNoise, "$s: Rauschen ${k.relNoise} statt hoechstens 40 % von ${one.relNoise}")
             assertTrue(k.edge <= 1.5, "$s: Kante ${k.edge} px, zu weich (Wahrheit 0,8 px)")
+            // D: Entrauschen im Bild, nicht nur durch Mitteln (vorher etwa 13 % des Einzelbilds)
+            assertTrue(k.relNoise <= 0.1 * one.relNoise, "$s: Korn ${k.relNoise}, hoechstens 10 % von ${one.relNoise}")
         }
         val shaky = "Dunkel, freihand"
         assertTrue(row(shaky, "Mittel ohne Ausrichtung").edge > 2 * row(shaky, "Nacht-Kern").edge, "Ausrichtung bringt keinen Vorteil")
@@ -115,6 +118,72 @@ class QualityLabTest {
         // Nachttest S24+: Samsung lag bei Stufe 35, wir bei 20 (Aufhellung am Anschlag 16)
         for (s in listOf("Dunkel, freihand", "Sehr dunkel, freihand, 23 Bilder"))
             assertTrue(row(s, "Nacht-Kern").bright >= 30.0, "$s: Nacht-Kern zu dunkel (${row(s, "Nacht-Kern").bright})")
+    }
+
+    /** Farbige Szene in linearem Licht (3 Kanaele): fast schwarzer Raum, Stoffe in Rot, Gelb, Blau, eine graue und eine schwarze Flaeche. */
+    private fun colorTruth(level: Double): DoubleArray {
+        val t = DoubleArray(w * h * 3)
+        for (y in 0 until h) for (x in 0 until w) {
+            val c = when {
+                y in 10 until 60 && x in 10 until 60 -> doubleArrayOf(0.8, 0.08, 0.05).map { it * level * 4 }
+                y in 10 until 60 && x in 70 until 120 -> doubleArrayOf(0.7, 0.6, 0.05).map { it * level * 4 }
+                y in 10 until 60 && x in 130 until 180 -> doubleArrayOf(0.05, 0.15, 0.7).map { it * level * 4 }
+                y in 80 until 130 && x in 10 until 90 -> List(3) { level * 2.5 }
+                y in 80 until 130 && x in 100 until 180 -> List(3) { 0.0 }
+                else -> List(3) { level * 0.2 }
+            }
+            for (k in 0 until 3) t[(y * w + x) * 3 + k] = c[k]
+        }
+        return t
+    }
+
+    private fun captureColor(t: DoubleArray, lab: Lab, electrons: Double = 20_000.0, read: Double = 2.0) = ByteArray(t.size) { i ->
+        val e = t[i] * electrons
+        val noisy = (e + lab.gauss() * sqrt(e + read * read)) / electrons
+        (NightTone.linearToSrgb(noisy.toFloat()) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte()
+    }
+
+    /** Mittlere lineare Farbe einer Flaeche und ihre Saettigung (max - min) / max, unabhaengig von der Helligkeit. */
+    private fun linearPatch(rgb: ByteArray, r: Rect): Pair<DoubleArray, Double> {
+        val m = DoubleArray(3); var n = 0
+        for (y in r.y0 until r.y1) for (x in r.x0 until r.x1) { for (k in 0 until 3) m[k] += NightTone.srgbToLinear((rgb[(y * w + x) * 3 + k].toInt() and 0xFF) / 255f); n++ }
+        for (k in 0 until 3) m[k] /= n
+        return m to (m.max() - m.min()) / m.max().coerceAtLeast(1e-9)
+    }
+
+    @Test fun `Testlabor Farben, Kontrast und Schwarz im Nacht-Kern`() {
+        val truth = colorTruth(0.0006)
+        val lab = Lab(4711)
+        val night = core(List(36) { captureColor(truth, lab) })
+        val old = NightTone.meanAndBrighten(Lab(4711).let { l -> List(36) { captureColor(truth, l) } }, w * h, w).rgb
+        val gray = Rect(15, 85, 85, 125); val black = Rect(105, 85, 175, 125)
+        val contrast = ImageQuality.mean(night, w, gray) - ImageQuality.mean(night, w, black)
+        val oldContrast = ImageQuality.mean(old, w, gray) - ImageQuality.mean(old, w, black)
+        val sb = StringBuilder("\n## Farbszene (36 Bilder, Stativ)\n\n| Messung | einfacher Mittelwert | Nacht-Kern |\n|---|---|---|\n")
+        sb.append("| Kontrast Grau minus Schwarz | ${"%.1f".format(oldContrast)} | ${"%.1f".format(contrast)} |\n")
+        sb.append("| Schwarz | ${"%.1f".format(ImageQuality.mean(old, w, black))} | ${"%.1f".format(ImageQuality.mean(night, w, black))} |\n")
+        // A und B: echtes Schwarz und mehr Kontrast
+        assertTrue(ImageQuality.mean(night, w, black) <= 6.0, "Schwarz ist grau: ${ImageQuality.mean(night, w, black)}")
+        assertTrue(contrast >= 100.0, "zu flau: Grau minus Schwarz $contrast (einfacher Mittelwert $oldContrast)")
+        // C: Farben bleiben wahr, Grau bleibt grau
+        val patches = listOf("Rot" to Rect(15, 15, 55, 55), "Gelb" to Rect(75, 15, 115, 55), "Blau" to Rect(135, 15, 175, 55))
+        for ((name, r) in patches) {
+            val want = DoubleArray(3).also { m -> var n = 0
+                for (y in r.y0 until r.y1) for (x in r.x0 until r.x1) { for (k in 0 until 3) m[k] += truth[(y * w + x) * 3 + k]; n++ }
+                for (k in 0 until 3) m[k] /= n }
+            val wantSat = (want.max() - want.min()) / want.max()
+            val (got, sat) = linearPatch(night, r)
+            sb.append("| Saettigung $name (Wahrheit ${"%.3f".format(wantSat)}) | ${"%.3f".format(linearPatch(old, r).second)} | ${"%.3f".format(sat)} |\n")
+            assertTrue(kotlin.math.abs(sat - wantSat) <= 0.05, "$name: Saettigung $sat statt $wantSat")
+            assertEquals(want.indices.sortedBy { want[it] }, got.indices.sortedBy { got[it] }, "$name: Farbton gekippt")
+        }
+        val graySat = linearPatch(night, gray).second
+        sb.append("| Saettigung Grau (Wahrheit 0) | ${"%.3f".format(linearPatch(old, gray).second)} | ${"%.3f".format(graySat)} |\n")
+        assertTrue(graySat <= 0.03, "Farbstich im Grau: $graySat")
+        // Ein Bericht fuer das CI (nur quality-report.md wird abgelegt), egal in welcher Reihenfolge die Tests laufen
+        File("build/quality-report-color.md").apply { parentFile.mkdirs() }.writeText(sb.toString())
+        File("build/quality-report.md").takeIf { it.exists() && "## Farbszene" !in it.readText() }?.appendText(sb.toString())
+        println(sb)
     }
 
     private fun writeReport(rows: List<Row>) {
@@ -126,6 +195,7 @@ class QualityLabTest {
         rows.forEach { r ->
             sb.append("| ${r.scenario} | ${r.method} | ${"%.3f".format(r.relNoise)} | ${"%.1f".format(r.edge)} | ${r.ghost?.let { "%.1f".format(it) } ?: ""} | ${"%.1f".format(r.bright)} |\n")
         }
+        File("build/quality-report-color.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         f.writeText(sb.toString())
         println(sb)
     }

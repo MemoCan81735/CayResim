@@ -96,3 +96,57 @@ class NightToneTest {
         assertFailsWith<IllegalArgumentException> { NightTone.brighten(FloatArray(10), 3) }
     }
 }
+
+/** Bausteine des Nacht-Looks (Schwarzpunkt, Kontrast, Entrauschen): guter Fall, Fehlerfall, Randfall. */
+class NightFinishTest {
+    private val w = 40; private val h = 30; private val n = w * h
+
+    @Test fun `Kastenfilter erhaelt Flaechen und die Summe eines Punktes`() {
+        val flat = FloatArray(n) { 0.3f }; NightTone.boxBlur(flat, w, h, 3)
+        assertTrue(flat.all { abs(it - 0.3f) < 1e-5f })
+        val dot = FloatArray(n).also { it[15 * w + 20] = 49f }; NightTone.boxBlur(dot, w, h, 3)
+        assertEquals(49f, dot.sum(), 1e-3f); assertEquals(1f, dot[15 * w + 20], 1e-5f); assertEquals(0f, dot[0])
+    }
+
+    @Test fun `Randfall Kastenfilter mit Radius 0 aendert nichts, falsche Groesse wird abgelehnt`() {
+        val a = FloatArray(n) { it.toFloat() }; val b = a.copyOf(); NightTone.boxBlur(a, w, h, 0)
+        assertContentEquals(b, a)
+        assertFailsWith<IllegalArgumentException> { NightTone.boxBlur(FloatArray(5), w, h, 2) }
+    }
+
+    @Test fun `Quantil trifft, leer ergibt 0`() {
+        val v = FloatArray(101) { it / 100f }
+        assertEquals(0.5f, NightTone.quantile(v, 0.5f)); assertEquals(0f, NightTone.quantile(v, 0f)); assertEquals(1f, NightTone.quantile(v, 1f))
+        assertEquals(0f, NightTone.quantile(FloatArray(0), 0.5f))
+    }
+
+    @Test fun `Gefuehrter Filter glaettet Rauschen und laesst die Kante stehen`() {
+        val rng = SeededRng(3)
+        val img = FloatArray(n) { (if (it % w < w / 2) 0.2f else 0.6f) + (rng.nextInt(21) - 10) / 500f }
+        val out = NightTone.guidedSelf(img, w, h, 3, 2.5f)
+        fun sd(a: FloatArray) = (5 until 15).flatMap { y -> (2 until 12).map { x -> a[y * w + x] } }.let { v -> val m = v.average(); sqrt(v.sumOf { (it - m) * (it - m) } / v.size) }
+        assertTrue(sd(out) < sd(img) / 2, "Rauschen ${sd(img)} -> ${sd(out)}")
+        assertTrue(out[15 * w + w / 2 - 2] < 0.3f && out[15 * w + w / 2 + 1] > 0.5f, "Kante verwischt")
+    }
+
+    @Test fun `Randfall gefuehrter Filter ohne Rauschen gibt das Bild unveraendert zurueck`() {
+        val img = FloatArray(n) { if (it % w < 20) 0.1f else 0.4f }
+        assertContentEquals(img, NightTone.guidedSelf(img, w, h, 3, 2.5f))
+    }
+
+    @Test fun `Nacht-Look macht Schwarz schwarz und Grau bleibt grau`() {
+        // dunkle Szene mit grauem Schleier: Schwarz liegt bei einem Drittel des Grautons
+        val lin = FloatArray(n * 3) { i -> val p = i / 3; if (p % w < 20) 0.0005f else 0.0015f }
+        val r = NightTone.finishNight(lin, w, 64f)
+        val dark = r.rgb[(15 * w + 5) * 3].toInt() and 0xFF; val gray = r.rgb[(15 * w + 30) * 3].toInt() and 0xFF
+        assertTrue(gray - dark > 25, "zu flau: $dark / $gray") // vorher (nur Aufhellen) etwa 19
+        val p = (15 * w + 30) * 3
+        assertEquals(r.rgb[p], r.rgb[p + 1]); assertEquals(r.rgb[p], r.rgb[p + 2])
+    }
+
+    @Test fun `Fehlerfall Nacht-Look mit falscher Groesse, Randfall ganz schwarz`() {
+        assertFailsWith<IllegalArgumentException> { NightTone.finishNight(FloatArray(10), 3) }
+        val r = NightTone.finishNight(FloatArray(n * 3), w, 64f)
+        assertEquals(n * 3, r.rgb.size); assertTrue(r.rgb.all { (it.toInt() and 0xFF) <= 1 })
+    }
+}
