@@ -43,6 +43,14 @@ class CameraXAdapterContractTest {
     @Test fun vertragZoomInDenGrenzen() = run { CameraBoundaryContract.zoomStaysWithinLimits(adapter) }
     @Test fun vertragFokusAusserhalb() = run { CameraBoundaryContract.focusOutsideTheImageIsRejected(adapter) }
 
+    /** Ultra HDR im normalen Modus, wenn die Kamera es kann; sonst normales JPEG ohne Ausfall. */
+    @Test fun ultraHdrNurWennUnterstuetzt() = run {
+        adapter.start()
+        assertEquals(adapter.capabilities.value!!.ultraHdr, adapter.ultraHdrActive)
+        val r = assertIs<CaptureResult.Saved>(adapter.capture())
+        adapter.delete(r.uri)
+    }
+
     /** Fokus auf die Bildmitte bricht nie ab und haengt nicht (Emulator: Fixfokus darf false liefern). */
     @Test fun fokusAufDieMitteHaengtNicht() = run {
         adapter.start()

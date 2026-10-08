@@ -112,6 +112,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var imageCapture: ImageCapture? = null
     private var pendingRequest: SurfaceRequest? = null
     private var bindGeneration = 0
+    /** Ob die aktuelle Bindung Ultra HDR speichert (fuer Tests und Diagnose). */
+    @androidx.annotation.VisibleForTesting internal var ultraHdrActive = false
     /** Wie oft die Selbstheilung noetig war; Tests verlangen 0 im normalen Ablauf. */
     @androidx.annotation.VisibleForTesting internal var selfHealCount = 0
     /** Unsichtbarer Sucher-Ersatz mit eigenem OpenGL-Abnehmer, siehe [FallbackPreviewSink]. */
@@ -252,7 +254,7 @@ class CameraXCameraAdapter @Inject constructor(
         }.getOrNull() == true
     }
 
-    private fun tryBind(p: ProcessCameraProvider, em: ExtensionsManager, key: ModeKey): Boolean = try {
+    private fun tryBind(p: ProcessCameraProvider, em: ExtensionsManager, key: ModeKey, allowUltraHdr: Boolean = true): Boolean = try {
         p.unbindAll()
         val ext = if (pipelineUsers > 0) ExtensionMode.NONE else key.toExtensionMode()
         // Belichtungsautomatik mitlesen (nur ohne Extension; Extensions erlauben keine eigenen Rueckrufe)
@@ -260,9 +262,15 @@ class CameraXCameraAdapter @Inject constructor(
             if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)
         }.build()
         val rawWanted = _manualState.value.raw && pipelineUsers == 0 && key == ModeKey.NORMAL
+        // Ultra HDR (JPEG mit Gain Map): hellere Lichter auf HDR-Bildschirmen. Nur im normalen Modus ohne
+        // eigene Pipeline; Extensions behalten ihr JPEG, damit kein Modus deswegen ausfaellt.
+        val ultraHdr = allowUltraHdr && !rawWanted && pipelineUsers == 0 && ext == ExtensionMode.NONE && _caps.value?.ultraHdr == true
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .apply { if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG) }
+            .apply {
+                if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG)
+                else if (ultraHdr) setOutputFormat(ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR)
+            }
             .build()
         // Alte Anfrage verwerfen: sie gehoert zur vorigen Bindung und wird nie mehr bedient.
         // Jede Bindung bekommt eine Nummer; spaet eintreffende Anfragen frueherer Bindungen werden ignoriert.
@@ -282,11 +290,13 @@ class CameraXCameraAdapter @Inject constructor(
             if (ext == ExtensionMode.NONE) SessionConfig(useCases)
             else ExtensionSessionConfig(ext, em, useCases)
         if (ext == ExtensionMode.NONE && !p.getCameraInfo(selector).isSessionConfigSupported(config)) {
-            false
+            // Ultra HDR passt nicht in diese Kombination: ohne erneut versuchen statt den Modus zu verlieren
+            if (ultraHdr) tryBind(p, em, key, allowUltraHdr = false) else false
         } else {
             boundCamera = p.bindToLifecycle(owner, selector, config)
             imageCapture = capture
             currentPreview = preview
+            ultraHdrActive = ultraHdr
             if (ext == ExtensionMode.NONE) applyManualOptions()
             true
         }

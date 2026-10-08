@@ -64,6 +64,8 @@ class GlProcessingAdapter @Inject constructor(
             ?: return ProcessResult.Failed(ProcessFailure.SOURCE_MISSING)
         if (look == Look.NONE) return withContext(io) { save(source, "orig") }
         val rendered = withContext(gpu) { runCatching { renderer.render(source, Looks.lut(LookId.valueOf(look.name))) }.getOrNull() }
+        // Der Look aendert das Grundbild; die Gain Map (Ultra HDR) wird uebernommen, damit Lichter hell bleiben
+        if (rendered != null && source.hasGainmap()) rendered.gainmap = source.gainmap
         source.recycle()
         rendered ?: return ProcessResult.Failed(ProcessFailure.GPU)
         return withContext(io) { save(rendered, look.name.lowercase()).also { rendered.recycle() } }
@@ -198,13 +200,32 @@ class GlProcessingAdapter @Inject constructor(
         val opts = BitmapFactory.Options().apply { inSampleSize = sample; inPreferredConfig = Bitmap.Config.ARGB_8888 }
         val bmp = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) } ?: return null
         val rotation = resolver.openInputStream(uri)?.use { ExifInterface(it).rotationDegrees } ?: 0
+        // Ultra HDR: die Gain Map muss jede Drehung mitmachen, sonst passt sie nicht mehr zum Bild
+        val gain = if (maxPx == Int.MAX_VALUE && bmp.hasGainmap()) bmp.gainmap else null
         val scaled = if (maxPx != Int.MAX_VALUE && maxOf(bmp.width, bmp.height) > maxPx) {
             val f = maxPx.toFloat() / maxOf(bmp.width, bmp.height)
             Bitmap.createScaledBitmap(bmp, (bmp.width * f).toInt().coerceAtLeast(1), (bmp.height * f).toInt().coerceAtLeast(1), true).also { if (it !== bmp) bmp.recycle() }
         } else bmp
         if (rotation == 0) return scaled
         val m = Matrix().apply { postRotate(rotation.toFloat()) }
-        return Bitmap.createBitmap(scaled, 0, 0, scaled.width, scaled.height, m, true).also { if (it !== scaled) scaled.recycle() }
+        val rotated = Bitmap.createBitmap(scaled, 0, 0, scaled.width, scaled.height, m, true).also { if (it !== scaled) scaled.recycle() }
+        if (gain != null && !rotated.hasGainmap()) rotated.gainmap = rotatedGainmap(gain, m)
+        return rotated
+    }
+
+    /** Kopie einer Gain Map mit gedrehtem Inhalt und gleichen Kennwerten. */
+    private fun rotatedGainmap(g: android.graphics.Gainmap, m: Matrix): android.graphics.Gainmap {
+        val c = g.gainmapContents
+        val turned = Bitmap.createBitmap(c, 0, 0, c.width, c.height, m, true)
+        return android.graphics.Gainmap(turned).apply {
+            g.ratioMin.let { setRatioMin(it[0], it[1], it[2]) }
+            g.ratioMax.let { setRatioMax(it[0], it[1], it[2]) }
+            g.gamma.let { setGamma(it[0], it[1], it[2]) }
+            g.epsilonSdr.let { setEpsilonSdr(it[0], it[1], it[2]) }
+            g.epsilonHdr.let { setEpsilonHdr(it[0], it[1], it[2]) }
+            minDisplayRatioForHdrTransition = g.minDisplayRatioForHdrTransition
+            displayRatioForFullHdr = g.displayRatioForFullHdr
+        }
     }
 
     private fun save(bitmap: Bitmap, suffix: String): ProcessResult {

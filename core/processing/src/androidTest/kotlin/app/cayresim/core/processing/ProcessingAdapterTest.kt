@@ -45,6 +45,31 @@ class ProcessingAdapterTest {
 
     private fun track(r: ProcessResult) { if (r is ProcessResult.Saved) created += Uri.parse(r.uri) }
 
+    /** Ultra-HDR-Foto (JPEG mit Gain Map) wie es die Kamera im normalen Modus liefert. */
+    private fun ultraHdrPhoto(w: Int = 640, h: Int = 480): String {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "uhdr_${System.nanoTime()}"); put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/CayResimTest")
+        }
+        val uri = ctx.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(180, 160, 120)) }
+        bmp.gainmap = android.graphics.Gainmap(Bitmap.createBitmap(w / 4, h / 4, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.GRAY) }).apply {
+            setRatioMax(4f, 4f, 4f); displayRatioForFullHdr = 4f
+        }
+        ctx.contentResolver.openOutputStream(uri)!!.use { bmp.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+        created += uri; return uri.toString()
+    }
+
+    @Test fun ultraHdrBleibtNachDemLookErhalten() = runBlocking {
+        val src = ultraHdrPhoto()
+        val decoded = assertNotNull(adapter.decodeOriented(Uri.parse(src), Int.MAX_VALUE))
+        if (!decoded.hasGainmap()) return@runBlocking // Emulator ohne Ultra-HDR-Kodierer: nichts zu pruefen
+        val r = adapter.applyLook(src, Look.FILM); track(r)
+        val out = assertNotNull(adapter.decodeOriented(Uri.parse(assertIs<ProcessResult.Saved>(r).uri), Int.MAX_VALUE))
+        assertTrue(out.hasGainmap(), "Gain Map ging beim Look verloren")
+        assertEquals(4f, out.gainmap!!.ratioMax[0], 0.2f)
+    }
+
     @Test fun lookWirdAlsNeuesFotoGespeichert() = runBlocking {
         val r = adapter.applyLook(photo(Color.rgb(200, 100, 50)), Look.MONO); track(r)
         val saved = assertIs<ProcessResult.Saved>(r, "Look fehlgeschlagen: $r")
