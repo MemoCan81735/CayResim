@@ -38,7 +38,7 @@ object NightPlan {
         require(aeExposureNs > 0 && aeIso > 0 && maxExposureNs > 0 && isoMin in 1..isoMax) { "Ungueltige Messwerte" }
         val target = aeExposureNs.toDouble() * aeIso * BRIGHTER
         val exp = minOf(maxExposureNs, MAX_FRAME_NS)
-        val iso = (target / exp).toInt()
+        val iso = Math.round(target / exp).toInt()
         return when {
             iso > isoMax -> Exposure(exp, isoMax)
             iso >= isoMin -> Exposure(exp, iso)
