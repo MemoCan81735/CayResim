@@ -57,6 +57,7 @@
     <string name="pro_not_available">Diese Kamera erlaubt keine manuellen Werte.</string>
     <string name="msg_fixed_focus">Diese Kamera hat festen Fokus, Fokus-Stacking geht hier nicht.</string>
     <string name="msg_no_manual">Diese Kamera erlaubt keine manuelle Belichtung.</string>
+    <string name="auto_night">Dunkel erkannt: Nachtaufnahme, Handy ruhig halten</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>
     <string name="msg_night_failed">Die Nachtaufnahme hat nicht geklappt.</string>
     <string name="msg_saved_with_raw">Foto und RAW-Datei gespeichert</string>

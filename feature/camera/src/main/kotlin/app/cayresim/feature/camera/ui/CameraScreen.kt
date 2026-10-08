@@ -206,7 +206,7 @@ fun CameraContent(
             val hint = when (state.specialStatus) {
                 SpecialStatus.COLLECTING, SpecialStatus.PROCESSING -> stringResource(R.string.special_collecting)
                 SpecialStatus.ARMED -> stringResource(R.string.special_armed)
-                SpecialStatus.IDLE -> null
+                SpecialStatus.IDLE -> if (state.autoNight) stringResource(R.string.auto_night) else null
             }
             hint?.let {
                 Surface(color = Color.Black.copy(alpha = 0.7f), contentColor = Color.White, shape = MaterialTheme.shapes.small,

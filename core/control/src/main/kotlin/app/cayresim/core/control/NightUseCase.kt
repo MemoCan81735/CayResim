@@ -31,6 +31,12 @@ class NightUseCase @Inject constructor(
         return NightPlan.isDark(l?.exposureNs, l?.iso) != false
     }
 
+    /** Nur gemessene Dunkelheit (fuer die Automatik; ohne Messung wird normal fotografiert). */
+    fun isDark(): Boolean {
+        val l = camera.state.value.light
+        return NightPlan.isDark(l?.exposureNs, l?.iso) == true
+    }
+
     suspend operator fun invoke(count: Int = NightPlan.FRAMES): StackOutcome {
         val caps = manual.manualCapabilities.value
         val expRange = caps?.exposureRangeNanos; val isoRange = caps?.isoRange

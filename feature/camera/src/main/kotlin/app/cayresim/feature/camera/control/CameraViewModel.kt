@@ -21,6 +21,7 @@ import app.cayresim.core.control.StackPhotoUseCase
 import app.cayresim.core.control.FocusStackUseCase
 import app.cayresim.core.control.AstroUseCase
 import app.cayresim.core.control.NightUseCase
+import app.cayresim.core.pure.NightPlan
 import app.cayresim.core.boundary.ManualCameraBoundary
 import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
 import app.cayresim.core.boundary.ManualStateSnapshot
@@ -69,6 +70,8 @@ class CameraViewModel @Inject constructor(
         val overlayAlpha: Float = 0.4f,
         val special: SpecialOption = SpecialOption.NONE,
         val specialStatus: SpecialStatus = SpecialStatus.IDLE,
+        /** Automatik (Standard): CayResim waehlt selbst, im Dunkeln den Nacht-Kern. */
+        val auto: Boolean = true,
     )
 
     private var triggerJob: Job? = null
@@ -164,7 +167,10 @@ class CameraViewModel @Inject constructor(
     }
 
     fun onModeSelected(mode: ModeOption) {
-        viewModelScope.launch { camera.selectMode(PhotoMode.valueOf(mode.name)) }
+        val auto = mode == ModeOption.AUTO
+        local.update { it.copy(auto = auto) }
+        // Die Automatik fotografiert im normalen Modus; nur so misst die Kamera laufend das Licht
+        viewModelScope.launch { camera.selectMode(if (auto) PhotoMode.NORMAL else PhotoMode.valueOf(mode.name)) }
     }
 
     /** Naechster Look in fester Reihenfolge. */
@@ -188,6 +194,8 @@ class CameraViewModel @Inject constructor(
         if (l.special != SpecialOption.NONE && l.special != SpecialOption.PRO) return onSpecialShutter(l.special)
         // "Nacht" im Dunkeln: eigener Nacht-Kern statt Samsungs schwacher Night-Extension
         if (l.special == SpecialOption.NONE && camera.state.value.requestedMode == PhotoMode.NIGHT && night.shouldUseOwn()) return onNightShutter()
+        // Automatik: nur bei gemessener Dunkelheit (im normalen Modus misst die Kamera laufend)
+        if (l.special == SpecialOption.NONE && l.auto && night.isDark()) return onNightShutter()
         viewModelScope.launch {
             when (val r = capture(Look.valueOf(l.look.name), l.selectedSeriesId)) {
                 is CaptureOutcome.Saved -> {
@@ -287,8 +295,9 @@ class CameraViewModel @Inject constructor(
             CameraStatus.RUNNING -> ScreenStatus.RUNNING
             CameraStatus.ERROR -> ScreenStatus.ERROR
         },
-        modes = s.offeredModes.map { ModeOption.valueOf(it.name) },
-        selected = ModeOption.valueOf(s.requestedMode.name),
+        modes = listOf(ModeOption.AUTO) + s.offeredModes.filter { it != PhotoMode.AUTO }.map { ModeOption.valueOf(it.name) },
+        selected = if (l.auto) ModeOption.AUTO else ModeOption.valueOf(s.requestedMode.name),
+        autoNight = l.auto && l.special == SpecialOption.NONE && NightPlan.isDark(s.light?.exposureNs, s.light?.iso) == true,
         active = ModeOption.valueOf(s.activeMode.name),
         fallbackFrom = s.fallbackFrom?.let { ModeOption.valueOf(it.name) },
         previewToken = s.preview?.token,

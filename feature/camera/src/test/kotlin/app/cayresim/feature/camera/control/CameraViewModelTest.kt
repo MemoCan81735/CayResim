@@ -61,7 +61,8 @@ class CameraViewModelTest {
         assertEquals(ScreenStatus.RUNNING, s.status)
         assertEquals(PermissionStatus.GRANTED, s.permission)
         assertNotNull(s.previewToken)
-        assertEquals(listOf(ModeOption.NORMAL, ModeOption.NIGHT, ModeOption.HDR), s.modes)
+        assertEquals(listOf(ModeOption.AUTO, ModeOption.NORMAL, ModeOption.NIGHT, ModeOption.HDR), s.modes)
+        assertEquals(ModeOption.AUTO, s.selected, "Automatik ist Standard")
         assertTrue(s.canShoot)
     }
 
@@ -401,5 +402,43 @@ class CameraViewModelTest {
         vm.onShutter()
         assertEquals(MessageKind.NIGHT_FAILED, vm.uiState.value.message?.kind)
         assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+    }
+
+    // ---------- Automatik ----------
+
+    @Test fun `Automatik im Dunkeln nimmt den Nacht-Kern und zeigt den Hinweis`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        assertTrue(vm.uiState.value.autoNight)
+        vm.onShutter()
+        assertEquals(1, proc.nightRuns.size); assertEquals(MessageKind.NIGHT_SAVED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Automatik bei Tageslicht macht ein normales Foto`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(5_000_000, 50))
+        assertFalse(vm.uiState.value.autoNight)
+        vm.onShutter()
+        assertEquals(0, proc.nightRuns.size); assertEquals(1, cam.saved.size)
+    }
+
+    @Test fun `Randfall Automatik ohne Messung macht ein normales Foto`() = runTest {
+        visibleAndGranted(); vm.onShutter()
+        assertEquals(0, proc.nightRuns.size); assertEquals(1, cam.saved.size)
+    }
+
+    @Test fun `Eigene Moduswahl schaltet die Automatik ab, Auto schaltet sie wieder ein`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        vm.onModeSelected(ModeOption.NORMAL)
+        assertEquals(ModeOption.NORMAL, vm.uiState.value.selected); assertFalse(vm.uiState.value.autoNight)
+        vm.onShutter(); assertEquals(0, proc.nightRuns.size)
+        vm.onModeSelected(ModeOption.AUTO)
+        assertEquals(ModeOption.AUTO, vm.uiState.value.selected)
+        assertEquals(app.cayresim.core.boundary.PhotoMode.NORMAL, cam.state.value.requestedMode, "Automatik misst im normalen Modus")
+    }
+
+    @Test fun `Automatik mit Spezialaufnahme folgt der Spezialaufnahme`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        vm.onNextSpecial() // Menschen wegrechnen
+        assertFalse(vm.uiState.value.autoNight)
+        vm.onShutter(); assertEquals(0, proc.nightRuns.size); assertEquals(1, proc.stacked.size)
     }
 }

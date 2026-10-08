@@ -72,6 +72,8 @@ data class CameraUiState(
     val special: SpecialOption = SpecialOption.NONE,
     val specialStatus: SpecialStatus = SpecialStatus.IDLE,
     val pro: ProUi = ProUi(),
+    /** Automatik hat Dunkelheit erkannt: der Ausloeser startet den Nacht-Kern. */
+    val autoNight: Boolean = false,
     val zoomRatio: Float = 1f,
     val zoomPresets: List<ZoomPresetUi> = emptyList(),
 ) {
