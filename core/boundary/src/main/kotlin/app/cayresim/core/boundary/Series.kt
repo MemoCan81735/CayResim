@@ -27,7 +27,8 @@ class ImageHandle(val token: Any, val width: Int, val height: Int)
 enum class Look { NONE, WARM, COOL, FILM, MONO }
 
 sealed interface ProcessResult {
-    data class Saved(val uri: String) : ProcessResult
+    /** [info]: kurze Angaben zur Verarbeitung fuer die Diagnose, z. B. Bildzahl und Verstaerkung. */
+    data class Saved(val uri: String, val info: String? = null) : ProcessResult
     data class Failed(val reason: ProcessFailure) : ProcessResult
 }
 
@@ -46,4 +47,7 @@ interface ProcessingBoundary {
 
     /** Stapelt eine Serie (Median: Bewegtes verschwindet, Mittelwert: Langzeitbelichtung) und speichert das Ergebnis. */
     suspend fun stack(burst: FrameBurst, mode: StackMode): ProcessResult
+
+    /** Nacht-Kern: Bilder beim Eintreffen ausrichten, robust aufsummieren, aufhellen und speichern. */
+    suspend fun night(frames: Flow<Frame>): ProcessResult
 }

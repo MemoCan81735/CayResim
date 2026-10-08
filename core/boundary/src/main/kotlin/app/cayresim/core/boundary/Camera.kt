@@ -26,6 +26,9 @@ class PreviewHandle(val token: Any)
 /** Aktueller Zoom, die Grenzen der Kamera (S24+: 0,6x bis 10x) und die Schnellwahl-Stufen. */
 data class ZoomSnapshot(val ratio: Float = 1f, val min: Float = 1f, val max: Float = 1f, val presets: List<Float> = emptyList())
 
+/** Was die Belichtungsautomatik gerade misst; Grundlage fuer "ist es dunkel?". */
+data class LightSnapshot(val exposureNs: Long, val iso: Int)
+
 data class CameraStateSnapshot(
     val status: CameraStatus = CameraStatus.IDLE,
     val requestedMode: PhotoMode = PhotoMode.NORMAL,
@@ -36,6 +39,8 @@ data class CameraStateSnapshot(
     val capturing: Boolean = false,
     val error: CameraError? = null,
     val zoom: ZoomSnapshot = ZoomSnapshot(),
+    /** Letzte Messung der Automatik im normalen Modus; null, solange keine vorliegt. */
+    val light: LightSnapshot? = null,
 )
 
 enum class CameraError { NO_CAMERA, IN_USE, BIND_FAILED, UNKNOWN }

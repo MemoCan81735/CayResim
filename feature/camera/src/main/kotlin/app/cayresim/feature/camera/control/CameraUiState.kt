@@ -10,7 +10,7 @@ enum class PermissionStatus { UNKNOWN, GRANTED, DENIED }
 
 enum class ScreenStatus { IDLE, STARTING, RUNNING, ERROR }
 
-enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID, STACK_SAVED, STACK_SHORTENED, STACK_FAILED, TRIGGER_FIRED, FIXED_FOCUS, NO_MANUAL, SAVED_WITH_RAW }
+enum class MessageKind { SAVED, FAILED_STORAGE, FAILED_CAMERA, FAILED_OTHER, SAVED_WITHOUT_LOOK, SAVED_WITHOUT_SERIES, SERIES_CREATED, SERIES_INVALID, STACK_SAVED, STACK_SHORTENED, STACK_FAILED, TRIGGER_FIRED, FIXED_FOCUS, NO_MANUAL, SAVED_WITH_RAW, NIGHT_SAVED, NIGHT_FAILED }
 
 enum class LookOption { NONE, WARM, COOL, FILM, MONO }
 
@@ -38,7 +38,7 @@ data class SeriesOption(val id: Long, val name: String, val photoCount: Int)
 
 /** Einmalige Meldung als Teil des Zustands; die UI bestaetigt sie mit [CameraViewModel.onMessageShown] (R22). */
 @Immutable
-data class UserMessage(val id: Long, val kind: MessageKind)
+data class UserMessage(val id: Long, val kind: MessageKind, val detail: String? = null)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable

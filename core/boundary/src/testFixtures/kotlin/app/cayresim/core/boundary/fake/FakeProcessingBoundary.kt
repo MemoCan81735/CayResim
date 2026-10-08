@@ -34,6 +34,19 @@ class FakeProcessingBoundary : ProcessingBoundary {
         return ProcessResult.Saved(out)
     }
 
+    /** Bildzahl je Nachtaufnahme. */
+    val nightRuns = mutableListOf<Int>()
+
+    override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>): ProcessResult {
+        var count = 0
+        frames.collect { count++ }
+        if (count == 0) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        if (gpuFails) return ProcessResult.Failed(ProcessFailure.GPU)
+        nightRuns += count
+        val out = "content://fake/night/${++n}"; known += out
+        return ProcessResult.Saved(out, "$count Bilder")
+    }
+
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {
         if (photoUris.isEmpty() || photosPerSecond !in 1..60) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         if (photoUris.any { it !in known }) return ProcessResult.Failed(ProcessFailure.SOURCE_MISSING)

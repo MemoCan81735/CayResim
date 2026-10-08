@@ -21,5 +21,15 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
         return BurstResult.Ok(FrameBurst(4, 3, List(n) { ByteArray(4 * 3 * 3) }), count)
     }
 
+    /** Zahl der tatsaechlich gelieferten Einzelbilder des letzten Stroms. */
+    var streamed = 0; private set
+
+    override fun frames(maxCount: Int): Flow<app.cayresim.core.boundary.Frame> = kotlinx.coroutines.flow.flow {
+        streamed = 0
+        if (camera.state.value.status != app.cayresim.core.boundary.CameraStatus.RUNNING || fail != null) return@flow
+        val n = minOf(maxCount, allowed ?: maxCount).coerceAtLeast(0)
+        repeat(n) { emit(app.cayresim.core.boundary.Frame(4, 3, ByteArray(4 * 3 * 3))); streamed++ }
+    }
+
     override fun trigger(mode: TriggerMode): Flow<Unit> { lastTriggerMode = mode; return fires }
 }

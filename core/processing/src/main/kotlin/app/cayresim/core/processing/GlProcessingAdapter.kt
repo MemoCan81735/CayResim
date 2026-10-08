@@ -19,6 +19,7 @@ import app.cayresim.core.pure.Stacking
 import app.cayresim.core.pure.FocusStacking
 import app.cayresim.core.pure.StarAlignment
 import app.cayresim.core.pure.NightTone
+import app.cayresim.core.pure.NightMerge
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -110,6 +111,35 @@ class GlProcessingAdapter @Inject constructor(
         }
         val bitmap = withContext(compute) { rgbToBitmap(rgb, burst.width, burst.height, burst.rotationDegrees) }
         return withContext(io) { save(bitmap, when (mode) { StackMode.MEDIAN -> "ohne_bewegung"; StackMode.MEAN -> "langzeit"; StackMode.FOCUS -> "fokus"; StackMode.STARS -> "sterne" }).also { bitmap.recycle() } }
+    }
+
+    override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>): ProcessResult {
+        var merge: NightMerge? = null
+        var w = 0; var h = 0; var rot = 0
+        val result = try {
+            withContext(compute) {
+                frames.collect { f ->
+                    ensureActive()
+                    val m = merge ?: NightMerge(f.width, f.height).also { merge = it; w = f.width; h = f.height; rot = f.rotationDegrees }
+                    // Bilder anderer Groesse (z. B. nach einem Neubinden) werden uebersprungen
+                    if (f.width == w && f.height == h && f.rgb.size == w * h * 3) m.add(f.rgb)
+                }
+                merge?.finish()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        } ?: return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        val m = merge!!
+        val bitmap = withContext(compute) { rgbToBitmap(result.rgb, w, h, rot) }
+        val info = "${m.used} Bilder, ${m.dropped} verworfen, Aufhellung x${"%.1f".format(java.util.Locale.GERMANY, result.gain)}"
+        return withContext(io) {
+            when (val saved = save(bitmap, "nacht")) {
+                is ProcessResult.Saved -> saved.copy(info = info)
+                else -> saved
+            }.also { bitmap.recycle() }
+        }
     }
 
     /** Teilt das Bild in Baender, jedes Band rechnet ein eigener Kern; zwischen den Kacheln wird auf Abbruch geprueft (R17). */

@@ -71,6 +71,9 @@ class FakeCameraBoundary(
 
     override suspend fun delete(uri: String): Boolean = saved.remove(uri)
 
+    /** Simuliert eine Messung der Belichtungsautomatik. */
+    fun measure(light: app.cayresim.core.boundary.LightSnapshot?) = _state.update { it.copy(light = light) }
+
     override suspend fun setZoom(ratio: Float): Boolean {
         if (_state.value.status != CameraStatus.RUNNING || !ratio.isFinite()) return false
         _state.update { it.copy(zoom = it.zoom.copy(ratio = ratio.coerceIn(zoomRange.start, zoomRange.endInclusive))) }

@@ -1,0 +1,119 @@
+package app.cayresim.core.pure
+
+import kotlin.math.abs
+import kotlin.math.sqrt
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class NightPlanTest {
+    private val s24Max = 100_000_000L // gemessen: 1/10 s
+
+    @Test fun `Guter Fall dunkle Szene nutzt die volle Zeit und passende ISO`() {
+        // Automatik: 1/15 s bei ISO 3200 (am Anschlag)
+        val e = NightPlan.plan(66_666_666, 3200, s24Max, 25, 3200)
+        assertEquals(100_000_000L, e.exposureNs)
+        assertEquals(3200, e.iso) // 1,5-fach waere mehr als 3200: begrenzt
+    }
+
+    @Test fun `Guter Fall maessig dunkel ergibt mittlere ISO`() {
+        val e = NightPlan.plan(33_333_333, 800, s24Max, 25, 3200)
+        assertEquals(100_000_000L, e.exposureNs)
+        assertEquals(400, e.iso) // 1/30*800*1,5 = 1/10 s * 400
+    }
+
+    @Test fun `Randfall helle Szene kuerzt die Zeit statt ISO unter das Minimum zu druecken`() {
+        val e = NightPlan.plan(1_000_000, 25, s24Max, 25, 3200)
+        assertEquals(25, e.iso)
+        assertEquals(1_500_000L, e.exposureNs)
+    }
+
+    @Test fun `Randfall Geraet erlaubt mehr als 1 durch 10 s, Serie bleibt freihand bei 1 durch 10 s`() =
+        assertEquals(100_000_000L, NightPlan.plan(66_666_666, 3200, 500_000_000, 25, 3200).exposureNs)
+
+    @Test fun `Dunkel oder nicht`() {
+        assertEquals(true, NightPlan.isDark(66_666_666, 3200))
+        assertEquals(false, NightPlan.isDark(10_000_000, 100))
+        assertEquals(null, NightPlan.isDark(null, 100))
+        assertEquals(null, NightPlan.isDark(0, 100))
+    }
+
+    @Test fun `Fehlerfall unsinnige Messwerte`() {
+        assertFailsWith<IllegalArgumentException> { NightPlan.plan(0, 100, s24Max, 25, 3200) }
+        assertFailsWith<IllegalArgumentException> { NightPlan.plan(1, 100, s24Max, 3200, 25) }
+    }
+}
+
+class NightMergeTest {
+    private val w = 128; private val h = 96
+
+    /** Dunkle Szene mit Kanten (damit Ausrichtung und Schaerfe messbar sind), verschoben um dx, dy, mit Rauschen. */
+    private fun scene(dx: Int, dy: Int, rng: Rng, noise: Int = 3, blobAt: Int? = null): ByteArray = ByteArray(w * h * 3) { i ->
+        val p = i / 3; val x = p % w + dx; val y = p / w + dy
+        var v = if (((x / 16) + (y / 16)) % 2 == 0) 4 else 14
+        if (blobAt != null && p % w in blobAt until blobAt + 24 && p / w in 30 until 60) v = 120 // vorbeilaufendes Objekt
+        (v + rng.nextInt(2 * noise + 1) - noise).coerceIn(0, 255).toByte()
+    }
+
+    private fun sd(b: ByteArray, x0: Int, y0: Int, size: Int): Double {
+        val v = (y0 until y0 + size).flatMap { y -> (x0 until x0 + size).map { x -> b[(y * w + x) * 3 + 1].toInt() and 0xFF } }
+        val m = v.average(); return sqrt(v.sumOf { (it - m) * (it - m) } / v.size)
+    }
+
+    @Test fun `Guter Fall viele Bilder senken das Rauschen und hellen auf`() {
+        val rng = SeededRng(4711)
+        val single = NightMerge(w, h).apply { add(scene(0, 0, rng)) }.finish()
+        val m = NightMerge(w, h)
+        repeat(24) { m.add(scene(0, 0, rng)) }
+        val r = m.finish()
+        assertEquals(24, m.used)
+        assertTrue(r.gain > 1.5f, "Verstaerkung ${r.gain}")
+        // innerhalb einer gleichmaessigen Flaeche: Rauschen deutlich kleiner als beim Einzelbild (gleiche Verstaerkung)
+        assertTrue(sd(r.rgb, 2, 2, 12) < sd(single.rgb, 2, 2, 12) / 2.5, "Rauschen ${sd(single.rgb, 2, 2, 12)} -> ${sd(r.rgb, 2, 2, 12)}")
+    }
+
+    @Test fun `Guter Fall verwackelte Serie wird ausgerichtet, Kanten bleiben scharf`() {
+        val rng = SeededRng(9)
+        val shifts = listOf(0 to 0, 4 to 0, -8 to 4, 12 to -4, 0 to 8, -4 to -4, 8 to 8, -12 to 0)
+        val m = NightMerge(w, h)
+        shifts.forEach { (dx, dy) -> m.add(scene(dx, dy, rng)) }
+        val r = m.finish()
+        // Kante zwischen zwei Feldern bei x = 16: links dunkel, rechts hell, auch nach dem Mitteln
+        val left = r.rgb[(40 * w + 12) * 3].toInt() and 0xFF; val right = r.rgb[(40 * w + 20) * 3].toInt() and 0xFF
+        assertTrue(abs(left - right) > 15, "Kante verwischt: $left / $right")
+    }
+
+    @Test fun `Fehlerfall bewegtes Objekt hinterlaesst keinen Geist`() {
+        val rng = SeededRng(5)
+        val m = NightMerge(w, h)
+        m.add(scene(0, 0, rng)) // Referenz ohne Objekt
+        listOf(10, 40, 70, 100).forEach { m.add(scene(0, 0, rng, blobAt = it)) }
+        repeat(6) { m.add(scene(0, 0, rng)) }
+        val r = m.finish()
+        val ghost = r.rgb[(45 * w + 50) * 3].toInt() and 0xFF
+        val clean = NightMerge(w, h).apply { repeat(11) { add(scene(0, 0, SeededRng(5L + it))) } }.finish().rgb[(45 * w + 50) * 3].toInt() and 0xFF
+        assertTrue(abs(ghost - clean) < 25, "Geist: $ghost statt etwa $clean")
+    }
+
+    @Test fun `Fehlerfall verwackeltes Bild wird verworfen`() {
+        val rng = SeededRng(2)
+        val m = NightMerge(w, h)
+        m.add(scene(0, 0, rng))
+        val blurred = ByteArray(w * h * 3) { 9 } // keine Kanten
+        assertFalse(m.add(blurred))
+        assertEquals(1, m.dropped); assertEquals(1, m.used)
+    }
+
+    @Test fun `Randfall nur ein Bild ergibt ein gueltiges Ergebnis`() {
+        val r = NightMerge(w, h).apply { add(scene(0, 0, SeededRng(1))) }.finish()
+        assertEquals(w * h * 3, r.rgb.size)
+    }
+
+    @Test fun `Fehlerfall falsche Groessen und leer`() {
+        assertFailsWith<IllegalArgumentException> { NightMerge(10, 10) }
+        assertFailsWith<IllegalArgumentException> { NightMerge(w, h).add(ByteArray(3)) }
+        assertFailsWith<IllegalStateException> { NightMerge(w, h).finish() }
+    }
+}

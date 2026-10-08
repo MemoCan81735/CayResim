@@ -20,6 +20,7 @@ import app.cayresim.core.control.StackOutcome
 import app.cayresim.core.control.StackPhotoUseCase
 import app.cayresim.core.control.FocusStackUseCase
 import app.cayresim.core.control.AstroUseCase
+import app.cayresim.core.control.NightUseCase
 import app.cayresim.core.boundary.ManualCameraBoundary
 import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
 import app.cayresim.core.boundary.ManualStateSnapshot
@@ -54,6 +55,7 @@ class CameraViewModel @Inject constructor(
     private val manual: ManualCameraBoundary,
     private val focusStack: FocusStackUseCase,
     private val astro: AstroUseCase,
+    private val night: NightUseCase,
 ) : ViewModel() {
 
     private data class Local(
@@ -184,6 +186,8 @@ class CameraViewModel @Inject constructor(
     fun onShutter() {
         val l = local.value
         if (l.special != SpecialOption.NONE && l.special != SpecialOption.PRO) return onSpecialShutter(l.special)
+        // "Nacht" im Dunkeln: eigener Nacht-Kern statt Samsungs schwacher Night-Extension
+        if (l.special == SpecialOption.NONE && camera.state.value.requestedMode == PhotoMode.NIGHT && night.shouldUseOwn()) return onNightShutter()
         viewModelScope.launch {
             when (val r = capture(Look.valueOf(l.look.name), l.selectedSeriesId)) {
                 is CaptureOutcome.Saved -> {
@@ -201,6 +205,18 @@ class CameraViewModel @Inject constructor(
                     CaptureFailure.NOT_READY, CaptureFailure.CAMERA_CLOSED -> post(MessageKind.FAILED_CAMERA)
                     CaptureFailure.UNKNOWN -> post(MessageKind.FAILED_OTHER)
                 }
+            }
+        }
+    }
+
+    private fun onNightShutter() {
+        viewModelScope.launch {
+            local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
+            val r = night()
+            local.update { it.copy(specialStatus = SpecialStatus.IDLE) }
+            when (r) {
+                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.info) { it.copy(lastPhotoUri = r.uri) }
+                is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED, r.detail)
             }
         }
     }
@@ -259,8 +275,8 @@ class CameraViewModel @Inject constructor(
         local.update { if (it.message?.id == id) it.copy(message = null) else it }
     }
 
-    private fun post(kind: MessageKind, extra: (Local) -> Local = { it }) {
-        local.update { l -> extra(l).copy(message = UserMessage(l.nextMessageId, kind), nextMessageId = l.nextMessageId + 1) }
+    private fun post(kind: MessageKind, detail: String? = null, extra: (Local) -> Local = { it }) {
+        local.update { l -> extra(l).copy(message = UserMessage(l.nextMessageId, kind, detail), nextMessageId = l.nextMessageId + 1) }
     }
 
     private fun toUi(s: CameraStateSnapshot, l: Local, series: List<SeriesSnapshot>, ov: androidx.compose.ui.graphics.ImageBitmap?) = CameraUiState(

@@ -62,6 +62,8 @@ import app.cayresim.core.boundary.CameraDispatcher
 import app.cayresim.core.boundary.CameraError
 import app.cayresim.core.boundary.CameraStateSnapshot
 import app.cayresim.core.boundary.ZoomSnapshot
+import app.cayresim.core.boundary.LightSnapshot
+import app.cayresim.core.boundary.Frame
 import app.cayresim.core.entity.ZoomEntity
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureFailure
@@ -252,7 +254,11 @@ class CameraXCameraAdapter @Inject constructor(
 
     private fun tryBind(p: ProcessCameraProvider, em: ExtensionsManager, key: ModeKey): Boolean = try {
         p.unbindAll()
-        val preview = Preview.Builder().build()
+        val ext = if (pipelineUsers > 0) ExtensionMode.NONE else key.toExtensionMode()
+        // Belichtungsautomatik mitlesen (nur ohne Extension; Extensions erlauben keine eigenen Rueckrufe)
+        val preview = Preview.Builder().apply {
+            if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)
+        }.build()
         val rawWanted = _manualState.value.raw && pipelineUsers == 0 && key == ModeKey.NORMAL
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -270,7 +276,6 @@ class CameraXCameraAdapter @Inject constructor(
             pendingRequest = request
             _state.update { it.copy(preview = PreviewHandle(request)) }
         }
-        val ext = if (pipelineUsers > 0) ExtensionMode.NONE else key.toExtensionMode()
         val useCases = mutableListOf(preview, capture)
         if (pipelineUsers > 0) useCases += buildAnalysis()
         val config: SessionConfig =
@@ -363,6 +368,37 @@ class CameraXCameraAdapter @Inject constructor(
             releasePipeline()
         }
     }
+
+    /** Liest Belichtungszeit und ISO aus jedem 10. Kamerabild; Grundlage fuer "ist es dunkel?" (Nacht-Kern). */
+    private val lightMeter = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+        private var n = 0
+        override fun onCaptureCompleted(
+            session: android.hardware.camera2.CameraCaptureSession,
+            request: CaptureRequest,
+            result: android.hardware.camera2.TotalCaptureResult,
+        ) {
+            if (n++ % 10 != 0) return
+            val exp = result.get(android.hardware.camera2.CaptureResult.SENSOR_EXPOSURE_TIME) ?: return
+            val iso = result.get(android.hardware.camera2.CaptureResult.SENSOR_SENSITIVITY) ?: return
+            val l = LightSnapshot(exp, iso)
+            if (_state.value.light != l) _state.update { it.copy(light = l) }
+        }
+    }
+
+    override fun frames(maxCount: Int): Flow<Frame> = callbackFlow {
+        if (_state.value.status != CameraStatus.RUNNING || maxCount <= 0) { close(); return@callbackFlow }
+        val n = thermal.framesFor(maxCount, headroom())
+        var sent = 0
+        val listener: (ByteArray, Int, Int, Int) -> Unit = { bytes, w, h, rot ->
+            // Kopie je Bild; der Empfaenger verarbeitet sofort, gespeichert wird nichts
+            if (sent < n && trySend(Frame(w, h, bytes.copyOf(), rot)).isSuccess) sent++
+            if (sent >= n) channel.close()
+        }
+        acquirePipeline()
+        withContext(dispatcher) { ensureSurface() }
+        frameListeners += listener
+        awaitClose { frameListeners -= listener; launch(NonCancellable) { releasePipeline() } }
+    }.buffer(2) // volle Warteschlange: Bild auslassen statt Speicher fuellen; gezaehlt wird nur, was ankommt
 
     override fun trigger(mode: TriggerMode): Flow<Unit> = callbackFlow {
         val entity = TriggerEntity(if (mode == TriggerMode.MOTION) TriggerKind.MOTION else TriggerKind.STILLNESS)

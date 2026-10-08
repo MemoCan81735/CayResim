@@ -8,7 +8,7 @@ import app.cayresim.core.boundary.StackMode
 import javax.inject.Inject
 
 sealed interface StackOutcome {
-    data class Saved(val uri: String, val frames: Int, val shortened: Boolean) : StackOutcome
+    data class Saved(val uri: String, val frames: Int, val shortened: Boolean, val info: String? = null) : StackOutcome
     data class Failed(val stage: Stage, val detail: String) : StackOutcome
     enum class Stage { COLLECT, PROCESS }
 }

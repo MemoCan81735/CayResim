@@ -96,6 +96,32 @@ class ProcessingAdapterTest {
         assertTrue(kotlin.math.abs(Color.red(c) - (bg[i].toInt() and 0xFF)) < 40, "Bewegtes Objekt ist noch sichtbar")
     }
 
+    /** Nacht-Kern: 30 dunkle, leicht verwackelte Bilder als Strom werden zu einem hellen Bild. */
+    @Test fun nachtKernAusDemStrom() = runBlocking {
+        val w = 128; val h = 96
+        val rng = java.util.Random(7)
+        val frames = kotlinx.coroutines.flow.flow {
+            repeat(30) { k ->
+                val dx = (k % 3) * 4
+                emit(app.cayresim.core.boundary.Frame(w, h, ByteArray(w * h * 3) { i ->
+                    val x = (i / 3) % w + dx; val y = (i / 3) / w
+                    ((if ((x / 16 + y / 16) % 2 == 0) 3 else 10) + rng.nextInt(3) - 1).toByte()
+                }))
+            }
+        }
+        val r = adapter.night(frames); track(r)
+        val saved = assertIs<ProcessResult.Saved>(r, "Nacht fehlgeschlagen: $r")
+        val used = saved.info!!.substringBefore(" Bilder").toInt()
+        assertTrue(used >= 25, "Zu viele Bilder verworfen: ${saved.info}")
+        val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(saved.uri), 1000))
+        assertEquals(w, bmp.width)
+        assertTrue(Color.green(bmp.getPixel(w / 2, h / 2)) >= 12, "Ergebnis zu dunkel")
+    }
+
+    @Test fun nachtKernOhneBilderScheitertSauber() = runBlocking {
+        assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.night(kotlinx.coroutines.flow.emptyFlow()))
+    }
+
     /** Fehler vom S24+: "Langzeit" im Dunkeln blieb schwarz (Mittel 1,5 von 255). Jetzt wird aufgehellt. */
     @Test fun dunkleLangzeitSerieWirdAufgehellt() = runBlocking {
         val w = 64; val h = 48

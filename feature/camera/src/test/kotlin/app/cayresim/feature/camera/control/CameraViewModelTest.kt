@@ -46,7 +46,8 @@ class CameraViewModelTest {
         manual = app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam)
         vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, procSeesCamera, series, Clock { ++t }), series, proc,
             app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames, manual,
-            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc))
+            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc),
+            app.cayresim.core.control.NightUseCase(cam, manual, frames, proc))
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -297,7 +298,8 @@ class CameraViewModelTest {
         manual = app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam, app.cayresim.core.boundary.ManualCapabilitiesSnapshot(null, null, null, false))
         vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, proc, series, Clock { 1 }), series, proc,
             app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames, manual,
-            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc))
+            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc),
+            app.cayresim.core.control.NightUseCase(cam, manual, frames, proc))
         visibleAndGranted(); special(SpecialOption.FOCUS_STACK); vm.onShutter()
         assertEquals(MessageKind.FIXED_FOCUS, vm.uiState.value.message?.kind)
         special(SpecialOption.ASTRO); vm.onShutter()
@@ -364,5 +366,40 @@ class CameraViewModelTest {
 
     @Test fun `Fehlerfall Lautstaerketaste ohne laufende Kamera loest nicht aus`() = runTest {
         vm.onHardwareShutter(); assertEquals(0, cam.saved.size); assertNull(vm.uiState.value.message)
+    }
+
+    // ---------- Nacht-Kern ----------
+
+    @Test fun `Nacht im Dunkeln nutzt den eigenen Kern und meldet die Werte`() = runTest {
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
+        cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        vm.onShutter()
+        assertEquals(1, proc.nightRuns.size)
+        assertEquals(0, cam.saved.size, "kein Foto ueber Samsungs Extension")
+        val m = vm.uiState.value.message!!
+        assertEquals(MessageKind.NIGHT_SAVED, m.kind)
+        assertTrue(m.detail!!.contains("ISO"), m.detail)
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
+        assertNotNull(vm.uiState.value.lastPhotoUri)
+    }
+
+    @Test fun `Nacht bei hellem Licht nutzt Samsungs Modus`() = runTest {
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
+        cam.measure(app.cayresim.core.boundary.LightSnapshot(5_000_000, 50))
+        vm.onShutter()
+        assertEquals(0, proc.nightRuns.size); assertEquals(1, cam.saved.size)
+    }
+
+    @Test fun `Normaler Modus im Dunkeln bleibt ein normales Foto`() = runTest {
+        visibleAndGranted(); cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        vm.onShutter()
+        assertEquals(0, proc.nightRuns.size); assertEquals(1, cam.saved.size)
+    }
+
+    @Test fun `Fehlerfall Nachtaufnahme scheitert mit Meldung`() = runTest {
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT); proc.gpuFails = true
+        vm.onShutter()
+        assertEquals(MessageKind.NIGHT_FAILED, vm.uiState.value.message?.kind)
+        assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
     }
 }

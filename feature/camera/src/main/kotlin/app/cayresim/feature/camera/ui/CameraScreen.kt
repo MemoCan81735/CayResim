@@ -160,7 +160,7 @@ fun CameraContent(
 ) {
     val snackbar = remember { SnackbarHostState() }
     val message = state.message
-    val text = message?.let { stringResource(messageRes(it.kind)) }
+    val text = message?.let { m -> stringResource(messageRes(m.kind)) + (m.detail?.let { "\n$it" } ?: "") }
     LaunchedEffect(message?.id) {
         if (message != null && text != null) {
             snackbar.showSnackbar(text)
@@ -439,4 +439,6 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.FIXED_FOCUS -> R.string.msg_fixed_focus
     MessageKind.NO_MANUAL -> R.string.msg_no_manual
     MessageKind.SAVED_WITH_RAW -> R.string.msg_saved_with_raw
+    MessageKind.NIGHT_SAVED -> R.string.msg_night_saved
+    MessageKind.NIGHT_FAILED -> R.string.msg_night_failed
 }
