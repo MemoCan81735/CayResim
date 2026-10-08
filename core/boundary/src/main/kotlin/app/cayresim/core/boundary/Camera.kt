@@ -13,6 +13,8 @@ data class CameraCapabilitiesSnapshot(
     val lowLightBoost: Boolean,
     val ultraHdr: Boolean,
     val raw: Boolean,
+    /** Geraetewerte fuer die Diagnose im Selbsttest (Name, Wert), z. B. Belichtungsbereich. */
+    val device: List<Pair<String, String>> = emptyList(),
 )
 
 /**

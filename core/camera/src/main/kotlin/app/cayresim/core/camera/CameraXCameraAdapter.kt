@@ -188,6 +188,7 @@ class CameraXCameraAdapter @Inject constructor(
             lowLightBoost = runCatching { info.isLowLightBoostSupported }.getOrDefault(false),
             ultraHdr = ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR in formats,
             raw = ImageCapture.OUTPUT_FORMAT_RAW in formats,
+            device = readDeviceReport(info),
         )
     }
 
@@ -468,6 +469,42 @@ class CameraXCameraAdapter @Inject constructor(
             }
         }
     }
+
+    /**
+     * Was das Geraet Drittanbieter-Apps wirklich erlaubt (Bildqualitaets-Dossier, P0). Grundlage fuer die
+     * Nachtpipeline: Samsung begrenzt z. B. die Belichtungszeit fuer andere Apps.
+     */
+    private fun readDeviceReport(info: androidx.camera.core.CameraInfo): List<Pair<String, String>> = buildList {
+        runCatching {
+            val c2 = Camera2CameraInfo.from(info)
+            fun <T> ch(k: CameraCharacteristics.Key<T>): T? = runCatching { c2.getCameraCharacteristic(k) }.getOrNull()
+            val level = when (ch(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)) {
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEVEL_3 -> "LEVEL_3"
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL -> "FULL"
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED -> "LIMITED"
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY -> "LEGACY"
+                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL -> "EXTERNAL"
+                else -> "?"
+            }
+            add("Hardware-Stufe" to level)
+            ch(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)?.let { add("Belichtung" to "${exposureText(it.lower)} bis ${exposureText(it.upper)}") }
+            ch(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)?.let { add("ISO" to "${it.lower} bis ${it.upper}") }
+            ch(CameraCharacteristics.SENSOR_INFO_MAX_FRAME_DURATION)?.let { add("Laengste Bilddauer" to exposureText(it)) }
+            ch(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)?.minByOrNull { it.lower }?.let { add("Kleinste Bildrate" to "${it.lower} bis ${it.upper} fps") }
+            val caps = ch(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
+            add("RAW-Sensor" to if (CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW in caps) "ja" else "nein")
+            add("Serienaufnahme" to if (CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_BURST_CAPTURE in caps) "ja" else "nein")
+            ch(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)?.let { add("Sensor" to "${it.width} x ${it.height} (${it.width.toLong() * it.height / 1_000_000} MP)") }
+        }
+        runCatching { add("Zero Shutter Lag" to if (info.isZslSupported) "ja" else "nein") }
+        runCatching { info.zoomState.value?.let { add("Zoom" to "${it.minZoomRatio} bis ${it.maxZoomRatio}") } }
+        runCatching { add("Kameras" to "${info.physicalCameraInfos.size} physisch") }
+        add("Chip" to "${android.os.Build.SOC_MANUFACTURER} ${android.os.Build.SOC_MODEL}")
+        add("System" to "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.DISPLAY}")
+    }
+
+    private fun exposureText(ns: Long): String =
+        if (ns >= 1_000_000_000L) "%.1f s".format(java.util.Locale.GERMANY, ns / 1e9) else "1/${(1e9 / ns.coerceAtLeast(1)).toLong()} s"
 
     private fun readManualCapabilities(info: androidx.camera.core.CameraInfo, raw: Boolean): ManualCapabilitiesSnapshot? = runCatching {
         val c2 = Camera2CameraInfo.from(info)

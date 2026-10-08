@@ -8,7 +8,7 @@ import app.cayresim.core.boundary.SelfTestJournalBoundary
 import app.cayresim.core.pure.Clock
 import javax.inject.Inject
 
-enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
+enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
 
 /** Ein Ergebnis des Selbsttests. [mode] ist bei MODE_CAPTURE gesetzt. */
 data class SelfTestItem(
@@ -66,6 +66,8 @@ class SelfTestUseCase @Inject constructor(
             items += SelfTestItem(SelfTestCheck.LOW_LIGHT_BOOST, true, 0, detail = if (caps.lowLightBoost) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.ULTRA_HDR, true, 0, detail = if (caps.ultraHdr) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.RAW, true, 0, detail = if (caps.raw) "ja" else "nein")
+            if (caps.device.isNotEmpty())
+                items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, detail = caps.device.joinToString("\n") { (k, v) -> "$k: $v" })
         }
 
         val previous = camera.state.value.requestedMode

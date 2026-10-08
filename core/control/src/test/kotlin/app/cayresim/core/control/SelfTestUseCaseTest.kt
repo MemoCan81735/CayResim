@@ -135,4 +135,19 @@ class SelfTestUseCaseTest {
         val cam = FakeCameraBoundary(emptySet())
         assertTrue(SelfTestUseCase(cam, CaptureClock(cam, 2_272), FakeSelfTestJournalBoundary())().passed)
     }
+
+    // ---------- Geraetewerte ----------
+
+    @Test fun `Geraetewerte erscheinen als eigene Zeile`() = runTest {
+        val cam = FakeCameraBoundary(emptySet()).apply { deviceReport = listOf("Belichtung" to "1/100000 s bis 0,5 s", "ISO" to "50 bis 3200") }
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
+        val d = report.items.single { it.check == SelfTestCheck.DEVICE }
+        assertTrue(d.passed)
+        assertEquals("Belichtung: 1/100000 s bis 0,5 s\nISO: 50 bis 3200", d.detail)
+    }
+
+    @Test fun `Randfall ohne Geraetewerte keine leere Zeile`() = runTest {
+        val report = SelfTestUseCase(FakeCameraBoundary(emptySet()), StepClock(), FakeSelfTestJournalBoundary())()
+        assertTrue(report.items.none { it.check == SelfTestCheck.DEVICE })
+    }
 }

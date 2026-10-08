@@ -80,6 +80,7 @@ private fun label(row: CheckRow): String = when (row.kind) {
     CheckKind.LAST_RUN -> stringResource(R.string.check_last_run)
     CheckKind.CAMERA_START -> stringResource(R.string.check_camera_start)
     CheckKind.CAPABILITIES -> stringResource(R.string.check_capabilities)
+    CheckKind.DEVICE -> stringResource(R.string.check_device)
     CheckKind.MODE_CAPTURE -> stringResource(R.string.check_mode_capture, row.modeName ?: "")
     CheckKind.LOW_LIGHT_BOOST -> stringResource(R.string.check_low_light_boost)
     CheckKind.ULTRA_HDR -> stringResource(R.string.check_ultra_hdr)

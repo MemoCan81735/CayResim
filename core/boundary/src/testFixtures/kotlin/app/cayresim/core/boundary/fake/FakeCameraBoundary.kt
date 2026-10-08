@@ -30,6 +30,7 @@ class FakeCameraBoundary(
     /** Zoomgrenzen der simulierten Kamera; letzter Fokuspunkt. */
     var zoomRange: ClosedFloatingPointRange<Float> = 1f..1f
     var zoomPresets: List<Float> = emptyList()
+    var deviceReport: List<Pair<String, String>> = emptyList()
     var lastFocus: Pair<Float, Float>? = null; private set
     var startCalls = 0; private set
     var stopCalls = 0; private set
@@ -38,7 +39,7 @@ class FakeCameraBoundary(
     override suspend fun start() {
         startCalls++
         val modes = listOf(PhotoMode.NORMAL) + PhotoMode.entries.filter { it in availableModes && it != PhotoMode.NORMAL }
-        _caps.value = CameraCapabilitiesSnapshot(modes, lowLightBoost = false, ultraHdr = false, raw = false)
+        _caps.value = CameraCapabilitiesSnapshot(modes, lowLightBoost = false, ultraHdr = false, raw = false, device = deviceReport)
         val err = startError
         _state.update {
             if (err != null) it.copy(status = CameraStatus.ERROR, error = err, preview = null)
