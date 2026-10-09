@@ -1,6 +1,6 @@
 # S-001: Prüfbefunde Nacht-Kern und RAW-Weg
 
-**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.82, Gerätetest offen
+**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.82, Gerätetest K5 bestanden
 **Anlass:** eigene Prüfung der Änderungen vom 9. Oktober, sieben Befunde. Befund 1 im Python-Modell bestätigt:
 bei Leserauschen 40 Kante 0,77 px ohne Entrauschen, 3,62 px mit Entrauschen (Stärke 2,5).
 
@@ -67,3 +67,9 @@ Zweitprüfung (unabhängiger Agent): sieben Befunde, umgesetzt: Kamera-Öffnen o
 beim Abbruch, Bericht auch bei roter Farbszene, Teil für Restlicht, alte Teile gelöscht, Uhr im Test läuft mit den
 Bildern (Start beim Auslösen, RAW-Versuch zählt mit), Dauer nie negativ. Offen: Dauer nutzt die Systemuhr
 (`System.currentTimeMillis`), eine monotone Uhr wäre genauer.
+
+**Gerätetest S24+ (9. Oktober, 21:29, v0.1.82):** Hinweis "1/10 s, ISO 3200, 36 Bilder, 0 verworfen, Aufhellung x1,0,
+Dauer 5,1 s". K5 erfüllt (Grenze 10 s). Bild (Tisch mit Glasplatte, Raum beleuchtet): scharf, keine Geister oder
+Kachelkanten sichtbar. Samsung-Vergleich steht noch aus. Selbsttest am selben Abend: RAW-Nullen 0,0 % im hellen Raum
+(vorher 61,9 % im dunklen), Wahl 8 Bit nur wegen Probenacht 6,7 s; Folgebefund für S-002 (Schwarzwert 0 als
+Abschneide-Merkmal).
