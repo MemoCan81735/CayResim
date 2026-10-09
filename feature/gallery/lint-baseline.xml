@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)) }"
+        errorLine2="                                                                       ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/feature/gallery/ui/GalleryScreen.kt"
+            line="43"
+            column="72"/>
+    </issue>
+
+</issues>

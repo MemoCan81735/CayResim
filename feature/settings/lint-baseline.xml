@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(vm.uiState.value.copy(rows = listOf(row)), {}, {}) } }"
+        errorLine2="                                                                                     ~~~~~">
+        <location
+            file="src/test/kotlin/app/cayresim/feature/settings/SelfTestTest.kt"
+            line="111"
+            column="86"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(vm.uiState.value.copy(rows = listOf(row)), {}, {}) } }"
+        errorLine2="                                                                                     ~~~~~">
+        <location
+            file="src/test/kotlin/app/cayresim/feature/settings/SelfTestTest.kt"
+            line="128"
+            column="86"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;von&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;raw_frames&quot;>Bilder: %1$d von %2$d, je %3$d ms (höchstens %4$d ms)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="40"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;bis&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;device_iso&quot;>ISO: %1$d bis %2$d&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="66"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;bis&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;device_fps&quot;>Langsamste Bildrate: %1$d bis %2$d fps&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="68"
+            column="5"/>
+    </issue>
+
+</issues>

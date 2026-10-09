@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="HalfFloat"
+        message="Half-float type in expression widened to java.nio.ShortBuffer"
+        errorLine1="                hb.put(Half.toHalf(lut.data[i * 3])); hb.put(Half.toHalf(lut.data[i * 3 + 1])); hb.put(Half.toHalf(lut.data[i * 3 + 2])); hb.put(Half.toHalf(1f))"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlLutRenderer.kt"
+            line="83"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="HalfFloat"
+        message="Half-float type in expression widened to java.nio.ShortBuffer"
+        errorLine1="                hb.put(Half.toHalf(lut.data[i * 3])); hb.put(Half.toHalf(lut.data[i * 3 + 1])); hb.put(Half.toHalf(lut.data[i * 3 + 2])); hb.put(Half.toHalf(1f))"
+        errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlLutRenderer.kt"
+            line="83"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="HalfFloat"
+        message="Half-float type in expression widened to java.nio.ShortBuffer"
+        errorLine1="                hb.put(Half.toHalf(lut.data[i * 3])); hb.put(Half.toHalf(lut.data[i * 3 + 1])); hb.put(Half.toHalf(lut.data[i * 3 + 2])); hb.put(Half.toHalf(1f))"
+        errorLine2="                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlLutRenderer.kt"
+            line="83"
+            column="104"/>
+    </issue>
+
+    <issue
+        id="HalfFloat"
+        message="Half-float type in expression widened to java.nio.ShortBuffer"
+        errorLine1="                hb.put(Half.toHalf(lut.data[i * 3])); hb.put(Half.toHalf(lut.data[i * 3 + 1])); hb.put(Half.toHalf(lut.data[i * 3 + 2])); hb.put(Half.toHalf(1f))"
+        errorLine2="                                                                                                                                                 ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlLutRenderer.kt"
+            line="83"
+            column="146"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            val media = MediaItem.Builder().setUri(u).setMimeType(MimeTypes.IMAGE_JPEG).setImageDurationMs(durationMs).build()"
+        errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="21"
+            column="89"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            EditedMediaItem.Builder(media).setFrameRate(plan.fps).build()"
+        errorLine2="                            ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="22"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            EditedMediaItem.Builder(media).setFrameRate(plan.fps).build()"
+        errorLine2="                                           ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="22"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            EditedMediaItem.Builder(media).setFrameRate(plan.fps).build()"
+        errorLine2="                                                                  ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="22"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="        val composition = Composition.Builder(EditedMediaItemSequence.Builder(items).build()).build()"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="24"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="        val composition = Composition.Builder(EditedMediaItemSequence.Builder(items).build()).build()"
+        errorLine2="                                      ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="24"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="        val composition = Composition.Builder(EditedMediaItemSequence.Builder(items).build()).build()"
+        errorLine2="                                                                      ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="24"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="        val composition = Composition.Builder(EditedMediaItemSequence.Builder(items).build()).build()"
+        errorLine2="                                                                                     ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="24"
+            column="86"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="        val composition = Composition.Builder(EditedMediaItemSequence.Builder(items).build()).build()"
+        errorLine2="                                                                                              ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="24"
+            column="95"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            val transformer = Transformer.Builder(context)"
+        errorLine2="                ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="26"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            val transformer = Transformer.Builder(context)"
+        errorLine2="                                          ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="26"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                .setVideoMimeType(MimeTypes.VIDEO_H264)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="27"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                .addListener(object : Transformer.Listener {"
+        errorLine2="                 ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="28"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onCompleted(composition: Composition, exportResult: ExportResult) { if (cont.isActive) cont.resume(true) }"
+        errorLine2="                                 ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="29"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onCompleted(composition: Composition, exportResult: ExportResult) { if (cont.isActive) cont.resume(true) }"
+        errorLine2="                                                          ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="29"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onCompleted(composition: Composition, exportResult: ExportResult) { if (cont.isActive) cont.resume(true) }"
+        errorLine2="                                                                                     ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="29"
+            column="86"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) { if (cont.isActive) cont.resume(false) }"
+        errorLine2="                                 ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="30"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) { if (cont.isActive) cont.resume(false) }"
+        errorLine2="                                                      ~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="30"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) { if (cont.isActive) cont.resume(false) }"
+        errorLine2="                                                                                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="30"
+            column="82"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                    override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) { if (cont.isActive) cont.resume(false) }"
+        errorLine2="                                                                                                                ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="30"
+            column="113"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="                }).build()"
+        errorLine2="                   ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="31"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            cont.invokeOnCancellation { runCatching { transformer.cancel() } }"
+        errorLine2="                                                                  ~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="32"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.media3.common.util.UnstableApi` or `@OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)`"
+        errorLine1="            runCatching { transformer.start(composition, outPath) }.onFailure { if (cont.isActive) cont.resume(false) }"
+        errorLine2="                                      ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt"
+            line="33"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="            val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlLutRenderer.kt"
+            line="114"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        runCatching { decodeOriented(Uri.parse(uri), maxPx) }.getOrNull()?.let { ImageHandle(it, it.width, it.height) }"
+        errorLine2="                                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt"
+            line="59"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        val source = withContext(io) { runCatching { decodeOriented(Uri.parse(uri), Int.MAX_VALUE) }.getOrNull() }"
+        errorLine2="                                                                    ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt"
+            line="63"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        val missing = withContext(io) { photoUris.any { u -> runCatching { context.contentResolver.openInputStream(Uri.parse(u))?.use { true } ?: false }.getOrDefault(false).not() } }"
+        errorLine2="                                                                                                                   ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt"
+            line="78"
+            column="116"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Bitmap.scale` instead?"
+        errorLine1="            Bitmap.createScaledBitmap(bmp, (bmp.width * f).toInt().coerceAtLeast(1), (bmp.height * f).toInt().coerceAtLeast(1), true).also { if (it !== bmp) bmp.recycle() }"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt"
+            line="250"
+            column="13"/>
+    </issue>
+
+</issues>

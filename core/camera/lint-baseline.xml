@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="RestrictedApi"
+        message="SurfaceRequest.isServiced can only be called from within the same library group (referenced groupId=`androidx.camera` from groupId=`CayResim.core`)"
+        errorLine1="        repeat(10) { if (req.isServiced) return; delay(50) }"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="1150"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="RestrictedApi"
+        message="SurfaceRequest.isServiced can only be called from within the same library group (referenced groupId=`androidx.camera` from groupId=`CayResim.core`)"
+        errorLine1="        repeat(10) { if (req.isServiced) return; delay(50) }"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="1150"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="RestrictedApi"
+        message="SurfaceRequest.isServiced can only be called from within the same library group (referenced groupId=`androidx.camera` from groupId=`CayResim.core`)"
+        errorLine1="        if (req.isServiced) return"
+        errorLine2="                ~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="1151"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="RestrictedApi"
+        message="SurfaceRequest.isServiced can only be called from within the same library group (referenced groupId=`androidx.camera` from groupId=`CayResim.core`)"
+        errorLine1="        if (req.isServiced) return"
+        errorLine2="                ~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="1151"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)"
+        errorLine2="                                                                                          ~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="284"
+            column="91"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)"
+        errorLine2="                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="284"
+            column="106"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val c2 = info?.let { runCatching { Camera2CameraInfo.from(it) }.getOrNull() }"
+        errorLine2="                ~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="512"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val c2 = info?.let { runCatching { Camera2CameraInfo.from(it) }.getOrNull() }"
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="512"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val c2 = info?.let { runCatching { Camera2CameraInfo.from(it) }.getOrNull() }"
+        errorLine2="                                                                 ~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="512"
+            column="66"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            fun &lt;T> ch(k: CameraCharacteristics.Key&lt;T>): T? = runCatching { c2.getCameraCharacteristic(k) }.getOrNull()"
+        errorLine2="                                                                               ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="514"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = runCatching { Camera2CameraInfo.from(info) }.getOrNull()"
+        errorLine2="            ~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="747"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = runCatching { Camera2CameraInfo.from(info) }.getOrNull()"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="747"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = runCatching { Camera2CameraInfo.from(info) }.getOrNull()"
+        errorLine2="                                                 ~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="747"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        fun &lt;T> ch(k: CameraCharacteristics.Key&lt;T>): T? = runCatching { c2?.getCameraCharacteristic(k) }.getOrNull()"
+        errorLine2="                                                                            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="748"
+            column="77"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.core.ExperimentalZeroShutterLag` or `@OptIn(markerClass = androidx.camera.core.ExperimentalZeroShutterLag.class)`"
+        errorLine1="            zsl = runCatching { info.isZslSupported }.getOrNull(),"
+        errorLine2="                                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="768"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = Camera2CameraInfo.from(info)"
+        errorLine2="            ~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="779"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = Camera2CameraInfo.from(info)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="779"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val c2 = Camera2CameraInfo.from(info)"
+        errorLine2="                                   ~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="779"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val caps = c2.getCameraCharacteristic(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="780"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val exp = if (manualSensor) c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) else null"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="782"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val iso = if (manualSensor) c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE) else null"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="783"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val focus = c2.getCameraCharacteristic(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="784"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val b = CaptureRequestOptions.Builder()"
+        errorLine2="            ~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="797"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        val b = CaptureRequestOptions.Builder()"
+        errorLine2="                                      ~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="797"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        if (oisAvailable) b.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="800"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        if (exp == null &amp;&amp; aeLocked) b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="801"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="803"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            b.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exp)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="804"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            b.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, iso)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="805"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            b.setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="808"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            b.setCaptureRequestOption(CaptureRequest.LENS_FOCUS_DISTANCE, focus)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="809"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="811"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }"
+        errorLine2="                                           ~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="811"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }"
+        errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="811"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="        runCatching { Camera2CameraControl.from(cam.cameraControl).setCaptureRequestOptions(b.build()) }"
+        errorLine2="                                                                                              ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="811"
+            column="95"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val chars = boundCamera?.cameraInfo?.let { info -> runCatching { Camera2CameraInfo.from(info) }.getOrNull() }"
+        errorLine2="                ~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="869"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val chars = boundCamera?.cameraInfo?.let { info -> runCatching { Camera2CameraInfo.from(info) }.getOrNull() }"
+        errorLine2="                                                                             ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="869"
+            column="78"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            val chars = boundCamera?.cameraInfo?.let { info -> runCatching { Camera2CameraInfo.from(info) }.getOrNull() }"
+        errorLine2="                                                                                               ~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="869"
+            column="96"/>
+    </issue>
+
+    <issue
+        id="UnsafeOptInUsageError"
+        message="This declaration is opt-in and its usage should be marked with `@androidx.camera.camera2.interop.ExperimentalCamera2Interop` or `@OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)`"
+        errorLine1="            fun &lt;T> ch(k: CameraCharacteristics.Key&lt;T>): T? = runCatching { chars?.getCameraCharacteristic(k) }.getOrNull()"
+        errorLine2="                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="870"
+            column="84"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        runCatching { context.contentResolver.delete(Uri.parse(uri), null, null) > 0 }.getOrDefault(false)"
+        errorLine2="                                                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt"
+            line="1162"
+            column="54"/>
+    </issue>
+
+</issues>
