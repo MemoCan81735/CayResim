@@ -43,6 +43,20 @@ class FakeManualCameraBoundary(
         _state.update { it.copy(raw = enabled) }; return true
     }
 
+    /** Antwort fuer [probeRaw]; Standard: gemessene Werte in der Art des S24+. */
+    var rawProbe: app.cayresim.core.boundary.RawProbeResult = app.cayresim.core.boundary.RawProbeResult.Ok(
+        app.cayresim.core.boundary.RawProbe(8, 8, 180, 240, 4080, 3060, listOf(64, 64, 64, 64), 1023,
+            app.cayresim.core.boundary.CfaLayout.GRBG, colorMatrix = true, forwardMatrix = true, lensShading = true,
+            meanAboveBlack = 3.2f, noise = 4.1f))
+    val probeCalls = mutableListOf<Triple<Int, Long, Int>>()
+
+    override suspend fun probeRaw(count: Int, exposureNanos: Long, iso: Int): app.cayresim.core.boundary.RawProbeResult {
+        probeCalls += Triple(count, exposureNanos, iso)
+        if (_caps.value?.raw != true) return app.cayresim.core.boundary.RawProbeResult.Failed(app.cayresim.core.boundary.RawProbeFailure.NOT_SUPPORTED)
+        if (camera.state.value.status != CameraStatus.RUNNING) return app.cayresim.core.boundary.RawProbeResult.Failed(app.cayresim.core.boundary.RawProbeFailure.NOT_READY)
+        return rawProbe
+    }
+
     override suspend fun focusBracket(steps: Int): BurstResult {
         if (camera.state.value.status != CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
         if (_caps.value?.canFocus != true) return BurstResult.Failed(BurstFailure.NOT_READY)

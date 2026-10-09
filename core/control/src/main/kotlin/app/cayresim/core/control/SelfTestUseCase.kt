@@ -3,12 +3,15 @@ package app.cayresim.core.control
 import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureResult
+import app.cayresim.core.boundary.ManualCameraBoundary
+import app.cayresim.core.boundary.RawProbe
+import app.cayresim.core.boundary.RawProbeResult
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.SelfTestJournalBoundary
 import app.cayresim.core.pure.Clock
 import javax.inject.Inject
 
-enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
+enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, CLEANUP }
 
 /** Ein Ergebnis des Selbsttests. [mode] ist bei MODE_CAPTURE gesetzt. */
 data class SelfTestItem(
@@ -18,6 +21,7 @@ data class SelfTestItem(
     val mode: PhotoMode? = null,
     val detail: String = "",
     val device: app.cayresim.core.boundary.DeviceReport? = null,
+    val rawProbe: RawProbe? = null,
 )
 
 data class SelfTestReport(val items: List<SelfTestItem>) {
@@ -39,6 +43,8 @@ class SelfTestUseCase @Inject constructor(
     private val camera: CameraBoundary,
     private val clock: Clock,
     private val journal: SelfTestJournalBoundary,
+    /** Fuer die RAW-Messung (Schritt 0 des RAW-Wegs); ohne sie entfaellt der Schritt. */
+    private val manual: ManualCameraBoundary? = null,
 ) {
     suspend operator fun invoke(): SelfTestReport {
         val items = mutableListOf<SelfTestItem>()
@@ -94,6 +100,7 @@ class SelfTestUseCase @Inject constructor(
                 r is CaptureResult.Failed -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, r.reason.name)
             }
         }
+        rawSeries(skip)?.let { items += it }
         journal.step(STEP_CLEANUP)
         camera.selectMode(previous)
 
@@ -103,7 +110,35 @@ class SelfTestUseCase @Inject constructor(
         return SelfTestReport(items)
     }
 
+    /** RAW-Serie nur in den Speicher, im normalen Modus; misst Tempo und Kalibrierung fuer den RAW-Weg. */
+    private suspend fun rawSeries(skip: String?): SelfTestItem? {
+        val m = manual ?: return null
+        if (m.manualCapabilities.value?.raw != true) return null
+        if (skip == STEP_RAW) return SelfTestItem(SelfTestCheck.RAW_SERIES, false, 0, detail = "uebersprungen, der letzte Lauf brach hier ab")
+        journal.step(STEP_RAW)
+        camera.selectMode(PhotoMode.NORMAL)
+        val t = clock.nowMillis()
+        val r = m.probeRaw(RAW_FRAMES, RAW_EXPOSURE_NS, RAW_ISO)
+        val ms = clock.nowMillis() - t
+        return when (r) {
+            is RawProbeResult.Failed -> SelfTestItem(SelfTestCheck.RAW_SERIES, false, ms, detail = r.reason.name)
+            is RawProbeResult.Ok -> {
+                val p = r.probe
+                val ok = p.frames == p.requested && p.avgFrameMs <= MAX_RAW_FRAME_MS
+                SelfTestItem(SelfTestCheck.RAW_SERIES, ok, ms, rawProbe = p,
+                    detail = if (ok) "" else "langsamer als ${MAX_RAW_FRAME_MS} ms je Bild")
+            }
+        }
+    }
+
     internal companion object {
+        const val STEP_RAW = "RAW-Serie"
+        /** Messung wie fuer die Nacht: 8 Bilder bei 1/10 s und ISO 3200. */
+        const val RAW_FRAMES = 8
+        const val RAW_EXPOSURE_NS = 100_000_000L
+        const val RAW_ISO = 3200
+        /** Langsamer als 1 s je RAW-Bild taugt nicht fuer eine Nachtserie. */
+        const val MAX_RAW_FRAME_MS = 1_000L
         const val STEP_START = "Kamera starten"
         const val STEP_CAPTURE = "Aufnahme "
         const val STEP_CLEANUP = "Aufraeumen"

@@ -5,6 +5,10 @@ import app.cayresim.core.boundary.CaptureFailure
 import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
+import app.cayresim.core.boundary.fake.FakeManualCameraBoundary
+import app.cayresim.core.boundary.RawProbeFailure
+import app.cayresim.core.boundary.RawProbeResult
+import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
 import app.cayresim.core.boundary.fake.FakeSelfTestJournalBoundary
 import kotlin.test.assertFailsWith
 import app.cayresim.core.pure.Clock
@@ -150,5 +154,49 @@ class SelfTestUseCaseTest {
     @Test fun `Randfall ohne Geraetewerte keine leere Zeile`() = runTest {
         val report = SelfTestUseCase(FakeCameraBoundary(emptySet()), StepClock(), FakeSelfTestJournalBoundary())()
         assertTrue(report.items.none { it.check == SelfTestCheck.DEVICE })
+    }
+
+    // ---------- RAW-Serie (Schritt 0 des RAW-Wegs) ----------
+
+    @Test fun `Guter Fall RAW-Serie wird gemessen und typisiert gemeldet`() = runTest {
+        val cam = FakeCameraBoundary(setOf(PhotoMode.NIGHT)); cam.start(); cam.selectMode(PhotoMode.NIGHT)
+        val manual = FakeManualCameraBoundary(cam)
+        val journal = FakeSelfTestJournalBoundary()
+        val report = SelfTestUseCase(cam, StepClock(), journal, manual)()
+        val item = report.items.single { it.check == SelfTestCheck.RAW_SERIES }
+        assertTrue(item.passed, item.toString())
+        assertEquals((manual.rawProbe as RawProbeResult.Ok).probe, item.rawProbe)
+        assertEquals(listOf(Triple(8, 100_000_000L, 3200)), manual.probeCalls)
+        assertTrue("RAW-Serie" in journal.steps, "Schritt wird vorher protokolliert (Neustart-Schutz)")
+        assertEquals(PhotoMode.NIGHT, cam.state.value.requestedMode, "vorheriger Modus wiederhergestellt")
+    }
+
+    @Test fun `Fehlerfall RAW zu langsam oder gescheitert ist rot`() = runTest {
+        val cam = FakeCameraBoundary(emptySet())
+        val slow = FakeManualCameraBoundary(cam).apply {
+            rawProbe = RawProbeResult.Ok((rawProbe as RawProbeResult.Ok).probe.copy(avgFrameMs = 1_500))
+        }
+        assertFalse(SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary(), slow)().items.single { it.check == SelfTestCheck.RAW_SERIES }.passed)
+        val failed = FakeManualCameraBoundary(cam).apply { rawProbe = RawProbeResult.Failed(RawProbeFailure.TIMEOUT) }
+        val item = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary(), failed)().items.single { it.check == SelfTestCheck.RAW_SERIES }
+        assertFalse(item.passed); assertEquals("TIMEOUT", item.detail)
+    }
+
+    @Test fun `Randfall ohne RAW entfaellt der Schritt`() = runTest {
+        val cam = FakeCameraBoundary(emptySet())
+        val noRaw = FakeManualCameraBoundary(cam, ManualCapabilitiesSnapshot(100_000L..2_000_000_000L, 50..3200, 10f, raw = false))
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary(), noRaw)()
+        assertTrue(report.items.none { it.check == SelfTestCheck.RAW_SERIES }); assertTrue(noRaw.probeCalls.isEmpty())
+    }
+
+    @Test fun `Fehlerfall Neustart bei der RAW-Serie wird einmal uebersprungen`() = runTest {
+        val cam = FakeCameraBoundary(emptySet()); val manual = FakeManualCameraBoundary(cam)
+        val journal = FakeSelfTestJournalBoundary().apply { crashAtStep = "RAW-Serie" }
+        runCatching { SelfTestUseCase(cam, StepClock(), journal, manual)() }
+        journal.crashAtStep = null
+        val second = SelfTestUseCase(cam, StepClock(), journal, manual)()
+        val item = second.items.single { it.check == SelfTestCheck.RAW_SERIES }
+        assertFalse(item.passed); assertTrue(manual.probeCalls.isEmpty(), "nicht sofort wiederholen")
+        assertTrue(SelfTestUseCase(cam, StepClock(), journal, manual)().items.single { it.check == SelfTestCheck.RAW_SERIES }.passed)
     }
 }

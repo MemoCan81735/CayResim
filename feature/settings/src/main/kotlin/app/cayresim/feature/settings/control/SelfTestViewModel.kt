@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class CheckKind { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, CLEANUP }
+enum class CheckKind { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, CLEANUP }
 
 @Immutable
 data class CheckRow(
@@ -24,6 +24,31 @@ data class CheckRow(
     val durationMillis: Long,
     val detail: String,
     val device: DeviceInfoUi? = null,
+    val raw: RawProbeUi? = null,
+)
+
+/** Spiegel von RawProbe fuer die UI (R1); nur Zahlen und Schluessel. */
+@Immutable
+data class RawProbeUi(
+    val frames: Int,
+    val requested: Int,
+    val avgFrameMs: Long,
+    val maxFrameMs: Long,
+    val width: Int,
+    val height: Int,
+    val blackLevel: List<Int>,
+    val whiteLevel: Int?,
+    val cfa: String,
+    val colorMatrix: Boolean,
+    val forwardMatrix: Boolean,
+    val lensShading: Boolean,
+    val meanAboveBlack: Float,
+    val noise: Float?,
+)
+
+internal fun app.cayresim.core.boundary.RawProbe.toUi() = RawProbeUi(
+    frames, requested, avgFrameMs, maxFrameMs, width, height, blackLevel, whiteLevel, cfa.name,
+    colorMatrix, forwardMatrix, lensShading, meanAboveBlack, noise,
 )
 
 /** Spiegel von DeviceReport fuer die UI (R1: die UI kennt keine Boundary-Typen); nur Zahlen, den Text baut die UI. */
@@ -85,7 +110,7 @@ class SelfTestViewModel @Inject constructor(private val selfTest: SelfTestUseCas
                     running = false,
                     finished = true,
                     rows = report?.items?.map { i ->
-                        CheckRow(CheckKind.valueOf(i.check.name), i.mode?.name, i.passed, i.durationMillis, i.detail, i.device?.toUi())
+                        CheckRow(CheckKind.valueOf(i.check.name), i.mode?.name, i.passed, i.durationMillis, i.detail, i.device?.toUi(), i.rawProbe?.toUi())
                     } ?: listOf(CheckRow(CheckKind.CAMERA_START, null, false, 0, "Abbruch")),
                 )
             }

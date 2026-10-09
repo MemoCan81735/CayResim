@@ -78,6 +78,23 @@ class CameraXAdapterContractTest {
         assertEquals(0, adapter.pipelineUserCount, "Zaehler blieb nach Abbruch stehen")
     }
 
+    /**
+     * RAW-Messung (Schritt 0 RAW-Weg): Ergebnis darf je nach Geraet ausfallen, aber danach ist alles wie vorher:
+     * Belichtung automatisch, Kamera laeuft, ein normales Foto gelingt.
+     */
+    @Test fun rawMessungStelltBindungUndBelichtungWiederHer() = run {
+        adapter.start()
+        val r = adapter.probeRaw(3, 33_000_000, 400)
+        android.util.Log.i("CayResimTest", "RAW-Messung Emulator: $r")
+        if (r is app.cayresim.core.boundary.RawProbeResult.Ok) {
+            assertEquals(3, r.probe.frames); assertTrue(r.probe.width > 0 && r.probe.height > 0, r.toString())
+        }
+        assertEquals(null, adapter.manualState.value.exposureNanos, "Belichtung nicht zurueck")
+        assertEquals(CameraStatus.RUNNING, adapter.state.value.status)
+        val c = assertIs<CaptureResult.Saved>(adapter.capture(), "Foto nach der RAW-Messung")
+        adapter.delete(c.uri)
+    }
+
     /** Ultra HDR im normalen Modus, wenn die Kamera es kann; sonst normales JPEG ohne Ausfall. */
     @Test fun ultraHdrNurWennUnterstuetzt() = run {
         adapter.start()

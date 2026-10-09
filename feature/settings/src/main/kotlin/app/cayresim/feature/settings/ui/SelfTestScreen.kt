@@ -28,6 +28,7 @@ import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.CheckKind
 import app.cayresim.feature.settings.control.CheckRow
 import app.cayresim.feature.settings.control.DeviceInfoUi
+import app.cayresim.feature.settings.control.RawProbeUi
 import app.cayresim.feature.settings.control.SelfTestUiState
 import app.cayresim.feature.settings.control.SelfTestViewModel
 
@@ -73,6 +74,7 @@ private fun CheckLine(row: CheckRow, modifier: Modifier) {
             val extra = listOfNotNull(row.detail.ifBlank { null }, if (row.durationMillis > 0) "${row.durationMillis} ms" else null)
             if (extra.isNotEmpty()) Text(extra.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
             row.device?.let { DeviceLines(it) }
+            row.raw?.let { RawLines(it) }
         }
     }
 }
@@ -87,6 +89,7 @@ private fun label(row: CheckRow): String = when (row.kind) {
     CheckKind.LOW_LIGHT_BOOST -> stringResource(R.string.check_low_light_boost)
     CheckKind.ULTRA_HDR -> stringResource(R.string.check_ultra_hdr)
     CheckKind.RAW -> stringResource(R.string.check_raw)
+    CheckKind.RAW_SERIES -> stringResource(R.string.check_raw_series)
     CheckKind.CLEANUP -> stringResource(R.string.check_cleanup)
 }
 
@@ -113,6 +116,22 @@ private fun DeviceLines(d: DeviceInfoUi) {
         d.physicalCameras?.let { add(stringResource(R.string.device_cameras, it)) }
         if (d.chip.isNotBlank()) add(stringResource(R.string.device_chip, d.chip))
         if (d.system.isNotBlank()) add(stringResource(R.string.device_system, d.system))
+    }
+    lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+}
+
+/** Messwerte der RAW-Serie, z. B. "Bilder: 8 von 8, je 180 ms (hoechstens 240 ms)". */
+@Composable
+private fun RawLines(r: RawProbeUi) {
+    val yes = stringResource(R.string.device_yes); val no = stringResource(R.string.device_no)
+    fun yn(b: Boolean) = if (b) yes else no
+    fun dec(v: Float) = String.format(java.util.Locale.GERMANY, "%.1f", v)
+    val lines = buildList {
+        add(stringResource(R.string.raw_frames, r.frames, r.requested, r.avgFrameMs, r.maxFrameMs))
+        add(stringResource(R.string.raw_size, r.width, r.height))
+        add(stringResource(R.string.raw_levels, r.blackLevel.joinToString("/"), r.whiteLevel?.toString() ?: "?", r.cfa))
+        add(stringResource(R.string.raw_calibration, yn(r.colorMatrix), yn(r.forwardMatrix), yn(r.lensShading)))
+        add(stringResource(R.string.raw_signal, dec(r.meanAboveBlack), r.noise?.let { dec(it) } ?: "?"))
     }
     lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
 }

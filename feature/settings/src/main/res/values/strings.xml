@@ -36,6 +36,12 @@
     <string name="check_low_light_boost">Low Light Boost</string>
     <string name="check_ultra_hdr">Ultra HDR</string>
     <string name="check_raw">RAW</string>
+    <string name="check_raw_series">RAW-Serie (1/10 s, ISO 3200)</string>
+    <string name="raw_frames">Bilder: %1$d von %2$d, je %3$d ms (höchstens %4$d ms)</string>
+    <string name="raw_size">Größe: %1$d x %2$d</string>
+    <string name="raw_levels">Schwarz: %1$s, Weiß: %2$s, Farbmuster: %3$s</string>
+    <string name="raw_calibration">Farbmatrix: %1$s, Vorwärtsmatrix: %2$s, Vignettierung: %3$s</string>
+    <string name="raw_signal">Signal über Schwarz: %1$s, Rauschen: %2$s Stufen</string>
     <string name="check_cleanup">Testfotos gelöscht</string>
     <string name="device_yes">ja</string>
     <string name="device_no">nein</string>

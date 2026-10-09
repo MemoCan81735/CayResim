@@ -100,6 +100,18 @@ class SelfTestTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/selftest_device.png")
     }
 
+    @Test fun bild_raw_serie() {
+        val cam = FakeCameraBoundary()
+        val vm = SelfTestViewModel(SelfTestUseCase(cam, clock, FakeSelfTestJournalBoundary(), app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam)))
+        vm.onStart()
+        val row = vm.uiState.value.rows.single { it.kind == CheckKind.RAW_SERIES }
+        assertEquals(8, row.raw!!.frames); assertEquals("GRBG", row.raw!!.cfa)
+        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(vm.uiState.value.copy(rows = listOf(row)), {}, {}) } }
+        compose.onNodeWithText("Bilder: 8 von 8, je 180 ms (höchstens 240 ms)", substring = true).assertExists()
+        compose.onNodeWithText("Schwarz: 64/64/64/64, Weiß: 1023, Farbmuster: GRBG", substring = true).assertExists()
+        compose.onNodeWithText("Signal über Schwarz: 3,2, Rauschen: 4,1 Stufen", substring = true).assertExists()
+    }
+
     @Test fun leerer_zustand_ist_nicht_gruen() = assertFalse(SelfTestUiState(finished = true).allPassed)
 
     private val rows = listOf(

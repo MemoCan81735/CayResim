@@ -10,6 +10,10 @@ import androidx.camera.core.Camera
 import app.cayresim.core.boundary.ManualCameraBoundary
 import app.cayresim.core.boundary.ManualCapabilitiesSnapshot
 import app.cayresim.core.boundary.ManualStateSnapshot
+import app.cayresim.core.boundary.CfaLayout
+import app.cayresim.core.boundary.RawProbe
+import app.cayresim.core.boundary.RawProbeFailure
+import app.cayresim.core.boundary.RawProbeResult
 import app.cayresim.core.entity.ManualLimits
 import app.cayresim.core.entity.ManualSettingsEntity
 import android.os.PowerManager
@@ -275,15 +279,17 @@ class CameraXCameraAdapter @Inject constructor(
         val preview = Preview.Builder().apply {
             if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)
         }.build()
-        val rawWanted = _manualState.value.raw && pipelineUsers == 0 && key == ModeKey.NORMAL
+        val probe = rawProbeActive && pipelineUsers == 0 && ext == ExtensionMode.NONE
+        val rawWanted = !probe && _manualState.value.raw && pipelineUsers == 0 && key == ModeKey.NORMAL
         // Ultra HDR (JPEG mit Gain Map): hellere Lichter auf HDR-Bildschirmen. Nur im normalen Modus ohne
         // eigene Pipeline; Extensions behalten ihr JPEG, damit kein Modus deswegen ausfaellt.
-        val ultraHdr = allowUltraHdr && !rawWanted && pipelineUsers == 0 && ext == ExtensionMode.NONE && _caps.value?.ultraHdr == true
+        val ultraHdr = allowUltraHdr && !probe && !rawWanted && pipelineUsers == 0 && ext == ExtensionMode.NONE && _caps.value?.ultraHdr == true
         ultraTried = ultraHdr
         val capture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .apply {
-                if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG)
+                if (probe) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW)
+                else if (rawWanted) setOutputFormat(ImageCapture.OUTPUT_FORMAT_RAW_JPEG)
                 else if (ultraHdr) setOutputFormat(ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR)
             }
             .build()
@@ -694,6 +700,131 @@ class CameraXCameraAdapter @Inject constructor(
         true
     }
 
+    // ---------- RAW-Messung (Schritt 0 des RAW-Wegs) ----------
+
+    /** Solange gesetzt, bindet tryBind eine reine RAW-Aufnahme (nur im normalen Modus ohne eigene Pipeline). */
+    @Volatile private var rawProbeActive = false
+
+    override suspend fun probeRaw(count: Int, exposureNanos: Long, iso: Int): RawProbeResult {
+        if (_manualCaps.value?.raw != true) return RawProbeResult.Failed(RawProbeFailure.NOT_SUPPORTED)
+        if (_state.value.status != CameraStatus.RUNNING || count <= 0) return RawProbeResult.Failed(RawProbeFailure.NOT_READY)
+        val before = _manualState.value
+        var switched = false
+        try {
+            withContext(NonCancellable + dispatcher) {
+                mutex.withLock {
+                    rawProbeActive = true; switched = true
+                    val p = provider; val em = extensions
+                    if (owner.isActive && p != null && em != null) bindCurrent(p, em)
+                }
+            }
+            val ic = imageCapture ?: return RawProbeResult.Failed(RawProbeFailure.CAMERA)
+            if (ic.outputFormat != ImageCapture.OUTPUT_FORMAT_RAW) return RawProbeResult.Failed(RawProbeFailure.NOT_SUPPORTED)
+            val chars = boundCamera?.cameraInfo?.let { info -> runCatching { Camera2CameraInfo.from(info) }.getOrNull() }
+            fun <T> ch(k: CameraCharacteristics.Key<T>): T? = runCatching { chars?.getCameraCharacteristic(k) }.getOrNull()
+            val pattern = ch(CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN)
+            val black = IntArray(4) { i -> pattern?.getOffsetForIndex(i % 2, i / 2) ?: 0 }
+            setExposure(exposureNanos, iso)
+            delay(AE_SETTLE_MS)
+            val times = mutableListOf<Long>()
+            var last: RawSample? = null
+            var noise: Float? = null
+            repeat(count) {
+                val t0 = SystemClock.elapsedRealtime()
+                // R24: Kamerafehler werden zum Ergebnistyp; Abbruch bleibt Abbruch
+                val s = try {
+                    withTimeoutOrNull(RAW_FRAME_TIMEOUT_MS) { takeRawSample(ic, black) } ?: return RawProbeResult.Failed(RawProbeFailure.TIMEOUT)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return RawProbeResult.Failed(RawProbeFailure.CAMERA)
+                }
+                times += SystemClock.elapsedRealtime() - t0
+                last?.let { prev -> noise = s.noiseAgainst(prev) }
+                last = s
+            }
+            val s = last!!
+            return RawProbeResult.Ok(RawProbe(
+                frames = times.size, requested = count,
+                avgFrameMs = times.average().toLong(), maxFrameMs = times.max(),
+                width = s.width, height = s.height,
+                blackLevel = black.toList(),
+                whiteLevel = ch(CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL),
+                cfa = when (ch(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT)) {
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_RGGB -> CfaLayout.RGGB
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_GRBG -> CfaLayout.GRBG
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_GBRG -> CfaLayout.GBRG
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_BGGR -> CfaLayout.BGGR
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_RGB -> CfaLayout.RGB
+                    CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_MONO -> CfaLayout.MONO
+                    else -> CfaLayout.UNKNOWN
+                },
+                colorMatrix = ch(CameraCharacteristics.SENSOR_COLOR_TRANSFORM1) != null,
+                forwardMatrix = ch(CameraCharacteristics.SENSOR_FORWARD_MATRIX1) != null,
+                lensShading = ch(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_LENS_SHADING_MAP_MODES)
+                    ?.contains(CameraCharacteristics.STATISTICS_LENS_SHADING_MAP_MODE_ON) == true,
+                meanAboveBlack = s.mean, noise = noise,
+            ))
+        } finally {
+            if (switched) withContext(NonCancellable + dispatcher) {
+                mutex.withLock {
+                    rawProbeActive = false
+                    val p = provider; val em = extensions
+                    if (owner.isActive && p != null && em != null) bindCurrent(p, em)
+                }
+                setExposure(before.exposureNanos, before.iso)
+            }
+        }
+    }
+
+    /** Stichprobe eines RAW-Bildes (jedes 7. Pixel und jede 7. Zeile, damit alle vier Farbpositionen vorkommen). */
+    private class RawSample(val width: Int, val height: Int, val values: IntArray, val mean: Float) {
+        fun noiseAgainst(prev: RawSample): Float? {
+            if (prev.values.size != values.size || values.isEmpty()) return null
+            var s = 0.0; var q = 0.0
+            for (i in values.indices) { val d = (values[i] - prev.values[i]).toDouble(); s += d; q += d * d }
+            val n = values.size; val m = s / n
+            return (kotlin.math.sqrt((q / n - m * m).coerceAtLeast(0.0)) / kotlin.math.sqrt(2.0)).toFloat()
+        }
+    }
+
+    private suspend fun takeRawSample(ic: ImageCapture, black: IntArray): RawSample =
+        kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+            ic.takePicture(rawExecutor, object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    // R19: das Bild gehoert nur diesem Rueckruf und wird sofort geschlossen
+                    val r = runCatching { image.use { sampleRaw(it, black) } }
+                    if (cont.isActive) r.fold({ cont.resumeWith(Result.success(it)) }, { cont.resumeWith(Result.failure(it)) })
+                }
+                override fun onError(exception: ImageCaptureException) {
+                    if (cont.isActive) cont.resumeWith(Result.failure(exception))
+                }
+            })
+        }
+
+    private fun sampleRaw(image: ImageProxy, black: IntArray): RawSample {
+        check(image.format == android.graphics.ImageFormat.RAW_SENSOR) { "kein RAW: ${image.format}" }
+        val plane = image.planes[0]
+        val buf = plane.buffer.duplicate().order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        val rs = plane.rowStride; val ps = plane.pixelStride
+        val w = image.width; val h = image.height
+        val values = IntArray(((h + 6) / 7) * ((w + 6) / 7))
+        var n = 0; var sum = 0L
+        var y = 0
+        while (y < h) {
+            var x = 0
+            while (x < w) {
+                val v = (buf.getShort(y * rs + x * ps).toInt() and 0xFFFF) - black[(y and 1) * 2 + (x and 1)]
+                values[n++] = v; sum += v
+                x += 7
+            }
+            y += 7
+        }
+        return RawSample(w, h, values.copyOf(n), if (n == 0) 0f else sum.toFloat() / n)
+    }
+
+    private val rawExecutor = Executors.newSingleThreadExecutor()
+
     override suspend fun focusBracket(steps: Int): BurstResult {
         if (_state.value.status != CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
         val e = manualEntity ?: return BurstResult.Failed(BurstFailure.NOT_READY)
@@ -752,6 +883,8 @@ class CameraXCameraAdapter @Inject constructor(
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
         const val CAPTURE_TIMEOUT_MS = 8_000L
+        /** Obergrenze je RAW-Bild in der Messung; das Tempo selbst bewertet der Selbsttest. */
+        const val RAW_FRAME_TIMEOUT_MS = 5_000L
         const val FOCUS_TIMEOUT_MS = 3_000L
         const val AE_SETTLE_MS = 300L
         const val AE_CONVERGE_TIMEOUT_MS = 1_500L
