@@ -285,6 +285,43 @@ class QualityLabTest {
         assertTrue(noise <= 0.4 * singleNoise, "RAW: Rauschen $noise, Einzelbild $singleNoise")
     }
 
+    // ---------- Nachttest S24+ am 9. Oktober (Auto bei Regen): Randstreifen und Blockkanten ----------
+
+    @Test fun `Testlabor verwackelte Serie behaelt am Rand so viel Struktur wie in der Mitte`() {
+        // feines Muster ueber das ganze Bild, damit "Struktur" ueberall messbar ist; Wackeln bis 10 Pixel
+        val scene = DoubleArray(w * h) { p -> val x = p % w; val y = p / w; if (((x / 3) + (y / 3)) % 2 == 0) 0.0008 else 0.0024 }
+        val lab = Lab(21); val shifts = Random(22)
+        val merge = NightMerge(w, h)
+        repeat(36) { k -> merge.add(capture(scene, if (k == 0) 0 else shifts.nextInt(-10, 11), if (k == 0) 0 else shifts.nextInt(-10, 11), lab)) }
+        val rgb = merge.finish().rgb
+        fun texture(r: Rect) = ImageQuality.noise(rgb, w, r) / ImageQuality.mean(rgb, w, r)
+        val middle = texture(Rect(70, 50, 120, 94)); val right = texture(Rect(w - 12, 30, w - 1, 114)); val top = texture(Rect(40, 0, 150, 10))
+        File("build/quality-report-edge.md").apply { parentFile.mkdirs() }.writeText(
+            "\n## Rand bei Wackeln\n\nStruktur Mitte ${"%.3f".format(middle)}, rechter Rand ${"%.3f".format(right)}, oberer Rand ${"%.3f".format(top)}; " +
+            "Bilder je Pixel Mitte ${"%.1f".format(merge.weightIn(70, 50, 120, 94))}, Rand ${"%.1f".format(merge.weightIn(w - 12, 30, w - 1, 114))}\n")
+        File("build/quality-report.md").takeIf { it.exists() && "## Rand bei Wackeln" !in it.readText() }?.appendText(File("build/quality-report-edge.md").readText())
+        assertTrue(right >= 0.8 * middle, "rechter Rand verschmiert: $right gegen Mitte $middle")
+        assertTrue(top >= 0.8 * middle, "oberer Rand verschmiert: $top gegen Mitte $middle")
+        assertTrue(merge.weightIn(w - 12, 30, w - 1, 114) < merge.weightIn(70, 50, 120, 94), "Rand muss aus weniger Bildern bestehen als die Mitte")
+    }
+
+    @Test fun `Testlabor bewegtes Objekt auf einer Kachelgrenze hinterlaesst weder Doppelbild noch Blockkante`() {
+        val lab = Lab(31)
+        val clean = truth(0.0006)
+        // Passant laeuft genau ueber die Kachelgrenzen bei x = 64, 80, 96 (Kachel 16)
+        val frames = List(36) { k -> capture(if (k in 6..20) truth(0.0006, 50 + (k - 6) * 4) else clean, 0, 0, lab) }
+        val rgb = core(frames)
+        val reference = core(Lab(31).let { l -> List(36) { capture(clean, 0, 0, l) } })
+        val path = Rect(50, 72, 110, 98)
+        val ghost = ImageQuality.meanAbsDiff(rgb, reference, w, path)
+        // Blockkante: Sprung der Helligkeit zwischen den Spalten links und rechts einer Kachelgrenze, gemittelt
+        fun seam(x: Int) = kotlin.math.abs(ImageQuality.mean(rgb, w, Rect(x - 2, 72, x, 98)) - ImageQuality.mean(rgb, w, Rect(x, 72, x + 2, 98)))
+        val seams = listOf(64, 80, 96).map { seam(it) }
+        File("build/quality-report-edge.md").appendText("Passant auf Kachelgrenzen: Geist ${"%.2f".format(ghost)} Stufen, Kanten ${seams.joinToString { "%.2f".format(it) }}\n")
+        assertTrue(ghost < 3.0, "Doppelbild: $ghost Stufen")
+        assertTrue(seams.all { it < 2.0 }, "Blockkante an Kachelgrenze: $seams")
+    }
+
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {
         for ((level, count) in listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36)) {
             val s = scenario("x", level, shake = 10, passer = false, count = count)
@@ -306,6 +343,7 @@ class QualityLabTest {
         File("build/quality-report-floor.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         File("build/quality-report-highlight.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         File("build/quality-report-raw.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
+        File("build/quality-report-edge.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         f.writeText(sb.toString())
         println(sb)
     }

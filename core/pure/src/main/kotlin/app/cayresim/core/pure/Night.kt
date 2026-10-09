@@ -60,15 +60,20 @@ object NightPlan {
  * Robuste, streamende Zusammenfuehrung: das erste Bild ist die Referenz, jedes weitere wird global
  * verschoben (Suche auf verkleinerter Helligkeit) und kachelweise gewichtet. Kacheln, die deutlich
  * mehr von der Referenz abweichen als ueblich (Bewegung), zaehlen wenig; verwackelte Bilder werden verworfen.
+ *
+ * Gewichte je Pixel (Nachttest S24+ am 9. Oktober, Auto bei Regen): Die Kachelgewichte werden bilinear zwischen
+ * den Kachelmitten ueberblendet, damit keine Blockkanten entstehen (Befund M9), und Pixel, die ein verschobenes
+ * Bild nie gesehen hat, zaehlen fuer dieses Bild nicht (vorher: Streifen durch wiederholte Randpixel).
  */
-class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
+class NightMerge(val width: Int, val height: Int, private val tile: Int = 16) {
     init { require(width >= 32 && height >= 32 && tile >= 8) { "Bild zu klein" } }
 
     private val pixels = width * height
     private val sum = FloatArray(pixels * 3)
     private val tilesX = (width + tile - 1) / tile
     private val tilesY = (height + tile - 1) / tile
-    private val weight = FloatArray(tilesX * tilesY)
+    /** Summe der Gewichte je Pixel. */
+    private val weight = FloatArray(pixels)
     private var refLuma: ByteArray? = null
     private var refSmall: ByteArray? = null
     private var refSharpness = 0.0
@@ -131,12 +136,15 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         // Sehr verrauschte Bilder (RAW im Dunkeln): eine Verschiebung nur annehmen, wenn sie klar besser passt als keine
         val (dx, dy) = if ((bx != 0 || by != 0) && alignError(rl, frame, bx, by) > SHIFT_GAIN * alignError(rl, frame, 0, 0)) 0 to 0 else bx to by
         // Abweichung je Kachel nach dem Ausrichten
-        val diff = FloatArray(weight.size)
-        val count = IntArray(weight.size)
+        val tiles = tilesX * tilesY
+        val diff = FloatArray(tiles)
+        val count = IntArray(tiles)
         for (y in 0 until height step 2) {
-            val sy = (y + dy).coerceIn(0, height - 1)
+            val sy = y + dy
+            if (sy < 0 || sy >= height) continue
             for (x in 0 until width step 2) {
-                val sx = (x + dx).coerceIn(0, width - 1)
+                val sx = x + dx
+                if (sx < 0 || sx >= width) continue
                 val s = (sy * width + sx) * 3
                 val l = lumaAt(frame, s)
                 val t = (y / tile) * tilesX + x / tile
@@ -145,17 +153,24 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         }
         for (t in diff.indices) diff[t] = if (count[t] == 0) 0f else diff[t] / count[t]
         val typical = median(diff).coerceAtLeast(0.5f)
-        val w = FloatArray(weight.size) { t ->
+        val w = FloatArray(tiles) { t ->
             val d = diff[t]
             if (d <= ROBUST * typical) 1f else (ROBUST * typical / d).let { it * it }
         }
         for (y in 0 until height) {
-            val sy = (y + dy).coerceIn(0, height - 1)
-            val rowT = (y / tile) * tilesX
+            val sy = y + dy
+            if (sy < 0 || sy >= height) continue // vom Bild nie gesehen: zaehlt nicht
+            val fy = ((y + 0.5f) / tile - 0.5f).coerceIn(0f, (tilesY - 1).toFloat())
+            val ty = fy.toInt().coerceAtMost(tilesY - 1); val ty1 = minOf(ty + 1, tilesY - 1); val ay = fy - ty
             for (x in 0 until width) {
-                val sx = (x + dx).coerceIn(0, width - 1)
-                val wt = w[rowT + x / tile]
-                val s = (sy * width + sx) * 3; val d = (y * width + x) * 3
+                val sx = x + dx
+                if (sx < 0 || sx >= width) continue
+                val fx = ((x + 0.5f) / tile - 0.5f).coerceIn(0f, (tilesX - 1).toFloat())
+                val tx = fx.toInt().coerceAtMost(tilesX - 1); val tx1 = minOf(tx + 1, tilesX - 1); val ax = fx - tx
+                // bilinear zwischen den vier naechsten Kachelmitten
+                val wt = (w[ty * tilesX + tx] * (1 - ax) + w[ty * tilesX + tx1] * ax) * (1 - ay) +
+                    (w[ty1 * tilesX + tx] * (1 - ax) + w[ty1 * tilesX + tx1] * ax) * ay
+                val s = (sy * width + sx) * 3; val p = y * width + x; val d = p * 3
                 if (linear != null) {
                     sum[d] += wt * linear[s]; sum[d + 1] += wt * linear[s + 1]; sum[d + 2] += wt * linear[s + 2]
                 } else {
@@ -163,9 +178,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
                     sum[d + 1] += wt * LIN[frame[s + 1].toInt() and 0xFF]
                     sum[d + 2] += wt * LIN[frame[s + 2].toInt() and 0xFF]
                 }
+                weight[p] += wt
             }
         }
-        for (t in weight.indices) weight[t] += w[t]
         used++
         return true
     }
@@ -204,8 +219,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         check(used > 0) { "Kein Bild" }
         val mean = FloatArray(sum.size)
         for (p in 0 until pixels) {
-            val t = ((p / width) / tile) * tilesX + (p % width) / tile
-            val inv = 1f / weight[t]
+            val inv = 1f / weight[p]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
         // RAW: Rauschen ist nicht abgeschnitten, einzelne Bilder sagen nichts; der Boden wird am Mittel gemessen
@@ -218,8 +232,15 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             if (linearInput) NightTone.FLOOR_BLACK_RAW else NightTone.FLOOR_BLACK)
     }
 
-    /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */
+    /** Mittlere Zahl der Bilder, die je Pixel wirklich beigetragen haben. */
     fun effectiveFrames(): Float = weight.average().toFloat()
+
+    /** Mittleres Gewicht in einem Bereich (fuer das Testlabor: Rand gegen Mitte). */
+    fun weightIn(x0: Int, y0: Int, x1: Int, y1: Int): Float {
+        var s = 0.0; var n = 0
+        for (y in y0 until y1) for (x in x0 until x1) { s += weight[y * width + x]; n++ }
+        return if (n == 0) 0f else (s / n).toFloat()
+    }
 
     private fun downscale(f: ByteArray): ByteArray {
         val out = ByteArray(sw * sh * 3)
