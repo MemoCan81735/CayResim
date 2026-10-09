@@ -19,3 +19,4 @@ Regel ihn heute verhindert.
 | 9.10. | Kanten bei starkem Rauschen weich (3,6 px) | Entrauschen zu stark; Test verglich nur zwei Verfahren | eigene Prüfung (S-001) | Laborszene starkes Rauschen mit fester Grenze |
 | 9.10. | geöffnete Kamera konnte beim Abbruch verloren gehen | zwei Zeitblöcke ineinander, Wert fiel beim Abbruch weg | Zweitprüfung (S-001) | ein Zeitblock, `resume` mit Schließen beim Abbruch |
 | 9.10. | Laborbericht ohne Werte, wenn die Farbszene rot ist | Bericht erst nach den Prüfungen geschrieben | Zweitprüfung (S-001) | Bericht im `finally`, alte Teile werden gelöscht |
+| 9.10. | Kantenmessung bei starkem Rauschen unbrauchbar (bis 3 px für ein scharfes Bild) | erste Schnittpunkte im Profil, Ausreißer | CI rot, dann Python über 12 Rauschmuster | angepasste Kante, `ImageQualityTest` prüft die Messung selbst |
