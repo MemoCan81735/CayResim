@@ -112,6 +112,16 @@ class NightMergeTest {
         assertTrue(abs(ghost - clean) < 25, "Geist: $ghost statt etwa $clean")
     }
 
+    @Test fun `Randfall starkes Wackeln wertet keine ungesehenen Kacheln ab`() {
+        // S-001 K4 (Schutz gegen Rueckschritt, kein Rot-Nachweis): ruhige Szene, jedes zweite Bild um 12 Pixel verschoben;
+        // nie gesehene Randkacheln duerfen den Vergleichswert nicht senken, die ruhige Mitte behaelt volles Gewicht.
+        val rng = SeededRng(8)
+        val m = NightMerge(w, h)
+        repeat(20) { k -> m.add(scene(if (k % 2 == 0) 0 else 12, 0, rng)) }
+        // Bildmitte: alle 20 Bilder sehen sie, keine Bewegung, also volles Gewicht
+        assertTrue(m.weightIn(40, 30, 80, 60) >= 19.0f, "Mitte wurde abgewertet: ${m.weightIn(40, 30, 80, 60)}")
+    }
+
     @Test fun `Fehlerfall verwackeltes Bild wird verworfen`() {
         val rng = SeededRng(2)
         val m = NightMerge(w, h)

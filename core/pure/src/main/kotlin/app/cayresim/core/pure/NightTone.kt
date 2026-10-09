@@ -199,7 +199,9 @@ object NightTone {
 
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
     const val LUMA_RADIUS = 3
-    const val DENOISE_STRENGTH = 2.5f
+    // S-001 K1: 2,5 machte bei starkem Rauschen die Kante 3,6 px breit (Wahrheit 0,8); 1,5 ergab im Modell 0,9 px
+    // bei einem Drittel des Rauschens ohne Entrauschen
+    const val DENOISE_STRENGTH = 1.5f
 
     /**
      * Fertigstellen eines gemittelten Nachtbilds (linear): A Schwarzpunkt abziehen, C Farbrauschen glaetten,

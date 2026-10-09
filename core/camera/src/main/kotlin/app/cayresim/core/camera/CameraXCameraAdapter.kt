@@ -532,11 +532,7 @@ class CameraXCameraAdapter @Inject constructor(
             try {
                 withContext(NonCancellable + dispatcher) { mutex.lock(); locked = true }
                 withContext(dispatcher) { provider?.unbindAll(); boundCamera = null; imageCapture = null }
-                for (attempt in 0 until 8) {
-                    device = openCamera(context.getSystemService(android.hardware.camera2.CameraManager::class.java), cameraId, executor)
-                    if (device != null) break
-                    delay(250)
-                }
+                device = openCameraWithin(context.getSystemService(android.hardware.camera2.CameraManager::class.java), cameraId, executor)
                 val dev = device ?: run { close(); return@callbackFlow }
                 // Kalibrierung der letzten Aufnahme: Weissabgleich, Farbmatrix, Schwarzwert
                 val gains = java.util.concurrent.atomic.AtomicReference(floatArrayOf(1f, 1f, 1f))
@@ -989,12 +985,7 @@ class CameraXCameraAdapter @Inject constructor(
         var device: android.hardware.camera2.CameraDevice? = null
         var session: android.hardware.camera2.CameraCaptureSession? = null
         try {
-            // CameraX schliesst die Kamera verzoegert: einige Male versuchen
-            for (attempt in 0 until 8) {
-                device = openCamera(mgr, cameraId, executor)
-                if (device != null) break
-                delay(250)
-            }
+            device = openCameraWithin(mgr, cameraId, executor)
             val dev = device ?: return@withContext null
             val frames = java.util.concurrent.atomic.AtomicInteger(0)
             reader.setOnImageAvailableListener({ r -> runCatching { r.acquireNextImage()?.close() }; frames.incrementAndGet() }, handler)
@@ -1039,25 +1030,44 @@ class CameraXCameraAdapter @Inject constructor(
         }
     }
 
+    /**
+     * CameraX schliesst die Kamera verzoegert: wiederholt versuchen, zusammen hoechstens [RAW_OPEN_BUDGET_MS]
+     * (S-001 K6, vorher bis zu 8 x 3 s). Danach null, der Aufrufer faellt auf den 8-Bit-Weg zurueck (R14).
+     * Das Ergebnis liegt ausserhalb des Zeitblocks, damit ein spaet geoeffnetes Geraet nicht verloren geht.
+     */
+    private suspend fun openCameraWithin(mgr: android.hardware.camera2.CameraManager, id: String, executor: java.util.concurrent.Executor): android.hardware.camera2.CameraDevice? {
+        var dev: android.hardware.camera2.CameraDevice? = null
+        withTimeoutOrNull(RAW_OPEN_BUDGET_MS) {
+            while (dev == null) {
+                dev = openCamera(mgr, id, executor)
+                if (dev == null) delay(RAW_OPEN_RETRY_MS)
+            }
+        }
+        return dev
+    }
+
+    /**
+     * Ein Versuch, ohne eigene Zeitgrenze: die Grenze setzt [openCameraWithin]. Kein zweiter Zeitblock dazwischen,
+     * sonst koennte ein geoeffnetes Geraet beim Abbruch zwischen Rueckgabe und Zuweisung verloren gehen.
+     */
     @android.annotation.SuppressLint("MissingPermission")
     private suspend fun openCamera(mgr: android.hardware.camera2.CameraManager, id: String, executor: java.util.concurrent.Executor) =
-        withTimeoutOrNull(3_000) {
-            kotlinx.coroutines.suspendCancellableCoroutine<android.hardware.camera2.CameraDevice?> { cont ->
-                try {
-                    mgr.openCamera(id, executor, object : android.hardware.camera2.CameraDevice.StateCallback() {
-                        override fun onOpened(camera: android.hardware.camera2.CameraDevice) {
-                            if (cont.isActive) cont.resumeWith(Result.success(camera)) else camera.close()
-                        }
-                        override fun onDisconnected(camera: android.hardware.camera2.CameraDevice) {
-                            camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
-                        }
-                        override fun onError(camera: android.hardware.camera2.CameraDevice, error: Int) {
-                            camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
-                        }
-                    })
-                } catch (e: Exception) {
-                    if (cont.isActive) cont.resumeWith(Result.success(null))
-                }
+        kotlinx.coroutines.suspendCancellableCoroutine<android.hardware.camera2.CameraDevice?> { cont ->
+            try {
+                mgr.openCamera(id, executor, object : android.hardware.camera2.CameraDevice.StateCallback() {
+                    override fun onOpened(camera: android.hardware.camera2.CameraDevice) {
+                        // Abbruch zwischen Oeffnen und Weitergabe: Geraet schliessen statt verlieren
+                        if (cont.isActive) cont.resume(camera) { _, c, _ -> c?.close() } else camera.close()
+                    }
+                    override fun onDisconnected(camera: android.hardware.camera2.CameraDevice) {
+                        camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
+                    }
+                    override fun onError(camera: android.hardware.camera2.CameraDevice, error: Int) {
+                        camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
+                    }
+                })
+            } catch (e: Exception) {
+                if (cont.isActive) cont.resumeWith(Result.success(null))
             }
         }
 
@@ -1144,6 +1154,9 @@ class CameraXCameraAdapter @Inject constructor(
         const val CAPTURE_TIMEOUT_MS = 8_000L
         /** Obergrenze je RAW-Bild in der Messung; das Tempo selbst bewertet der Selbsttest. */
         const val RAW_FRAME_TIMEOUT_MS = 5_000L
+        /** S-001 K6: Gesamtzeit fuer das Oeffnen der Camera2-Sitzung, danach 8-Bit-Weg. */
+        const val RAW_OPEN_BUDGET_MS = 3_000L
+        private const val RAW_OPEN_RETRY_MS = 250L
         const val RAW_STREAM_WARMUP_MS = 500L
         const val RAW_STREAM_MEASURE_MS = 2_000L
         const val FOCUS_TIMEOUT_MS = 3_000L

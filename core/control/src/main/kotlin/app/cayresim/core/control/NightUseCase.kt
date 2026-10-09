@@ -8,6 +8,7 @@ import app.cayresim.core.pure.NightPath
 import app.cayresim.core.boundary.ProcessResult
 import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.pure.NightPlan
+import app.cayresim.core.pure.Clock
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -30,6 +31,8 @@ class NightUseCase @Inject constructor(
     private val processing: ProcessingBoundary,
     /** Wahl aus dem Selbsttest; ohne sie immer der 8-Bit-Weg. */
     private val nightPath: NightPathBoundary? = null,
+    /** Misst die Dauer fuer den Hinweis (R2, R27); ohne Uhr keine Dauer. */
+    private val clock: Clock? = null,
 ) {
     /** Eigener Kern bei Dunkelheit oder wenn noch keine Messung vorliegt; bei gemessen hellem Licht Samsungs Modus. */
     fun shouldUseOwn(): Boolean {
@@ -48,7 +51,8 @@ class NightUseCase @Inject constructor(
         val expRange = caps?.exposureRangeNanos; val isoRange = caps?.isoRange
         if (caps?.canExpose != true || expRange == null || isoRange == null)
             return StackOutcome.Failed(StackOutcome.Stage.COLLECT, "NO_MANUAL_EXPOSURE")
-        if (nightPath?.load()?.path == NightPath.RAW) rawNight(count, expRange, isoRange)?.let { return it }
+        val start = clock?.nowMillis()
+        if (nightPath?.load()?.path == NightPath.RAW) rawNight(count, expRange, isoRange, start)?.let { return it }
         val before = manual.manualState.value
         var plan: NightPlan.Exposure? = null
         try {
@@ -69,7 +73,7 @@ class NightUseCase @Inject constructor(
                 is ProcessResult.Saved -> {
                     val used = r.night?.used ?: count
                     StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
-                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f))
+                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start)))
                 }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
@@ -83,18 +87,21 @@ class NightUseCase @Inject constructor(
      * RAW-Nachtweg: Belichtung aus der letzten Messung der Automatik, die RAW-Sitzung setzt sie selbst.
      * null = RAW gescheitert, der Aufrufer nimmt den 8-Bit-Weg (R14).
      */
-    private suspend fun rawNight(count: Int, expRange: LongRange, isoRange: IntRange): StackOutcome? {
+    private suspend fun rawNight(count: Int, expRange: LongRange, isoRange: IntRange, start: Long?): StackOutcome? {
         val l = camera.state.value.light
         val p = NightPlan.plan(l?.exposureNs ?: FALLBACK_NS, l?.iso ?: isoRange.last, expRange.last, isoRange.first, isoRange.last)
         return when (val r = processing.nightRaw(frames.rawFrames(count, p.exposureNs, p.iso))) {
             is ProcessResult.Saved -> {
                 val used = r.night?.used ?: count
                 StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
-                    NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true))
+                    NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true, durationMs = since(start)))
             }
             is ProcessResult.Failed -> null
         }
     }
+
+    /** Nie negativ, auch wenn die Systemuhr zurueckspringt. */
+    private fun since(start: Long?): Long? = if (start == null || clock == null) null else (clock.nowMillis() - start).coerceAtLeast(0)
 
     companion object {
         /** Bilder mit Automatik zum Messen. */

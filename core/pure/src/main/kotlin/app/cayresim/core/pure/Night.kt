@@ -83,6 +83,20 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private val sh = height / SCALE
     private val maxShift = minOf(8, (sw - 1) / 2 - 1, (sh - 1) / 2 - 1).coerceAtLeast(0)
 
+    // Ueberblenden zwischen Kachelmitten: Tabellen je Spalte und Zeile einmal berechnen (S-001, R27)
+    private val colTile = IntArray(width); private val colTile1 = IntArray(width); private val colA = FloatArray(width)
+    private val rowTile = IntArray(height); private val rowTile1 = IntArray(height); private val rowA = FloatArray(height)
+
+    init {
+        fun fill(n: Int, tilesN: Int, t0: IntArray, t1: IntArray, a: FloatArray) {
+            for (i in 0 until n) {
+                val f = ((i + 0.5f) / tile - 0.5f).coerceIn(0f, (tilesN - 1).toFloat())
+                t0[i] = f.toInt().coerceAtMost(tilesN - 1); t1[i] = minOf(t0[i] + 1, tilesN - 1); a[i] = f - t0[i]
+            }
+        }
+        fill(width, tilesX, colTile, colTile1, colA); fill(height, tilesY, rowTile, rowTile1, rowA)
+    }
+
     var used = 0; private set
 
     /** Anteil der Pixel mit Helligkeit 0 oder 1 im ersten Bild: hoch heisst "fast kein Licht" (siehe NightTone.FLOOR_SHARE). */
@@ -154,21 +168,22 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             }
         }
         for (t in diff.indices) diff[t] = if (count[t] == 0) 0f else diff[t] / count[t]
-        val typical = median(diff).coerceAtLeast(0.5f)
+        // S-001 K4: nur gesehene Kacheln mit genug Stichproben bestimmen, was "normales Rauschen" ist
+        val seen = diff.filterIndexed { t, _ -> count[t] >= MIN_TILE_SAMPLES }.toFloatArray()
+        val typical = (if (seen.isEmpty()) 0f else median(seen)).coerceAtLeast(0.5f)
         val w = FloatArray(tiles) { t ->
             val d = diff[t]
-            if (d <= ROBUST * typical) 1f else (ROBUST * typical / d).let { it * it }
+            // zu wenige Stichproben sind kein Beleg fuer Bewegung
+            if (count[t] < MIN_TILE_SAMPLES || d <= ROBUST * typical) 1f else (ROBUST * typical / d).let { it * it }
         }
         for (y in 0 until height) {
             val sy = y + dy
             if (sy < 0 || sy >= height) continue // vom Bild nie gesehen: zaehlt nicht
-            val fy = ((y + 0.5f) / tile - 0.5f).coerceIn(0f, (tilesY - 1).toFloat())
-            val ty = fy.toInt().coerceAtMost(tilesY - 1); val ty1 = minOf(ty + 1, tilesY - 1); val ay = fy - ty
+            val ty = rowTile[y]; val ty1 = rowTile1[y]; val ay = rowA[y]
             for (x in 0 until width) {
                 val sx = x + dx
                 if (sx < 0 || sx >= width) continue
-                val fx = ((x + 0.5f) / tile - 0.5f).coerceIn(0f, (tilesX - 1).toFloat())
-                val tx = fx.toInt().coerceAtMost(tilesX - 1); val tx1 = minOf(tx + 1, tilesX - 1); val ax = fx - tx
+                val tx = colTile[x]; val tx1 = colTile1[x]; val ax = colA[x]
                 // bilinear zwischen den vier naechsten Kachelmitten
                 val wt = (w[ty * tilesX + tx] * (1 - ax) + w[ty * tilesX + tx1] * ax) * (1 - ay) +
                     (w[ty1 * tilesX + tx] * (1 - ax) + w[ty1 * tilesX + tx1] * ax) * ay
@@ -281,6 +296,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         const val BLUR_LIMIT = 0.5
         /** Eine Verschiebung muss den Fehler auf hoechstens 97 % von "keine Verschiebung" senken. */
         const val SHIFT_GAIN = 0.97
+        /** Weniger Stichproben je Kachel (nur am Rand moeglich) reichen nicht als Beleg fuer Bewegung. */
+        const val MIN_TILE_SAMPLES = 4
         /** Vorschau linearer Bilder: Median auf etwa sRGB 120, hoechstens 256-fach. */
         const val PREVIEW_MEDIAN = 0.18f
         const val PREVIEW_MAX_GAIN = 256f

@@ -57,14 +57,14 @@ class QualityLabTest {
 
     private data class Scenario(val name: String, val frames: List<ByteArray>, val clean: List<ByteArray>?)
 
-    private fun scenario(name: String, level: Double, shake: Int, passer: Boolean, count: Int = 36, seed: Long = 4711): Scenario {
+    private fun scenario(name: String, level: Double, shake: Int, passer: Boolean, count: Int = 36, seed: Long = 4711, read: Double = 2.0): Scenario {
         val lab = Lab(seed); val shifts = Random(seed + 1)
         val moves = List(count) { if (it == 0 || shake == 0) 0 to 0 else shifts.nextInt(-shake, shake + 1) to shifts.nextInt(-shake, shake + 1) }
         val frames = List(count) { k ->
             val px = if (passer && k in 4..16) 10 + (k - 4) * 12 else null
-            capture(truth(level, px), moves[k].first, moves[k].second, lab)
+            capture(truth(level, px), moves[k].first, moves[k].second, lab, read = read)
         }
-        val clean = if (passer) { val lab2 = Lab(seed); List(count) { k -> capture(truth(level), moves[k].first, moves[k].second, lab2) } } else null
+        val clean = if (passer) { val lab2 = Lab(seed); List(count) { k -> capture(truth(level), moves[k].first, moves[k].second, lab2, read = read) } } else null
         return Scenario(name, frames, clean)
     }
 
@@ -88,6 +88,9 @@ class QualityLabTest {
             scenario("Daemmerung, freihand", 0.004, shake = 6, passer = false),
             // Nachttest S24+ am 8. Oktober: Einzelbilder im Mittel bei Stufe 1 bis 2, nur 23 Bilder
             scenario("Sehr dunkel, freihand, 23 Bilder", 0.00045, shake = 10, passer = false, count = 23),
+            // S-001 K1, K2: starkes Sensorrauschen (Leserauschen 40); vorher machte das Entrauschen die Kante 3,6 px breit
+            scenario("Dunkel, starkes Rauschen", 0.0006, shake = 0, passer = false, read = 40.0),
+            scenario("Starkes Rauschen, 1 Pixel Wackeln", 0.0006, shake = 1, passer = false, read = 40.0),
         )
         val rows = mutableListOf<Row>()
         for (s in scenarios) {
@@ -162,30 +165,29 @@ class QualityLabTest {
         val contrast = ImageQuality.mean(night, w, gray) - ImageQuality.mean(night, w, black)
         val oldContrast = ImageQuality.mean(old, w, gray) - ImageQuality.mean(old, w, black)
         val sb = StringBuilder("\n## Farbszene (36 Bilder, Stativ)\n\n| Messung | einfacher Mittelwert | Nacht-Kern |\n|---|---|---|\n")
-        sb.append("| Kontrast Grau minus Schwarz | ${"%.1f".format(oldContrast)} | ${"%.1f".format(contrast)} |\n")
-        sb.append("| Schwarz | ${"%.1f".format(ImageQuality.mean(old, w, black))} | ${"%.1f".format(ImageQuality.mean(night, w, black))} |\n")
-        // A und B: echtes Schwarz und mehr Kontrast
-        assertTrue(ImageQuality.mean(night, w, black) <= 6.0, "Schwarz ist grau: ${ImageQuality.mean(night, w, black)}")
-        assertTrue(contrast >= 100.0, "zu flau: Grau minus Schwarz $contrast (einfacher Mittelwert $oldContrast)")
-        // C: Farben bleiben wahr, Grau bleibt grau
-        val patches = listOf("Rot" to Rect(15, 15, 55, 55), "Gelb" to Rect(75, 15, 115, 55), "Blau" to Rect(135, 15, 175, 55))
-        for ((name, r) in patches) {
-            val want = DoubleArray(3).also { m -> var n = 0
-                for (y in r.y0 until r.y1) for (x in r.x0 until r.x1) { for (k in 0 until 3) m[k] += truth[(y * w + x) * 3 + k]; n++ }
-                for (k in 0 until 3) m[k] /= n }
-            val wantSat = (want.max() - want.min()) / want.max()
-            val (got, sat) = linearPatch(night, r)
-            sb.append("| Saettigung $name (Wahrheit ${"%.3f".format(wantSat)}) | ${"%.3f".format(linearPatch(old, r).second)} | ${"%.3f".format(sat)} |\n")
-            assertTrue(kotlin.math.abs(sat - wantSat) <= 0.05, "$name: Saettigung $sat statt $wantSat")
-            assertEquals(want.indices.sortedBy { want[it] }, got.indices.sortedBy { got[it] }, "$name: Farbton gekippt")
-        }
-        val graySat = linearPatch(night, gray).second
-        sb.append("| Saettigung Grau (Wahrheit 0) | ${"%.3f".format(linearPatch(old, gray).second)} | ${"%.3f".format(graySat)} |\n")
-        assertTrue(graySat <= 0.03, "Farbstich im Grau: $graySat")
-        // Ein Bericht fuer das CI (nur quality-report.md wird abgelegt), egal in welcher Reihenfolge die Tests laufen
-        File("build/quality-report-color.md").apply { parentFile.mkdirs() }.writeText(sb.toString())
-        File("build/quality-report.md").takeIf { it.exists() && "## Farbszene" !in it.readText() }?.appendText(sb.toString())
-        println(sb)
+        // S-001 K7: Bericht auch dann, wenn eine Grenze verletzt ist
+        try {
+            sb.append("| Kontrast Grau minus Schwarz | ${"%.1f".format(oldContrast)} | ${"%.1f".format(contrast)} |\n")
+            sb.append("| Schwarz | ${"%.1f".format(ImageQuality.mean(old, w, black))} | ${"%.1f".format(ImageQuality.mean(night, w, black))} |\n")
+            // A und B: echtes Schwarz und mehr Kontrast
+            assertTrue(ImageQuality.mean(night, w, black) <= 6.0, "Schwarz ist grau: ${ImageQuality.mean(night, w, black)}")
+            assertTrue(contrast >= 100.0, "zu flau: Grau minus Schwarz $contrast (einfacher Mittelwert $oldContrast)")
+            // C: Farben bleiben wahr, Grau bleibt grau
+            val patches = listOf("Rot" to Rect(15, 15, 55, 55), "Gelb" to Rect(75, 15, 115, 55), "Blau" to Rect(135, 15, 175, 55))
+            for ((name, r) in patches) {
+                val want = DoubleArray(3).also { m -> var n = 0
+                    for (y in r.y0 until r.y1) for (x in r.x0 until r.x1) { for (k in 0 until 3) m[k] += truth[(y * w + x) * 3 + k]; n++ }
+                    for (k in 0 until 3) m[k] /= n }
+                val wantSat = (want.max() - want.min()) / want.max()
+                val (got, sat) = linearPatch(night, r)
+                sb.append("| Saettigung $name (Wahrheit ${"%.3f".format(wantSat)}) | ${"%.3f".format(linearPatch(old, r).second)} | ${"%.3f".format(sat)} |\n")
+                assertTrue(kotlin.math.abs(sat - wantSat) <= 0.05, "$name: Saettigung $sat statt $wantSat")
+                assertEquals(want.indices.sortedBy { want[it] }, got.indices.sortedBy { got[it] }, "$name: Farbton gekippt")
+            }
+            val graySat = linearPatch(night, gray).second
+            sb.append("| Saettigung Grau (Wahrheit 0) | ${"%.3f".format(linearPatch(old, gray).second)} | ${"%.3f".format(graySat)} |\n")
+            assertTrue(graySat <= 0.03, "Farbstich im Grau: $graySat")
+        } finally { report("20-farbe", sb.toString()) }
     }
 
     @Test fun `Testlabor lichtloser Raum mit Tuer bleibt Nacht`() {
@@ -201,10 +203,7 @@ class QualityLabTest {
         val roomL = ImageQuality.mean(rgb, w, room); val doorL = ImageQuality.mean(rgb, w, door)
         val (roomRgb, _) = linearPatch(rgb, room)
         val blueCast = NightTone.linearToSrgb(roomRgb[2].toFloat()) * 255 - NightTone.linearToSrgb(roomRgb[0].toFloat()) * 255
-        File("build/quality-report-floor.md").apply { parentFile.mkdirs() }.writeText(
-            "\n## Lichtloser Raum mit Tuer\n\nAnteil Boden ${"%.2f".format(merge.floorShare)}, Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot im Raum ${"%.1f".format(blueCast)}\n")
-        File("build/quality-report.md").takeIf { it.exists() && "## Lichtloser Raum" !in it.readText() }
-            ?.appendText(File("build/quality-report-floor.md").readText())
+        report("30-lichtlos", "\n## Lichtloser Raum mit Tuer\n\nAnteil Boden ${"%.2f".format(merge.floorShare)}, Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot im Raum ${"%.1f".format(blueCast)}\n")
         assertTrue(merge.floorShare >= NightTone.FLOOR_SHARE, "Boden nicht erkannt: ${merge.floorShare}")
         assertTrue(roomL <= 8.0, "Raum aufgehellt: $roomL")
         assertTrue(doorL - roomL >= 15.0, "Tuer geht unter: Raum $roomL, Tuer $doorL")
@@ -223,10 +222,7 @@ class QualityLabTest {
         val p99 = lum.sorted()[(0.99 * (lum.size - 1)).toInt()]
         val cur = Rect(10, 10, 60, 134)
         val texture = ImageQuality.noise(rgb, w, cur) / ImageQuality.mean(rgb, w, cur)
-        File("build/quality-report-highlight.md").apply { parentFile.mkdirs() }.writeText(
-            "\n## Heller Vorhang\n\n99-%-Helligkeit ${"%.0f".format(p99)} (vorher 233, Samsung im Nachttest 201), Struktur ${"%.3f".format(texture)} (Wahrheit etwa 0,15)\n")
-        File("build/quality-report.md").takeIf { it.exists() && "## Heller Vorhang" !in it.readText() }
-            ?.appendText(File("build/quality-report-highlight.md").readText())
+        report("40-vorhang", "\n## Heller Vorhang\n\n99-%-Helligkeit ${"%.0f".format(p99)} (vorher 233, Samsung im Nachttest 201), Struktur ${"%.3f".format(texture)} (Wahrheit etwa 0,15)\n")
         assertTrue(p99 <= 215.0, "Lichter brennen aus: 99-%-Helligkeit $p99")
         assertTrue(texture >= 0.08, "Struktur im Vorhang verloren: $texture")
         assertTrue(ImageQuality.mean(rgb, w, Rect(100, 20, 180, 120)) >= 25.0, "Raum zu dunkel geworden")
@@ -259,8 +255,7 @@ class QualityLabTest {
         val roomL = ImageQuality.mean(rgb, w, Rect(5, 5, 60, 25)); val doorL = ImageQuality.mean(rgb, w, Rect(75, 40, 105, 110))
         val (roomRgb, _) = linearPatch(rgb, Rect(5, 5, 60, 25))
         val cast = NightTone.linearToSrgb(roomRgb[2].toFloat()) * 255 - NightTone.linearToSrgb(roomRgb[0].toFloat()) * 255
-        File("build/quality-report-raw.md").apply { parentFile.mkdirs() }.writeText(
-            "\n## RAW-Weg (simulierter Sensor)\n\nLichtloser Raum: Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot ${"%.1f".format(cast)}\n")
+        report("50-raw-a", "\n## RAW-Weg (simulierter Sensor)\n\nLichtloser Raum: Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot ${"%.1f".format(cast)}\n")
         assertTrue(roomL <= 8.0, "RAW: Raum aufgehellt: $roomL")
         assertTrue(doorL - roomL >= 15.0, "RAW: Tuer geht unter: Raum $roomL, Tuer $doorL")
         assertTrue(kotlin.math.abs(cast) <= 3.0, "RAW: Farbstich im Raum: $cast")
@@ -275,11 +270,12 @@ class QualityLabTest {
         val bright = ImageQuality.mean(rgb, w, background)
         val edge = ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132); val yuvEdge = ImageQuality.edgeWidth(yuv, w, 80, 130, 108, 132)
         val noise = ImageQuality.relativeNoise(rgb, w, flat); val yuvNoise = ImageQuality.relativeNoise(yuv, w, flat)
-        File("build/quality-report-raw.md").appendText("Dunkler Raum, RAW gegen 8 Bit bei gleichem Rauschen: Helligkeit ${"%.1f".format(bright)} / ${"%.1f".format(ImageQuality.mean(yuv, w, background))}, " +
+        report("51-raw-b", "\n## RAW-Weg, dunkler Raum\n\nRAW gegen 8 Bit bei gleichem Rauschen: Helligkeit ${"%.1f".format(bright)} / ${"%.1f".format(ImageQuality.mean(yuv, w, background))}, " +
             "Kante ${"%.1f".format(edge)} / ${"%.1f".format(yuvEdge)} px, Rauschen ${"%.3f".format(noise)} / ${"%.3f".format(yuvNoise)}\n")
-        File("build/quality-report.md").takeIf { it.exists() && "## RAW-Weg" !in it.readText() }?.appendText(File("build/quality-report-raw.md").readText())
         assertTrue(bright >= 30.0, "RAW: zu dunkel: $bright")
-        assertTrue(edge <= yuvEdge + 0.3, "RAW: Kante $edge px, 8 Bit $yuvEdge px")
+        // S-001: feste Grenze gegen die Wahrheit, nicht nur der Vergleich zweier Verfahren
+        assertTrue(edge <= 1.5, "RAW: Kante $edge px (Wahrheit 0,8)")
+        assertTrue(yuvEdge <= 1.5, "8 Bit bei starkem Rauschen: Kante $yuvEdge px (Wahrheit 0,8)")
         val single = rawCore(Lab(7).let { l -> listOf(captureRaw(truthRgb, l)) })
         val singleNoise = ImageQuality.relativeNoise(single, w, flat)
         assertTrue(noise <= 0.4 * singleNoise, "RAW: Rauschen $noise, Einzelbild $singleNoise")
@@ -297,10 +293,8 @@ class QualityLabTest {
         val rgb = merge.finish().rgb
         fun texture(r: Rect) = ImageQuality.noise(rgb, w, r) / ImageQuality.mean(rgb, w, r)
         val middle = texture(Rect(70, 50, 120, 94)); val right = texture(Rect(w - 12, 30, w - 1, 114)); val top = texture(Rect(40, 0, 150, 10))
-        File("build/quality-report-edge.md").apply { parentFile.mkdirs() }.writeText(
-            "\n## Rand bei Wackeln\n\nStruktur Mitte ${"%.3f".format(middle)}, rechter Rand ${"%.3f".format(right)}, oberer Rand ${"%.3f".format(top)}; " +
+        report("60-rand", "\n## Rand bei Wackeln\n\nStruktur Mitte ${"%.3f".format(middle)}, rechter Rand ${"%.3f".format(right)}, oberer Rand ${"%.3f".format(top)}; " +
             "Bilder je Pixel Mitte ${"%.1f".format(merge.weightIn(70, 50, 120, 94))}, Rand ${"%.1f".format(merge.weightIn(w - 12, 30, w - 1, 114))}\n")
-        File("build/quality-report.md").takeIf { it.exists() && "## Rand bei Wackeln" !in it.readText() }?.appendText(File("build/quality-report-edge.md").readText())
         assertTrue(right >= 0.8 * middle, "rechter Rand verschmiert: $right gegen Mitte $middle")
         assertTrue(top >= 0.8 * middle, "oberer Rand verschmiert: $top gegen Mitte $middle")
         assertTrue(merge.weightIn(w - 12, 30, w - 1, 114) < merge.weightIn(70, 50, 120, 94), "Rand muss aus weniger Bildern bestehen als die Mitte")
@@ -309,7 +303,7 @@ class QualityLabTest {
     @Test fun `Testlabor bewegtes Objekt auf einer Kachelgrenze hinterlaesst weder Doppelbild noch Blockkante`() {
         val lab = Lab(31)
         val clean = truth(0.0006)
-        // Passant laeuft genau ueber die Kachelgrenzen bei x = 64, 80, 96 (Kachel 16)
+        // Passant laeuft genau ueber die Kachelgrenzen bei x = 64, 80, 96 (Vielfache von 8 und 16)
         val frames = List(36) { k -> capture(if (k in 6..20) truth(0.0006, 50 + (k - 6) * 4) else clean, 0, 0, lab) }
         val rgb = core(frames)
         val reference = core(Lab(31).let { l -> List(36) { capture(clean, 0, 0, l) } })
@@ -318,21 +312,38 @@ class QualityLabTest {
         // Blockkante: Sprung der Helligkeit zwischen den Spalten links und rechts einer Kachelgrenze, gemittelt
         fun seam(x: Int) = kotlin.math.abs(ImageQuality.mean(rgb, w, Rect(x - 2, 72, x, 98)) - ImageQuality.mean(rgb, w, Rect(x, 72, x + 2, 98)))
         val seams = listOf(64, 80, 96).map { seam(it) }
-        File("build/quality-report-edge.md").appendText("Passant auf Kachelgrenzen: Geist ${"%.2f".format(ghost)} Stufen, Kanten ${seams.joinToString { "%.2f".format(it) }}\n")
+        report("61-kachelgrenze", "\n## Passant auf Kachelgrenzen\n\nGeist ${"%.2f".format(ghost)} Stufen, Kanten ${seams.joinToString { "%.2f".format(it) }}\n")
         assertTrue(ghost < 3.0, "Doppelbild: $ghost Stufen")
         assertTrue(seams.all { it < 2.0 }, "Blockkante an Kachelgrenze: $seams")
     }
 
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {
-        for ((level, count) in listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36)) {
+        val shares = listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36).map { (level, count) ->
             val s = scenario("x", level, shake = 10, passer = false, count = count)
-            val m = NightMerge(w, h).apply { s.frames.forEach { add(it) } }
-            assertTrue(m.floorShare < NightTone.FLOOR_SHARE, "Restlicht $level als lichtlos erkannt: ${m.floorShare}")
+            level to NightMerge(w, h).apply { s.frames.forEach { add(it) } }.floorShare
         }
+        report("31-restlicht", "\n## Restlicht (Anteil Boden, lichtlos ab ${NightTone.FLOOR_SHARE})\n\n" +
+            shares.joinToString { (level, share) -> "Licht $level: ${"%.2f".format(share)}" } + "\n")
+        for ((level, share) in shares) assertTrue(share < NightTone.FLOOR_SHARE, "Restlicht $level als lichtlos erkannt: $share")
+    }
+
+    /**
+     * S-001 K7: jeder Test schreibt seinen eigenen Teil, der Gesamtbericht wird jedes Mal aus allen Teilen neu
+     * zusammengesetzt. So ist er vollstaendig, egal in welcher Reihenfolge die Tests laufen.
+     */
+    companion object {
+        // Teile eines frueheren Laufs entfernen (einmal je Testlauf), damit kein alter Wert im Bericht steht
+        init { File("build/quality-report-parts").deleteRecursively() }
+    }
+
+    private fun report(part: String, text: String) {
+        val dir = File("build/quality-report-parts").apply { mkdirs() }
+        File(dir, "$part.md").writeText(text)
+        File("build/quality-report.md").writeText(dir.listFiles().orEmpty().sortedBy { it.name }.joinToString("") { it.readText() })
+        println(text)
     }
 
     private fun writeReport(rows: List<Row>) {
-        val f = File("build/quality-report.md"); f.parentFile.mkdirs()
         val sb = StringBuilder("# Testlabor Bildqualitaet\n\n")
         sb.append("Relatives Rauschen (kleiner ist besser), Kantenbreite in Pixeln (kleiner ist schaerfer), ")
         sb.append("Geisterbild in Helligkeitsstufen (nahe 0 ist gut), Helligkeit des dunklen Hintergrunds (0 bis 255).\n\n")
@@ -340,12 +351,6 @@ class QualityLabTest {
         rows.forEach { r ->
             sb.append("| ${r.scenario} | ${r.method} | ${"%.3f".format(r.relNoise)} | ${"%.1f".format(r.edge)} | ${r.ghost?.let { "%.1f".format(it) } ?: ""} | ${"%.1f".format(r.bright)} |\n")
         }
-        File("build/quality-report-color.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
-        File("build/quality-report-floor.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
-        File("build/quality-report-highlight.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
-        File("build/quality-report-raw.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
-        File("build/quality-report-edge.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
-        f.writeText(sb.toString())
-        println(sb)
+        report("10-szenen", sb.toString())
     }
 }

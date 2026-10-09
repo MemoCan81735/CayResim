@@ -135,4 +135,33 @@ class NightUseCaseTest {
         rawNight(app.cayresim.core.pure.NightPath.YUV)(10); night(10)
         assertTrue(frames.rawCalls.isEmpty()); assertEquals(listOf(10, 10), proc.nightRuns)
     }
+
+    /** Uhr, die mit den gelieferten Bildern laeuft: 100 ms je Bild (8 Bit und RAW). */
+    private val frameClock = app.cayresim.core.pure.Clock { (frames.streamed + frames.rawStreamed) * 100L }
+
+    @Test fun `Dauer wird gemessen vom Ausloesen bis gespeichert`() = runTest {
+        val timed = NightUseCase(cam, manual, frames, proc, null, frameClock)
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        val r = assertIs<StackOutcome.Saved>(timed(10))
+        // Messbilder und Einschwingbilder zaehlen mit: die Dauer beginnt beim Ausloesen
+        assertEquals((NightUseCase.METER + NightUseCase.SETTLE + 10) * 100L, r.night!!.durationMs)
+        assertNull(assertIs<StackOutcome.Saved>(night(10)).night!!.durationMs, "ohne Uhr keine Dauer")
+    }
+
+    @Test fun `Dauer wird auch im RAW-Weg gemessen`() = runTest {
+        val timed = NightUseCase(cam, manual, frames, proc,
+            app.cayresim.core.boundary.fake.FakeNightPathBoundary(app.cayresim.core.boundary.NightPathSnapshot(app.cayresim.core.pure.NightPath.RAW)), frameClock)
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        val r = assertIs<StackOutcome.Saved>(timed(10))
+        assertTrue(r.night!!.raw); assertEquals(1_000L, r.night!!.durationMs)
+    }
+
+    @Test fun `Dauer nach gescheitertem RAW enthaelt den RAW-Versuch`() = runTest {
+        val timed = NightUseCase(cam, manual, frames, proc,
+            app.cayresim.core.boundary.fake.FakeNightPathBoundary(app.cayresim.core.boundary.NightPathSnapshot(app.cayresim.core.pure.NightPath.RAW)), frameClock)
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.rawFails = true
+        val r = assertIs<StackOutcome.Saved>(timed(10))
+        assertFalse(r.night!!.raw)
+        assertEquals((10 + NightUseCase.METER + NightUseCase.SETTLE + 10) * 100L, r.night!!.durationMs)
+    }
 }
