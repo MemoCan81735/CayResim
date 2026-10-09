@@ -1,6 +1,6 @@
 # S-002: Nachtbelichtung im beleuchteten Raum, Automatik im Hinweis, RAW-Schwarzwert 0
 
-**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 21:34: Repository öffentlich, also weiter)
+**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.83, Gerätetest offen
 **Anlass:** Gerätetest S24+ am 9. Oktober, 21:29 bis 21:31 (v0.1.82), beleuchtetes Wohnzimmer, Jeans aus der Nähe:
 - Hinweis "1/10 s, ISO 3200, 36 Bilder, 0 verworfen, Aufhellung x1,0, Dauer 6,1 s". Bild grau statt blau, helle
   Stellen ohne Struktur, Stoffmuster verschmiert, heller Saum an Kanten. Samsung im selben Licht: scharf und farbig.
@@ -53,4 +53,4 @@ dort reicht, zeigt erst der nächste Gerätetest mit den Werten der Automatik. R
 Ein Release (etwa 20 Minuten); Repository öffentlich, deshalb ohne Minutenverbrauch.
 
 ## Ergebnis
-(nach dem Lauf eintragen)
+Lauf 37981736559 grün (schneller Job, Emulator, Release v0.1.83). Gerätetest offen: Werte der Automatik im beleuchteten und im dunklen Raum.

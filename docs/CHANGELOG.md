@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## nächste Version (S-002)
+## 0.1.83 (9. Oktober 2026, S-002)
 - Nachtaufnahme im beleuchteten Raum höchstens 4-mal so hell wie die Automatik (vorher bis 10-fach, Bild grau und flau).
 - Hinweis nennt die Messung der Automatik, z. B. "(Automatik 1/20 s, ISO 640)".
 - Selbsttest: RAW mit Schwarzwert 0 gilt immer als abgeschnitten, nicht nur im Dunkeln.
