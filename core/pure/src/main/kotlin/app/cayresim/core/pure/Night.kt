@@ -85,12 +85,40 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
     /** Fuegt ein Bild hinzu. false = verworfen (verwackelt). */
     fun add(frame: ByteArray): Boolean {
         require(frame.size == pixels * 3) { "Bild hat die falsche Groesse" }
+        return addInternal(frame, null)
+    }
+
+    /** Verstaerkung fuer die 8-Bit-Vorschau linearer Bilder (aus dem ersten Bild, fuer alle gleich). */
+    private var previewGain = 0f
+
+    /** True, sobald lineare Bilder (RAW-Weg) zusammengefuehrt werden; der Schwarzwert ist dann bekannt. */
+    var linearInput = false; private set
+
+    /**
+     * RAW-Weg: lineares Bild (3 Floats je Pixel, 1,0 = Weiss, auch leicht negativ). Ausgerichtet wird auf einer
+     * hellen 8-Bit-Vorschau, aufsummiert wird das lineare Bild selbst, ohne Rundung und ohne Abschneiden.
+     */
+    fun addLinear(linear: FloatArray): Boolean {
+        require(linear.size == pixels * 3) { "Bild hat die falsche Groesse" }
+        if (previewGain == 0f) {
+            val y = FloatArray(pixels) { 0.2126f * linear[it * 3] + 0.7152f * linear[it * 3 + 1] + 0.0722f * linear[it * 3 + 2] }
+            val m = NightTone.quantile(y, 0.5f)
+            previewGain = if (m <= 0f) PREVIEW_MAX_GAIN else (PREVIEW_MEDIAN / m).coerceIn(1f, PREVIEW_MAX_GAIN)
+            linearInput = true
+        }
+        val g = previewGain
+        val preview = ByteArray(linear.size) { (NightTone.linearToSrgb(linear[it] * g) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte() }
+        return addInternal(preview, linear)
+    }
+
+    private fun addInternal(frame: ByteArray, linear: FloatArray?): Boolean {
         val small = downscale(frame)
         val ref = refSmall
         if (ref == null) {
             refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small)
-            floorShare = refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
-            for (i in sum.indices) sum[i] = LIN[frame[i].toInt() and 0xFF]
+            // Bei RAW ist der Schwarzwert bekannt: kein Raten des Rauschbodens
+            floorShare = if (linear != null) 0f else refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
+            for (i in sum.indices) sum[i] = linear?.get(i) ?: LIN[frame[i].toInt() and 0xFF]
             weight.fill(1f); used = 1
             return true
         }
@@ -99,7 +127,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         val (sdx, sdy) = if (maxShift > 0) StarAlignment.estimateShift(ref, small, sw, sh, maxShift) else 0 to 0
         val rl = refLuma!!
         // Feinausrichtung in voller Aufloesung um die Grobschaetzung herum (die Grobstufe trifft nur auf 4 Pixel genau)
-        val (dx, dy) = refine(rl, frame, sdx * SCALE, sdy * SCALE)
+        val (bx, by) = refine(rl, frame, sdx * SCALE, sdy * SCALE)
+        // Sehr verrauschte Bilder (RAW im Dunkeln): eine Verschiebung nur annehmen, wenn sie klar besser passt als keine
+        val (dx, dy) = if ((bx != 0 || by != 0) && alignError(rl, frame, bx, by) > SHIFT_GAIN * alignError(rl, frame, 0, 0)) 0 to 0 else bx to by
         // Abweichung je Kachel nach dem Ausrichten
         val diff = FloatArray(weight.size)
         val count = IntArray(weight.size)
@@ -126,9 +156,13 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
                 val sx = (x + dx).coerceIn(0, width - 1)
                 val wt = w[rowT + x / tile]
                 val s = (sy * width + sx) * 3; val d = (y * width + x) * 3
-                sum[d] += wt * LIN[frame[s].toInt() and 0xFF]
-                sum[d + 1] += wt * LIN[frame[s + 1].toInt() and 0xFF]
-                sum[d + 2] += wt * LIN[frame[s + 2].toInt() and 0xFF]
+                if (linear != null) {
+                    sum[d] += wt * linear[s]; sum[d + 1] += wt * linear[s + 1]; sum[d + 2] += wt * linear[s + 2]
+                } else {
+                    sum[d] += wt * LIN[frame[s].toInt() and 0xFF]
+                    sum[d + 1] += wt * LIN[frame[s + 1].toInt() and 0xFF]
+                    sum[d + 2] += wt * LIN[frame[s + 2].toInt() and 0xFF]
+                }
             }
         }
         for (t in weight.indices) weight[t] += w[t]
@@ -139,24 +173,30 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
     /** Sucht im Umkreis von [SCALE] - 1 Pixeln die beste Verschiebung auf der vollen Helligkeit (jedes 2. Pixel). */
     private fun refine(ref: ByteArray, frame: ByteArray, cx: Int, cy: Int): Pair<Int, Int> {
         val r = SCALE - 1
-        val m = minOf(width, height) / 8
         var best = cx to cy; var bestErr = Long.MAX_VALUE
         for (dy in cy - r..cy + r) for (dx in cx - r..cx + r) {
-            var err = 0L
-            var y = m
-            while (y < height - m) {
-                val sy = (y + dy).coerceIn(0, height - 1)
-                var x = m
-                while (x < width - m) {
-                    val sx = (x + dx).coerceIn(0, width - 1)
-                    err += abs(lumaAt(frame, (sy * width + sx) * 3) - (ref[y * width + x].toInt() and 0xFF))
-                    x += 2
-                }
-                y += 2
-            }
+            val err = alignError(ref, frame, dx, dy)
             if (err < bestErr) { bestErr = err; best = dx to dy }
         }
         return best
+    }
+
+    /** Summe der Helligkeitsabweichung bei Verschiebung (dx, dy), Rand ausgespart, jedes 2. Pixel. */
+    private fun alignError(ref: ByteArray, frame: ByteArray, dx: Int, dy: Int): Long {
+        val m = minOf(width, height) / 8
+        var err = 0L
+        var y = m
+        while (y < height - m) {
+            val sy = (y + dy).coerceIn(0, height - 1)
+            var x = m
+            while (x < width - m) {
+                val sx = (x + dx).coerceIn(0, width - 1)
+                err += abs(lumaAt(frame, (sy * width + sx) * 3) - (ref[y * width + x].toInt() and 0xFF))
+                x += 2
+            }
+            y += 2
+        }
+        return err
     }
 
     /** Gewichtetes Mittel in linearem Licht, dann Nacht-Look (Schwarzpunkt, Entrauschen, Kontrast, Aufhellen). */
@@ -168,7 +208,13 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             val inv = 1f / weight[t]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
-        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), floorShare)
+        // RAW: Rauschen ist nicht abgeschnitten, einzelne Bilder sagen nichts; der Boden wird am Mittel gemessen
+        val share = if (linearInput) {
+            var n = 0
+            for (p in 0 until pixels) if (0.2126f * mean[p * 3] + 0.7152f * mean[p * 3 + 1] + 0.0722f * mean[p * 3 + 2] <= NightTone.FLOOR_LINEAR) n++
+            n.toFloat() / pixels
+        } else floorShare
+        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), share)
     }
 
     /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */
@@ -209,6 +255,11 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         const val ROBUST = 2f
         /** Unter 50 % der Kantenenergie der Referenz gilt ein Bild als verwackelt. */
         const val BLUR_LIMIT = 0.5
+        /** Eine Verschiebung muss den Fehler auf hoechstens 97 % von "keine Verschiebung" senken. */
+        const val SHIFT_GAIN = 0.97
+        /** Vorschau linearer Bilder: Median auf etwa sRGB 120, hoechstens 256-fach. */
+        const val PREVIEW_MEDIAN = 0.18f
+        const val PREVIEW_MAX_GAIN = 256f
         private val LIN = FloatArray(256) { NightTone.srgbToLinear(it / 255f) }
     }
 }

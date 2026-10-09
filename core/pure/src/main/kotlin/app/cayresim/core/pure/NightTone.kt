@@ -185,6 +185,9 @@ object NightTone {
      * Im Testlabor lag die Kueche-aehnliche Szene bei 67 %, der lichtlose Raum bei 98 bis 100 %.
      */
     const val FLOOR_SHARE = 0.85f
+
+    /** RAW-Weg: lineare Helligkeit, die im 8-Bit-Bild Stufe 1 entspraeche; darunter zaehlt ein Pixel zum Boden. */
+    const val FLOOR_LINEAR = 0.00046f
     const val FLOOR_HIGH_TARGET = 0.1f
 
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */

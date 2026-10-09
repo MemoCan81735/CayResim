@@ -232,6 +232,53 @@ class QualityLabTest {
         assertTrue(ImageQuality.mean(rgb, w, Rect(100, 20, 180, 120)) >= 25.0, "Raum zu dunkel geworden")
     }
 
+    // ---------- RAW-Weg: simulierter Bayer-Sensor (10 Bit, Schwarz 64, nicht abgeschnitten) ----------
+
+    /** Aus einer linearen RGB-Wahrheit in Laborgroesse ein RGGB-Rohbild doppelter Kantenlaenge. */
+    private fun captureRaw(truth: DoubleArray, lab: Lab, black: Int = 64, white: Int = 1023, electrons: Double = 20_000.0, read: Double = 40.0): ShortArray {
+        val rw = w * 2; val rh = h * 2
+        val colors = RawDevelop.Cfa.RGGB.colors
+        return ShortArray(rw * rh) { i ->
+            val x = i % rw; val y = i / rw
+            val e = truth[((y / 2) * w + x / 2) * 3 + colors[(y % 2) * 2 + x % 2]] * electrons
+            val noisy = (e + lab.gauss() * sqrt(e + read * read)) / electrons
+            (black + noisy * (white - black)).let { kotlin.math.round(it).toInt() }.coerceIn(0, white).toShort()
+        }
+    }
+
+    private fun rawCore(frames: List<ShortArray>): ByteArray = NightMerge(w, h).apply {
+        frames.forEach { addLinear(RawDevelop.binToLinear(it, w * 2, h * 2, w * 2, RawDevelop.Cfa.RGGB, floatArrayOf(64f, 64f, 64f, 64f), 1023f, floatArrayOf(1f, 1f, 1f), RawDevelop.IDENTITY)) }
+    }.finish().rgb
+
+    @Test fun `Testlabor RAW-Weg lichtloser Raum mit Tuer bleibt Nacht`() {
+        val truth = DoubleArray(w * h * 3).also { t ->
+            for (y in 30 until 120) for (x in 70 until 110) { t[(y * w + x) * 3] = 0.9 * 0.0006; t[(y * w + x) * 3 + 1] = 0.75 * 0.0006; t[(y * w + x) * 3 + 2] = 0.5 * 0.0006 }
+        }
+        val lab = Lab(4711)
+        val rgb = rawCore(List(36) { captureRaw(truth, lab) })
+        val roomL = ImageQuality.mean(rgb, w, Rect(5, 5, 60, 25)); val doorL = ImageQuality.mean(rgb, w, Rect(75, 40, 105, 110))
+        val (roomRgb, _) = linearPatch(rgb, Rect(5, 5, 60, 25))
+        val cast = NightTone.linearToSrgb(roomRgb[2].toFloat()) * 255 - NightTone.linearToSrgb(roomRgb[0].toFloat()) * 255
+        File("build/quality-report-raw.md").apply { parentFile.mkdirs() }.writeText(
+            "\n## RAW-Weg (simulierter Sensor)\n\nLichtloser Raum: Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot ${"%.1f".format(cast)}\n")
+        assertTrue(roomL <= 8.0, "RAW: Raum aufgehellt: $roomL")
+        assertTrue(doorL - roomL >= 15.0, "RAW: Tuer geht unter: Raum $roomL, Tuer $doorL")
+        assertTrue(kotlin.math.abs(cast) <= 3.0, "RAW: Farbstich im Raum: $cast")
+    }
+
+    @Test fun `Testlabor RAW-Weg dunkler Raum mit Restlicht wird aufgehellt und bleibt scharf`() {
+        val gray = truth(0.0006)
+        val truthRgb = DoubleArray(w * h * 3) { gray[it / 3] }
+        val lab = Lab(99)
+        val rgb = rawCore(List(36) { captureRaw(truthRgb, lab) })
+        val bright = ImageQuality.mean(rgb, w, background)
+        val edge = ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132)
+        File("build/quality-report-raw.md").appendText("Dunkler Raum: Helligkeit ${"%.1f".format(bright)}, Kante ${"%.1f".format(edge)} px, Rauschen ${"%.3f".format(ImageQuality.relativeNoise(rgb, w, flat))}\n")
+        File("build/quality-report.md").takeIf { it.exists() && "## RAW-Weg" !in it.readText() }?.appendText(File("build/quality-report-raw.md").readText())
+        assertTrue(bright >= 30.0, "RAW: zu dunkel: $bright")
+        assertTrue(edge <= 1.5, "RAW: Kante $edge px")
+    }
+
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {
         for ((level, count) in listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36)) {
             val s = scenario("x", level, shake = 10, passer = false, count = count)
@@ -252,6 +299,7 @@ class QualityLabTest {
         File("build/quality-report-color.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         File("build/quality-report-floor.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         File("build/quality-report-highlight.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
+        File("build/quality-report-raw.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         f.writeText(sb.toString())
         println(sb)
     }
