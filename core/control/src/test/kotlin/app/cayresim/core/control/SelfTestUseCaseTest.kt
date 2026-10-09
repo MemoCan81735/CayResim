@@ -237,6 +237,16 @@ class SelfTestUseCaseTest {
         assertTrue(rig.proc.rawNightRuns.isEmpty())
     }
 
+    @Test fun `Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen`() = runTest {
+        // S-002 K4: S24+ meldet "Schwarz: 0/0/0/0"; im hellen Raum 0,0 % Nullen
+        val rig = Rig()
+        rig.manual.rawProbe = RawProbeResult.Ok((rig.manual.rawProbe as RawProbeResult.Ok).probe.copy(blackLevel = listOf(0, 0, 0, 0), zeroShare = 0f))
+        val item = rig.run()().items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPathRule.Reason.CLIPPED, item.nightPath!!.reason)
+        assertEquals(app.cayresim.core.pure.NightPath.YUV, rig.store.stored.path)
+        assertTrue(rig.proc.rawNightRuns.isEmpty(), "keine Probenacht")
+    }
+
     @Test fun `Fehlerfall Probenacht zu langsam ergibt 8 Bit`() = runTest {
         val rig = Rig()
         // Uhr springt waehrend der Probenacht um 7 s

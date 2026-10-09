@@ -256,6 +256,12 @@ class CameraContentTest {
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Aufhellung x12,0, Dauer 4,2 s", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test fun nacht_hinweis_zeigt_die_automatik() {
+        show(running.copy(message = UserMessage(7, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 1280, 36, 0, 1f, meterExposureNs = 50_000_000, meterIso = 640))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1/10 s, ISO 1280 (Automatik 1/20 s, ISO 640), 36 Bilder", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     @Test fun nacht_hinweis_nennt_den_raw_weg() {
         show(running.copy(message = UserMessage(5, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 36, 0, 12f, raw = true))))

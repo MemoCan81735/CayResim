@@ -55,12 +55,14 @@ class NightUseCase @Inject constructor(
         if (nightPath?.load()?.path == NightPath.RAW) rawNight(count, expRange, isoRange, start)?.let { return it }
         val before = manual.manualState.value
         var plan: NightPlan.Exposure? = null
+        var meter: app.cayresim.core.boundary.LightSnapshot? = null
         try {
             val stream = frames.frames(METER + SETTLE + count)
                 .withIndex()
                 .onEach { (i, _) ->
                     if (i == METER - 1) {
                         val l = camera.state.value.light
+                        meter = l
                         // Ohne Messung: wie bei voller Dunkelheit
                         val p = NightPlan.plan(l?.exposureNs ?: FALLBACK_NS, l?.iso ?: isoRange.last, expRange.last, isoRange.first, isoRange.last)
                         // Befund M6: nur melden, was wirklich eingestellt wurde
@@ -73,7 +75,8 @@ class NightUseCase @Inject constructor(
                 is ProcessResult.Saved -> {
                     val used = r.night?.used ?: count
                     StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
-                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start)))
+                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start),
+                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso))
                 }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
@@ -94,7 +97,8 @@ class NightUseCase @Inject constructor(
             is ProcessResult.Saved -> {
                 val used = r.night?.used ?: count
                 StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
-                    NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true, durationMs = since(start)))
+                    NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true, durationMs = since(start),
+                        meterExposureNs = l?.exposureNs, meterIso = l?.iso))
             }
             is ProcessResult.Failed -> null
         }

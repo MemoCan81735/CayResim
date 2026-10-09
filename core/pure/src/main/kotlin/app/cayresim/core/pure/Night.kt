@@ -21,11 +21,19 @@ object NightPlan {
 
     /**
      * Die Automatik gilt als am Anschlag, wenn sie lange belichtet ([AE_LIMIT_NS]) oder ihre ISO fast am Maximum
-     * steht ([AE_LIMIT_ISO_SHARE]). Dann belichtet sie zu knapp, und die Nachtserie nimmt die hoechste ISO.
+     * steht ([AE_LIMIT_ISO_SHARE]). Dann belichtet sie zu knapp, und die Nachtserie nimmt die hoechste ISO, aber
+     * hoechstens [MAX_BOOST]-mal so hell wie die Automatik (S-002).
      * Gemessen am S24+ (8. Oktober, zweimal): Automatik bei etwa 1/25 s und ISO 3200, der Plan ergab nur ISO 1919.
      */
     const val AE_LIMIT_NS = 50_000_000L
     const val AE_LIMIT_ISO_SHARE = 0.9
+
+    /**
+     * S-002: auch "am Anschlag" hoechstens so viel heller als die Automatik (Belichtung mal ISO). Abgeleitet aus dem
+     * Nachtfall vom 8. Oktober (1/15 s bei ISO 1279 brauchte 3,75-fach); im beleuchteten Raum am 9. Oktober (Aufhellung
+     * x1,0) ergab die alte Regel bis zu 10-fach, helle Stellen liefen voll.
+     */
+    const val MAX_BOOST = 4.0
 
     /** Bildzahl fuer etwa 4 s Licht bei 1/10 s je Bild. */
     const val FRAMES = 36
@@ -46,7 +54,10 @@ object NightPlan {
         require(aeExposureNs > 0 && aeIso > 0 && maxExposureNs > 0 && isoMin in 1..isoMax) { "Ungueltige Messwerte" }
         val target = aeExposureNs.toDouble() * aeIso * BRIGHTER
         val exp = minOf(maxExposureNs, MAX_FRAME_NS)
-        if (aeExposureNs >= AE_LIMIT_NS || aeIso >= AE_LIMIT_ISO_SHARE * isoMax) return Exposure(exp, isoMax)
+        if (aeExposureNs >= AE_LIMIT_NS || aeIso >= AE_LIMIT_ISO_SHARE * isoMax) {
+            val capped = Math.round(aeExposureNs.toDouble() * aeIso * MAX_BOOST / exp).toInt()
+            return Exposure(exp, capped.coerceIn(isoMin, isoMax))
+        }
         val iso = Math.round(target / exp).toInt()
         return when {
             iso > isoMax -> Exposure(exp, isoMax)

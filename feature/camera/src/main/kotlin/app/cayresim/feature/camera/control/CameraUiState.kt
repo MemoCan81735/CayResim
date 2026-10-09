@@ -42,7 +42,8 @@ data class UserMessage(val id: Long, val kind: MessageKind, val night: NightInfo
 
 /** Kennzahlen einer Nachtaufnahme fuer den Hinweis; den Text baut die Oberflaeche (R23). */
 @Immutable
-data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val shortened: Boolean = false, val raw: Boolean = false, val durationMs: Long? = null)
+data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val shortened: Boolean = false, val raw: Boolean = false, val durationMs: Long? = null,
+    val meterExposureNs: Long? = null, val meterIso: Int? = null)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable

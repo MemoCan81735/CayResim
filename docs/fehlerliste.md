@@ -20,3 +20,5 @@ Regel ihn heute verhindert.
 | 9.10. | geöffnete Kamera konnte beim Abbruch verloren gehen | zwei Zeitblöcke ineinander, Wert fiel beim Abbruch weg | Zweitprüfung (S-001) | ein Zeitblock, `resume` mit Schließen beim Abbruch |
 | 9.10. | Laborbericht ohne Werte, wenn die Farbszene rot ist | Bericht erst nach den Prüfungen geschrieben | Zweitprüfung (S-001) | Bericht im `finally`, alte Teile werden gelöscht |
 | 9.10. | Kantenmessung bei starkem Rauschen unbrauchbar (bis 3 px für ein scharfes Bild) | erste Schnittpunkte im Profil, Ausreißer | CI rot, dann Python über 12 Rauschmuster | angepasste Kante, `ImageQualityTest` prüft die Messung selbst |
+| 9.10. | Nachtbild im hellen Raum grau und flau | Regel "Automatik am Anschlag" nahm volle ISO schon bei 1/20 s, bis 10-fach zu hell | Gerätetest S24+ (Jeans) | Grenze 4-fach in `NightPlan`, Hinweis zeigt die Automatik (S-002) |
+| 9.10. | RAW-Wahl hing vom Raumlicht ab | Abschneiden nur über Nullen im Bild erkannt | Selbsttest im hellen Raum (0,0 % Nullen) | Schwarzwert 0 gilt als abgeschnitten (S-002) |

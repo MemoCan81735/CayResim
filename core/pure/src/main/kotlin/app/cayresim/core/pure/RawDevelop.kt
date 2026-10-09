@@ -66,12 +66,19 @@ object NightPathRule {
 
     data class Verdict(val path: NightPath, val reason: Reason)
 
-    /** Vorpruefung aus der Messung; null = Messung erlaubt RAW, die Probenacht entscheidet. */
-    fun precheck(raw: Boolean, streamFps: Float?, zeroShare: Float, calibrated: Boolean): Verdict? = when {
+    /**
+     * Vorpruefung aus der Messung; null = Messung erlaubt RAW, die Probenacht entscheidet.
+     * [black]: Schwarzwert je Position im 2x2-Muster. Alle 0 heisst (S-002): das Geraet hat Schwarz schon abgezogen und
+     * kann Rauschen unter Schwarz nicht darstellen, unabhaengig vom Raumlicht. Die Nullen im Bild ([zeroShare])
+     * zeigen das nur im Dunkeln (S24+: 61,9 % nachts, 0,0 % im hellen Raum).
+     */
+    fun precheck(raw: Boolean, streamFps: Float?, zeroShare: Float, calibrated: Boolean, black: List<Int> = emptyList()): Verdict? = when {
         !raw -> Verdict(NightPath.YUV, Reason.NO_RAW)
         streamFps == null || streamFps < MIN_STREAM_FPS -> Verdict(NightPath.YUV, Reason.SLOW_STREAM)
         zeroShare > MAX_ZERO_SHARE -> Verdict(NightPath.YUV, Reason.CLIPPED)
+        // ohne Kalibrierung meldet der Adapter Schwarz als 0; das ist dann kein Beleg fuer Abschneiden
         !calibrated -> Verdict(NightPath.YUV, Reason.NO_CALIBRATION)
+        black.isNotEmpty() && black.all { it == 0 } -> Verdict(NightPath.YUV, Reason.CLIPPED)
         else -> null
     }
 

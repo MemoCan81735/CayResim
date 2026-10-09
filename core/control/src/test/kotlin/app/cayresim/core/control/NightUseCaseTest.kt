@@ -136,6 +136,22 @@ class NightUseCaseTest {
         assertTrue(frames.rawCalls.isEmpty()); assertEquals(listOf(10, 10), proc.nightRuns)
     }
 
+    @Test fun `Bericht nennt die Messung der Automatik`() = runTest {
+        // S-002 K3: ohne diese Werte ist eine Ueberbelichtung auf dem Geraet nicht nachweisbar
+        cam.start(); cam.measure(LightSnapshot(50_000_000, 640))
+        val r = assertIs<StackOutcome.Saved>(night(10))
+        assertEquals(50_000_000L, r.night!!.meterExposureNs); assertEquals(640, r.night!!.meterIso)
+        assertEquals(1280, r.night!!.iso, "hoechstens 4-mal so hell wie die Automatik")
+        val raw = assertIs<StackOutcome.Saved>(rawNight(app.cayresim.core.pure.NightPath.RAW)(10))
+        assertEquals(50_000_000L, raw.night!!.meterExposureNs); assertEquals(640, raw.night!!.meterIso)
+    }
+
+    @Test fun `Randfall ohne Messung der Automatik bleibt der Bericht ohne Automatik`() = runTest {
+        cam.start()
+        val r = assertIs<StackOutcome.Saved>(night(10))
+        assertNull(r.night!!.meterExposureNs); assertNull(r.night!!.meterIso)
+    }
+
     /** Uhr, die mit den gelieferten Bildern laeuft: 100 ms je Bild (8 Bit und RAW). */
     private val frameClock = app.cayresim.core.pure.Clock { (frames.streamed + frames.rawStreamed) * 100L }
 

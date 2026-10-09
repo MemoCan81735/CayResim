@@ -45,6 +45,13 @@ class NightPlanTest {
         assertEquals(100_000_000L, e.exposureNs); assertEquals(3200, e.iso)
     }
 
+    @Test fun `Nachttest S24+ beleuchteter Raum wird hoechstens 4-mal so hell wie die Automatik`() {
+        // S-002 K1: 9. Oktober, Jeans im Wohnzimmer, Aufhellung x1,0 bei ISO 3200; der alte Plan ergab hier ISO 3200 (10-fach)
+        val e = NightPlan.plan(50_000_000, 640, s24Max, 25, 3200)
+        assertEquals(100_000_000L, e.exposureNs); assertEquals(1280, e.iso)
+        assertTrue(NightPlan.level(e.exposureNs, e.iso) <= NightPlan.MAX_BOOST * NightPlan.level(50_000_000, 640) + 1e-9)
+    }
+
     @Test fun `Randfall knapp unter dem Anschlag bleibt beim 1,5-fachen`() =
         assertEquals(1200, NightPlan.plan(40_000_000, 2000, s24Max, 25, 3200).iso)
 

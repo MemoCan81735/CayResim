@@ -380,6 +380,8 @@ class CameraViewModelTest {
         val m = vm.uiState.value.message!!
         assertEquals(MessageKind.NIGHT_SAVED, m.kind)
         assertEquals(3200, m.night!!.iso); assertEquals(100_000_000L, m.night!!.exposureNs)
+        // S-002: Messung der Automatik kommt bis in den Hinweis
+        assertEquals(66_666_666L, m.night!!.meterExposureNs); assertEquals(3200, m.night!!.meterIso)
         assertEquals(SpecialStatus.IDLE, vm.uiState.value.specialStatus)
         assertNotNull(vm.uiState.value.lastPhotoUri)
     }

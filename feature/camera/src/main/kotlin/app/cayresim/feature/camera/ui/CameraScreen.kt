@@ -444,12 +444,16 @@ internal fun messageRes(k: MessageKind): Int = when (k) {
     MessageKind.NIGHT_FAILED -> R.string.msg_night_failed
 }
 
-/** Hinweis nach der Nachtaufnahme, z. B. "1/10 s, ISO 3200, 34 Bilder, 2 verworfen, Aufhellung x6,0, Dauer 4,2 s". */
+/** Hinweis nach der Nachtaufnahme, z. B. "1/10 s, ISO 3200 (Automatik 1/15 s, ISO 1279), 34 Bilder, 2 verworfen, Aufhellung x6,0, Dauer 4,2 s". */
 @Composable
 internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): String {
-    val exposure = if (n.exposureNs != null && n.iso != null)
+    val set = if (n.exposureNs != null && n.iso != null)
         stringResource(R.string.night_exposure, (1_000_000_000L / n.exposureNs.coerceAtLeast(1)).toInt(), n.iso)
     else stringResource(R.string.night_exposure_auto)
+    // S-002: Messung der Automatik vor der Serie, z. B. "1/10 s, ISO 1280 (Automatik 1/20 s, ISO 640)"
+    val exposure = if (n.meterExposureNs != null && n.meterIso != null)
+        stringResource(R.string.night_exposure_meter, set, (1_000_000_000L / n.meterExposureNs.coerceAtLeast(1)).toInt(), n.meterIso)
+    else set
     val gain = String.format(java.util.Locale.GERMANY, "%.1f", n.gain)
     val detail = stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
     val cut = if (n.shortened) detail + stringResource(R.string.night_shortened) else detail

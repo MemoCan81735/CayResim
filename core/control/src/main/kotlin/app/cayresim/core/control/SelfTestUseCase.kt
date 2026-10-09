@@ -156,7 +156,7 @@ class SelfTestUseCase @Inject constructor(
         val verdict = if (probe == null) {
             NightPathRule.Verdict(NightPath.YUV, if (rawCaps) NightPathRule.Reason.PROBE_FAILED else NightPathRule.Reason.NO_RAW)
         } else {
-            NightPathRule.precheck(true, probe.streamFps, probe.zeroShare, probe.colorMatrix && probe.whiteLevel != null) ?: run {
+            NightPathRule.precheck(true, probe.streamFps, probe.zeroShare, probe.colorMatrix && probe.whiteLevel != null, probe.blackLevel) ?: run {
                 val fr = frames; val pr = processing
                 if (fr == null || pr == null || skip == STEP_RAW_NIGHT) {
                     NightPathRule.Verdict(NightPath.YUV, NightPathRule.Reason.PROBE_FAILED)

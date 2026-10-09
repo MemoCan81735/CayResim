@@ -68,6 +68,13 @@ class NightPathRuleTest {
         listOf(NightPathRule.afterProbe(false, 1), NightPathRule.afterProbe(true, 9_999)).forEach { assertEquals(NightPath.YUV, it.path) }
     }
 
+    @Test fun `Nachttest S24+ Schwarzwert 0 gilt als abgeschnitten, auch ohne Nullen im hellen Raum`() {
+        // S-002 K4: Selbsttest 9. Oktober "Schwarz: 0/0/0/0", Nullen 0,0 % bei Raumlicht (61,9 % im Dunkeln)
+        assertEquals(NightPathRule.Reason.CLIPPED, NightPathRule.precheck(true, 9f, 0f, true, listOf(0, 0, 0, 0))!!.reason)
+        assertEquals(null, NightPathRule.precheck(true, 9f, 0f, true, listOf(64, 64, 64, 64)), "echter Schwarzwert: weiter zur Probenacht")
+        assertEquals(null, NightPathRule.precheck(true, 9f, 0f, true, listOf(0, 64, 64, 64)), "nur eine Position 0: kein Beleg")
+    }
+
     @Test fun `Randfall genau an den Grenzen gilt noch als gut`() {
         assertEquals(null, NightPathRule.precheck(true, NightPathRule.MIN_STREAM_FPS, NightPathRule.MAX_ZERO_SHARE, true))
         assertEquals(NightPath.RAW, NightPathRule.afterProbe(true, NightPathRule.MAX_PROBE_MS).path)
