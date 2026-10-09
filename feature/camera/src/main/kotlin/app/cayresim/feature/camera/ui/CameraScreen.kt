@@ -318,6 +318,9 @@ private fun ProPanel(pro: ProUi, onExposure: (Float?) -> Unit, onIso: (Float) ->
             if (pro.canExpose) {
                 ProRow(stringResource(R.string.pro_exposure), pro.exposureLabel, pro.exposure, { onExposure(it) }, { onExposure(null) }, "pro_exposure")
                 ProRow(stringResource(R.string.pro_iso), pro.isoLabel, pro.iso, { onIso(it) }, { onExposure(null) }, "pro_iso")
+                // S-004: Hinweis bei langer Belichtungszeit
+                if (pro.shakeWarning) Text(stringResource(R.string.pro_shake_warning), color = Color(0xFFFFC107),
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp).testTag("pro_shake_warning"))
             }
             if (pro.canFocus) ProRow(stringResource(R.string.pro_focus), if (pro.focus == null) stringResource(R.string.pro_auto) else "", pro.focus, { onFocus(it) }, { onFocus(null) }, "pro_focus")
             if (pro.canRaw) Row(verticalAlignment = Alignment.CenterVertically) {

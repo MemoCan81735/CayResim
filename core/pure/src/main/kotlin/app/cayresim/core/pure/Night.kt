@@ -91,9 +91,12 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private var refSmall: ByteArray? = null
     private var refSharpness = 0.0
     private var refRobust = 0.0
-    private val sw = width / SCALE
-    private val sh = height / SCALE
-    private val maxShift = minOf(8, (sw - 1) / 2 - 1, (sh - 1) / 2 - 1).coerceAtLeast(0)
+    /** S-004: gemeinsame Ausrichtung (auch fuer Langzeit, Wegrechnen, Fokus-Stacking). */
+    // Nacht bleibt beim schnellen einfachen Verfahren (Zeitbudget je Bild im Bildstrom, R27); bewegte Objekte
+    // gewichten hier die Kacheln ab. Die robuste Suche nutzen die Serienmodi (FrameAlignment.alignInPlace).
+    private val aligner = FrameAligner(width, height, robust = false)
+    private val sw = aligner.sw
+    private val sh = aligner.sh
 
     // Ueberblenden zwischen Kachelmitten: Tabellen je Spalte und Zeile einmal berechnen (S-001, R27)
     private val colTile = IntArray(width); private val colTile1 = IntArray(width); private val colA = FloatArray(width)
@@ -191,12 +194,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         }
         // Verwackelte Bilder (deutlich weniger Kanten als die Referenz) verschlechtern das Ergebnis
         if (refSharpness > 0 && sharpness(small) < BLUR_LIMIT * refSharpness) { dropped++; return false }
-        val (sdx, sdy) = if (maxShift > 0) StarAlignment.estimateShift(ref, small, sw, sh, maxShift) else 0 to 0
         val rl = refLuma!!
-        // Feinausrichtung in voller Aufloesung um die Grobschaetzung herum (die Grobstufe trifft nur auf 4 Pixel genau)
-        val (bx, by) = refine(rl, frame, sdx * SCALE, sdy * SCALE)
-        // Sehr verrauschte Bilder (RAW im Dunkeln): eine Verschiebung nur annehmen, wenn sie klar besser passt als keine
-        val (dx, dy) = if ((bx != 0 || by != 0) && alignError(rl, frame, bx, by) > SHIFT_GAIN * alignError(rl, frame, 0, 0)) 0 to 0 else bx to by
+        val (dx, dy) = aligner.shiftOf(ref, rl, small, frame)
         maxShake = maxOf(maxShake, abs(dx), abs(dy))
         // Abweichung je Kachel nach dem Ausrichten
         val tiles = tilesX * tilesY
@@ -249,35 +248,6 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         return true
     }
 
-    /** Sucht im Umkreis von [SCALE] - 1 Pixeln die beste Verschiebung auf der vollen Helligkeit (jedes 2. Pixel). */
-    private fun refine(ref: ByteArray, frame: ByteArray, cx: Int, cy: Int): Pair<Int, Int> {
-        val r = SCALE - 1
-        var best = cx to cy; var bestErr = Long.MAX_VALUE
-        for (dy in cy - r..cy + r) for (dx in cx - r..cx + r) {
-            val err = alignError(ref, frame, dx, dy)
-            if (err < bestErr) { bestErr = err; best = dx to dy }
-        }
-        return best
-    }
-
-    /** Summe der Helligkeitsabweichung bei Verschiebung (dx, dy), Rand ausgespart, jedes 2. Pixel. */
-    private fun alignError(ref: ByteArray, frame: ByteArray, dx: Int, dy: Int): Long {
-        val m = minOf(width, height) / 8
-        var err = 0L
-        var y = m
-        while (y < height - m) {
-            val sy = (y + dy).coerceIn(0, height - 1)
-            var x = m
-            while (x < width - m) {
-                val sx = (x + dx).coerceIn(0, width - 1)
-                err += abs(lumaAt(frame, (sy * width + sx) * 3) - (ref[y * width + x].toInt() and 0xFF))
-                x += 2
-            }
-            y += 2
-        }
-        return err
-    }
-
     /** Gewichtetes Mittel in linearem Licht, dann Nacht-Look (Schwarzpunkt, Entrauschen, Kontrast, Aufhellen). */
     fun finish(): NightTone.Result {
         check(used > 0) { "Kein Bild" }
@@ -306,20 +276,11 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         return if (n == 0) 0f else (s / n).toFloat()
     }
 
-    private fun downscale(f: ByteArray): ByteArray {
-        val out = ByteArray(sw * sh * 3)
-        for (y in 0 until sh) for (x in 0 until sw) for (c in 0 until 3) {
-            var s = 0
-            for (oy in 0 until SCALE) for (ox in 0 until SCALE) s += f[((y * SCALE + oy) * width + x * SCALE + ox) * 3 + c].toInt() and 0xFF
-            out[(y * sw + x) * 3 + c] = (s / (SCALE * SCALE)).toByte()
-        }
-        return out
-    }
+    private fun downscale(f: ByteArray) = aligner.downscale(f)
 
-    private fun luma(f: ByteArray) = ByteArray(pixels) { lumaAt(f, it * 3).toByte() }
+    private fun luma(f: ByteArray) = aligner.luma(f)
 
-    private fun lumaAt(f: ByteArray, i: Int) =
-        ((f[i].toInt() and 0xFF) * 54 + (f[i + 1].toInt() and 0xFF) * 183 + (f[i + 2].toInt() and 0xFF) * 19) shr 8
+    private fun lumaAt(f: ByteArray, i: Int) = FrameAligner.lumaAt(f, i)
 
     /** Kantenenergie (Laplace) auf dem verkleinerten Bild. */
     private fun sharpness(s: ByteArray): Double {
@@ -364,13 +325,12 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private fun median(a: FloatArray): Float = a.sortedArray().let { it[it.size / 2] }
 
     companion object {
-        const val SCALE = 4
+        const val SCALE = FrameAligner.SCALE
         /** Kacheln bis zum Doppelten der ueblichen Abweichung gelten als Rauschen, darueber als Bewegung. */
         const val ROBUST = 2f
         /** Unter 50 % der Kantenenergie der Referenz gilt ein Bild als verwackelt. */
         const val BLUR_LIMIT = 0.5
-        /** Eine Verschiebung muss den Fehler auf hoechstens 97 % von "keine Verschiebung" senken. */
-        const val SHIFT_GAIN = 0.97
+        const val SHIFT_GAIN = FrameAligner.SHIFT_GAIN
         /** S-003: so viele erste Bilder kommen als Bezug in Frage; 1 = immer das erste (Rueckweg). */
         const val REF_CANDIDATES = 3
         /** Ein Kandidat muss so viel schaerfer sein, damit der Bezug wechselt (Rauschen allein reicht nicht). */

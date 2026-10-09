@@ -208,6 +208,17 @@ class CameraContentTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_pro.png")
     }
 
+    @Test fun pro_warnt_vor_verwackeln() {
+        show(running.copy(special = SpecialOption.PRO, pro = app.cayresim.feature.camera.control.ProUi(true, true, true, 0.9f, 0.2f, null, false, "1/4 s", "ISO 400", shakeWarning = true)))
+        compose.onNodeWithText("Verwacklungsgefahr: Handy abstützen oder Timer nutzen").assertIsDisplayed()
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_pro_shake.png")
+    }
+
+    @Test fun pro_ohne_warnung_bei_kurzer_zeit() {
+        show(running.copy(special = SpecialOption.PRO, pro = app.cayresim.feature.camera.control.ProUi(true, true, true, 0.4f, 0.2f, null, true, "1/60 s", "ISO 400")))
+        compose.onAllNodesWithTag("pro_shake_warning").assertCountEquals(0)
+    }
+
     @Test fun pro_ohne_faehigkeiten_zeigt_hinweis() {
         show(running.copy(special = SpecialOption.PRO))
         compose.onNodeWithTag("pro_panel").assertIsDisplayed()

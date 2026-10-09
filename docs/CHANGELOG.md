@@ -2,6 +2,11 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## nächste Version (S-004)
+- Langzeit, Menschen wegrechnen und Fokus-Stacking richten die Bilder vorher aus (wie der Nachtmodus): freihand scharf.
+- Pro-Modus warnt bei Belichtungszeiten über 1/24 s vor Verwackeln.
+- Gerät: Langzeit und Menschen wegrechnen einmal freihand, Pro mit langer Zeit.
+
 ## 0.1.86 (9. Oktober 2026, S-003)
 - Nacht: das schärfste der ersten 3 Bilder wird Bezug; verwackelte Einzelbilder werden so zuverlässiger verworfen.
 - Nacht-Hinweis zeigt das Wackeln, z. B. ", Wackeln bis 12 px".

@@ -68,6 +68,7 @@
     <string name="timer_off">Selbstauslöser aus</string>
     <string name="timer_on">Selbstauslöser 2 s</string>
     <string name="timer_short">2 s</string>
+    <string name="pro_shake_warning">Verwacklungsgefahr: Handy abstützen oder Timer nutzen</string>
     <string name="night_duration">, Dauer %1$s s</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>
     <string name="msg_night_failed">Die Nachtaufnahme hat nicht geklappt.</string>

@@ -6,6 +6,12 @@ import kotlin.math.roundToLong
 
 /** Regler-Umrechnung fuer das Pro-Panel. Belichtung logarithmisch, weil sie ueber viele Zehnerpotenzen reicht. */
 object ProScale {
+    /**
+     * S-004: Kehrwertregel, 1 durch Brennweite (Hauptkamera etwa 24 mm Kleinbild): laenger als 1/24 s verwackelt
+     * aus der Hand leicht. Nur ein Hinweis; der Stabilisator schafft oft mehr.
+     */
+    const val SHAKE_LIMIT_NS = 1_000_000_000L / 24
+
     fun fromSlider(v: Float, range: LongRange): Long {
         val lo = ln(range.first.coerceAtLeast(1).toDouble()); val hi = ln(range.last.coerceAtLeast(range.first + 1).toDouble())
         return exp(lo + v.coerceIn(0f, 1f) * (hi - lo)).roundToLong().coerceIn(range)

@@ -29,6 +29,8 @@ data class ProUi(
     val raw: Boolean = false,
     val exposureLabel: String = "Auto",
     val isoLabel: String = "Auto",
+    /** S-004: Belichtungszeit laenger als [ProScale.SHAKE_LIMIT_NS], aus der Hand verwackelt das Foto leicht. */
+    val shakeWarning: Boolean = false,
 )
 
 enum class SpecialStatus { IDLE, COLLECTING, PROCESSING, ARMED }

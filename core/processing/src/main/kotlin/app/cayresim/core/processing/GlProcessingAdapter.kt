@@ -15,6 +15,7 @@ import app.cayresim.core.boundary.MainDispatcher
 import app.cayresim.core.boundary.ComputeDispatcher
 import app.cayresim.core.boundary.FrameBurst
 import app.cayresim.core.boundary.StackMode
+import app.cayresim.core.pure.FrameAlignment
 import app.cayresim.core.pure.Stacking
 import app.cayresim.core.pure.FocusStacking
 import app.cayresim.core.pure.StarAlignment
@@ -88,6 +89,8 @@ class GlProcessingAdapter @Inject constructor(
             return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         val rgb = try {
             withContext(compute) {
+                // S-004: freihand verschobene Bilder erst aufeinanderlegen (wie im Nacht-Kern); Sterne haben eine eigene Suche
+                if (mode != StackMode.STARS) FrameAlignment.alignInPlace(burst.frames, burst.width, burst.height) { ensureActive() }
                 when (mode) {
                     // Dunkle Serien werden linear gemittelt und aufgehellt (NightTone); helle bleiben unveraendert
                     StackMode.MEDIAN -> NightTone.brightenBytes(parallelStack(burst, median = true), burst.width).rgb

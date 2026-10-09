@@ -324,6 +324,54 @@ class QualityLabTest {
         assertTrue(t >= 0.9 * t0, "Struktur $t, hoechstens 10 % unter $t0")
     }
 
+    // ---------- S-004: Ausrichtung fuer Langzeit und Menschen wegrechnen ----------
+
+    /** Unregelmaessiges Muster wie im Randtest; [passerX]: helles Objekt (Passant) an dieser Stelle. */
+    private fun blockTruth(passerX: Int? = null): DoubleArray {
+        val blocks = Random(23).let { r -> DoubleArray(((w + 2) / 3) * ((h + 2) / 3)) { if (r.nextBoolean()) 0.0008 else 0.0024 } }
+        return DoubleArray(w * h) { p ->
+            val x = p % w; val y = p / w
+            if (passerX != null && x in passerX until passerX + 20 && y in 60 until 100) 0.012 else blocks[(y / 3) * ((w + 2) / 3) + x / 3]
+        }
+    }
+
+    private fun texture(rgb: ByteArray) = Rect(70, 50, 120, 94).let { ImageQuality.noise(rgb, w, it) / ImageQuality.mean(rgb, w, it) }
+
+    /** 20 Bilder wie im Serienmodus; freihand bis 10 Pixel Versatz. */
+    private fun series(seed: Long, shake: Int, passer: Boolean = false): List<ByteArray> {
+        val lab = Lab(seed); val r = Random(seed + 1)
+        return List(20) { k ->
+            val dx = if (k == 0 || shake == 0) 0 else r.nextInt(-shake, shake + 1); val dy = if (k == 0 || shake == 0) 0 else r.nextInt(-shake, shake + 1)
+            capture(blockTruth(if (passer && k in 4..16) 10 + (k - 4) * 12 else null), dx, dy, lab)
+        }
+    }
+
+    @Test fun `Testlabor Langzeit freihand wird ausgerichtet und bleibt scharf`() {
+        // S-004 K2: wie GlProcessingAdapter, StackMode.MEAN; ohne Ausrichtung verschmiert der Mittelwert das Muster
+        fun mean(f: List<ByteArray>) = NightTone.softGammaMeanAndBrighten(f, w * h, w).rgb
+        val calm = texture(mean(series(51, 0)))
+        val plain = texture(mean(series(51, 10)))
+        val shaky = series(51, 10).also { FrameAlignment.alignInPlace(it, w, h) }
+        val aligned = texture(mean(shaky))
+        report("70-langzeit", "\n## Langzeit freihand (20 Bilder, bis 10 Pixel)\n\nStruktur ausgerichtet ${"%.3f".format(aligned)}, ohne Ausrichtung ${"%.3f".format(plain)}, Stativ ${"%.3f".format(calm)}\n")
+        assertTrue(aligned >= 0.9 * calm, "Langzeit freihand: Struktur $aligned gegen $calm auf dem Stativ")
+        assertTrue(plain < 0.7 * calm, "Pruefe die Pruefung: ohne Ausrichtung muss die Szene verschmieren ($plain gegen $calm)")
+    }
+
+    @Test fun `Testlabor Menschen wegrechnen freihand entfernt den Passanten und bleibt scharf`() {
+        // S-004 K3: wie GlProcessingAdapter, StackMode.MEDIAN (Median der Helligkeit, dann Aufhellen)
+        fun median(f: List<ByteArray>) = ByteArray(w * h * 3).also { Stacking.lumaMedianRange(f, it, 0, w * h) }.let { NightTone.brightenBytes(it, w).rgb }
+        val clean = median(series(61, 0))
+        val shaky = series(61, 10, passer = true).also { FrameAlignment.alignInPlace(it, w, h) }
+        val out = median(shaky)
+        val path = Rect(20, 62, 180, 98)
+        val ghost = ImageQuality.mean(out, w, path) - ImageQuality.mean(clean, w, path)
+        val t = texture(out); val t0 = texture(clean)
+        report("71-wegrechnen", "\n## Menschen wegrechnen freihand (20 Bilder, bis 10 Pixel)\n\nGeist ${"%.2f".format(ghost)} Stufen, Struktur ${"%.3f".format(t)} gegen ${"%.3f".format(t0)} auf dem Stativ\n")
+        assertTrue(kotlin.math.abs(ghost) < 3.0, "Passant bleibt sichtbar: $ghost Stufen")
+        assertTrue(t >= 0.9 * t0, "Wegrechnen freihand verschmiert: $t gegen $t0")
+    }
+
     @Test fun `Testlabor bewegtes Objekt auf einer Kachelgrenze hinterlaesst weder Doppelbild noch Blockkante`() {
         val lab = Lab(31)
         val clean = truth(0.0006)

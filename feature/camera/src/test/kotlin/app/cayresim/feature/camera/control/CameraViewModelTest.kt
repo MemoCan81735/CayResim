@@ -307,6 +307,14 @@ class CameraViewModelTest {
         assertEquals("2,0 s", vm.uiState.value.pro.exposureLabel); assertEquals("ISO 3200", vm.uiState.value.pro.isoLabel)
     }
 
+    @Test fun `Pro warnt bei langer Belichtungszeit vor Verwackeln`() = runTest {
+        // S-004 K6: laenger als 1/24 s
+        visibleAndGranted(); special(SpecialOption.PRO)
+        vm.onExposure(1f); assertTrue(vm.uiState.value.pro.shakeWarning, "2 s aus der Hand")
+        vm.onExposure(0f); assertFalse(vm.uiState.value.pro.shakeWarning, "kuerzeste Zeit")
+        vm.onExposure(null); assertFalse(vm.uiState.value.pro.shakeWarning, "Automatik")
+    }
+
     @Test fun `Auto setzt die Automatik zurueck`() = runTest {
         vm.onExposure(0.3f); vm.onExposure(null); vm.onFocus(0.5f); vm.onFocus(null)
         assertNull(manual.manualState.value.exposureNanos); assertNull(manual.manualState.value.focusDiopters)

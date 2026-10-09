@@ -115,6 +115,7 @@ class CameraViewModel @Inject constructor(
             raw = m.raw,
             exposureLabel = exp?.let { ProScale.exposureText(it) } ?: "Auto",
             isoLabel = iso?.let { "ISO $it" } ?: "Auto",
+            shakeWarning = exp != null && exp > ProScale.SHAKE_LIMIT_NS,
         )
     }
 
