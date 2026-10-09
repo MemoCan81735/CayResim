@@ -95,6 +95,21 @@ class CameraXAdapterContractTest {
         adapter.delete(c.uri)
     }
 
+    /** RAW-Nachtweg (Ausnahme A3): Rohbilder mit Kalibrierung, danach laeuft CameraX wieder und ein Foto gelingt. */
+    @Test fun rawStromLiefertRohbilderUndGibtDieKameraZurueck() = run {
+        adapter.start()
+        val frames = withTimeout(20_000) { adapter.rawFrames(3, 33_000_000, 400).toList() }
+        android.util.Log.i("CayResimTest", "RAW-Strom Emulator: ${frames.size} Bilder, ${frames.firstOrNull()?.let { "${it.width}x${it.height} ${it.cfa} Schwarz ${it.black.toList()} Weiss ${it.white} WB ${it.gains.toList()}" }}")
+        if (adapter.manualCapabilities.value?.raw == true) {
+            assertEquals(3, frames.size, "RAW-Strom lieferte ${frames.size} Bilder")
+            val f = frames.first()
+            assertTrue(f.data.size >= f.rowStride * (f.height - 1) + f.width, "Rohdaten zu kurz")
+        }
+        assertEquals(CameraStatus.RUNNING, adapter.state.value.status)
+        val c = assertIs<CaptureResult.Saved>(adapter.capture(), "Foto nach dem RAW-Strom")
+        adapter.delete(c.uri)
+    }
+
     /** Ultra HDR im normalen Modus, wenn die Kamera es kann; sonst normales JPEG ohne Ausfall. */
     @Test fun ultraHdrNurWennUnterstuetzt() = run {
         adapter.start()

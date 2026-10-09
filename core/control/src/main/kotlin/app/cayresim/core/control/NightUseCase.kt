@@ -3,6 +3,8 @@ package app.cayresim.core.control
 import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.ManualCameraBoundary
+import app.cayresim.core.boundary.NightPathBoundary
+import app.cayresim.core.pure.NightPath
 import app.cayresim.core.boundary.ProcessResult
 import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.pure.NightPlan
@@ -26,6 +28,8 @@ class NightUseCase @Inject constructor(
     private val manual: ManualCameraBoundary,
     private val frames: FrameBoundary,
     private val processing: ProcessingBoundary,
+    /** Wahl aus dem Selbsttest; ohne sie immer der 8-Bit-Weg. */
+    private val nightPath: NightPathBoundary? = null,
 ) {
     /** Eigener Kern bei Dunkelheit oder wenn noch keine Messung vorliegt; bei gemessen hellem Licht Samsungs Modus. */
     fun shouldUseOwn(): Boolean {
@@ -44,6 +48,7 @@ class NightUseCase @Inject constructor(
         val expRange = caps?.exposureRangeNanos; val isoRange = caps?.isoRange
         if (caps?.canExpose != true || expRange == null || isoRange == null)
             return StackOutcome.Failed(StackOutcome.Stage.COLLECT, "NO_MANUAL_EXPOSURE")
+        if (nightPath?.load()?.path == NightPath.RAW) rawNight(count, expRange, isoRange)?.let { return it }
         val before = manual.manualState.value
         var plan: NightPlan.Exposure? = null
         try {
@@ -71,6 +76,23 @@ class NightUseCase @Inject constructor(
         } finally {
             // Auch bei Abbruch (Zurueck, Home): sonst bliebe die Nachtbelichtung im Singleton-Adapter haengen
             withContext(NonCancellable) { manual.setExposure(before.exposureNanos, before.iso) }
+        }
+    }
+
+    /**
+     * RAW-Nachtweg: Belichtung aus der letzten Messung der Automatik, die RAW-Sitzung setzt sie selbst.
+     * null = RAW gescheitert, der Aufrufer nimmt den 8-Bit-Weg (R14).
+     */
+    private suspend fun rawNight(count: Int, expRange: LongRange, isoRange: IntRange): StackOutcome? {
+        val l = camera.state.value.light
+        val p = NightPlan.plan(l?.exposureNs ?: FALLBACK_NS, l?.iso ?: isoRange.last, expRange.last, isoRange.first, isoRange.last)
+        return when (val r = processing.nightRaw(frames.rawFrames(count, p.exposureNs, p.iso))) {
+            is ProcessResult.Saved -> {
+                val used = r.night?.used ?: count
+                StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
+                    NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true))
+            }
+            is ProcessResult.Failed -> null
         }
     }
 

@@ -71,6 +71,9 @@ class FakeCameraBoundary(
 
     override suspend fun delete(uri: String): Boolean = saved.remove(uri)
 
+    /** Uebernimmt ein Foto, das ein anderer Fake gespeichert hat (wie die echte Galerie: loeschen geht ueber die Kamera). */
+    fun adopt(uri: String) { saved += uri }
+
     /** Simuliert eine Messung der Belichtungsautomatik. */
     fun measure(light: app.cayresim.core.boundary.LightSnapshot?) = _state.update { it.copy(light = light) }
 

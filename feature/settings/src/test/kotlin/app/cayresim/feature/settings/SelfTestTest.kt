@@ -115,6 +115,18 @@ class SelfTestTest {
         compose.onNodeWithText("Schwarz laut Aufnahme: 64,0/64,0/64,0/64,0, Weiß: 1023", substring = true).assertExists()
     }
 
+    @Test fun nachtweg_wird_mit_grund_angezeigt() {
+        val cam = FakeCameraBoundary()
+        val proc = app.cayresim.core.boundary.fake.FakeProcessingBoundary().apply { onRawSaved = { cam.adopt(it) } }
+        val vm = SelfTestViewModel(SelfTestUseCase(cam, clock, FakeSelfTestJournalBoundary(), app.cayresim.core.boundary.fake.FakeManualCameraBoundary(cam),
+            app.cayresim.core.boundary.fake.FakeFrameBoundary(cam), proc, app.cayresim.core.boundary.fake.FakeNightPathBoundary()))
+        vm.onStart()
+        val row = vm.uiState.value.rows.single { it.kind == CheckKind.NIGHT_PATH }
+        assertEquals("RAW", row.nightPath)
+        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(vm.uiState.value.copy(rows = listOf(row)), {}, {}) } }
+        compose.onNodeWithText("Gewählt: RAW, Grund: RAW-Probenacht gelungen", substring = true).assertExists()
+    }
+
     @Test fun leerer_zustand_ist_nicht_gruen() = assertFalse(SelfTestUiState(finished = true).allPassed)
 
     private val rows = listOf(

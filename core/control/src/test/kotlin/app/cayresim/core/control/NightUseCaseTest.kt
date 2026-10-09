@@ -109,4 +109,30 @@ class NightUseCaseTest {
         val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, stubborn, frames, proc)(10))
         assertNull(r.night!!.exposureNs); assertNull(r.night!!.iso)
     }
+
+    // ---------- RAW-Nachtweg (Wahl aus dem Selbsttest) ----------
+
+    private fun rawNight(stored: app.cayresim.core.pure.NightPath) =
+        NightUseCase(cam, manual, frames, proc, app.cayresim.core.boundary.fake.FakeNightPathBoundary(app.cayresim.core.boundary.NightPathSnapshot(stored)))
+
+    @Test fun `Guter Fall gespeichert RAW nutzt den RAW-Strom mit geplanter Belichtung`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(39_990_000, 3200))
+        val r = assertIs<StackOutcome.Saved>(rawNight(app.cayresim.core.pure.NightPath.RAW)(36))
+        assertEquals(listOf(36), proc.rawNightRuns); assertTrue(proc.nightRuns.isEmpty(), "kein 8-Bit-Weg")
+        assertEquals(Triple(36, 100_000_000L, 3200), frames.rawCalls.single())
+        assertTrue(r.night!!.raw); assertEquals(3200, r.night!!.iso)
+        assertTrue(manual.history.isEmpty(), "RAW-Sitzung setzt die Belichtung selbst, die manuellen Werte bleiben unberuehrt")
+    }
+
+    @Test fun `Fehlerfall RAW scheitert, der 8-Bit-Weg springt ein`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.rawFails = true
+        val r = assertIs<StackOutcome.Saved>(rawNight(app.cayresim.core.pure.NightPath.RAW)(20))
+        assertEquals(listOf(20), proc.nightRuns); assertFalse(r.night!!.raw)
+    }
+
+    @Test fun `Randfall gespeichert 8 Bit oder nichts gespeichert nutzt nie RAW`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        rawNight(app.cayresim.core.pure.NightPath.YUV)(10); night(10)
+        assertTrue(frames.rawCalls.isEmpty()); assertEquals(listOf(10, 10), proc.nightRuns)
+    }
 }

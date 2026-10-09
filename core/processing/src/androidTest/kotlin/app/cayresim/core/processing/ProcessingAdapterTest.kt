@@ -143,6 +143,34 @@ class ProcessingAdapterTest {
         assertTrue(Color.green(bmp.getPixel(w / 2, h / 2)) >= 12, "Ergebnis zu dunkel")
     }
 
+    /** RAW-Nachtweg: Bayer-Rohbilder (RGGB, 10 Bit, Schwarz 64) ergeben ein Nachtbild halber Kantenlaenge. */
+    @Test fun rawNachtAusDemStrom() = runBlocking {
+        val w = 256; val h = 192
+        val rng = java.util.Random(3)
+        val frames = kotlinx.coroutines.flow.flow {
+            repeat(12) {
+                emit(app.cayresim.core.boundary.RawFrame(w, h, w, ShortArray(w * h) { i ->
+                    val x = i % w; val y = i / w
+                    ((if ((x / 32 + y / 32) % 2 == 0) 70 else 110) + rng.nextInt(9) - 4).toShort()
+                }, app.cayresim.core.boundary.CfaLayout.RGGB, floatArrayOf(64f, 64f, 64f, 64f), 1023f,
+                    floatArrayOf(1.8f, 1f, 1.5f), floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)))
+            }
+        }
+        val r = adapter.nightRaw(frames); track(r)
+        val saved = assertIs<ProcessResult.Saved>(r, "RAW-Nacht fehlgeschlagen: $r")
+        assertEquals(12, saved.night!!.used)
+        val bmp = assertNotNull(adapter.decodeOriented(Uri.parse(saved.uri), 1000))
+        assertEquals(w / 2, maxOf(bmp.width, bmp.height)); bmp.recycle()
+    }
+
+    @Test fun rawNachtOhneBayerMusterScheitertSauber() = runBlocking {
+        val mono = kotlinx.coroutines.flow.flowOf(*Array(5) {
+            app.cayresim.core.boundary.RawFrame(64, 48, 64, ShortArray(64 * 48) { 100 }, app.cayresim.core.boundary.CfaLayout.MONO,
+                floatArrayOf(64f, 64f, 64f, 64f), 1023f, floatArrayOf(1f, 1f, 1f), floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f))
+        })
+        assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.nightRaw(mono))
+    }
+
     @Test fun nachtKernMitZuWenigBildernSpeichertNichts() = runBlocking {
         val two = kotlinx.coroutines.flow.flowOf(*Array(2) { app.cayresim.core.boundary.Frame(64, 48, ByteArray(64 * 48 * 3) { 5 }) })
         assertEquals(ProcessResult.Failed(ProcessFailure.INVALID_INPUT), adapter.night(two))

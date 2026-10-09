@@ -199,4 +199,67 @@ class SelfTestUseCaseTest {
         assertFalse(item.passed); assertTrue(manual.probeCalls.isEmpty(), "nicht sofort wiederholen")
         assertTrue(SelfTestUseCase(cam, StepClock(), journal, manual)().items.single { it.check == SelfTestCheck.RAW_SERIES }.passed)
     }
+
+    // ---------- Nachtweg: Pruefung auf dem Geraet entscheidet ----------
+
+    private class Rig(rawOk: Boolean = true) {
+        val cam = FakeCameraBoundary(emptySet())
+        val manual = FakeManualCameraBoundary(cam)
+        val frames = app.cayresim.core.boundary.fake.FakeFrameBoundary(cam)
+        val proc = app.cayresim.core.boundary.fake.FakeProcessingBoundary().apply { rawFails = !rawOk; onRawSaved = { cam.adopt(it) } }
+        val store = app.cayresim.core.boundary.fake.FakeNightPathBoundary()
+        fun run(clock: Clock = StepClock(), journal: FakeSelfTestJournalBoundary = FakeSelfTestJournalBoundary()) =
+            SelfTestUseCase(cam, clock, journal, manual, frames, proc, store)
+    }
+
+    @Test fun `Guter Fall Messung und Probenacht gut, RAW wird gewaehlt und gespeichert`() = runTest {
+        val rig = Rig()
+        val report = rig.run()()
+        val item = report.items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPath.RAW, item.nightPath!!.path)
+        assertEquals(app.cayresim.core.pure.NightPath.RAW, rig.store.stored.path)
+        assertEquals(listOf(12), rig.proc.rawNightRuns, "Probenacht mit 12 RAW-Bildern")
+        assertTrue(report.passed, report.toString()); assertEquals(0, rig.cam.saved.size, "Probefoto geloescht")
+    }
+
+    @Test fun `Fehlerfall Probenacht scheitert, 8 Bit mit Grund`() = runTest {
+        val rig = Rig(rawOk = false)
+        val item = rig.run()().items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPathRule.Reason.PROBE_FAILED, item.nightPath!!.reason)
+        assertEquals(app.cayresim.core.pure.NightPath.YUV, rig.store.stored.path)
+    }
+
+    @Test fun `Fehlerfall Bildstrom zu langsam, keine Probenacht`() = runTest {
+        val rig = Rig()
+        rig.manual.rawProbe = RawProbeResult.Ok((rig.manual.rawProbe as RawProbeResult.Ok).probe.copy(streamFps = 3f))
+        val item = rig.run()().items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPathRule.Reason.SLOW_STREAM, item.nightPath!!.reason)
+        assertTrue(rig.proc.rawNightRuns.isEmpty())
+    }
+
+    @Test fun `Fehlerfall Probenacht zu langsam ergibt 8 Bit`() = runTest {
+        val rig = Rig()
+        // Uhr springt waehrend der Probenacht um 7 s
+        val clock = object : Clock { var t = 0L; override fun nowMillis(): Long { t += if (rig.frames.rawCalls.isNotEmpty() && t < 7_000) 7_000 else 10; return t } }
+        val item = rig.run(clock)().items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPathRule.Reason.PROBE_SLOW, item.nightPath!!.reason)
+    }
+
+    @Test fun `Fehlerfall Neustart bei der Probenacht wird einmal uebersprungen`() = runTest {
+        val rig = Rig()
+        val journal = FakeSelfTestJournalBoundary().apply { crashAtStep = "RAW-Nacht" }
+        runCatching { rig.run(journal = journal)() }
+        journal.crashAtStep = null
+        val item = rig.run(journal = journal)().items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPath.YUV, item.nightPath!!.path)
+        assertTrue(rig.proc.rawNightRuns.isEmpty(), "nach einem Absturz nicht sofort wiederholen")
+    }
+
+    @Test fun `Randfall ohne RAW-Faehigkeit 8 Bit ohne Probenacht`() = runTest {
+        val rig = Rig()
+        val noRaw = FakeManualCameraBoundary(rig.cam, ManualCapabilitiesSnapshot(100_000L..2_000_000_000L, 50..3200, 10f, raw = false))
+        val item = SelfTestUseCase(rig.cam, StepClock(), FakeSelfTestJournalBoundary(), noRaw, rig.frames, rig.proc, rig.store)()
+            .items.single { it.check == SelfTestCheck.NIGHT_PATH }
+        assertEquals(app.cayresim.core.pure.NightPathRule.Reason.NO_RAW, item.nightPath!!.reason)
+    }
 }

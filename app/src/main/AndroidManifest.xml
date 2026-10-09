@@ -3,6 +3,7 @@
     <application
         android:name=".shell.CayResimApp"
         android:allowBackup="false"
+        android:largeHeap="true"
         android:icon="@android:drawable/ic_menu_camera"
         android:label="CayResim"
         android:supportsRtl="true"

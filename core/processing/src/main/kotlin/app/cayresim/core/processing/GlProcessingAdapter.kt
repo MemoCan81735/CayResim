@@ -146,6 +146,47 @@ class GlProcessingAdapter @Inject constructor(
         }
     }
 
+    override suspend fun nightRaw(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.RawFrame>): ProcessResult {
+        var merge: NightMerge? = null
+        var w = 0; var h = 0; var rot = 0
+        val result = try {
+            withContext(compute) {
+                frames.collect { f ->
+                    ensureActive()
+                    val cfa = when (f.cfa) {
+                        app.cayresim.core.boundary.CfaLayout.RGGB -> app.cayresim.core.pure.RawDevelop.Cfa.RGGB
+                        app.cayresim.core.boundary.CfaLayout.GRBG -> app.cayresim.core.pure.RawDevelop.Cfa.GRBG
+                        app.cayresim.core.boundary.CfaLayout.GBRG -> app.cayresim.core.pure.RawDevelop.Cfa.GBRG
+                        app.cayresim.core.boundary.CfaLayout.BGGR -> app.cayresim.core.pure.RawDevelop.Cfa.BGGR
+                        else -> return@collect // kein Bayer-Muster: Bild ueberspringen
+                    }
+                    val lin = app.cayresim.core.pure.RawDevelop.binToLinear(
+                        f.data, f.width, f.height, f.rowStride, cfa, f.black, f.white, f.gains, f.colorMatrix)
+                    val m = merge ?: NightMerge(f.width / 2, f.height / 2).also { merge = it; w = f.width / 2; h = f.height / 2; rot = f.rotationDegrees }
+                    if (f.width / 2 == w && f.height / 2 == h) m.addLinear(lin)
+                }
+                merge?.finish()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        } catch (e: OutOfMemoryError) {
+            // RAW in voller Groesse braucht viel Speicher; scheitert das, nimmt der Aufrufer den 8-Bit-Weg (R14)
+            return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        } ?: return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        val m = merge!!
+        if (m.used < MIN_NIGHT_FRAMES) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        val bitmap = withContext(compute) { rgbToBitmap(result.rgb, w, h, rot) }
+        val stats = app.cayresim.core.boundary.NightStats(m.used, m.dropped, result.gain)
+        return withContext(io) {
+            when (val saved = save(bitmap, "nacht_raw")) {
+                is ProcessResult.Saved -> saved.copy(night = stats)
+                else -> saved
+            }.also { bitmap.recycle() }
+        }
+    }
+
     /** Teilt das Bild in Baender, jedes Band rechnet ein eigener Kern; zwischen den Kacheln wird auf Abbruch geprueft (R17). */
     private suspend fun parallelStack(burst: FrameBurst, median: Boolean): ByteArray = coroutineScope {
         val out = ByteArray(burst.pixels * 3)

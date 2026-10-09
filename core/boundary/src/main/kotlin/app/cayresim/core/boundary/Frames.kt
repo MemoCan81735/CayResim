@@ -10,6 +10,24 @@ class FrameBurst(val width: Int, val height: Int, val frames: List<ByteArray>, v
 /** Ein einzelnes Bild aus dem Frame-Strom (RGB, 3 Bytes je Pixel). */
 class Frame(val width: Int, val height: Int, val rgb: ByteArray, val rotationDegrees: Int = 0)
 
+/**
+ * Ein RAW-Bild (Bayer, je Wert 16 Bit, [rowStride] Werte je Zeile) mit der Kalibrierung seiner Aufnahme.
+ * Nur Zahlen (R23): Schwarz je Position im 2x2-Muster, Weisswert, Weissabgleich Rot/Gruen/Blau,
+ * Farbmatrix Kamera nach sRGB linear (3x3 zeilenweise).
+ */
+class RawFrame(
+    val width: Int,
+    val height: Int,
+    val rowStride: Int,
+    val data: ShortArray,
+    val cfa: CfaLayout,
+    val black: FloatArray,
+    val white: Float,
+    val gains: FloatArray,
+    val colorMatrix: FloatArray,
+    val rotationDegrees: Int = 0,
+)
+
 enum class BurstFailure { NOT_READY, TIMEOUT, CANCELLED }
 
 sealed interface BurstResult {
@@ -33,6 +51,13 @@ interface FrameBoundary {
      * Ohne laufende Kamera endet der Strom sofort ohne Bild.
      */
     fun frames(maxCount: Int): Flow<Frame>
+
+    /**
+     * RAW-Bildstrom mit fester Belichtung fuer den RAW-Nachtweg (eigene Camera2-Sitzung, Ausnahme A3); hoechstens
+     * [maxCount] Bilder, hoechstens eins gleichzeitig unterwegs (R19). Leer, wenn RAW nicht moeglich ist.
+     * Danach laeuft die Kamera wie vorher.
+     */
+    fun rawFrames(maxCount: Int, exposureNs: Long, iso: Int): Flow<RawFrame>
 
     /** Meldet jedes Mal, wenn der Ausloeser nach den Regeln feuern soll. */
     fun trigger(mode: TriggerMode): Flow<Unit>

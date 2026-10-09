@@ -250,6 +250,12 @@ class CameraContentTest {
         compose.onAllNodesWithText("gekürzt", substring = true).assertCountEquals(0)
     }
 
+    @Test fun nacht_hinweis_nennt_den_raw_weg() {
+        show(running.copy(message = UserMessage(5, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 36, 0, 12f, raw = true))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("RAW, 1/10 s, ISO 3200, 36 Bilder", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     @Test fun nacht_hinweis_meldet_gekuerzte_serie() {
         show(running.copy(message = UserMessage(4, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 23, 0, 16f, shortened = true))))

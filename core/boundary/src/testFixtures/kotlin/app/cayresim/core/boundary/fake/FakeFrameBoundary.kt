@@ -31,5 +31,21 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
         repeat(n) { emit(app.cayresim.core.boundary.Frame(4, 3, ByteArray(4 * 3 * 3))); streamed++ }
     }
 
+    /** RAW-Strom: null = wie [allowed]; 0 = RAW nicht moeglich (leerer Strom). */
+    var rawAllowed: Int? = null
+    var rawStreamed = 0; private set
+    val rawCalls = mutableListOf<Triple<Int, Long, Int>>()
+
+    override fun rawFrames(maxCount: Int, exposureNs: Long, iso: Int): Flow<app.cayresim.core.boundary.RawFrame> = kotlinx.coroutines.flow.flow {
+        rawCalls += Triple(maxCount, exposureNs, iso); rawStreamed = 0
+        if (camera.state.value.status != app.cayresim.core.boundary.CameraStatus.RUNNING || fail != null) return@flow
+        val n = minOf(maxCount, rawAllowed ?: allowed ?: maxCount).coerceAtLeast(0)
+        repeat(n) {
+            emit(app.cayresim.core.boundary.RawFrame(4, 2, 4, ShortArray(8) { 64 }, app.cayresim.core.boundary.CfaLayout.RGGB,
+                floatArrayOf(64f, 64f, 64f, 64f), 1023f, floatArrayOf(1f, 1f, 1f), floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)))
+            rawStreamed++
+        }
+    }
+
     override fun trigger(mode: TriggerMode): Flow<Unit> { lastTriggerMode = mode; return fires }
 }

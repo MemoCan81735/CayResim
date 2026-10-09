@@ -53,4 +53,7 @@ interface ProcessingBoundary {
 
     /** Nacht-Kern: Bilder beim Eintreffen ausrichten, robust aufsummieren, aufhellen und speichern. */
     suspend fun night(frames: Flow<Frame>): ProcessResult
+
+    /** RAW-Nachtweg: Rohbilder entwickeln (2x2 zusammengefasst), wie [night] zusammenfuehren und speichern. */
+    suspend fun nightRaw(frames: Flow<RawFrame>): ProcessResult
 }

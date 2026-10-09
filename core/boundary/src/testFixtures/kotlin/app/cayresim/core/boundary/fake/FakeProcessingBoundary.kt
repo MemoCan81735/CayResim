@@ -53,6 +53,21 @@ class FakeProcessingBoundary : ProcessingBoundary {
         return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f))
     }
 
+    val rawNightRuns = mutableListOf<Int>()
+    /** Laesst den RAW-Weg scheitern (z. B. Speicher), damit der Rueckfall auf 8 Bit pruefbar ist. */
+    var rawFails = false
+    /** Meldet gespeicherte RAW-Nachtbilder, z. B. an FakeCameraBoundary.adopt. */
+    var onRawSaved: ((String) -> Unit)? = null
+
+    override suspend fun nightRaw(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.RawFrame>): ProcessResult {
+        var count = 0
+        frames.collect { count++ }
+        if (rawFails || count < 3) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
+        rawNightRuns += count
+        val out = "content://fake/nightraw/${++n}"; known += out; onRawSaved?.invoke(out)
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 3f))
+    }
+
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {
         if (photoUris.isEmpty() || photosPerSecond !in 1..60) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         if (photoUris.any { it !in known }) return ProcessResult.Failed(ProcessFailure.SOURCE_MISSING)

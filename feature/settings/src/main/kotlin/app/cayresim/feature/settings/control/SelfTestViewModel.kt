@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class CheckKind { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, CLEANUP }
+enum class CheckKind { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, NIGHT_PATH, CLEANUP }
 
 @Immutable
 data class CheckRow(
@@ -25,6 +25,9 @@ data class CheckRow(
     val detail: String,
     val device: DeviceInfoUi? = null,
     val raw: RawProbeUi? = null,
+    /** Gewaehlter Nachtweg ("RAW" oder "YUV") und Grund als Schluessel; den Text baut die UI (R23). */
+    val nightPath: String? = null,
+    val nightReason: String? = null,
 )
 
 /** Spiegel von RawProbe fuer die UI (R1); nur Zahlen und Schluessel. */
@@ -116,7 +119,8 @@ class SelfTestViewModel @Inject constructor(private val selfTest: SelfTestUseCas
                     running = false,
                     finished = true,
                     rows = report?.items?.map { i ->
-                        CheckRow(CheckKind.valueOf(i.check.name), i.mode?.name, i.passed, i.durationMillis, i.detail, i.device?.toUi(), i.rawProbe?.toUi())
+                        CheckRow(CheckKind.valueOf(i.check.name), i.mode?.name, i.passed, i.durationMillis, i.detail, i.device?.toUi(), i.rawProbe?.toUi(),
+                            i.nightPath?.path?.name, i.nightPath?.reason?.name)
                     } ?: listOf(CheckRow(CheckKind.CAMERA_START, null, false, 0, "Abbruch")),
                 )
             }

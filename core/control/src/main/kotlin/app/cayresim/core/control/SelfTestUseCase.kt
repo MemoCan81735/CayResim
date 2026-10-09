@@ -4,6 +4,13 @@ import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureResult
 import app.cayresim.core.boundary.ManualCameraBoundary
+import app.cayresim.core.boundary.FrameBoundary
+import app.cayresim.core.boundary.NightPathBoundary
+import app.cayresim.core.boundary.NightPathSnapshot
+import app.cayresim.core.boundary.ProcessResult
+import app.cayresim.core.boundary.ProcessingBoundary
+import app.cayresim.core.pure.NightPath
+import app.cayresim.core.pure.NightPathRule
 import app.cayresim.core.boundary.RawProbe
 import app.cayresim.core.boundary.RawProbeResult
 import app.cayresim.core.boundary.PhotoMode
@@ -11,7 +18,7 @@ import app.cayresim.core.boundary.SelfTestJournalBoundary
 import app.cayresim.core.pure.Clock
 import javax.inject.Inject
 
-enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, CLEANUP }
+enum class SelfTestCheck { LAST_RUN, CAMERA_START, CAPABILITIES, DEVICE, MODE_CAPTURE, LOW_LIGHT_BOOST, ULTRA_HDR, RAW, RAW_SERIES, NIGHT_PATH, CLEANUP }
 
 /** Ein Ergebnis des Selbsttests. [mode] ist bei MODE_CAPTURE gesetzt. */
 data class SelfTestItem(
@@ -22,6 +29,7 @@ data class SelfTestItem(
     val detail: String = "",
     val device: app.cayresim.core.boundary.DeviceReport? = null,
     val rawProbe: RawProbe? = null,
+    val nightPath: NightPathRule.Verdict? = null,
 )
 
 data class SelfTestReport(val items: List<SelfTestItem>) {
@@ -45,6 +53,10 @@ class SelfTestUseCase @Inject constructor(
     private val journal: SelfTestJournalBoundary,
     /** Fuer die RAW-Messung (Schritt 0 des RAW-Wegs); ohne sie entfaellt der Schritt. */
     private val manual: ManualCameraBoundary? = null,
+    /** Fuer die RAW-Probenacht und das Speichern der Wahl; ohne sie entfaellt der Schritt "Nachtweg". */
+    private val frames: FrameBoundary? = null,
+    private val processing: ProcessingBoundary? = null,
+    private val nightPath: NightPathBoundary? = null,
 ) {
     suspend operator fun invoke(): SelfTestReport {
         val items = mutableListOf<SelfTestItem>()
@@ -100,7 +112,9 @@ class SelfTestUseCase @Inject constructor(
                 r is CaptureResult.Failed -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, r.reason.name)
             }
         }
-        rawSeries(skip)?.let { items += it }
+        val raw = rawSeries(skip)
+        raw?.let { items += it }
+        choosePath(raw?.rawProbe, skip, created)?.let { items += it }
         journal.step(STEP_CLEANUP)
         camera.selectMode(previous)
 
@@ -131,8 +145,39 @@ class SelfTestUseCase @Inject constructor(
         }
     }
 
+    /**
+     * Entscheidet den Nachtweg fuer dieses Geraet und speichert ihn: Vorpruefung aus der RAW-Messung, dann eine echte
+     * RAW-Probenacht. Immer gruen, denn beide Wege funktionieren; das Detail sagt, welcher gewaehlt wurde und warum.
+     */
+    private suspend fun choosePath(probe: RawProbe?, skip: String?, created: MutableList<String>): SelfTestItem? {
+        val store = nightPath ?: return null
+        val rawCaps = manual?.manualCapabilities?.value?.raw == true
+        var ms = 0L
+        val verdict = if (probe == null) {
+            NightPathRule.Verdict(NightPath.YUV, if (rawCaps) NightPathRule.Reason.PROBE_FAILED else NightPathRule.Reason.NO_RAW)
+        } else {
+            NightPathRule.precheck(true, probe.streamFps, probe.zeroShare, probe.colorMatrix && probe.whiteLevel != null) ?: run {
+                val fr = frames; val pr = processing
+                if (fr == null || pr == null || skip == STEP_RAW_NIGHT) {
+                    NightPathRule.Verdict(NightPath.YUV, NightPathRule.Reason.PROBE_FAILED)
+                } else {
+                    journal.step(STEP_RAW_NIGHT)
+                    camera.selectMode(PhotoMode.NORMAL)
+                    val t = clock.nowMillis()
+                    val r = pr.nightRaw(fr.rawFrames(NightPathRule.PROBE_FRAMES, RAW_EXPOSURE_NS, RAW_ISO))
+                    ms = clock.nowMillis() - t
+                    if (r is ProcessResult.Saved) { created += r.uri; journal.photo(r.uri) }
+                    NightPathRule.afterProbe(r is ProcessResult.Saved, ms)
+                }
+            }
+        }
+        store.save(NightPathSnapshot(verdict.path, verdict.reason))
+        return SelfTestItem(SelfTestCheck.NIGHT_PATH, true, ms, nightPath = verdict)
+    }
+
     internal companion object {
         const val STEP_RAW = "RAW-Serie"
+        const val STEP_RAW_NIGHT = "RAW-Nacht"
         /** Messung wie fuer die Nacht: 8 Bilder bei 1/10 s und ISO 3200. */
         const val RAW_FRAMES = 8
         const val RAW_EXPOSURE_NS = 100_000_000L

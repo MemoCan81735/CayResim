@@ -488,6 +488,140 @@ class CameraXCameraAdapter @Inject constructor(
         }
     }
 
+    // ---------- RAW-Nachtweg (Ausnahme A3: eigene Camera2-Sitzung nur waehrend der Aufnahme) ----------
+
+    override fun rawFrames(maxCount: Int, exposureNs: Long, iso: Int): Flow<app.cayresim.core.boundary.RawFrame> = kotlinx.coroutines.flow.flow {
+        // Je Sammlung ein eigener Zaehler; hoechstens ein Rohbild (24 MB) unterwegs (R19)
+        val inFlight = java.util.concurrent.atomic.AtomicInteger(0)
+        emitAll(rawStream(maxCount, exposureNs, iso, inFlight).buffer(1).onEach { inFlight.decrementAndGet() })
+    }
+
+    @android.annotation.SuppressLint("MissingPermission")
+    private fun rawStream(maxCount: Int, exposureNs: Long, iso: Int, inFlight: java.util.concurrent.atomic.AtomicInteger) =
+        callbackFlow<app.cayresim.core.boundary.RawFrame> {
+            if (_state.value.status != CameraStatus.RUNNING || maxCount <= 0 || _manualCaps.value?.raw != true) { close(); return@callbackFlow }
+            val info = boundCamera?.cameraInfo
+            val c2 = info?.let { runCatching { Camera2CameraInfo.from(it) }.getOrNull() }
+            if (c2 == null) { close(); return@callbackFlow }
+            fun <T> ch(k: CameraCharacteristics.Key<T>): T? = runCatching { c2.getCameraCharacteristic(k) }.getOrNull()
+            val size = ch(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                ?.getOutputSizes(android.graphics.ImageFormat.RAW_SENSOR)?.maxByOrNull { it.width.toLong() * it.height }
+            val pattern = ch(CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN)
+            val staticBlack = FloatArray(4) { i -> (pattern?.getOffsetForIndex(i % 2, i / 2) ?: 0).toFloat() }
+            val white = (ch(CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL) ?: 1023).toFloat()
+            val cfa = when (ch(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT)) {
+                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_RGGB -> CfaLayout.RGGB
+                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_GRBG -> CfaLayout.GRBG
+                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_GBRG -> CfaLayout.GBRG
+                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_BGGR -> CfaLayout.BGGR
+                else -> null
+            }
+            if (size == null || cfa == null) { close(); return@callbackFlow }
+            val rotation = rawRotation(ch(CameraCharacteristics.SENSOR_ORIENTATION) ?: 90)
+            val n = thermal.streamFramesFor(maxCount, headroom())
+            val cameraId = c2.cameraId
+            val thread = android.os.HandlerThread("raw-night").apply { start() }
+            val handler = android.os.Handler(thread.looper)
+            val executor = java.util.concurrent.Executor { handler.post(it) }
+            val reader = android.media.ImageReader.newInstance(size.width, size.height, android.graphics.ImageFormat.RAW_SENSOR, 3)
+            var device: android.hardware.camera2.CameraDevice? = null
+            var session: android.hardware.camera2.CameraCaptureSession? = null
+            val watchers = mutableListOf<kotlinx.coroutines.Job>()
+            // Sperre mit Merker im try (Befund H1): withContext kann nach dem Ende werfen, die Freigabe darf nicht fehlen
+            var locked = false
+            try {
+                withContext(NonCancellable + dispatcher) { mutex.lock(); locked = true }
+                withContext(dispatcher) { provider?.unbindAll(); boundCamera = null; imageCapture = null }
+                for (attempt in 0 until 8) {
+                    device = openCamera(context.getSystemService(android.hardware.camera2.CameraManager::class.java), cameraId, executor)
+                    if (device != null) break
+                    delay(250)
+                }
+                val dev = device ?: run { close(); return@callbackFlow }
+                // Kalibrierung der letzten Aufnahme: Weissabgleich, Farbmatrix, Schwarzwert
+                val gains = java.util.concurrent.atomic.AtomicReference(floatArrayOf(1f, 1f, 1f))
+                val matrix = java.util.concurrent.atomic.AtomicReference(app.cayresim.core.pure.RawDevelop.IDENTITY)
+                val black = java.util.concurrent.atomic.AtomicReference(staticBlack)
+                val sent = java.util.concurrent.atomic.AtomicInteger(0)
+                val lastFrame = java.util.concurrent.atomic.AtomicLong(SystemClock.elapsedRealtime())
+                reader.setOnImageAvailableListener({ r ->
+                    val img = runCatching { r.acquireNextImage() }.getOrNull() ?: return@setOnImageAvailableListener
+                    img.use {
+                        lastFrame.set(SystemClock.elapsedRealtime())
+                        if (sent.get() < n && inFlight.get() < 1) {
+                            val plane = it.planes[0]
+                            val stride = plane.rowStride / 2
+                            val sb = plane.buffer.duplicate().order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                            val data = ShortArray(minOf(sb.remaining(), stride * it.height)); sb.get(data)
+                            val frame = app.cayresim.core.boundary.RawFrame(it.width, it.height, stride, data, cfa,
+                                black.get().copyOf(), white, gains.get().copyOf(), matrix.get().copyOf(), rotation)
+                            inFlight.incrementAndGet()
+                            if (trySend(frame).isSuccess) sent.incrementAndGet() else inFlight.decrementAndGet()
+                        }
+                    }
+                    if (sent.get() >= n) channel.close()
+                }, handler)
+                val s = createSession(dev, reader.surface, executor) ?: run { close(); return@callbackFlow }
+                session = s
+                val minFrame = runCatching {
+                    ch(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.getOutputMinFrameDuration(android.graphics.ImageFormat.RAW_SENSOR, size)
+                }.getOrNull() ?: 0L
+                val req = dev.createCaptureRequest(android.hardware.camera2.CameraDevice.TEMPLATE_PREVIEW).apply {
+                    addTarget(reader.surface)
+                    set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+                    set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO)
+                    set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureNs)
+                    set(CaptureRequest.SENSOR_SENSITIVITY, iso)
+                    set(CaptureRequest.SENSOR_FRAME_DURATION, maxOf(exposureNs, minFrame))
+                }.build()
+                s.setRepeatingRequest(req, object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+                    override fun onCaptureCompleted(
+                        session: android.hardware.camera2.CameraCaptureSession,
+                        request: CaptureRequest,
+                        result: android.hardware.camera2.TotalCaptureResult,
+                    ) {
+                        result.get(android.hardware.camera2.CaptureResult.COLOR_CORRECTION_GAINS)?.let { g ->
+                            gains.set(floatArrayOf(g.red, (g.greenEven + g.greenOdd) / 2f, g.blue))
+                        }
+                        result.get(android.hardware.camera2.CaptureResult.COLOR_CORRECTION_TRANSFORM)?.let { t ->
+                            matrix.set(FloatArray(9) { i -> t.getElement(i % 3, i / 3).toFloat() })
+                        }
+                        result.get(android.hardware.camera2.CaptureResult.SENSOR_DYNAMIC_BLACK_LEVEL)?.takeIf { it.size == 4 }?.let { black.set(it.copyOf()) }
+                    }
+                }, handler)
+                // Strom endet, wenn zu lange kein Bild kommt (wie beim 8-Bit-Strom, Befund C2)
+                watchers += launch {
+                    while (true) {
+                        delay(STREAM_FRAME_TIMEOUT_MS / 2)
+                        if (SystemClock.elapsedRealtime() - lastFrame.get() > STREAM_FRAME_TIMEOUT_MS) { channel.close(); break }
+                    }
+                }
+                awaitClose { }
+            } finally {
+                watchers.forEach { it.cancel() }
+                withContext(NonCancellable + dispatcher) {
+                    runCatching { session?.stopRepeating() }
+                    runCatching { session?.close() }
+                    runCatching { device?.close() }
+                    runCatching { reader.close() }
+                    thread.quitSafely()
+                    // CameraX wieder binden; die Sperre gehoert noch uns, deshalb direkt
+                    if (locked) {
+                        val p = provider; val em = extensions
+                        if (owner.isActive && p != null && em != null) runCatching { bindCurrent(p, em) }
+                        mutex.unlock()
+                    }
+                }
+            }
+        }
+
+    /** Drehung des Rohbilds fuer die Anzeige: Sensorlage minus Bildschirmdrehung (Rueckkamera). */
+    private fun rawRotation(sensorOrientation: Int): Int {
+        val display = runCatching { (context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager).getDisplay(android.view.Display.DEFAULT_DISPLAY).rotation }.getOrNull() ?: Surface.ROTATION_0
+        val deg = when (display) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
+        return (sensorOrientation - deg + 360) % 360
+    }
+
     override fun trigger(mode: TriggerMode): Flow<Unit> = callbackFlow {
         val entity = TriggerEntity(if (mode == TriggerMode.MOTION) TriggerKind.MOTION else TriggerKind.STILLNESS)
         var previous = ByteArray(0)

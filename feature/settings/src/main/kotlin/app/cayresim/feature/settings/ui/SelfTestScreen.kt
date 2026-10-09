@@ -75,6 +75,7 @@ private fun CheckLine(row: CheckRow, modifier: Modifier) {
             if (extra.isNotEmpty()) Text(extra.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
             row.device?.let { DeviceLines(it) }
             row.raw?.let { RawLines(it) }
+            row.nightPath?.let { NightPathLine(it, row.nightReason) }
         }
     }
 }
@@ -90,6 +91,7 @@ private fun label(row: CheckRow): String = when (row.kind) {
     CheckKind.ULTRA_HDR -> stringResource(R.string.check_ultra_hdr)
     CheckKind.RAW -> stringResource(R.string.check_raw)
     CheckKind.RAW_SERIES -> stringResource(R.string.check_raw_series)
+    CheckKind.NIGHT_PATH -> stringResource(R.string.check_night_path)
     CheckKind.CLEANUP -> stringResource(R.string.check_cleanup)
 }
 
@@ -139,4 +141,23 @@ private fun RawLines(r: RawProbeUi) {
             add(stringResource(R.string.raw_stream_levels, r.streamBlack?.joinToString("/") { dec(it) } ?: "?", r.streamWhite?.toString() ?: "?"))
     }
     lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+}
+
+/** "Gewaehlt: RAW" oder "Gewaehlt: 8 Bit, Grund: RAW-Bildstrom zu langsam". */
+@Composable
+private fun NightPathLine(path: String, reason: String?) {
+    val name = stringResource(if (path == "RAW") R.string.night_path_raw else R.string.night_path_yuv)
+    val why = when (reason) {
+        "NO_RAW" -> R.string.night_reason_no_raw
+        "SLOW_STREAM" -> R.string.night_reason_slow_stream
+        "CLIPPED" -> R.string.night_reason_clipped
+        "NO_CALIBRATION" -> R.string.night_reason_no_calibration
+        "PROBE_FAILED" -> R.string.night_reason_probe_failed
+        "PROBE_SLOW" -> R.string.night_reason_probe_slow
+        "RAW_OK" -> R.string.night_reason_raw_ok
+        else -> null
+    }
+    val text = if (why == null) stringResource(R.string.night_path_chosen, name)
+        else stringResource(R.string.night_path_chosen_why, name, stringResource(why))
+    Text(text, style = MaterialTheme.typography.bodySmall)
 }
