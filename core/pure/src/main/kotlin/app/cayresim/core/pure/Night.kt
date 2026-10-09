@@ -77,6 +77,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
     private val maxShift = minOf(8, (sw - 1) / 2 - 1, (sh - 1) / 2 - 1).coerceAtLeast(0)
 
     var used = 0; private set
+
+    /** Anteil der Pixel mit Helligkeit 0 oder 1 im ersten Bild: hoch heisst "fast kein Licht" (siehe NightTone.FLOOR_SHARE). */
+    var floorShare = 0f; private set
     var dropped = 0; private set
 
     /** Fuegt ein Bild hinzu. false = verworfen (verwackelt). */
@@ -86,6 +89,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
         val ref = refSmall
         if (ref == null) {
             refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small)
+            floorShare = refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
             for (i in sum.indices) sum[i] = LIN[frame[i].toInt() and 0xFF]
             weight.fill(1f); used = 1
             return true
@@ -164,7 +168,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             val inv = 1f / weight[t]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
-        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used))
+        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), floorShare)
     }
 
     /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */

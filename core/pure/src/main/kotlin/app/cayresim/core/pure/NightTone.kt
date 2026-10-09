@@ -170,6 +170,15 @@ object NightTone {
     /** C: Radius fuer das Glaetten des Farbrauschens (zweimal angewendet). */
     const val CHROMA_RADIUS = 3
 
+    /**
+     * Fast kein Licht (Nachttest S24+ am 9. Oktober, lichtloser Raum mit Tuer): bestehen mindestens [FLOOR_SHARE] der
+     * Einzelbilder aus Werten 0 und 1, ist die Bildmitte nur der Rauschboden. Dann wird der Boden je Kanal zu Schwarz,
+     * und aufgehellt wird nach den hellen Stellen ([FLOOR_HIGH_TARGET] fuer das 99-%-Quantil) statt nach dem Median.
+     * Im Testlabor lag die Kueche-aehnliche Szene bei 67 %, der lichtlose Raum bei 98 bis 100 %.
+     */
+    const val FLOOR_SHARE = 0.85f
+    const val FLOOR_HIGH_TARGET = 0.1f
+
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
     const val LUMA_RADIUS = 3
     const val DENOISE_STRENGTH = 2.5f
@@ -180,23 +189,37 @@ object NightTone {
      * etwa gleich stark), dann verstaerken, B Kontrastkurve um den Ziel-Median, Schulter, Dithering.
      * Die Farben werden nicht kuenstlich verstaerkt: im Testlabor blieben sie ohne das am naechsten an der Wahrheit.
      */
-    fun finishNight(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN): Result {
+    fun finishNight(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN, floorShare: Float = 0f): Result {
         require(width > 0 && linear.size % 3 == 0 && (linear.size / 3) % width == 0) { "Ungueltige Bildgroesse" }
         val n = linear.size / 3
         val height = n / width
         val y = FloatArray(n) { lumaOf(linear, it * 3) }
-        val bp = minOf(quantile(y, BLACK_QUANTILE), BLACK_MAX_SHARE * quantile(y, 0.5f)).coerceAtLeast(0f)
-        val rgb = FloatArray(linear.size) { (linear[it] - bp).coerceAtLeast(0f) }
+        val floor = floorShare >= FLOOR_SHARE
+        val medianY = quantile(y, 0.5f)
+        // A: Schwarzpunkt je Farbkanal, sonst wird der leicht unterschiedliche Boden der Kanaele zum Farbstich
+        val bp = FloatArray(3) { c ->
+            val ch = FloatArray(n) { linear[it * 3 + c] }
+            (if (floor) quantile(ch, 0.5f * floorShare) else minOf(quantile(ch, BLACK_QUANTILE), BLACK_MAX_SHARE * medianY)).coerceAtLeast(0f)
+        }
+        val rgb = FloatArray(linear.size) { (linear[it] - bp[it % 3]).coerceAtLeast(0f) }
         for (p in 0 until n) y[p] = lumaOf(rgb, p * 3)
         val chroma = Array(3) { c -> FloatArray(n) { rgb[it * 3 + c] - y[it] } }
         for (d in chroma) { boxBlur(d, width, height, CHROMA_RADIUS); boxBlur(d, width, height, CHROMA_RADIUS) }
         val base = guidedSelf(FloatArray(n) { kotlin.math.sqrt(y[it]) }, width, height, LUMA_RADIUS, DENOISE_STRENGTH)
         for (p in 0 until n) { val v = base[p].coerceAtLeast(0f); base[p] = v * v }
-        val median = quantile(base, 0.5f)
-        val gain = if (median <= 0f) maxGain else (TARGET_MEDIAN / median).coerceIn(1f, maxGain)
-        val high = quantile(base, 0.995f) * gain
-        val contrast = if (high > TARGET_MEDIAN * 1.01f)
-            (kotlin.math.ln(WHITE_TARGET / TARGET_MEDIAN) / kotlin.math.ln(high / TARGET_MEDIAN)).coerceIn(1f, MAX_CONTRAST) else 1f
+        val gain: Float
+        val contrast: Float
+        if (floor) {
+            val hi = quantile(base, 0.99f)
+            gain = if (hi <= 0f) maxGain else (FLOOR_HIGH_TARGET / hi).coerceIn(1f, maxGain)
+            contrast = 1f
+        } else {
+            val median = quantile(base, 0.5f)
+            gain = if (median <= 0f) maxGain else (TARGET_MEDIAN / median).coerceIn(1f, maxGain)
+            val high = quantile(base, 0.995f) * gain
+            contrast = if (high > TARGET_MEDIAN * 1.01f)
+                (kotlin.math.ln(WHITE_TARGET / TARGET_MEDIAN) / kotlin.math.ln(high / TARGET_MEDIAN)).coerceIn(1f, MAX_CONTRAST) else 1f
+        }
         val out = ByteArray(linear.size)
         for (p in 0 until n) {
             val x = p % width; val row = p / width

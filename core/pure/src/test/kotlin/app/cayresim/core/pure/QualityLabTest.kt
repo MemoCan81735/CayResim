@@ -139,9 +139,9 @@ class QualityLabTest {
         return t
     }
 
-    private fun captureColor(t: DoubleArray, lab: Lab, electrons: Double = 20_000.0, read: Double = 2.0) = ByteArray(t.size) { i ->
+    private fun captureColor(t: DoubleArray, lab: Lab, electrons: Double = 20_000.0, read: Double = 2.0, offset: DoubleArray = DoubleArray(3)) = ByteArray(t.size) { i ->
         val e = t[i] * electrons
-        val noisy = (e + lab.gauss() * sqrt(e + read * read)) / electrons
+        val noisy = (e + lab.gauss() * sqrt(e + read * read)) / electrons + offset[i % 3]
         (NightTone.linearToSrgb(noisy.toFloat()) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte()
     }
 
@@ -188,6 +188,37 @@ class QualityLabTest {
         println(sb)
     }
 
+    @Test fun `Testlabor lichtloser Raum mit Tuer bleibt Nacht`() {
+        // Nachttest S24+ am 9. Oktober: Samsung liess den Raum schwarz (Median 2) und zeigte die Tuer; wir hellten den
+        // Rauschboden 64-fach zu blaeulichem Grau auf (Median 39). Blauer Boden wie am Geraet: kleiner Versatz im Blaukanal.
+        val truth = DoubleArray(w * h * 3).also { t ->
+            for (y in 30 until 120) for (x in 70 until 110) { t[(y * w + x) * 3] = 0.9 * 0.0006; t[(y * w + x) * 3 + 1] = 0.75 * 0.0006; t[(y * w + x) * 3 + 2] = 0.5 * 0.0006 }
+        }
+        val lab = Lab(4711); val offset = doubleArrayOf(0.0, 0.0, 0.00008)
+        val merge = NightMerge(w, h).apply { repeat(36) { add(captureColor(truth, lab, offset = offset)) } }
+        val rgb = merge.finish().rgb
+        val room = Rect(5, 5, 60, 25); val door = Rect(75, 40, 105, 110)
+        val roomL = ImageQuality.mean(rgb, w, room); val doorL = ImageQuality.mean(rgb, w, door)
+        val (roomRgb, _) = linearPatch(rgb, room)
+        val blueCast = NightTone.linearToSrgb(roomRgb[2].toFloat()) * 255 - NightTone.linearToSrgb(roomRgb[0].toFloat()) * 255
+        File("build/quality-report-floor.md").apply { parentFile.mkdirs() }.writeText(
+            "\n## Lichtloser Raum mit Tuer\n\nAnteil Boden ${"%.2f".format(merge.floorShare)}, Raum ${"%.1f".format(roomL)}, Tuer ${"%.1f".format(doorL)}, Blau minus Rot im Raum ${"%.1f".format(blueCast)}\n")
+        File("build/quality-report.md").takeIf { it.exists() && "## Lichtloser Raum" !in it.readText() }
+            ?.appendText(File("build/quality-report-floor.md").readText())
+        assertTrue(merge.floorShare >= NightTone.FLOOR_SHARE, "Boden nicht erkannt: ${merge.floorShare}")
+        assertTrue(roomL <= 8.0, "Raum aufgehellt: $roomL")
+        assertTrue(doorL - roomL >= 15.0, "Tuer geht unter: Raum $roomL, Tuer $doorL")
+        assertTrue(kotlin.math.abs(blueCast) <= 3.0, "Farbstich im Raum: $blueCast")
+    }
+
+    @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {
+        for ((level, count) in listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36)) {
+            val s = scenario("x", level, shake = 10, passer = false, count = count)
+            val m = NightMerge(w, h).apply { s.frames.forEach { add(it) } }
+            assertTrue(m.floorShare < NightTone.FLOOR_SHARE, "Restlicht $level als lichtlos erkannt: ${m.floorShare}")
+        }
+    }
+
     private fun writeReport(rows: List<Row>) {
         val f = File("build/quality-report.md"); f.parentFile.mkdirs()
         val sb = StringBuilder("# Testlabor Bildqualitaet\n\n")
@@ -198,6 +229,7 @@ class QualityLabTest {
             sb.append("| ${r.scenario} | ${r.method} | ${"%.3f".format(r.relNoise)} | ${"%.1f".format(r.edge)} | ${r.ghost?.let { "%.1f".format(it) } ?: ""} | ${"%.1f".format(r.bright)} |\n")
         }
         File("build/quality-report-color.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
+        File("build/quality-report-floor.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         f.writeText(sb.toString())
         println(sb)
     }
