@@ -65,8 +65,9 @@
     <string name="night_raw_prefix">"RAW, "</string>
     <string name="night_shortened">, Serie gekürzt</string>
     <string name="night_shake">, Wackeln bis %1$d px</string>
-    <string name="timer_off">Timer aus</string>
-    <string name="timer_on">Timer 2 s</string>
+    <string name="timer_off">Selbstauslöser aus</string>
+    <string name="timer_on">Selbstauslöser 2 s</string>
+    <string name="timer_short">2 s</string>
     <string name="night_duration">, Dauer %1$s s</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>
     <string name="msg_night_failed">Die Nachtaufnahme hat nicht geklappt.</string>

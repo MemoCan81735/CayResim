@@ -192,14 +192,24 @@ fun CameraContent(
             TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
             TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
-            // S-003: zuletzt, damit die Serienwahl bei schmalem Bildschirm sichtbar bleibt
-            TopChip(stringResource(if (state.timer) R.string.timer_on else R.string.timer_off), onToggleTimer, "timer")
         }
         // S-003: Countdown des Selbstausloesers gross in der Mitte
         state.countdown?.let { c ->
             Surface(color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White, shape = CircleShape,
                 modifier = Modifier.align(Alignment.Center).size(120.dp).testTag("countdown")) {
                 Box(contentAlignment = Alignment.Center) { Text(c.toString(), style = MaterialTheme.typography.displayLarge) }
+            }
+        }
+        // S-003: Selbstausloeser als runder Knopf unter dem Zahnrad, immer sichtbar (in der Leiste rutschte er aus dem Bild)
+        val timerLabel = stringResource(if (state.timer) R.string.timer_on else R.string.timer_off)
+        Surface(onClick = onToggleTimer, shape = CircleShape,
+            color = if (state.timer) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.55f),
+            contentColor = if (state.timer) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.7f),
+            modifier = Modifier.align(Alignment.TopEnd).safeDrawingPadding().padding(top = 56.dp, end = 8.dp).size(40.dp)
+                .semantics { contentDescription = timerLabel }.testTag("timer")) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.timer_short), style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false,
+                    textDecoration = if (state.timer) null else androidx.compose.ui.text.style.TextDecoration.LineThrough)
             }
         }
         // Immer sichtbar und nie abgeschnitten, auch nach dem ersten Foto (Selbsttest)

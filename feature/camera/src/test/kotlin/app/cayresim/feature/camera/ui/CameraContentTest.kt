@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -73,6 +74,7 @@ class CameraContentTest {
                 onZoomPreset = { events += "zoom:$it" },
                 onPinch = { events += "pinch" },
                 onTapFocus = { x, y -> events += "focus:$x,$y" },
+                onToggleTimer = { events += "timer" },
                 viewfinder = { _, _ -> Box(Modifier.fillMaxSize().background(Color(0xFF335544))) },
             )
         }
@@ -272,15 +274,16 @@ class CameraContentTest {
         show(running.copy(timer = true, countdown = 2))
         compose.onNodeWithTag("countdown").assertIsDisplayed()
         compose.onNodeWithText("2").assertIsDisplayed()
-        compose.onNodeWithTag("timer").assertIsDisplayed()
-        compose.onNodeWithText("Timer 2 s").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Selbstauslöser 2 s").assertIsDisplayed()
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_countdown.png")
     }
 
     @Test fun selbstausloeser_aus_ohne_countdown() {
         show(running)
         compose.onAllNodesWithTag("countdown").assertCountEquals(0)
-        compose.onNodeWithText("Timer aus").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Selbstauslöser aus").assertIsDisplayed()
+        compose.onNodeWithTag("timer").performClick()
+        assertEquals(listOf("timer"), events.filter { it == "timer" })
     }
 
     @Test fun nacht_hinweis_nennt_den_raw_weg() {
