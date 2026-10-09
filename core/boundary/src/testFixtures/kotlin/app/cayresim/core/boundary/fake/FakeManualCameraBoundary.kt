@@ -47,7 +47,8 @@ class FakeManualCameraBoundary(
     var rawProbe: app.cayresim.core.boundary.RawProbeResult = app.cayresim.core.boundary.RawProbeResult.Ok(
         app.cayresim.core.boundary.RawProbe(8, 8, 180, 240, 4080, 3060, listOf(64, 64, 64, 64), 1023,
             app.cayresim.core.boundary.CfaLayout.GRBG, colorMatrix = true, forwardMatrix = true, lensShading = true,
-            meanAboveBlack = 3.2f, noise = 4.1f))
+            meanAboveBlack = 3.2f, noise = 4.1f, zeroShare = 0.12f, streamFps = 9.8f, streamMaxFps = 30f,
+            streamBlack = listOf(64f, 64f, 64f, 64f), streamWhite = 1023))
     val probeCalls = mutableListOf<Triple<Int, Long, Int>>()
 
     override suspend fun probeRaw(count: Int, exposureNanos: Long, iso: Int): app.cayresim.core.boundary.RawProbeResult {

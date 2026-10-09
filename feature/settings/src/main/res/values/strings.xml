@@ -41,6 +41,10 @@
     <string name="raw_size">Größe: %1$d x %2$d</string>
     <string name="raw_levels">Schwarz: %1$s, Weiß: %2$s, Farbmuster: %3$s</string>
     <string name="raw_calibration">Farbmatrix: %1$s, Vorwärtsmatrix: %2$s, Vignettierung: %3$s</string>
+    <string name="raw_zero">Werte genau 0: %1$s %%</string>
+    <string name="raw_stream">RAW-Bildstrom: %1$s fps (Gerät: bis %2$s fps)</string>
+    <string name="raw_stream_none">RAW-Bildstrom: nicht messbar</string>
+    <string name="raw_stream_levels">Schwarz laut Aufnahme: %1$s, Weiß: %2$s</string>
     <string name="raw_signal">Signal über Schwarz: %1$s, Rauschen: %2$s Stufen</string>
     <string name="check_cleanup">Testfotos gelöscht</string>
     <string name="device_yes">ja</string>

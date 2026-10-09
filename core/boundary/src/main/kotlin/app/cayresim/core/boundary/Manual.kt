@@ -63,6 +63,15 @@ data class RawProbe(
     val meanAboveBlack: Float,
     /** Rauschen aus dem Unterschied der letzten zwei Bilder (geteilt durch Wurzel 2); null bei nur einem Bild. */
     val noise: Float?,
+    /** Anteil der Werte, die genau 0 sind: hoch heisst, das Geraet schneidet unter Schwarz ab. */
+    val zeroShare: Float = 0f,
+    /** Gemessene Bildrate eines echten RAW-Bildstroms (eigene Camera2-Sitzung, 2 s); null = nicht messbar. */
+    val streamFps: Float? = null,
+    /** Hoechste RAW-Bildrate, die das Geraet fuer diese Groesse angibt. */
+    val streamMaxFps: Float? = null,
+    /** Schwarzwert je Position laut Aufnahme-Metadaten (dynamisch); null = nicht gemeldet. */
+    val streamBlack: List<Float>? = null,
+    val streamWhite: Int? = null,
 )
 
 enum class RawProbeFailure { NOT_SUPPORTED, NOT_READY, TIMEOUT, CAMERA }

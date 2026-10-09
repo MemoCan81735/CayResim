@@ -110,6 +110,9 @@ class SelfTestTest {
         compose.onNodeWithText("Bilder: 8 von 8, je 180 ms (höchstens 240 ms)", substring = true).assertExists()
         compose.onNodeWithText("Schwarz: 64/64/64/64, Weiß: 1023, Farbmuster: GRBG", substring = true).assertExists()
         compose.onNodeWithText("Signal über Schwarz: 3,2, Rauschen: 4,1 Stufen", substring = true).assertExists()
+        compose.onNodeWithText("Werte genau 0: 12,0 %", substring = true).assertExists()
+        compose.onNodeWithText("RAW-Bildstrom: 9,8 fps (Gerät: bis 30,0 fps)", substring = true).assertExists()
+        compose.onNodeWithText("Schwarz laut Aufnahme: 64,0/64,0/64,0/64,0, Weiß: 1023", substring = true).assertExists()
     }
 
     @Test fun leerer_zustand_ist_nicht_gruen() = assertFalse(SelfTestUiState(finished = true).allPassed)

@@ -211,6 +211,27 @@ class QualityLabTest {
         assertTrue(kotlin.math.abs(blueCast) <= 3.0, "Farbstich im Raum: $blueCast")
     }
 
+    @Test fun `Testlabor heller gestreifter Vorhang brennt nicht aus`() {
+        // Nachttest S24+ am 9. Oktober (Morgendaemmerung): unser Vorhang bei 249, Samsung bei 201 mit sichtbarer Struktur
+        val scene = DoubleArray(w * h) { p ->
+            val x = p % w; val y = p / w
+            if (x in 10 until 60 && y in 10 until 134) 0.05 * (1 + 0.3 * kotlin.math.sign(kotlin.math.sin(x / 2.0))) else 0.002
+        }
+        val lab = Lab(1)
+        val rgb = core(List(36) { capture(scene, 0, 0, lab) })
+        val lum = DoubleArray(w * h) { ImageQuality.luma(rgb, it * 3).toDouble() }
+        val p99 = lum.sorted()[(0.99 * (lum.size - 1)).toInt()]
+        val cur = Rect(10, 10, 60, 134)
+        val texture = ImageQuality.noise(rgb, w, cur) / ImageQuality.mean(rgb, w, cur)
+        File("build/quality-report-highlight.md").apply { parentFile.mkdirs() }.writeText(
+            "\n## Heller Vorhang\n\n99-%-Helligkeit ${"%.0f".format(p99)} (vorher 233, Samsung im Nachttest 201), Struktur ${"%.3f".format(texture)} (Wahrheit etwa 0,15)\n")
+        File("build/quality-report.md").takeIf { it.exists() && "## Heller Vorhang" !in it.readText() }
+            ?.appendText(File("build/quality-report-highlight.md").readText())
+        assertTrue(p99 <= 215.0, "Lichter brennen aus: 99-%-Helligkeit $p99")
+        assertTrue(texture >= 0.08, "Struktur im Vorhang verloren: $texture")
+        assertTrue(ImageQuality.mean(rgb, w, Rect(100, 20, 180, 120)) >= 25.0, "Raum zu dunkel geworden")
+    }
+
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {
         for ((level, count) in listOf(0.0006 to 36, 0.00045 to 23, 0.004 to 36)) {
             val s = scenario("x", level, shake = 10, passer = false, count = count)
@@ -230,6 +251,7 @@ class QualityLabTest {
         }
         File("build/quality-report-color.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         File("build/quality-report-floor.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
+        File("build/quality-report-highlight.md").takeIf { it.exists() }?.let { sb.append(it.readText()) }
         f.writeText(sb.toString())
         println(sb)
     }

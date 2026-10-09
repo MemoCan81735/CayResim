@@ -747,6 +747,11 @@ class CameraXCameraAdapter @Inject constructor(
                 last = s
             }
             val s = last!!
+            val cameraId = chars?.cameraId
+            val map = ch(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+            val minFrameNs = runCatching { map?.getOutputMinFrameDuration(android.graphics.ImageFormat.RAW_SENSOR, Size(s.width, s.height)) }.getOrNull()
+            // Echter RAW-Bildstrom: CameraX kann RAW nur als Einzelfoto, deshalb kurz eine eigene Camera2-Sitzung
+            val stream = if (cameraId != null) mutex.withLock { probeRawStream(cameraId, Size(s.width, s.height), exposureNanos, iso) } else null
             return RawProbeResult.Ok(RawProbe(
                 frames = times.size, requested = count,
                 avgFrameMs = times.average().toLong(), maxFrameMs = times.max(),
@@ -767,6 +772,11 @@ class CameraXCameraAdapter @Inject constructor(
                 lensShading = ch(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_LENS_SHADING_MAP_MODES)
                     ?.contains(CameraCharacteristics.STATISTICS_LENS_SHADING_MAP_MODE_ON) == true,
                 meanAboveBlack = s.mean, noise = noise,
+                zeroShare = s.zeroShare,
+                streamFps = stream?.fps,
+                streamMaxFps = minFrameNs?.takeIf { it > 0 }?.let { 1e9f / it },
+                streamBlack = stream?.black?.toList(),
+                streamWhite = stream?.white,
             ))
         } finally {
             if (switched) withContext(NonCancellable + dispatcher) {
@@ -781,7 +791,7 @@ class CameraXCameraAdapter @Inject constructor(
     }
 
     /** Stichprobe eines RAW-Bildes (jedes 7. Pixel und jede 7. Zeile, damit alle vier Farbpositionen vorkommen). */
-    private class RawSample(val width: Int, val height: Int, val values: IntArray, val mean: Float) {
+    private class RawSample(val width: Int, val height: Int, val values: IntArray, val mean: Float, val zeroShare: Float) {
         fun noiseAgainst(prev: RawSample): Float? {
             if (prev.values.size != values.size || values.isEmpty()) return null
             var s = 0.0; var q = 0.0
@@ -812,19 +822,131 @@ class CameraXCameraAdapter @Inject constructor(
         val rs = plane.rowStride; val ps = plane.pixelStride
         val w = image.width; val h = image.height
         val values = IntArray(((h + 6) / 7) * ((w + 6) / 7))
-        var n = 0; var sum = 0L
+        var n = 0; var sum = 0L; var zeros = 0
         var y = 0
         while (y < h) {
             var x = 0
             while (x < w) {
-                val v = (buf.getShort(y * rs + x * ps).toInt() and 0xFFFF) - black[(y and 1) * 2 + (x and 1)]
+                val raw = buf.getShort(y * rs + x * ps).toInt() and 0xFFFF
+                if (raw == 0) zeros++
+                val v = raw - black[(y and 1) * 2 + (x and 1)]
                 values[n++] = v; sum += v
                 x += 7
             }
             y += 7
         }
-        return RawSample(w, h, values.copyOf(n), if (n == 0) 0f else sum.toFloat() / n)
+        return RawSample(w, h, values.copyOf(n), if (n == 0) 0f else sum.toFloat() / n, if (n == 0) 0f else zeros.toFloat() / n)
     }
+
+    private class RawStream(val fps: Float, val black: FloatArray?, val white: Int?)
+
+    /**
+     * Misst 2 s lang einen RAW-Bildstrom mit fester Belichtung in einer eigenen Camera2-Sitzung (nur Messung,
+     * Schritt A des RAW-Plans). CameraX wird dafuer losgelassen; der Aufrufer bindet danach neu. null = nicht messbar.
+     */
+    @android.annotation.SuppressLint("MissingPermission")
+    private suspend fun probeRawStream(cameraId: String, size: Size, exposureNs: Long, iso: Int): RawStream? = withContext(dispatcher) {
+        provider?.unbindAll(); boundCamera = null; imageCapture = null
+        val thread = android.os.HandlerThread("raw-stream").apply { start() }
+        val handler = android.os.Handler(thread.looper)
+        val executor = java.util.concurrent.Executor { handler.post(it) }
+        val mgr = context.getSystemService(android.hardware.camera2.CameraManager::class.java)
+        val reader = android.media.ImageReader.newInstance(size.width, size.height, android.graphics.ImageFormat.RAW_SENSOR, 3)
+        var device: android.hardware.camera2.CameraDevice? = null
+        var session: android.hardware.camera2.CameraCaptureSession? = null
+        try {
+            // CameraX schliesst die Kamera verzoegert: einige Male versuchen
+            for (attempt in 0 until 8) {
+                device = openCamera(mgr, cameraId, executor)
+                if (device != null) break
+                delay(250)
+            }
+            val dev = device ?: return@withContext null
+            val frames = java.util.concurrent.atomic.AtomicInteger(0)
+            reader.setOnImageAvailableListener({ r -> runCatching { r.acquireNextImage()?.close() }; frames.incrementAndGet() }, handler)
+            val s = createSession(dev, reader.surface, executor) ?: return@withContext null
+            session = s
+            val req = dev.createCaptureRequest(android.hardware.camera2.CameraDevice.TEMPLATE_PREVIEW).apply {
+                addTarget(reader.surface)
+                set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
+                set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureNs)
+                set(CaptureRequest.SENSOR_SENSITIVITY, iso)
+                set(CaptureRequest.SENSOR_FRAME_DURATION, exposureNs)
+            }.build()
+            val black = java.util.concurrent.atomic.AtomicReference<FloatArray?>(null)
+            val white = java.util.concurrent.atomic.AtomicInteger(-1)
+            s.setRepeatingRequest(req, object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
+                override fun onCaptureCompleted(
+                    session: android.hardware.camera2.CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: android.hardware.camera2.TotalCaptureResult,
+                ) {
+                    result.get(android.hardware.camera2.CaptureResult.SENSOR_DYNAMIC_BLACK_LEVEL)?.let { black.set(it) }
+                    result.get(android.hardware.camera2.CaptureResult.SENSOR_DYNAMIC_WHITE_LEVEL)?.let { white.set(it) }
+                }
+            }, handler)
+            delay(RAW_STREAM_WARMUP_MS)
+            val f0 = frames.get(); val t0 = SystemClock.elapsedRealtime()
+            delay(RAW_STREAM_MEASURE_MS)
+            val f1 = frames.get(); val t1 = SystemClock.elapsedRealtime()
+            RawStream((f1 - f0) * 1000f / (t1 - t0).coerceAtLeast(1), black.get(), white.get().takeIf { it >= 0 })
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        } finally {
+            withContext(NonCancellable) {
+                runCatching { session?.stopRepeating() }
+                runCatching { session?.close() }
+                runCatching { device?.close() }
+                runCatching { reader.close() }
+                thread.quitSafely()
+            }
+        }
+    }
+
+    @android.annotation.SuppressLint("MissingPermission")
+    private suspend fun openCamera(mgr: android.hardware.camera2.CameraManager, id: String, executor: java.util.concurrent.Executor) =
+        withTimeoutOrNull(3_000) {
+            kotlinx.coroutines.suspendCancellableCoroutine<android.hardware.camera2.CameraDevice?> { cont ->
+                try {
+                    mgr.openCamera(id, executor, object : android.hardware.camera2.CameraDevice.StateCallback() {
+                        override fun onOpened(camera: android.hardware.camera2.CameraDevice) {
+                            if (cont.isActive) cont.resumeWith(Result.success(camera)) else camera.close()
+                        }
+                        override fun onDisconnected(camera: android.hardware.camera2.CameraDevice) {
+                            camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
+                        }
+                        override fun onError(camera: android.hardware.camera2.CameraDevice, error: Int) {
+                            camera.close(); if (cont.isActive) cont.resumeWith(Result.success(null))
+                        }
+                    })
+                } catch (e: Exception) {
+                    if (cont.isActive) cont.resumeWith(Result.success(null))
+                }
+            }
+        }
+
+    private suspend fun createSession(dev: android.hardware.camera2.CameraDevice, surface: Surface, executor: java.util.concurrent.Executor) =
+        withTimeoutOrNull(3_000) {
+            kotlinx.coroutines.suspendCancellableCoroutine<android.hardware.camera2.CameraCaptureSession?> { cont ->
+                try {
+                    dev.createCaptureSession(android.hardware.camera2.params.SessionConfiguration(
+                        android.hardware.camera2.params.SessionConfiguration.SESSION_REGULAR,
+                        listOf(android.hardware.camera2.params.OutputConfiguration(surface)), executor,
+                        object : android.hardware.camera2.CameraCaptureSession.StateCallback() {
+                            override fun onConfigured(session: android.hardware.camera2.CameraCaptureSession) {
+                                if (cont.isActive) cont.resumeWith(Result.success(session)) else session.close()
+                            }
+                            override fun onConfigureFailed(session: android.hardware.camera2.CameraCaptureSession) {
+                                if (cont.isActive) cont.resumeWith(Result.success(null))
+                            }
+                        }))
+                } catch (e: Exception) {
+                    if (cont.isActive) cont.resumeWith(Result.success(null))
+                }
+            }
+        }
 
     private val rawExecutor = Executors.newSingleThreadExecutor()
 
@@ -888,6 +1010,8 @@ class CameraXCameraAdapter @Inject constructor(
         const val CAPTURE_TIMEOUT_MS = 8_000L
         /** Obergrenze je RAW-Bild in der Messung; das Tempo selbst bewertet der Selbsttest. */
         const val RAW_FRAME_TIMEOUT_MS = 5_000L
+        const val RAW_STREAM_WARMUP_MS = 500L
+        const val RAW_STREAM_MEASURE_MS = 2_000L
         const val FOCUS_TIMEOUT_MS = 3_000L
         const val AE_SETTLE_MS = 300L
         const val AE_CONVERGE_TIMEOUT_MS = 1_500L

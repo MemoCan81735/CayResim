@@ -132,6 +132,11 @@ private fun RawLines(r: RawProbeUi) {
         add(stringResource(R.string.raw_levels, r.blackLevel.joinToString("/"), r.whiteLevel?.toString() ?: "?", r.cfa))
         add(stringResource(R.string.raw_calibration, yn(r.colorMatrix), yn(r.forwardMatrix), yn(r.lensShading)))
         add(stringResource(R.string.raw_signal, dec(r.meanAboveBlack), r.noise?.let { dec(it) } ?: "?"))
+        add(stringResource(R.string.raw_zero, dec(r.zeroShare * 100f)))
+        add(if (r.streamFps == null) stringResource(R.string.raw_stream_none)
+            else stringResource(R.string.raw_stream, dec(r.streamFps), r.streamMaxFps?.let { dec(it) } ?: "?"))
+        if (r.streamBlack != null || r.streamWhite != null)
+            add(stringResource(R.string.raw_stream_levels, r.streamBlack?.joinToString("/") { dec(it) } ?: "?", r.streamWhite?.toString() ?: "?"))
     }
     lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
 }

@@ -44,11 +44,17 @@ data class RawProbeUi(
     val lensShading: Boolean,
     val meanAboveBlack: Float,
     val noise: Float?,
+    val zeroShare: Float = 0f,
+    val streamFps: Float? = null,
+    val streamMaxFps: Float? = null,
+    val streamBlack: List<Float>? = null,
+    val streamWhite: Int? = null,
 )
 
 internal fun app.cayresim.core.boundary.RawProbe.toUi() = RawProbeUi(
     frames, requested, avgFrameMs, maxFrameMs, width, height, blackLevel, whiteLevel, cfa.name,
     colorMatrix, forwardMatrix, lensShading, meanAboveBlack, noise,
+    zeroShare, streamFps, streamMaxFps, streamBlack, streamWhite,
 )
 
 /** Spiegel von DeviceReport fuer die UI (R1: die UI kennt keine Boundary-Typen); nur Zahlen, den Text baut die UI. */

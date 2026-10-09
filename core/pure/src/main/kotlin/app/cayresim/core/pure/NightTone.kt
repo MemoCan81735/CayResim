@@ -167,6 +167,14 @@ object NightTone {
     const val WHITE_TARGET = 0.5f
     const val MAX_CONTRAST = 1.6f
 
+    /**
+     * Lichterschutz (Nachttest S24+ am 9. Oktober: Vorhang bei 249, Samsung 201): sind die hellsten 2 % zu hell,
+     * wird der Kontrast um den Median bis auf [MIN_CONTRAST] gesenkt. Die 2 % sorgen dafuer, dass eine einzelne
+     * kleine Lampe nicht das ganze Bild flau macht; sie darf weiter ausbrennen.
+     */
+    const val MIN_CONTRAST = 0.6f
+    const val COMPRESS_QUANTILE = 0.98f
+
     /** C: Radius fuer das Glaetten des Farbrauschens (zweimal angewendet). */
     const val CHROMA_RADIUS = 3
 
@@ -217,8 +225,15 @@ object NightTone {
             val median = quantile(base, 0.5f)
             gain = if (median <= 0f) maxGain else (TARGET_MEDIAN / median).coerceIn(1f, maxGain)
             val high = quantile(base, 0.995f) * gain
-            contrast = if (high > TARGET_MEDIAN * 1.01f)
-                (kotlin.math.ln(WHITE_TARGET / TARGET_MEDIAN) / kotlin.math.ln(high / TARGET_MEDIAN)).coerceIn(1f, MAX_CONTRAST) else 1f
+            fun toWhite(v: Float) = kotlin.math.ln(WHITE_TARGET / TARGET_MEDIAN) / kotlin.math.ln(v / TARGET_MEDIAN)
+            contrast = when {
+                high <= TARGET_MEDIAN * 1.01f -> 1f
+                high < WHITE_TARGET -> toWhite(high).coerceIn(1f, MAX_CONTRAST)
+                else -> {
+                    val body = quantile(base, COMPRESS_QUANTILE) * gain
+                    if (body > WHITE_TARGET) toWhite(body).coerceIn(MIN_CONTRAST, 1f) else 1f
+                }
+            }
         }
         val out = ByteArray(linear.size)
         for (p in 0 until n) {
