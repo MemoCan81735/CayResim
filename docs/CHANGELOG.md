@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## nächste Version (S-003)
+## 0.1.86 (9. Oktober 2026, S-003)
 - Nacht: das schärfste der ersten 3 Bilder wird Bezug; verwackelte Einzelbilder werden so zuverlässiger verworfen.
 - Nacht-Hinweis zeigt das Wackeln, z. B. ", Wackeln bis 12 px".
 - Optischer Stabilisator wird angefordert; der Selbsttest zeigt, ob er angeboten und aktiv ist.

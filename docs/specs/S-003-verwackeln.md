@@ -1,6 +1,6 @@
 # S-003: Schutz gegen Verwackeln, Teil 1
 
-**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 22:00)
+**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.86, Gerätetest offen
 **Anlass:** Prüfung "Schutz gegen Verwackeln" am 9. Oktober und Gerätetest S24+ (Jeans im beleuchteten Raum, 36 Bilder,
 0 verworfen, Stoffmuster verschmiert). Befunde im Code:
 - Nacht: jedes Bild wird nur mit dem ersten verglichen. Ist das erste verwackelt, kommen verwackelte Bilder durch
@@ -58,4 +58,15 @@ Rückweg: `REF_CANDIDATES = 1`.
 Ein Release (etwa 20 Minuten, Repository öffentlich, keine Minuten).
 
 ## Ergebnis
-(nach dem Lauf eintragen)
+Lauf 37988030498 grün (schneller Job, Emulator, Release v0.1.86). Davor zwei Läufe rot nur wegen fehlender
+Screenshot-Grundlagen (neu aufgenommen, angesehen, übernommen; Timer-Knopf dabei aus der Leiste unter das Zahnrad
+verlegt, weil er dort aus dem Bild rutschte).
+
+| Kriterium | Wert | Grenze |
+|---|---|---|
+| K1 verworfen / Struktur | 12 von 36 / 0,316 gegen 0,313 ohne Unschärfe (101 %) | mindestens 12 / 90 % |
+| K2, K4, K5 | Tests grün | |
+| K3 | Codeprüfung, Emulator grün | |
+| K6 | alle Laborszenen unverändert (Kante 0,8 px, Rauschen wie vorher) | |
+
+Offen: Gerätetest (Selbsttest-Zeile Stabilisator, Wackeln im Hinweis, Timer).
