@@ -65,6 +65,8 @@ ein zweiter Agent den Diff ohne die Begründungen des ersten, nur gegen Spec und
 - Keine zwei Zeitblöcke (`withTimeoutOrNull`) um eine Ressource, die beim Abbruch geschlossen werden muss; ein geöffnetes
   Gerät mit `resume(wert) { ... schließen }` übergeben.
 - Testberichte vor den Prüfungen schreiben (oder im `finally`), sonst fehlen die Werte genau im roten Lauf.
+- Jede sichtbare Änderung am Sucher oder an den Einstellungen ändert Screenshot-Grundlagen; fehlende oder abweichende
+  lassen den schnellen Job scheitern. Ablauf: kurzer Lauf, Bilder aus `ci-logs-fast/screenshots` ansehen, übernehmen, dann Release.
 
 ## 4. Definition of Done
 
