@@ -55,7 +55,7 @@ class QualityLabTest {
         return out
     }
 
-    private data class Scenario(val name: String, val frames: List<ByteArray>, val clean: List<ByteArray>?)
+    private data class Scenario(val name: String, val frames: List<ByteArray>, val clean: List<ByteArray>?, val read: Double = 2.0)
 
     private fun scenario(name: String, level: Double, shake: Int, passer: Boolean, count: Int = 36, seed: Long = 4711, read: Double = 2.0): Scenario {
         val lab = Lab(seed); val shifts = Random(seed + 1)
@@ -65,12 +65,12 @@ class QualityLabTest {
             capture(truth(level, px), moves[k].first, moves[k].second, lab, read = read)
         }
         val clean = if (passer) { val lab2 = Lab(seed); List(count) { k -> capture(truth(level), moves[k].first, moves[k].second, lab2, read = read) } } else null
-        return Scenario(name, frames, clean)
+        return Scenario(name, frames, clean, read)
     }
 
     private fun core(frames: List<ByteArray>) = NightMerge(w, h).apply { frames.forEach { add(it) } }.finish().rgb
 
-    private data class Row(val scenario: String, val method: String, val relNoise: Double, val edge: Double, val ghost: Double?, val bright: Double)
+    private data class Row(val scenario: String, val method: String, val relNoise: Double, val edge: Double, val ghost: Double?, val bright: Double, val edgeFit: Double)
 
     private fun measure(s: Scenario, method: String, rgb: ByteArray, cleanRgb: ByteArray?) = Row(
         s.name, method,
@@ -78,6 +78,7 @@ class QualityLabTest {
         ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132),
         cleanRgb?.let { ImageQuality.mean(rgb, w, ghostArea) - ImageQuality.mean(it, w, ghostArea) },
         ImageQuality.mean(rgb, w, background),
+        ImageQuality.edgeWidthFit(rgb, w, 80, 130, 108, 132),
     )
 
     @Test fun `Testlabor Nacht-Kern gegen Einzelbild und einfachen Mittelwert`() {
@@ -110,7 +111,11 @@ class QualityLabTest {
             val one = row(s, "Einzelbild"); val k = row(s, "Nacht-Kern")
             // Grenzwerte: werden sie verletzt, ist eine Aenderung eine Verschlechterung
             assertTrue(k.relNoise <= 0.4 * one.relNoise, "$s: Rauschen ${k.relNoise} statt hoechstens 40 % von ${one.relNoise}")
-            assertTrue(k.edge <= 1.5, "$s: Kante ${k.edge} px, zu weich (Wahrheit 0,8 px)")
+            // S-001: bei starkem Rauschen springt die 10-90-Messung auf Ausreisser (Python-Modell: bis 3 px fuer ein
+            // scharfes Mittel), dort gilt die angepasste Kante: ideale Stufe 0,2, ohne Entrauschen 0,3 bis 0,7,
+            // Entrauschen 2,5 (Befund 1) 2,4, Entrauschen 1,5 etwa 1,0
+            if (scenarios.single { it.name == s }.read > 10) assertTrue(k.edgeFit <= 1.3, "$s: angepasste Kante ${k.edgeFit} px, zu weich (ideal 0,2)")
+            else assertTrue(k.edge <= 1.5, "$s: Kante ${k.edge} px, zu weich (Wahrheit 0,8 px)")
             // D: Entrauschen im Bild, nicht nur durch Mitteln (vorher etwa 13 % des Einzelbilds). Untergrenze 0,015:
             // das absichtliche Dithering der Ausgabe allein ergibt bei Helligkeit 40 schon etwa 0,008
             val grain = maxOf(0.1 * one.relNoise, 0.015)
@@ -268,14 +273,15 @@ class QualityLabTest {
         // Vergleich mit dem 8-Bit-Weg bei gleich starkem Sensorrauschen (Leserauschen 40 statt 2 wie in den anderen Szenen)
         val yuv = core(Lab(99).let { l -> List(36) { capture(gray, 0, 0, l, read = 40.0) } })
         val bright = ImageQuality.mean(rgb, w, background)
-        val edge = ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132); val yuvEdge = ImageQuality.edgeWidth(yuv, w, 80, 130, 108, 132)
+        // S-001: angepasste Kante, weil die 10-90-Messung bei Leserauschen 40 auf Ausreisser springt
+        val edge = ImageQuality.edgeWidthFit(rgb, w, 80, 130, 108, 132); val yuvEdge = ImageQuality.edgeWidthFit(yuv, w, 80, 130, 108, 132)
         val noise = ImageQuality.relativeNoise(rgb, w, flat); val yuvNoise = ImageQuality.relativeNoise(yuv, w, flat)
         report("51-raw-b", "\n## RAW-Weg, dunkler Raum\n\nRAW gegen 8 Bit bei gleichem Rauschen: Helligkeit ${"%.1f".format(bright)} / ${"%.1f".format(ImageQuality.mean(yuv, w, background))}, " +
-            "Kante ${"%.1f".format(edge)} / ${"%.1f".format(yuvEdge)} px, Rauschen ${"%.3f".format(noise)} / ${"%.3f".format(yuvNoise)}\n")
+            "angepasste Kante ${"%.2f".format(edge)} / ${"%.2f".format(yuvEdge)} px, Rauschen ${"%.3f".format(noise)} / ${"%.3f".format(yuvNoise)}\n")
         assertTrue(bright >= 30.0, "RAW: zu dunkel: $bright")
         // S-001: feste Grenze gegen die Wahrheit, nicht nur der Vergleich zweier Verfahren
-        assertTrue(edge <= 1.5, "RAW: Kante $edge px (Wahrheit 0,8)")
-        assertTrue(yuvEdge <= 1.5, "8 Bit bei starkem Rauschen: Kante $yuvEdge px (Wahrheit 0,8)")
+        assertTrue(edge <= 1.3, "RAW: angepasste Kante $edge px (ideal 0,2)")
+        assertTrue(yuvEdge <= 1.3, "8 Bit bei starkem Rauschen: angepasste Kante $yuvEdge px (ideal 0,2)")
         val single = rawCore(Lab(7).let { l -> listOf(captureRaw(truthRgb, l)) })
         val singleNoise = ImageQuality.relativeNoise(single, w, flat)
         assertTrue(noise <= 0.4 * singleNoise, "RAW: Rauschen $noise, Einzelbild $singleNoise")
@@ -347,9 +353,10 @@ class QualityLabTest {
         val sb = StringBuilder("# Testlabor Bildqualitaet\n\n")
         sb.append("Relatives Rauschen (kleiner ist besser), Kantenbreite in Pixeln (kleiner ist schaerfer), ")
         sb.append("Geisterbild in Helligkeitsstufen (nahe 0 ist gut), Helligkeit des dunklen Hintergrunds (0 bis 255).\n\n")
-        sb.append("| Szene | Verfahren | Rauschen | Kante | Geist | Helligkeit |\n|---|---|---|---|---|---|\n")
+        sb.append("Angepasste Kante: weiche Stufe ans Profil angepasst, stabil auch bei starkem Rauschen (ideal 0,2).\n\n")
+        sb.append("| Szene | Verfahren | Rauschen | Kante | angepasste Kante | Geist | Helligkeit |\n|---|---|---|---|---|---|---|\n")
         rows.forEach { r ->
-            sb.append("| ${r.scenario} | ${r.method} | ${"%.3f".format(r.relNoise)} | ${"%.1f".format(r.edge)} | ${r.ghost?.let { "%.1f".format(it) } ?: ""} | ${"%.1f".format(r.bright)} |\n")
+            sb.append("| ${r.scenario} | ${r.method} | ${"%.3f".format(r.relNoise)} | ${"%.1f".format(r.edge)} | ${"%.2f".format(r.edgeFit)} | ${r.ghost?.let { "%.1f".format(it) } ?: ""} | ${"%.1f".format(r.bright)} |\n")
         }
         report("10-szenen", sb.toString())
     }

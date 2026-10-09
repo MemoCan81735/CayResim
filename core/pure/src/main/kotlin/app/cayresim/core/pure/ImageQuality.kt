@@ -56,6 +56,41 @@ object ImageQuality {
         return abs(cross(0.9) - cross(0.1))
     }
 
+    /**
+     * Kantenbreite fuer stark verrauschte Bilder (S-001): an das Profil wird eine weiche Stufe angepasst
+     * (logistische Kurve, kleinste Quadrate), Ergebnis ist deren Abstand vom 10-%- zum 90-%-Punkt.
+     * [edgeWidth] sucht die ersten Schnittpunkte und springt bei Restrauschen auf einzelne Ausreisser: im
+     * Python-Modell lieferte es fuer ein ungefiltertes, also scharfes Mittel bis 3 Pixel. Diese Messung ist stabil
+     * (8 Rauschmuster: 0,3 bis 0,7 Pixel ohne Entrauschen). Eine ideale Pixelstufe ergibt etwa 0,2.
+     */
+    fun edgeWidthFit(rgb: ByteArray, width: Int, y0: Int, y1: Int, xFrom: Int, xTo: Int): Double {
+        require(xTo - xFrom >= 12 && y1 > y0)
+        val n = xTo - xFrom
+        val p = DoubleArray(n)
+        for (y in y0 until y1) for (x in xFrom until xTo) p[x - xFrom] += luma(rgb, (y * width + x) * 3).toDouble()
+        for (i in 0 until n) p[i] /= (y1 - y0)
+        val pm = p.average()
+        val f = DoubleArray(n)
+        var bestErr = Double.MAX_VALUE; var bestS = 0.0
+        var s = 0.05
+        while (s < 4.0) {
+            var x0 = 4.0
+            while (x0 <= n - 4.0) {
+                for (i in 0 until n) f[i] = 1.0 / (1.0 + kotlin.math.exp(-(i + 0.5 - x0) / s))
+                val fm = f.average()
+                var cov = 0.0; var vf = 0.0
+                for (i in 0 until n) { cov += (f[i] - fm) * (p[i] - pm); vf += (f[i] - fm) * (f[i] - fm) }
+                val k = if (vf > 0) cov / vf else 0.0
+                var err = 0.0
+                for (i in 0 until n) { val d = p[i] - pm - k * (f[i] - fm); err += d * d }
+                if (err < bestErr) { bestErr = err; bestS = s }
+                x0 += 0.1
+            }
+            s += 0.05
+        }
+        return 2 * kotlin.math.ln(9.0) * bestS
+    }
+
     /** Mittlere absolute Abweichung zweier Bilder in einem Bereich (Geisterbild-Rest). */
     fun meanAbsDiff(a: ByteArray, b: ByteArray, width: Int, r: Rect): Double {
         require(a.size == b.size)
