@@ -1,0 +1,17 @@
+# S-005: detekt prueft nur Regeln, die auf echte Fehler zeigen: moegliche Fehler, Coroutinen, Ausnahmen,
+# Leistung und leere Bloecke. Stil, Namen, Komplexitaet und Kommentare bleiben aus, weil sie vor allem
+# Rauschen erzeugen (im ersten Lauf 684 von 809 Funden nur Zahlen im Code und Zeilenlaenge).
+# Alte Funde stehen in baseline.xml; jeder neue Fund macht den Analyse-Job rot.
+build:
+  maxIssues: 0
+comments:
+  active: false
+complexity:
+  active: false
+naming:
+  active: false
+style:
+  active: false
+coroutines:
+  GlobalCoroutineUsage:
+    active: true

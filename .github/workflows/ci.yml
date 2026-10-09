@@ -1,26 +1,33 @@
 name: CI
 on:
   push:
-    branches: [main]
+    # probe/**: Probelaeufe fuer CI-Aenderungen (S-005); dort laufen weder Emulator noch Release.
+    branches: [main, "probe/**"]
   workflow_dispatch:
     inputs:
       release:
         description: "Neue APK veroeffentlichen (voller Lauf mit Emulator)"
         type: boolean
         default: true
+      versionen:
+        description: "Versionslisten und Media3-Signaturen protokollieren (nur zur Information)"
+        type: boolean
+        default: false
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false
 jobs:
-  # Minuten sparen: Emulator nur bei Aenderungen, die er pruefen kann; Release nur auf Wunsch
-  # ("[release]" in einer Commit-Nachricht oder "Run workflow" auf GitHub).
+  # Kurzer Lauf (S-005): Kern, Oberflaeche, Analyse und APK laufen parallel, der Bericht fasst sie zusammen.
+  # Emulator nur bei Aenderungen, die er pruefen kann; Release nur auf Wunsch
+  # ("[release]" in einer Commit-Nachricht oder "Run workflow" auf GitHub). Grund ist die Wartezeit.
   plan:
     name: Plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       emulator: ${{ steps.p.outputs.emulator }}
       release: ${{ steps.p.outputs.release }}
@@ -43,20 +50,148 @@ jobs:
               '^(core/(camera|processing|data)/|app/|feature/[^/]+/src/androidTest/|\.github/|gradle/|build-logic/|[^/]*\.gradle\.kts$|gradle\.properties$)'; then EMU=true; fi
           fi
           [ "$REL" = true ] && EMU=true
+          if [ "$GITHUB_REF" != refs/heads/main ]; then EMU=false; REL=false; fi
           echo "emulator=$EMU" >> "$GITHUB_OUTPUT"; echo "release=$REL" >> "$GITHUB_OUTPUT"
           echo "Emulator: $EMU, Release: $REL"
 
-  fast:
-    name: Schnell (JVM)
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+  kern:
+    name: Kern (JVM)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v5
         with: { gradle-version: "9.8.0" }
-      - name: Versionen (Info)
+      - name: Reine Logik, Architektur, Abdeckung, Testlabor
+        run: |
+          set -o pipefail; mkdir -p out
+          gradle --continue :core:pure:test :core:entity:test :core:boundary:test :core:control:test :architecture:test \
+            :core:pure:koverVerify :core:entity:koverVerify :core:control:koverVerify 2>&1 | tee out/kern.log
+      - name: Ergebnisse sammeln
+        if: always()
+        run: |
+          mkdir -p out/results
+          cp core/pure/build/quality-report.md out/ 2>/dev/null || true
+          find core architecture -path '*/build/test-results/*' -name '*.xml' | while read -r f; do cp "$f" "out/results/$(echo "$f" | tr '/' '_')"; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: out-kern, path: out, retention-days: 7 }
+
+  oberflaeche:
+    name: Oberflaeche (Robolectric)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.8.0" }
+      - name: Android-Unit-Tests und Screenshots
+        run: |
+          set -o pipefail; mkdir -p out
+          # Vergleicht mit den Baselines; neue Bilder werden aufgenommen und abgelegt, Abweichungen lassen den Bau scheitern.
+          gradle --continue testDebugUnitTest verifyAndRecordRoborazziDebug 2>&1 | tee out/oberflaeche.log
+      - name: Ergebnisse sammeln
+        if: always()
+        run: |
+          mkdir -p out/results out/screenshots out/roborazzi
+          find app core feature -path '*/build/test-results/*' -name '*.xml' | while read -r f; do cp "$f" "out/results/$(echo "$f" | tr '/' '_')"; done
+          cp feature/*/src/test/screenshots/*.png out/screenshots/ 2>/dev/null || true
+          find feature -path '*/build/outputs/roborazzi/*' -name '*.png' -exec cp {} out/roborazzi/ \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: out-oberflaeche, path: out, retention-days: 7 }
+
+  analyse:
+    name: Analyse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.8.0" }
+      - name: Fallen, detekt, Lint (je mit Probe)
+        run: bash .github/scripts/analyse.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: out-analyse, path: out, retention-days: 7 }
+
+  apk:
+    name: APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v5
+        with: { gradle-version: "9.8.0" }
+      - name: Debug und Release (R8)
+        run: |
+          set -o pipefail; mkdir -p out
+          gradle --continue assembleDebug assembleRelease 2>&1 | tee out/apk.log
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: out-apk, path: out, retention-days: 7 }
+
+  bericht:
+    name: Bericht
+    needs: [kern, oberflaeche, analyse, apk]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: { pattern: out-*, path: in }
+      - name: Vergleichsbericht vom letzten Lauf auf main
+        run: |
+          if git fetch -q --depth 1 origin ci-logs-fast 2>/dev/null && git show FETCH_HEAD:quality-report.md > prev.md 2>/dev/null; then
+            echo "PREV_LABEL=letzten Lauf auf main ($(git log -1 --format=%s FETCH_HEAD | awk '{print substr($3,1,7)}'))" >> "$GITHUB_ENV"
+          else
+            rm -f prev.md
+          fi
+      - name: Zusammenfassung
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p pub
+          python3 .github/scripts/bericht.py in "$( [ -f prev.md ] && echo prev.md )" pub/summary.md
+          cat pub/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Protokoll ablegen
+        if: always()
+        run: |
+          mkdir -p pub
+          for j in kern oberflaeche apk; do [ -d "in/out-$j" ] && cp -r "in/out-$j/." pub/; done
+          [ -d in/out-analyse ] && cp -r in/out-analyse pub/analyse
+          cat pub/kern.log pub/oberflaeche.log pub/apk.log > pub/fast.log 2>/dev/null || true
+          BR=ci-logs-fast; [ "$GITHUB_REF" != refs/heads/main ] && BR=ci-logs-probe
+          cd pub && git init -q && git checkout -q -b "$BR"
+          git config user.name ci && git config user.email ci@local
+          git add . && git commit -qm "fast $GITHUB_RUN_ID $GITHUB_SHA"
+          git push -f -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} "$BR"
+
+  versionen:
+    name: Versionen (Info)
+    if: github.event_name == 'workflow_dispatch' && inputs.versionen
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: 17 }
+      - name: Versionen und Media3-Signaturen
         run: |
           m(){ curl -s "$1/maven-metadata.xml" | grep -oP '(?<=<version>)[^<]+' | tail -${2:-4} | tr '\n' ' '; echo; }
           G=https://dl.google.com/dl/android/maven2; C=https://repo1.maven.org/maven2
@@ -68,45 +203,18 @@ jobs:
             echo "test-rules $(m $G/androidx/test/rules)"; echo "test-ext $(m $G/androidx/test/ext/junit-ktx)"
             echo "uiautomator $(m $G/androidx/test/uiautomator/uiautomator)"; echo "core-ktx $(m $G/androidx/core/core-ktx)"
             echo "leakcanary $(m $C/com/squareup/leakcanary/leakcanary-android-instrumentation)"; } | tee versions.log
-          # API-Signaturen fuer Media3 (Zeitraffer), einmalig zur Orientierung
           mkdir -p x && cd x
           for a in media3-transformer media3-common media3-effect; do curl -sfL "$G/androidx/media3/$a/1.11.1/$a-1.11.1.aar" -o $a.aar && mkdir -p $a && (cd $a && unzip -qo ../$a.aar classes.jar && unzip -qo classes.jar); done
           for k in transformer:androidx.media3.transformer.EditedMediaItem\$Builder transformer:androidx.media3.transformer.EditedMediaItemSequence transformer:androidx.media3.transformer.EditedMediaItemSequence\$Builder transformer:androidx.media3.transformer.Composition\$Builder transformer:androidx.media3.transformer.Transformer\$Builder transformer:androidx.media3.transformer.Transformer transformer:androidx.media3.transformer.Transformer\$Listener transformer:androidx.media3.transformer.ExportResult common:androidx.media3.common.MediaItem\$Builder; do
             d=media3-${k%%:*}; c=${k#*:}; echo "=== $c" >> ../versions.log; javap -cp $d "$c" 2>&1 | grep public | head -40 >> ../versions.log; done
-          cd ..
-      - name: Tests, Architektur, Abdeckung, Screenshots, APK
-        run: |
-          set -o pipefail
-          # Vergleicht mit den Baselines; neue Bilder werden aufgenommen und abgelegt, Abweichungen lassen den Bau scheitern.
-          MODE=verifyAndRecordRoborazziDebug
-          echo "Screenshot-Modus: $MODE"
-          gradle --continue test $MODE koverVerify assembleDebug assembleRelease 2>&1 | tee fast.log
       - uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: apk
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
-      - name: Protokoll ablegen
-        if: always()
-        run: |
-          mkdir -p out/results out/screenshots out/roborazzi
-          cp fast.log versions.log out/ 2>/dev/null || true
-          cp core/pure/build/quality-report.md out/ 2>/dev/null || true
-          find . -path ./out -prune -o -path '*/build/test-results/*' -name '*.xml' -print | while read f; do cp "$f" "out/results/$(echo $f | tr '/' '_')"; done
-          cp feature/*/src/test/screenshots/*.png out/screenshots/ 2>/dev/null || true
-          find . -path ./out -prune -o -path '*/build/outputs/roborazzi/*' -name '*.png' -print -exec cp {} out/roborazzi/ \; >/dev/null 2>&1 || true
-          cd out && git init -q && git checkout -q -b ci-logs-fast
-          git config user.name ci && git config user.email ci@local
-          git add . && git commit -qm "fast $GITHUB_RUN_ID $GITHUB_SHA"
-          git push -f -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} ci-logs-fast
+        with: { name: versionen, path: versions.log }
 
   emulator:
     name: Emulator
     needs: plan
     if: needs.plan.outputs.emulator == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
@@ -143,9 +251,9 @@ jobs:
 
   release:
     name: Release
-    needs: [plan, fast, emulator]
+    needs: [plan, kern, oberflaeche, analyse, apk, emulator]
     if: needs.plan.outputs.release == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with: { name: apk, path: apk }

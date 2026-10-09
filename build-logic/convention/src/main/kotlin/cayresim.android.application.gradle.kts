@@ -6,3 +6,6 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
+extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
+    lint { cayresimDefaults(project) }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S-005 Selbstpruefung: fallen.sh muss diesen Text melden (Leerzeichen am Ende ohne Anfuehrungszeichen). -->
+<resources>
+    <string name="probe_trailing_space">RAW, </string>
+    <string name="probe_ok">"RAW, "</string>
+</resources>

@@ -1,6 +1,6 @@
 # S-005: Kurzer Lauf mit mehr Aussage
 
-**Stand:** 9. Oktober 2026 · **Status:** Entwurf, wartet auf Freigabe
+**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 22:41), in Umsetzung
 **Anlass:** Rückblick vom 9. Oktober (`CLAUDE.md` Abschnitt 9, V2 und V8) und Auswertung der letzten 60 CI-Läufe
 (7. bis 9. Oktober, GitHub API):
 - Der Schnell-Job war in 21 von 60 Läufen rot. Ein roter Schnell-Job meldet sich im Median erst nach 6,6 Minuten

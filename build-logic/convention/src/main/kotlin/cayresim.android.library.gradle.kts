@@ -18,6 +18,7 @@ extensions.configure<com.android.build.api.dsl.LibraryExtension> {
         unitTests.isIncludeAndroidResources = true
         unitTests.isReturnDefaultValues = true
     }
+    lint { cayresimDefaults(project) }
 }
 dependencies {
     "testImplementation"(libs.findLibrary("kotlin-test").get())

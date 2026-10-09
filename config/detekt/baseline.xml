@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>EmptyElseBlock:CameraXCameraAdapter.kt$CameraXCameraAdapter$if (req.isServiced) return</ID>
+    <ID>EmptyElseBlock:ImageQuality.kt$ImageQuality$if (luma(rgb, (y * width + x) * 3) &gt;= level) c++</ID>
+    <ID>SwallowedException:CameraXCameraAdapter.kt$CameraXCameraAdapter$e: Exception</ID>
+    <ID>SwallowedException:GlProcessingAdapter.kt$GlProcessingAdapter$e: Exception</ID>
+    <ID>SwallowedException:GlProcessingAdapter.kt$GlProcessingAdapter$e: OutOfMemoryError</ID>
+    <ID>TooGenericExceptionCaught:CameraXCameraAdapter.kt$CameraXCameraAdapter$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GlProcessingAdapter.kt$GlProcessingAdapter$e: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>
