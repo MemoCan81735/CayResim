@@ -90,6 +90,8 @@ Eine Änderung ist fertig, wenn alles davon stimmt:
   Änderungen an Kamera, Verarbeitung, Speicher, App-Shell, Gerätetests oder Build.
 - Ein absehbar scheiternder Lauf wird sofort abgebrochen.
 - Release: `[release]` in der Commit-Nachricht oder "Run workflow" auf GitHub.
+- Offen (V2 in Abschnitt 9): Das Repository ist öffentlich lesbar. Bleibt es öffentlich, sind die Minuten frei und
+  dieser Abschnitt entfällt weitgehend.
 
 ## 7. Sicherheit und Datenschutz
 
@@ -101,3 +103,28 @@ Eine Änderung ist fertig, wenn alles davon stimmt:
 
 - Keine Änderung ohne Arslans OK, außer Korrekturen eigener Fehler innerhalb einer bereits freigegebenen Aufgabe.
 - Annahmen, Kosten und Risiken offen nennen; einfache Erklärungen; keine Gedankenstriche in Texten.
+
+## 9. Schnellere Schleifen
+
+Beschlossen mit Arslan am 9. Oktober 2026 nach einem Rückblick über die ersten 97 Commits (7. bis 9. Oktober).
+Rund 40 % davon gingen nicht ins Produkt: 18 für CI und Proben, 10 für Screenshot-Baselines, 8 für Kompilierfehler,
+die erst CI fand, 6 für einen später gelöschten Tastentest. Bei der Bildqualität wurde die Regel "Automatik am
+Anschlag" in 25 Stunden dreimal geändert, jeweils nach einer einzelnen Szene vom Gerät; 7 von 17 Einträgen der
+Fehlerliste fand erst das S24+. Der Engpass ist nicht das Schreiben von Code, sondern die Dauer jeder Rückmeldung.
+Mehr Prozess hilft dagegen nicht, kürzere Schleifen und echte Testdaten schon.
+
+Jede Maßnahme wird mit eigener Spec umgesetzt, sofern sie Code betrifft. Der Status wird hier gepflegt.
+
+| Nr. | Maßnahme | Wirkung | Status |
+|---|---|---|---|
+| V1 | Lokaler Gradle-Lauf für Claude: Netzwerkfreigabe der Cloud-Umgebung für `repo.maven.apache.org`, `dl.google.com`, `plugins.gradle.org`, `services.gradle.org` | Kompilieren und JVM-Tests vor dem Push statt über CI | offen, Einstellung durch Arslan |
+| V2 | Öffentlich oder privat entscheiden. Öffentlich: Actions-Minuten auf Standard-Runnern frei, Emulator bei jedem Push, Abschnitt 6 entfällt weitgehend. Privat: Abschnitt 6 bleibt | Keine Sparlogik ohne Grund | offen, Entscheidung Arslan |
+| V3 | Szenenbibliothek: Debug-Funktion "Szene aufzeichnen" speichert die Serie (RAW oder 8 Bit) mit Metadaten und dazu ein Samsung-Foto derselben Szene. 10 bis 20 Szenen ohne Personen, privat abgelegt, nie im öffentlichen Repository. Ein JVM-Lauf rechnet alle Szenen und schreibt einen Bericht je Szene | Jede Parameteränderung wird an allen Szenen gemessen, nicht an einer | offen, Spec (neues Speichern von Daten) |
+| V4 | Varianten je Aufnahme: Im Debug-Modus wird eine Aufnahme mit 2 bis 3 Parametersätzen gerechnet und nebeneinander gespeichert | Ein Gerätetest liefert mehrere Datenpunkte ohne neue Version | offen, Spec |
+| V5 | Bericht als Datei: Knopf "Bericht teilen" erzeugt eine ZIP mit Messwerten (JSON) und kleinen Vorschaubildern | Kein Abtippen von Screenshots | offen, Spec |
+| V6 | Automatische Updates auf dem S24+ mit Obtainium aus den GitHub-Releases (bei privatem Repository mit Zugangsschlüssel) | Kein Herunterladen und Installieren von Hand | offen, Einrichtung durch Arslan |
+| V7 | Eine Quelle der Wahrheit: Bildrechnung nur in Kotlin (`:core:pure`) mit einem kleinen Kommandozeilenwerkzeug für Bildordner. Ein Python-Modell, falls noch nötig, liegt versioniert unter `tools/`, nie nur im Arbeitsordner einer Sitzung. Regeln stehen in dieser Datei; das Projektdokument spiegelt sie nur | Keine abweichenden Rechnungen, weniger Abgleich | offen; danach Abschnitt 1 Punkt 4 und Abschnitt 5 anpassen |
+| V8 | Statische Analyse im schnellen Job: detekt und Android Lint. Die Fallen aus Abschnitt 3 werden, wo möglich, zu automatischen Regeln | Fehler vor dem Lauf statt im Lauf | offen, Spec |
+| V9 | Fertig-Kriterium je Modus in Zahlen gegen die Szenenbibliothek, zum Beispiel für Nacht der Abstand zu Samsung je Messgröße. Danach kein weiteres Abstimmen ohne neuen Befund. Höchstens ein Modus gleichzeitig in Arbeit | Das Abstimmen endet planbar | offen, Zahlen mit Arslan festlegen |
+
+Vorgeschlagene Reihenfolge: V1 und V2, dann V3 und V4, dann der Rest.
