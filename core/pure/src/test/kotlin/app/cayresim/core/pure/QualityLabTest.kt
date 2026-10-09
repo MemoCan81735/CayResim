@@ -269,14 +269,18 @@ class QualityLabTest {
     @Test fun `Testlabor RAW-Weg dunkler Raum mit Restlicht wird aufgehellt und bleibt scharf`() {
         val gray = truth(0.0006)
         val truthRgb = DoubleArray(w * h * 3) { gray[it / 3] }
-        val lab = Lab(99)
-        val rgb = rawCore(List(36) { captureRaw(truthRgb, lab) })
+        val rgb = rawCore(Lab(99).let { l -> List(36) { captureRaw(truthRgb, l) } })
+        // Vergleich mit dem 8-Bit-Weg bei gleich starkem Sensorrauschen (Leserauschen 40 statt 2 wie in den anderen Szenen)
+        val yuv = core(Lab(99).let { l -> List(36) { capture(gray, 0, 0, l, read = 40.0) } })
         val bright = ImageQuality.mean(rgb, w, background)
-        val edge = ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132)
-        File("build/quality-report-raw.md").appendText("Dunkler Raum: Helligkeit ${"%.1f".format(bright)}, Kante ${"%.1f".format(edge)} px, Rauschen ${"%.3f".format(ImageQuality.relativeNoise(rgb, w, flat))}\n")
+        val edge = ImageQuality.edgeWidth(rgb, w, 80, 130, 108, 132); val yuvEdge = ImageQuality.edgeWidth(yuv, w, 80, 130, 108, 132)
+        val noise = ImageQuality.relativeNoise(rgb, w, flat); val yuvNoise = ImageQuality.relativeNoise(yuv, w, flat)
+        File("build/quality-report-raw.md").appendText("Dunkler Raum, RAW gegen 8 Bit bei gleichem Rauschen: Helligkeit ${"%.1f".format(bright)} / ${"%.1f".format(ImageQuality.mean(yuv, w, background))}, " +
+            "Kante ${"%.1f".format(edge)} / ${"%.1f".format(yuvEdge)} px, Rauschen ${"%.3f".format(noise)} / ${"%.3f".format(yuvNoise)}\n")
         File("build/quality-report.md").takeIf { it.exists() && "## RAW-Weg" !in it.readText() }?.appendText(File("build/quality-report-raw.md").readText())
         assertTrue(bright >= 30.0, "RAW: zu dunkel: $bright")
-        assertTrue(edge <= 1.5, "RAW: Kante $edge px")
+        assertTrue(edge <= yuvEdge + 0.3, "RAW: Kante $edge px, 8 Bit $yuvEdge px")
+        assertTrue(noise <= yuvNoise * 1.1, "RAW: Rauschen $noise, 8 Bit $yuvNoise")
     }
 
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {

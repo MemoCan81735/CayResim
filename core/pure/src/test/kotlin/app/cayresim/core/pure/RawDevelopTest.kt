@@ -30,7 +30,7 @@ class RawDevelopTest {
     @Test fun `Guter Fall Weissabgleich und Farbmatrix werden angewendet`() {
         val swap = floatArrayOf(0f, 0f, 1f, 0f, 1f, 0f, 1f, 0f, 0f) // Rot und Blau tauschen
         val out = RawDevelop.binToLinear(block(543, 64, 64), 4, 2, 4, RawDevelop.Cfa.RGGB, black, 1023f, floatArrayOf(2f, 1f, 1f), swap)
-        assertEquals(0f, out[0], 1e-5f); assertEquals(1f, out[2], 1e-3f)
+        assertEquals(0f, out[0], 1e-5f); assertEquals(1f, out[2], 2e-3f) // (543 - 64) / 959 * 2 = 0,999
     }
 
     @Test fun `Randfall unter Schwarz wird nicht abgeschnitten`() {

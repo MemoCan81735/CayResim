@@ -188,6 +188,9 @@ object NightTone {
 
     /** RAW-Weg: lineare Helligkeit, die im 8-Bit-Bild Stufe 1 entspraeche; darunter zaehlt ein Pixel zum Boden. */
     const val FLOOR_LINEAR = 0.00046f
+
+    /** Schwarz an die Oberkante des Bodens (90 % seiner Pixel), damit Restrauschen nicht als grauer Schleier bleibt. */
+    const val FLOOR_BLACK = 0.9f
     const val FLOOR_HIGH_TARGET = 0.1f
 
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
@@ -210,7 +213,7 @@ object NightTone {
         // A: Schwarzpunkt je Farbkanal, sonst wird der leicht unterschiedliche Boden der Kanaele zum Farbstich
         val bp = FloatArray(3) { c ->
             val ch = FloatArray(n) { linear[it * 3 + c] }
-            (if (floor) quantile(ch, 0.5f * floorShare) else minOf(quantile(ch, BLACK_QUANTILE), BLACK_MAX_SHARE * medianY)).coerceAtLeast(0f)
+            (if (floor) quantile(ch, FLOOR_BLACK * floorShare) else minOf(quantile(ch, BLACK_QUANTILE), BLACK_MAX_SHARE * medianY)).coerceAtLeast(0f)
         }
         val rgb = FloatArray(linear.size) { (linear[it] - bp[it % 3]).coerceAtLeast(0f) }
         for (p in 0 until n) y[p] = lumaOf(rgb, p * 3)
