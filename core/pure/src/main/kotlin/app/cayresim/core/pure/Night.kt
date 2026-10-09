@@ -214,7 +214,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 32) {
             for (p in 0 until pixels) if (0.2126f * mean[p * 3] + 0.7152f * mean[p * 3 + 1] + 0.0722f * mean[p * 3 + 2] <= NightTone.FLOOR_LINEAR) n++
             n.toFloat() / pixels
         } else floorShare
-        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), share)
+        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), share,
+            if (linearInput) NightTone.FLOOR_BLACK_RAW else NightTone.FLOOR_BLACK)
     }
 
     /** Mittlere Zahl der Bilder, die je Kachel wirklich beigetragen haben. */

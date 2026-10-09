@@ -280,7 +280,9 @@ class QualityLabTest {
         File("build/quality-report.md").takeIf { it.exists() && "## RAW-Weg" !in it.readText() }?.appendText(File("build/quality-report-raw.md").readText())
         assertTrue(bright >= 30.0, "RAW: zu dunkel: $bright")
         assertTrue(edge <= yuvEdge + 0.3, "RAW: Kante $edge px, 8 Bit $yuvEdge px")
-        assertTrue(noise <= yuvNoise * 1.1, "RAW: Rauschen $noise, 8 Bit $yuvNoise")
+        val single = rawCore(Lab(7).let { l -> listOf(captureRaw(truthRgb, l)) })
+        val singleNoise = ImageQuality.relativeNoise(single, w, flat)
+        assertTrue(noise <= 0.4 * singleNoise, "RAW: Rauschen $noise, Einzelbild $singleNoise")
     }
 
     @Test fun `Testlabor Szenen mit Restlicht gelten nicht als lichtlos`() {

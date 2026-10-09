@@ -189,8 +189,12 @@ object NightTone {
     /** RAW-Weg: lineare Helligkeit, die im 8-Bit-Bild Stufe 1 entspraeche; darunter zaehlt ein Pixel zum Boden. */
     const val FLOOR_LINEAR = 0.00046f
 
-    /** Schwarz an die Oberkante des Bodens (90 % seiner Pixel), damit Restrauschen nicht als grauer Schleier bleibt. */
-    const val FLOOR_BLACK = 0.9f
+    /**
+     * Lage des Schwarzpunkts im Boden: 8 Bit 50 % (die Tuer liegt dort nur zwei Stufen ueber dem Boden),
+     * RAW 90 % (Rauschen ist nicht abgeschnitten, sonst bliebe ein grauer Schleier).
+     */
+    const val FLOOR_BLACK = 0.5f
+    const val FLOOR_BLACK_RAW = 0.9f
     const val FLOOR_HIGH_TARGET = 0.1f
 
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
@@ -203,7 +207,7 @@ object NightTone {
      * etwa gleich stark), dann verstaerken, B Kontrastkurve um den Ziel-Median, Schulter, Dithering.
      * Die Farben werden nicht kuenstlich verstaerkt: im Testlabor blieben sie ohne das am naechsten an der Wahrheit.
      */
-    fun finishNight(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN, floorShare: Float = 0f): Result {
+    fun finishNight(linear: FloatArray, width: Int, maxGain: Float = MAX_GAIN, floorShare: Float = 0f, floorBlack: Float = FLOOR_BLACK): Result {
         require(width > 0 && linear.size % 3 == 0 && (linear.size / 3) % width == 0) { "Ungueltige Bildgroesse" }
         val n = linear.size / 3
         val height = n / width
@@ -213,7 +217,7 @@ object NightTone {
         // A: Schwarzpunkt je Farbkanal, sonst wird der leicht unterschiedliche Boden der Kanaele zum Farbstich
         val bp = FloatArray(3) { c ->
             val ch = FloatArray(n) { linear[it * 3 + c] }
-            (if (floor) quantile(ch, FLOOR_BLACK * floorShare) else minOf(quantile(ch, BLACK_QUANTILE), BLACK_MAX_SHARE * medianY)).coerceAtLeast(0f)
+            (if (floor) quantile(ch, floorBlack * floorShare) else minOf(quantile(ch, BLACK_QUANTILE), BLACK_MAX_SHARE * medianY)).coerceAtLeast(0f)
         }
         val rgb = FloatArray(linear.size) { (linear[it] - bp[it % 3]).coerceAtLeast(0f) }
         for (p in 0 until n) y[p] = lumaOf(rgb, p * 3)
