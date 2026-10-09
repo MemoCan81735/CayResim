@@ -288,8 +288,9 @@ class QualityLabTest {
     // ---------- Nachttest S24+ am 9. Oktober (Auto bei Regen): Randstreifen und Blockkanten ----------
 
     @Test fun `Testlabor verwackelte Serie behaelt am Rand so viel Struktur wie in der Mitte`() {
-        // feines Muster ueber das ganze Bild, damit "Struktur" ueberall messbar ist; Wackeln bis 10 Pixel
-        val scene = DoubleArray(w * h) { p -> val x = p % w; val y = p / w; if (((x / 3) + (y / 3)) % 2 == 0) 0.0008 else 0.0024 }
+        // unregelmaessiges Muster ueber das ganze Bild (ein regelmaessiges waere fuer die Ausrichtung mehrdeutig); Wackeln bis 10 Pixel
+        val blocks = Random(23).let { r -> DoubleArray(((w + 2) / 3) * ((h + 2) / 3)) { if (r.nextBoolean()) 0.0008 else 0.0024 } }
+        val scene = DoubleArray(w * h) { p -> val x = p % w; val y = p / w; blocks[(y / 3) * ((w + 2) / 3) + x / 3] }
         val lab = Lab(21); val shifts = Random(22)
         val merge = NightMerge(w, h)
         repeat(36) { k -> merge.add(capture(scene, if (k == 0) 0 else shifts.nextInt(-10, 11), if (k == 0) 0 else shifts.nextInt(-10, 11), lab)) }

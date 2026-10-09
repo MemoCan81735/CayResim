@@ -64,8 +64,10 @@ object NightPlan {
  * Gewichte je Pixel (Nachttest S24+ am 9. Oktober, Auto bei Regen): Die Kachelgewichte werden bilinear zwischen
  * den Kachelmitten ueberblendet, damit keine Blockkanten entstehen (Befund M9), und Pixel, die ein verschobenes
  * Bild nie gesehen hat, zaehlen fuer dieses Bild nicht (vorher: Streifen durch wiederholte Randpixel).
+ * Kacheln von 8 Pixeln: mit Ueberblenden allein zieht eine grosse "bewegte" Kachel ihr niedriges Gewicht in die
+ * Nachbarn und das Doppelbild wird staerker; im Python-Modell waren 8 Pixel ohne Rauschnachteil (Geist 1,4, Kanten 0,3).
  */
-class NightMerge(val width: Int, val height: Int, private val tile: Int = 16) {
+class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     init { require(width >= 32 && height >= 32 && tile >= 8) { "Bild zu klein" } }
 
     private val pixels = width * height
