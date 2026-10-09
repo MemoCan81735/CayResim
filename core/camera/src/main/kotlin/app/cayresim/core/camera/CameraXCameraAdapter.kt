@@ -718,6 +718,9 @@ class CameraXCameraAdapter @Inject constructor(
                     if (owner.isActive && p != null && em != null) bindCurrent(p, em)
                 }
             }
+            // Ohne sichtbaren Sucher braucht die Vorschau eine Ersatz-Flaeche, sonst oeffnet CameraX die Kamera nie
+            // (Emulatorlauf: "useCaseCamera is null", jede RAW-Aufnahme lief in die Zeitgrenze)
+            withContext(dispatcher) { ensureSurface() }
             val ic = imageCapture ?: return RawProbeResult.Failed(RawProbeFailure.CAMERA)
             if (ic.outputFormat != ImageCapture.OUTPUT_FORMAT_RAW) return RawProbeResult.Failed(RawProbeFailure.NOT_SUPPORTED)
             val chars = boundCamera?.cameraInfo?.let { info -> runCatching { Camera2CameraInfo.from(info) }.getOrNull() }
