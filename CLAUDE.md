@@ -85,13 +85,15 @@ Eine Änderung ist fertig, wenn alles davon stimmt:
 
 ## 6. GitHub-Minuten
 
-- Privates Repository: 2.000 freie Minuten im Monat. Ein kurzer Lauf kostet etwa 5, ein Release etwa 30 Minuten.
-- Vor jeder größeren Arbeit die Kosten nennen; Änderungen bündeln; ein Push startet den Emulator nur bei
-  Änderungen an Kamera, Verarbeitung, Speicher, App-Shell, Gerätetests oder Build.
-- Ein absehbar scheiternder Lauf wird sofort abgebrochen.
+- Das Repository bleibt öffentlich (entschieden mit Arslan am 9. Oktober 2026, V2). Actions-Minuten auf
+  Standard-Runnern sind damit frei; größere Runner kosten auch bei öffentlichen Repositories und werden nicht genutzt.
+- Gespart wird nur noch Zeit: Ein kurzer Lauf dauert etwa 5, ein Release etwa 30 Minuten. Ein absehbar scheiternder
+  Lauf wird sofort abgebrochen.
 - Release: `[release]` in der Commit-Nachricht oder "Run workflow" auf GitHub.
-- Offen (V2 in Abschnitt 9): Das Repository ist öffentlich lesbar. Bleibt es öffentlich, sind die Minuten frei und
-  dieser Abschnitt entfällt weitgehend.
+- Weil alles öffentlich ist, gilt Abschnitt 7 ohne Ausnahme.
+- Noch nicht umgestellt (eigene Änderung, Freigabe nötig): `ci.yml` startet den Emulator weiter nur bei Änderungen
+  an Kamera, Verarbeitung, Speicher, App-Shell, Gerätetests oder Build und nimmt außer vor einem Release 2.000 statt
+  5.000 Schritte Zufallsbedienung; das Testkonzept nennt noch die Grenze von 2.000 Minuten.
 
 ## 7. Sicherheit und Datenschutz
 
@@ -118,7 +120,7 @@ Jede Maßnahme wird mit eigener Spec umgesetzt, sofern sie Code betrifft. Der St
 | Nr. | Maßnahme | Wirkung | Status |
 |---|---|---|---|
 | V1 | Lokaler Gradle-Lauf für Claude: Netzwerkfreigabe der Cloud-Umgebung für `repo.maven.apache.org`, `dl.google.com`, `plugins.gradle.org`, `services.gradle.org` | Kompilieren und JVM-Tests vor dem Push statt über CI | offen, Einstellung durch Arslan |
-| V2 | Öffentlich oder privat entscheiden. Öffentlich: Actions-Minuten auf Standard-Runnern frei, Emulator bei jedem Push, Abschnitt 6 entfällt weitgehend. Privat: Abschnitt 6 bleibt | Keine Sparlogik ohne Grund | offen, Entscheidung Arslan |
+| V2 | Öffentlich oder privat entscheiden. Öffentlich: Actions-Minuten auf Standard-Runnern frei, Emulator bei jedem Push, Abschnitt 6 entfällt weitgehend. Privat: Abschnitt 6 bleibt | Keine Sparlogik ohne Grund | entschieden 9.10.: öffentlich (Abschnitt 6); CI-Umstellung offen |
 | V3 | Szenenbibliothek: Debug-Funktion "Szene aufzeichnen" speichert die Serie (RAW oder 8 Bit) mit Metadaten und dazu ein Samsung-Foto derselben Szene. 10 bis 20 Szenen ohne Personen, privat abgelegt, nie im öffentlichen Repository. Ein JVM-Lauf rechnet alle Szenen und schreibt einen Bericht je Szene | Jede Parameteränderung wird an allen Szenen gemessen, nicht an einer | offen, Spec (neues Speichern von Daten) |
 | V4 | Varianten je Aufnahme: Im Debug-Modus wird eine Aufnahme mit 2 bis 3 Parametersätzen gerechnet und nebeneinander gespeichert | Ein Gerätetest liefert mehrere Datenpunkte ohne neue Version | offen, Spec |
 | V5 | Bericht als Datei: Knopf "Bericht teilen" erzeugt eine ZIP mit Messwerten (JSON) und kleinen Vorschaubildern | Kein Abtippen von Screenshots | offen, Spec |
