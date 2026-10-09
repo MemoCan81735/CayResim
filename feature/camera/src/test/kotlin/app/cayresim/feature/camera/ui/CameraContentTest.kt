@@ -262,6 +262,27 @@ class CameraContentTest {
         compose.waitUntil(5_000) { compose.onAllNodesWithText("1/10 s, ISO 1280 (Automatik 1/20 s, ISO 640), 36 Bilder", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test fun nacht_hinweis_zeigt_das_wackeln() {
+        show(running.copy(message = UserMessage(8, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 33, 3, 12f, shakePx = 12))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("33 Bilder, 3 verworfen, Aufhellung x12,0, Wackeln bis 12 px", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun selbstausloeser_zeigt_countdown_und_schalter() {
+        show(running.copy(timer = true, countdown = 2))
+        compose.onNodeWithTag("countdown").assertIsDisplayed()
+        compose.onNodeWithText("2").assertIsDisplayed()
+        compose.onNodeWithTag("timer").assertIsDisplayed()
+        compose.onNodeWithText("Timer 2 s").assertIsDisplayed()
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_countdown.png")
+    }
+
+    @Test fun selbstausloeser_aus_ohne_countdown() {
+        show(running)
+        compose.onAllNodesWithTag("countdown").assertCountEquals(0)
+        compose.onNodeWithText("Timer aus").assertIsDisplayed()
+    }
+
     @Test fun nacht_hinweis_nennt_den_raw_weg() {
         show(running.copy(message = UserMessage(5, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 36, 0, 12f, raw = true))))

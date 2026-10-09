@@ -85,7 +85,8 @@ class SelfTestUseCase @Inject constructor(
             items += SelfTestItem(SelfTestCheck.LOW_LIGHT_BOOST, true, 0, detail = if (caps.lowLightBoost) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.ULTRA_HDR, true, 0, detail = if (caps.ultraHdr) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.RAW, true, 0, detail = if (caps.raw) "ja" else "nein")
-            caps.device?.let { items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = it) }
+            // S-003: Stabilisator aktiv laut letzter Aufnahme
+            caps.device?.let { items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = it.copy(oisActive = camera.state.value.stabilization)) }
         }
 
         val previous = camera.state.value.requestedMode

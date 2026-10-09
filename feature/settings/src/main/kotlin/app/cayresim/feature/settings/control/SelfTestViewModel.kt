@@ -81,6 +81,9 @@ data class DeviceInfoUi(
     val physicalCameras: Int?,
     val chip: String,
     val system: String,
+    /** S-003: angeboten und aktiv (null = unbekannt). */
+    val ois: Boolean? = null,
+    val oisActive: Boolean? = null,
 )
 
 internal fun DeviceReport.toUi() = DeviceInfoUi(
@@ -93,6 +96,7 @@ internal fun DeviceReport.toUi() = DeviceInfoUi(
     sensorWidth = sensorWidth, sensorHeight = sensorHeight,
     zsl = zsl, zoomMin = zoomMin, zoomMax = zoomMax,
     physicalCameras = physicalCameras, chip = chip, system = system,
+    ois = ois, oisActive = oisActive,
 )
 
 @Immutable

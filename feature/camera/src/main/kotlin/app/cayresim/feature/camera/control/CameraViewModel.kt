@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -72,9 +73,15 @@ class CameraViewModel @Inject constructor(
         val specialStatus: SpecialStatus = SpecialStatus.IDLE,
         /** Automatik (Standard): CayResim waehlt selbst, im Dunkeln den Nacht-Kern. */
         val auto: Boolean = true,
+        /** S-003: Selbstausloeser (nicht gespeichert). */
+        val timer: Boolean = false,
+        val countdown: Int? = null,
     )
 
     private var triggerJob: Job? = null
+    /** S-003: laufender Countdown des Selbstausloesers; erneuter Druck und Verlassen brechen ab. */
+    private var countdownJob: Job? = null
+
     /** Laufende Nachtaufnahme; wird beim Verlassen des Screens abgebrochen (Befund C2). */
     private var nightJob: Job? = null
 
@@ -175,7 +182,7 @@ class CameraViewModel @Inject constructor(
     private suspend fun syncAuto() { if (local.value.auto) camera.selectMode(PhotoMode.NORMAL) }
 
     fun onScreenStop() {
-        disarm()
+        disarm(); cancelCountdown()
         nightJob?.cancel(); nightJob = null
         local.update { it.copy(visible = false, specialStatus = if (it.specialStatus == SpecialStatus.ARMED) SpecialStatus.IDLE else it.specialStatus) }
         viewModelScope.launch { camera.stop() }
@@ -204,7 +211,32 @@ class CameraViewModel @Inject constructor(
         }
     }
 
+    /** S-003: Selbstausloeser 2 s ein oder aus; ein laufender Countdown endet. */
+    fun onToggleTimer() { cancelCountdown(); local.update { it.copy(timer = !it.timer) } }
+
     fun onShutter() {
+        // S-003: waehrend des Countdowns bricht ein Druck ab; mit Timer erst nach dem Countdown ausloesen
+        if (countdownJob?.isActive == true) return cancelCountdown()
+        // ein scharf geschalteter Ausloeser (Bewegung, Stillstand) wird sofort entschaerft, ohne Countdown
+        if (local.value.timer && local.value.specialStatus != SpecialStatus.ARMED) return startCountdown()
+        shoot()
+    }
+
+    private fun startCountdown() {
+        countdownJob = viewModelScope.launch {
+            for (s in TIMER_SECONDS downTo 1) { local.update { it.copy(countdown = s) }; delay(1_000) }
+            local.update { it.copy(countdown = null) }
+            countdownJob = null
+            shoot()
+        }
+    }
+
+    private fun cancelCountdown() {
+        countdownJob?.cancel(); countdownJob = null
+        local.update { it.copy(countdown = null) }
+    }
+
+    private fun shoot() {
         val l = local.value
         // Befund H2: waehrend eine Serie laeuft, loest ein weiterer Druck nichts aus (synchron geprueft, nicht ueber den UI-Zustand)
         if (l.specialStatus == SpecialStatus.COLLECTING || l.specialStatus == SpecialStatus.PROCESSING) return
@@ -240,7 +272,7 @@ class CameraViewModel @Inject constructor(
         nightJob = viewModelScope.launch {
             val r = try { night() } finally { local.update { it.copy(specialStatus = SpecialStatus.IDLE) } }
             when (r) {
-                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened, it.raw, it.durationMs, it.meterExposureNs, it.meterIso) }) { it.copy(lastPhotoUri = r.uri) }
+                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened, it.raw, it.durationMs, it.meterExposureNs, it.meterIso, it.shakePx) }) { it.copy(lastPhotoUri = r.uri) }
                 is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED)
             }
         }
@@ -328,6 +360,8 @@ class CameraViewModel @Inject constructor(
         overlayAlpha = l.overlayAlpha,
         special = l.special,
         specialStatus = l.specialStatus,
+        timer = l.timer,
+        countdown = l.countdown,
         zoomRatio = s.zoom.ratio,
         zoomPresets = s.zoom.presets.map { r ->
             // Hervorheben nur, wenn der Zoom nahe an der Stufe liegt (wie bei Samsung)
@@ -335,5 +369,9 @@ class CameraViewModel @Inject constructor(
         },
     )
 
-    companion object { const val OVERLAY_PX = 1440 }
+    companion object {
+        const val OVERLAY_PX = 1440
+        /** S-003: Selbstausloeser in Sekunden. */
+        const val TIMER_SECONDS = 2
+    }
 }

@@ -146,6 +146,12 @@ class NightUseCaseTest {
         assertEquals(50_000_000L, raw.night!!.meterExposureNs); assertEquals(640, raw.night!!.meterIso)
     }
 
+    @Test fun `Bericht nennt das Wackeln`() = runTest {
+        // S-003 K2
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.nightShake = 12
+        assertEquals(12, assertIs<StackOutcome.Saved>(night(10)).night!!.shakePx)
+    }
+
     @Test fun `Randfall ohne Messung der Automatik bleibt der Bericht ohne Automatik`() = runTest {
         cam.start()
         val r = assertIs<StackOutcome.Saved>(night(10))

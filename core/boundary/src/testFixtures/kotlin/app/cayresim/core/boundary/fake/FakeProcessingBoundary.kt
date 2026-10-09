@@ -40,6 +40,8 @@ class FakeProcessingBoundary : ProcessingBoundary {
     /** Haelt Nachtaufnahmen an, bis der Test sie freigibt; zaehlt jeden Start. */
     var nightGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
     var nightStarts = 0; private set
+    /** Gemeldetes Wackeln der 8-Bit-Nacht (S-003). */
+    var nightShake = 0
 
     override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>): ProcessResult {
         nightStarts++
@@ -50,7 +52,7 @@ class FakeProcessingBoundary : ProcessingBoundary {
         if (gpuFails) return ProcessResult.Failed(ProcessFailure.GPU)
         nightRuns += count
         val out = "content://fake/night/${++n}"; known += out
-        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f))
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f, nightShake))
     }
 
     val rawNightRuns = mutableListOf<Int>()

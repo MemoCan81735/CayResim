@@ -71,7 +71,7 @@ class SelfTestTest {
     private val s24 = DeviceReport(
         HardwareLevel.FULL, 85_000L..100_000_000L, 25..3200, 142_857_142L, 15..15,
         raw = true, burst = true, sensorWidth = 4080, sensorHeight = 3060, zsl = false,
-        zoomMin = 0.6f, zoomMax = 10f, physicalCameras = 3, chip = "s5e9945", system = "Android 16",
+        zoomMin = 0.6f, zoomMax = 10f, physicalCameras = 3, chip = "s5e9945", system = "Android 16", ois = true,
     )
 
     @Test fun viewmodel_reicht_geraetewerte_als_zahlen_weiter() {
@@ -97,6 +97,8 @@ class SelfTestTest {
         compose.onNodeWithText("Belichtung: 1/11765 s bis 1/10 s", substring = true).assertExists()
         compose.onNodeWithText("ISO: 25 bis 3200", substring = true).assertExists()
         compose.onNodeWithText("RAW: ja, Serienbilder: ja", substring = true).assertExists()
+        // S-003 K4: Fake meldet keine Aufnahme, also "unbekannt"
+        compose.onNodeWithText("Optischer Stabilisator: ja, aktiv: unbekannt", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/selftest_device.png")
     }
 

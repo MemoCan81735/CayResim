@@ -90,6 +90,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private var refLuma: ByteArray? = null
     private var refSmall: ByteArray? = null
     private var refSharpness = 0.0
+    private var refRobust = 0.0
     private val sw = width / SCALE
     private val sh = height / SCALE
     private val maxShift = minOf(8, (sw - 1) / 2 - 1, (sh - 1) / 2 - 1).coerceAtLeast(0)
@@ -110,14 +111,48 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     var used = 0; private set
 
+    /** Groesster angenommener Versatz zum Bezugsbild in Pixeln (S-003: zeigt auf dem Geraet, wie stark gewackelt wurde). */
+    var maxShake = 0; private set
+
+    /** S-003: Kopien der ersten Bilder, solange der Bezug noch wechseln darf (hoechstens [REF_CANDIDATES] - 1, R19). */
+    private val early = ArrayList<ByteArray>(REF_CANDIDATES - 1)
+    private var seen = 0
+
     /** Anteil der Pixel mit Helligkeit 0 oder 1 im ersten Bild: hoch heisst "fast kein Licht" (siehe NightTone.FLOOR_SHARE). */
     var floorShare = 0f; private set
     var dropped = 0; private set
 
-    /** Fuegt ein Bild hinzu. false = verworfen (verwackelt). */
+    /**
+     * Fuegt ein Bild hinzu. false = verworfen (verwackelt).
+     *
+     * S-003: Bezug ist das schaerfste der ersten [REF_CANDIDATES] Bilder. Ist ein spaeteres davon deutlich schaerfer
+     * ([REF_SWITCH]-fach, gemessen mit [robustSharpness]), beginnt die Summe neu mit ihm als Bezug, und die frueheren werden erneut geprueft (ein
+     * verwackeltes erstes Bild liess sonst alle halb verwackelten durch). Nur fuer 8-Bit-Bilder; RAW behaelt das erste.
+     */
     fun add(frame: ByteArray): Boolean {
         require(frame.size == pixels * 3) { "Bild hat die falsche Groesse" }
-        return addInternal(frame, null)
+        seen++
+        // Zweitpruefung S-003: robustes Mass, ein bewegtes helles Objekt darf den Bezug nicht uebernehmen
+        if (seen in 2..REF_CANDIDATES && refSmall != null && robustSharpness(downscale(frame)) > REF_SWITCH * refRobust) {
+            val before = early.toList()
+            restart()
+            addInternal(frame, null)
+            before.forEach { addInternal(it, null) }
+            // solange noch ein Wechsel moeglich ist, alle bisherigen Bilder behalten
+            if (seen < REF_CANDIDATES) { early += frame.copyOf(); early += before }
+            return true
+        }
+        val ok = addInternal(frame, null)
+        if (seen < REF_CANDIDATES) early += frame.copyOf() else early.clear()
+        return ok
+    }
+
+    /** Leert die Summe fuer einen neuen Bezug. */
+    private fun restart() {
+        sum.fill(0f); weight.fill(0f)
+        refSmall = null; refLuma = null; refSharpness = 0.0; refRobust = 0.0
+        used = 0; dropped = 0; maxShake = 0; floorShare = 0f
+        early.clear()
     }
 
     /** Verstaerkung fuer die 8-Bit-Vorschau linearer Bilder (aus dem ersten Bild, fuer alle gleich). */
@@ -147,7 +182,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         val small = downscale(frame)
         val ref = refSmall
         if (ref == null) {
-            refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small)
+            refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small); refRobust = robustSharpness(small)
             // Bei RAW ist der Schwarzwert bekannt: kein Raten des Rauschbodens
             floorShare = if (linear != null) 0f else refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
             for (i in sum.indices) sum[i] = linear?.get(i) ?: LIN[frame[i].toInt() and 0xFF]
@@ -162,6 +197,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         val (bx, by) = refine(rl, frame, sdx * SCALE, sdy * SCALE)
         // Sehr verrauschte Bilder (RAW im Dunkeln): eine Verschiebung nur annehmen, wenn sie klar besser passt als keine
         val (dx, dy) = if ((bx != 0 || by != 0) && alignError(rl, frame, bx, by) > SHIFT_GAIN * alignError(rl, frame, 0, 0)) 0 to 0 else bx to by
+        maxShake = maxOf(maxShake, abs(dx), abs(dy))
         // Abweichung je Kachel nach dem Ausrichten
         val tiles = tilesX * tilesY
         val diff = FloatArray(tiles)
@@ -180,8 +216,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         }
         for (t in diff.indices) diff[t] = if (count[t] == 0) 0f else diff[t] / count[t]
         // S-001 K4: nur gesehene Kacheln mit genug Stichproben bestimmen, was "normales Rauschen" ist
-        val seen = diff.filterIndexed { t, _ -> count[t] >= MIN_TILE_SAMPLES }.toFloatArray()
-        val typical = (if (seen.isEmpty()) 0f else median(seen)).coerceAtLeast(0.5f)
+        val sampled = diff.filterIndexed { t, _ -> count[t] >= MIN_TILE_SAMPLES }.toFloatArray()
+        val typical = (if (sampled.isEmpty()) 0f else median(sampled)).coerceAtLeast(0.5f)
         val w = FloatArray(tiles) { t ->
             val d = diff[t]
             // zu wenige Stichproben sind kein Beleg fuer Bewegung
@@ -297,6 +333,34 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         return e / maxOf(1, (sw - 2) * (sh - 2))
     }
 
+    /**
+     * Schaerfe als Median der Kantenenergie je Feld von 4 x 4 Pixeln des verkleinerten Bilds (S-003). Bewegungsunschaerfe
+     * senkt alle Felder, ein vorbeilaufendes helles Objekt hebt nur wenige (Python-Modell: Mittelwert 4-fach, Median 1,04-fach).
+     */
+    private fun robustSharpness(s: ByteArray): Double {
+        val t = 4
+        val tiles = ArrayList<Double>()
+        var y0 = 1
+        while (y0 + t <= sh - 1) {
+            var x0 = 1
+            while (x0 + t <= sw - 1) {
+                var e = 0.0
+                for (y in y0 until y0 + t) for (x in x0 until x0 + t) {
+                    val c = lumaAt(s, (y * sw + x) * 3)
+                    val l = 4 * c - lumaAt(s, (y * sw + x - 1) * 3) - lumaAt(s, (y * sw + x + 1) * 3) -
+                        lumaAt(s, ((y - 1) * sw + x) * 3) - lumaAt(s, ((y + 1) * sw + x) * 3)
+                    e += l.toDouble() * l
+                }
+                tiles += e / (t * t)
+                x0 += t
+            }
+            y0 += t
+        }
+        if (tiles.isEmpty()) return 0.0
+        tiles.sort()
+        return tiles[tiles.size / 2]
+    }
+
     private fun median(a: FloatArray): Float = a.sortedArray().let { it[it.size / 2] }
 
     companion object {
@@ -307,6 +371,10 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         const val BLUR_LIMIT = 0.5
         /** Eine Verschiebung muss den Fehler auf hoechstens 97 % von "keine Verschiebung" senken. */
         const val SHIFT_GAIN = 0.97
+        /** S-003: so viele erste Bilder kommen als Bezug in Frage; 1 = immer das erste (Rueckweg). */
+        const val REF_CANDIDATES = 3
+        /** Ein Kandidat muss so viel schaerfer sein, damit der Bezug wechselt (Rauschen allein reicht nicht). */
+        const val REF_SWITCH = 1.25
         /** Weniger Stichproben je Kachel (nur am Rand moeglich) reichen nicht als Beleg fuer Bewegung. */
         const val MIN_TILE_SAMPLES = 4
         /** Vorschau linearer Bilder: Median auf etwa sRGB 120, hoechstens 256-fach. */

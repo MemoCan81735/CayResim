@@ -237,6 +237,15 @@ class SelfTestUseCaseTest {
         assertTrue(rig.proc.rawNightRuns.isEmpty())
     }
 
+    @Test fun `Geraetewerte nennen den Stabilisator`() = runTest {
+        // S-003 K4: angeboten laut Geraet, aktiv laut letzter Aufnahme
+        val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(true) }
+        val d = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!
+        assertEquals(true, d.ois); assertEquals(true, d.oisActive)
+        val unknown = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }
+        assertEquals(null, SelfTestUseCase(unknown, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+    }
+
     @Test fun `Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen`() = runTest {
         // S-002 K4: S24+ meldet "Schwarz: 0/0/0/0"; im hellen Raum 0,0 % Nullen
         val rig = Rig()

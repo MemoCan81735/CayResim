@@ -36,6 +36,9 @@ data class DeviceReport(
     val physicalCameras: Int? = null,
     val chip: String = "",
     val system: String = "",
+    /** S-003: optischer Stabilisator angeboten (laut Geraet) und aktiv (laut letzter Aufnahme, null = unbekannt). */
+    val ois: Boolean? = null,
+    val oisActive: Boolean? = null,
 )
 
 /**
@@ -62,6 +65,8 @@ data class CameraStateSnapshot(
     val zoom: ZoomSnapshot = ZoomSnapshot(),
     /** Letzte Messung der Automatik im normalen Modus; null, solange keine vorliegt. */
     val light: LightSnapshot? = null,
+    /** S-003: optischer Stabilisator laut letzter Aufnahme der eigenen Pipeline; null = unbekannt (z. B. Samsung-Modi). */
+    val stabilization: Boolean? = null,
 )
 
 enum class CameraError { NO_CAMERA, IN_USE, BIND_FAILED, UNKNOWN }

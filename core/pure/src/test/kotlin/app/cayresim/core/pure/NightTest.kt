@@ -138,6 +138,49 @@ class NightMergeTest {
         assertEquals(1, m.dropped); assertEquals(1, m.used)
     }
 
+    @Test fun `S-003 verwackeltes erstes Bild wird nicht zum Bezug`() {
+        // erstes Bild ohne Kanten (verwackelt), danach scharfe: der Bezug wechselt, das erste Bild wird verworfen
+        val rng = SeededRng(3)
+        val m = NightMerge(w, h)
+        m.add(ByteArray(w * h * 3) { 9 })
+        repeat(5) { m.add(scene(0, 0, rng)) }
+        assertEquals(1, m.dropped, "verwackeltes erstes Bild"); assertEquals(5, m.used)
+    }
+
+    @Test fun `S-003 Randfall Bezug wechselt nur in den ersten Bildern`() {
+        val rng = SeededRng(4)
+        val m = NightMerge(w, h)
+        m.add(ByteArray(w * h * 3) { 9 }); m.add(ByteArray(w * h * 3) { 9 }); m.add(ByteArray(w * h * 3) { 9 })
+        m.add(scene(0, 0, rng)) // viertes Bild: kein Wechsel mehr, Bezug bleibt das erste
+        assertEquals(0, m.dropped); assertEquals(4, m.used)
+    }
+
+    /** Unregelmaessige Bloecke von 3 Pixeln (Zweitpruefung S-003: das Schachbrett ist fuer die Ausrichtung mehrdeutig). */
+    private val blocks = kotlin.random.Random(17).let { r -> BooleanArray((h / 3 + 20) * (w / 3 + 20)) { r.nextBoolean() } }
+
+    private fun blockScene(dx: Int, dy: Int, rng: Rng): ByteArray = ByteArray(w * h * 3) { i ->
+        val p = i / 3; val x = p % w + dx + 24; val y = p / w + dy + 24
+        val v = if (blocks[(y / 3) * (w / 3 + 20) + x / 3]) 30 else 4
+        (v + rng.nextInt(7) - 3).coerceIn(0, 255).toByte()
+    }
+
+    @Test fun `S-003 Wackeln wird gemessen`() {
+        // Python-Modell mit derselben Ausrichtung: Versatz exakt (4, 0), (8, 4), (12, 4), (0, 8)
+        val rng = SeededRng(9)
+        val m = NightMerge(w, h)
+        listOf(0 to 0, 4 to 0, -8 to 4, 12 to -4, 0 to 8).forEach { (dx, dy) -> m.add(blockScene(dx, dy, rng)) }
+        assertEquals(12, m.maxShake, "groesster Versatz zum Bezug in Pixeln")
+        assertEquals(0, NightMerge(w, h).apply { repeat(3) { add(blockScene(0, 0, rng)) } }.maxShake)
+    }
+
+    @Test fun `S-003 Fehlerfall vorbeilaufendes helles Objekt wird nicht zum Bezug`() {
+        // Zweitpruefung: mit dem Mittelwert der Kantenenergie war das Bild mit Objekt 4-mal "schaerfer" und wurde Bezug
+        val rng = SeededRng(5)
+        val m = NightMerge(w, h)
+        m.add(scene(0, 0, rng)); m.add(scene(0, 0, rng, blobAt = 40)); repeat(6) { m.add(scene(0, 0, rng)) }
+        assertEquals(0, m.dropped, "klare Bilder bleiben"); assertEquals(8, m.used)
+    }
+
     @Test fun `Aufhellung waechst mit der Bildzahl`() {
         assertEquals(16f, NightTone.maxGainFor(1)); assertEquals(16f, NightTone.maxGainFor(0))
         assertEquals(64f, NightTone.maxGainFor(36)); assertEquals(64f, NightTone.maxGainFor(100))

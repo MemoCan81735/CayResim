@@ -69,6 +69,8 @@
     <string name="device_raw_burst">RAW: %1$s, Serienbilder: %2$s</string>
     <string name="device_sensor">Sensor: %1$d x %2$d (%3$s MP)</string>
     <string name="device_zsl">Verzögerungsfrei (ZSL): %1$s</string>
+    <string name="device_ois">Optischer Stabilisator: %1$s, aktiv: %2$s</string>
+    <string name="device_unknown">unbekannt</string>
     <string name="device_zoom">Zoom: %1$s bis %2$s</string>
     <string name="device_cameras">Kameras: %1$d</string>
     <string name="device_chip">Chip: %1$s</string>

@@ -43,7 +43,7 @@ data class UserMessage(val id: Long, val kind: MessageKind, val night: NightInfo
 /** Kennzahlen einer Nachtaufnahme fuer den Hinweis; den Text baut die Oberflaeche (R23). */
 @Immutable
 data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val shortened: Boolean = false, val raw: Boolean = false, val durationMs: Long? = null,
-    val meterExposureNs: Long? = null, val meterIso: Int? = null)
+    val meterExposureNs: Long? = null, val meterIso: Int? = null, val shakePx: Int? = null)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable
@@ -81,6 +81,10 @@ data class CameraUiState(
     val autoNight: Boolean = false,
     val zoomRatio: Float = 1f,
     val zoomPresets: List<ZoomPresetUi> = emptyList(),
+    /** S-003: Selbstausloeser 2 s eingeschaltet. */
+    val timer: Boolean = false,
+    /** Laufender Countdown in Sekunden, null = keiner. */
+    val countdown: Int? = null,
 ) {
     val zoomLabel: String get() = zoomLabel(zoomRatio)
 

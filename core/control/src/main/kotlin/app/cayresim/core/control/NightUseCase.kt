@@ -76,7 +76,7 @@ class NightUseCase @Inject constructor(
                     val used = r.night?.used ?: count
                     StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
                         NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start),
-                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso))
+                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso, shakePx = r.night?.maxShake))
                 }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
@@ -98,7 +98,7 @@ class NightUseCase @Inject constructor(
                 val used = r.night?.used ?: count
                 StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
                     NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true, durationMs = since(start),
-                        meterExposureNs = l?.exposureNs, meterIso = l?.iso))
+                        meterExposureNs = l?.exposureNs, meterIso = l?.iso, shakePx = r.night?.maxShake))
             }
             is ProcessResult.Failed -> null
         }

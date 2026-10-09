@@ -2,6 +2,13 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## nächste Version (S-003)
+- Nacht: das schärfste der ersten 3 Bilder wird Bezug; verwackelte Einzelbilder werden so zuverlässiger verworfen.
+- Nacht-Hinweis zeigt das Wackeln, z. B. ", Wackeln bis 12 px".
+- Optischer Stabilisator wird angefordert; der Selbsttest zeigt, ob er angeboten und aktiv ist.
+- Selbstauslöser 2 s (Schalter "Timer" oben im Sucher).
+- Gerät: Selbsttest (Zeile Stabilisator), Nachtfoto freihand mit Hinweis, Timer einmal ausprobieren.
+
 ## 0.1.83 (9. Oktober 2026, S-002)
 - Nachtaufnahme im beleuchteten Raum höchstens 4-mal so hell wie die Automatik (vorher bis 10-fach, Bild grau und flau).
 - Hinweis nennt die Messung der Automatik, z. B. "(Automatik 1/20 s, ISO 640)".

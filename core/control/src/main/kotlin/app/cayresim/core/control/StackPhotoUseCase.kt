@@ -11,10 +11,11 @@ import javax.inject.Inject
 /**
  * [durationMs]: vom Ausloesen bis gespeichert (R27), null ohne Uhr.
  * [meterExposureNs], [meterIso]: was die Automatik vor der Serie gemessen hat (S-002), null ohne Messung.
+ * [shakePx]: groesster Versatz zum Bezugsbild in Pixeln (S-003), null ohne Kennzahlen der Verarbeitung.
  */
 data class NightReport(
     val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val raw: Boolean = false,
-    val durationMs: Long? = null, val meterExposureNs: Long? = null, val meterIso: Int? = null,
+    val durationMs: Long? = null, val meterExposureNs: Long? = null, val meterIso: Int? = null, val shakePx: Int? = null,
 )
 
 sealed interface StackOutcome {

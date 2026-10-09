@@ -109,6 +109,7 @@ fun CameraRoute(
         state = state,
         onModeSelected = viewModel::onModeSelected,
         onNextLook = viewModel::onNextLook,
+        onToggleTimer = viewModel::onToggleTimer,
         onNextSpecial = viewModel::onNextSpecial,
         onExposure = viewModel::onExposure,
         onIso = viewModel::onIso,
@@ -156,6 +157,7 @@ fun CameraContent(
     onZoomPreset: (Float) -> Unit = {},
     onPinch: (Float) -> Unit = {},
     onTapFocus: (Float, Float) -> Unit = { _, _ -> },
+    onToggleTimer: () -> Unit = {},
     viewfinder: @Composable (Any, (Float, Float) -> Unit) -> Unit = { token, tap -> DefaultViewfinder(token, tap) },
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -190,6 +192,15 @@ fun CameraContent(
             TopChip(stringResource(specialRes(state.special)), onNextSpecial, "special")
             val sel = state.series.firstOrNull { it.id == state.selectedSeriesId }
             TopChip(if (sel == null) stringResource(R.string.series_none) else stringResource(R.string.series_label, sel.name, sel.photoCount), { picker = true }, "series")
+            // S-003: zuletzt, damit die Serienwahl bei schmalem Bildschirm sichtbar bleibt
+            TopChip(stringResource(if (state.timer) R.string.timer_on else R.string.timer_off), onToggleTimer, "timer")
+        }
+        // S-003: Countdown des Selbstausloesers gross in der Mitte
+        state.countdown?.let { c ->
+            Surface(color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White, shape = CircleShape,
+                modifier = Modifier.align(Alignment.Center).size(120.dp).testTag("countdown")) {
+                Box(contentAlignment = Alignment.Center) { Text(c.toString(), style = MaterialTheme.typography.displayLarge) }
+            }
         }
         // Immer sichtbar und nie abgeschnitten, auch nach dem ersten Foto (Selbsttest)
         val settingsLabel = stringResource(R.string.open_settings)
@@ -456,7 +467,9 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
     else set
     val gain = String.format(java.util.Locale.GERMANY, "%.1f", n.gain)
     val detail = stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
-    val cut = if (n.shortened) detail + stringResource(R.string.night_shortened) else detail
+    // S-003: groesster Versatz zum Bezugsbild, z. B. ", Wackeln bis 12 px"
+    val shaken = n.shakePx?.let { detail + stringResource(R.string.night_shake, it) } ?: detail
+    val cut = if (n.shortened) shaken + stringResource(R.string.night_shortened) else shaken
     // S-001 K5: Dauer vom Ausloesen bis gespeichert, z. B. ", Dauer 4,2 s"
     val full = n.durationMs?.let { cut + stringResource(R.string.night_duration, String.format(java.util.Locale.GERMANY, "%.1f", it / 1000f)) } ?: cut
     return if (n.raw) stringResource(R.string.night_raw_prefix) + full else full

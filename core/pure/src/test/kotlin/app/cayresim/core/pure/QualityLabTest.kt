@@ -306,6 +306,24 @@ class QualityLabTest {
         assertTrue(merge.weightIn(w - 12, 30, w - 1, 114) < merge.weightIn(70, 50, 120, 94), "Rand muss aus weniger Bildern bestehen als die Mitte")
     }
 
+    @Test fun `Testlabor verwackelte Einzelbilder werden verworfen, auch wenn das erste verwackelt ist`() {
+        // S-003 K1: Bewegungsunschaerfe von 8 Pixeln (waagrecht) in jedem dritten Bild, auch im ersten. Python-Modell:
+        // alter Weg (Bezug = erstes Bild) nimmt alle 36, Struktur 75 %; Bezug = schaerfstes der ersten 3: 24 Bilder, 100 %
+        val blocks = Random(23).let { r -> DoubleArray(((w + 2) / 3) * ((h + 2) / 3)) { if (r.nextBoolean()) 0.0008 else 0.0024 } }
+        val scene = DoubleArray(w * h) { p -> val x = p % w; val y = p / w; blocks[(y / 3) * ((w + 2) / 3) + x / 3] }
+        val smeared = DoubleArray(w * h) { p -> val x = p % w; val y = p / w; (0 until 8).sumOf { k -> scene[y * w + (x + k).coerceAtMost(w - 1)] } / 8 }
+        val shaky = NightMerge(w, h); val lab = Lab(41)
+        repeat(36) { k -> shaky.add(capture(if (k % 3 == 0) smeared else scene, 0, 0, lab)) }
+        val calm = NightMerge(w, h); val lab2 = Lab(41)
+        repeat(36) { calm.add(capture(scene, 0, 0, lab2)) }
+        fun texture(rgb: ByteArray) = Rect(70, 50, 120, 94).let { ImageQuality.noise(rgb, w, it) / ImageQuality.mean(rgb, w, it) }
+        val t = texture(shaky.finish().rgb); val t0 = texture(calm.finish().rgb)
+        report("62-bewegungsunschaerfe", "\n## Bewegungsunschaerfe in jedem dritten Bild\n\nStruktur ${"%.3f".format(t)} gegen ${"%.3f".format(t0)} ohne Unschaerfe, " +
+            "verworfen ${shaky.dropped} von 36\n")
+        assertTrue(shaky.dropped >= 12, "verwackelte Bilder nicht verworfen: ${shaky.dropped}")
+        assertTrue(t >= 0.9 * t0, "Struktur $t, hoechstens 10 % unter $t0")
+    }
+
     @Test fun `Testlabor bewegtes Objekt auf einer Kachelgrenze hinterlaesst weder Doppelbild noch Blockkante`() {
         val lab = Lab(31)
         val clean = truth(0.0006)

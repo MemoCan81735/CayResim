@@ -15,6 +15,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
@@ -76,6 +78,38 @@ class CameraViewModelTest {
     @Test fun `Moduswahl wirkt`() = runTest {
         visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
         assertEquals(ModeOption.NIGHT, vm.uiState.value.active); assertNull(vm.uiState.value.fallbackFrom)
+    }
+
+    // ---------- S-003 K5: Selbstausloeser 2 s ----------
+
+    @Test fun `Selbstausloeser loest nach 2 s aus und zeigt den Countdown`() = runTest {
+        visibleAndGranted(); vm.onToggleTimer()
+        assertTrue(vm.uiState.value.timer)
+        vm.onShutter()
+        assertEquals(2, vm.uiState.value.countdown); assertTrue(cam.saved.isEmpty(), "noch nicht ausgeloest")
+        advanceTimeBy(1_000); runCurrent()
+        assertEquals(1, vm.uiState.value.countdown); assertTrue(cam.saved.isEmpty())
+        advanceTimeBy(1_000); runCurrent()
+        assertNull(vm.uiState.value.countdown); assertEquals(1, cam.saved.size)
+        assertEquals(MessageKind.SAVED, vm.uiState.value.message?.kind)
+    }
+
+    @Test fun `Selbstausloeser erneuter Druck bricht ab`() = runTest {
+        visibleAndGranted(); vm.onToggleTimer(); vm.onShutter()
+        advanceTimeBy(500); runCurrent()
+        vm.onShutter()
+        assertNull(vm.uiState.value.countdown)
+        advanceTimeBy(5_000); runCurrent()
+        assertTrue(cam.saved.isEmpty(), "abgebrochen")
+    }
+
+    @Test fun `Selbstausloeser Verlassen des Screens bricht ab, ohne Timer sofort`() = runTest {
+        visibleAndGranted(); vm.onToggleTimer(); vm.onShutter()
+        vm.onScreenStop()
+        advanceTimeBy(5_000); runCurrent()
+        assertTrue(cam.saved.isEmpty()); assertNull(vm.uiState.value.countdown)
+        vm.onScreenStart(); vm.onToggleTimer(); assertFalse(vm.uiState.value.timer)
+        vm.onShutter(); assertEquals(1, cam.saved.size, "ohne Timer sofort")
     }
 
     @Test fun `Bestaetigte Meldung verschwindet`() = runTest {

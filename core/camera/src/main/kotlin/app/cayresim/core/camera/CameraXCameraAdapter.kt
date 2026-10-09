@@ -125,6 +125,8 @@ class CameraXCameraAdapter @Inject constructor(
     private var aeLocked = false
     /** Letzter Zustand der Belichtungsautomatik (vom Kamera-Thread geschrieben). */
     @Volatile private var aeState: Int? = null
+    /** S-003: optischer Stabilisator angeboten; dann fordert die App ihn an (eigene Pipeline, Pro, RAW-Sitzung). */
+    @Volatile private var oisAvailable = false
     /** Fuer Tests: wie viele Stroeme gerade die eigene Pipeline brauchen (muss nach jedem Ende 0 sein). */
     @androidx.annotation.VisibleForTesting internal val pipelineUserCount: Int get() = pipelineUsers
     /** Ob die aktuelle Bindung Ultra HDR speichert (fuer Tests und Diagnose). */
@@ -182,7 +184,7 @@ class CameraXCameraAdapter @Inject constructor(
             fallbackSink = null
             imageCapture = null
             // Befund H4: alte Lichtmessung gilt nach dem Stopp nicht mehr (z. B. Wiederoeffnen bei Tageslicht)
-            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, light = null) }
+            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, light = null, stabilization = null) }
         }
     }
 
@@ -208,7 +210,7 @@ class CameraXCameraAdapter @Inject constructor(
             lowLightBoost = runCatching { info.isLowLightBoostSupported }.getOrDefault(false),
             ultraHdr = ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR in formats,
             raw = ImageCapture.OUTPUT_FORMAT_RAW in formats,
-            device = readDeviceReport(info),
+            device = readDeviceReport(info).also { oisAvailable = it.ois == true },
         )
     }
 
@@ -275,6 +277,8 @@ class CameraXCameraAdapter @Inject constructor(
         return try {
         p.unbindAll()
         val ext = if (pipelineUsers > 0) ExtensionMode.NONE else key.toExtensionMode()
+        // S-003: Samsungs Modi melden keine Aufnahmeergebnisse; ein alter Wert waere irrefuehrend
+        if (ext != ExtensionMode.NONE) _state.update { it.copy(stabilization = null) }
         // Belichtungsautomatik mitlesen (nur ohne Extension; Extensions erlauben keine eigenen Rueckrufe)
         val preview = Preview.Builder().apply {
             if (ext == ExtensionMode.NONE) androidx.camera.camera2.interop.Camera2Interop.Extender(this).setSessionCaptureCallback(lightMeter)
@@ -432,6 +436,10 @@ class CameraXCameraAdapter @Inject constructor(
         ) {
             val ae = result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE)
             aeState = ae
+            // S-003: ob der Stabilisator laeuft, sagt nur das Aufnahmeergebnis
+            val ois = result.get(android.hardware.camera2.CaptureResult.LENS_OPTICAL_STABILIZATION_MODE)
+                ?.let { it == CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON }
+            if (ois != null && _state.value.stabilization != ois) _state.update { it.copy(stabilization = ois) }
             // Befund H4: nur echte Messungen der Automatik zaehlen, keine manuellen oder festgehaltenen Werte
             if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_MODE) == CaptureRequest.CONTROL_AE_MODE_OFF) return
             if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_LOCK) == true) return
@@ -569,6 +577,7 @@ class CameraXCameraAdapter @Inject constructor(
                     set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureNs)
                     set(CaptureRequest.SENSOR_SENSITIVITY, iso)
                     set(CaptureRequest.SENSOR_FRAME_DURATION, maxOf(exposureNs, minFrame))
+                    if (oisAvailable) set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
                 }.build()
                 s.setRepeatingRequest(req, object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
                     override fun onCaptureCompleted(
@@ -759,6 +768,8 @@ class CameraXCameraAdapter @Inject constructor(
             zsl = runCatching { info.isZslSupported }.getOrNull(),
             zoomMin = zoom?.minZoomRatio, zoomMax = zoom?.maxZoomRatio,
             physicalCameras = runCatching { info.physicalCameraInfos.size }.getOrNull(),
+            ois = ch(CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION)
+                ?.contains(CameraCharacteristics.LENS_OPTICAL_STABILIZATION_MODE_ON),
             chip = "${android.os.Build.SOC_MANUFACTURER} ${android.os.Build.SOC_MODEL}",
             system = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.DISPLAY}",
         )
@@ -785,6 +796,8 @@ class CameraXCameraAdapter @Inject constructor(
         val st = _manualState.value
         val b = CaptureRequestOptions.Builder()
         val exp = st.exposureNanos; val iso = st.iso; val focus = st.focusDiopters
+        // S-003: optischen Stabilisator ausdruecklich anfordern, statt auf die Voreinstellung zu hoffen
+        if (oisAvailable) b.setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON)
         if (exp == null && aeLocked) b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
         if (exp != null && iso != null) {
             b.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)

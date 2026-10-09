@@ -27,7 +27,8 @@ class ImageHandle(val token: Any, val width: Int, val height: Int)
 enum class Look { NONE, WARM, COOL, FILM, MONO }
 
 /** Kennzahlen einer Nachtaufnahme: genutzte und verworfene Bilder, Aufhellung. */
-data class NightStats(val used: Int, val dropped: Int, val gain: Float)
+/** [maxShake]: groesster Versatz zum Bezugsbild in Pixeln des Nachtbilds (S-003). */
+data class NightStats(val used: Int, val dropped: Int, val gain: Float, val maxShake: Int = 0)
 
 sealed interface ProcessResult {
     /** [night]: Kennzahlen des Nacht-Kerns (nur Zahlen, Text baut die UI, R23). */
