@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## nächste Version (S-001)
+## 0.1.82 (9. Oktober 2026, S-001)
 - Nachtfotos bei starkem Rauschen schärfer (Entrauschen milder), Dauer der Nachtaufnahme im Hinweis.
 - Bewegungserkennung am Bildrand nicht mehr zu streng; RAW-Weg wartet im Fehlerfall höchstens 3 s.
 - Testlabor: stabilere Kantenmessung bei starkem Rauschen.

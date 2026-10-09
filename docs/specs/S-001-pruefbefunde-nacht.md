@@ -1,6 +1,6 @@
 # S-001: Prüfbefunde Nacht-Kern und RAW-Weg
 
-**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 20:11)
+**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.82, Gerätetest offen
 **Anlass:** eigene Prüfung der Änderungen vom 9. Oktober, sieben Befunde. Befund 1 im Python-Modell bestätigt:
 bei Leserauschen 40 Kante 0,77 px ohne Entrauschen, 3,62 px mit Entrauschen (Stärke 2,5).
 
