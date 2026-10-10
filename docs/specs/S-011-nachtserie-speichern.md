@@ -154,7 +154,7 @@ endet mit "Schalter wieder aus".
 |---|---|---|
 | K11 | Nach gespeicherter Serie ist der Schalter aus, die nächste Aufnahme legt nichts ab; nach Speicherfehler bleibt er an | `NightUseCaseTest > S-011 Schalter schaltet sich nach der gespeicherten Serie aus` (lokal rot mit dem Code von v0.1.122, dann grün) |
 
-Geänderte Screenshot-Grundlagen: `settings.png`, `settings_nightseries.png`, `camera_night_series.png`.
+Geänderte Screenshot-Grundlagen: `settings.png`, `settings_nightseries.png`, `camera_night_series.png`. Release v0.1.127.
 
 ## Ergebnis
 Gerätetest offen.

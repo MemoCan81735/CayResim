@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Signal zu schwach, Schalter Nachtserie (10. Oktober 2026, S-012 und Nachtrag S-011, noch nicht veröffentlicht)
+## 0.1.127 Signal zu schwach, Schalter Nachtserie (10. Oktober 2026, S-012 und Nachtrag S-011)
 - Schwenk-Messung: Ist die Quelle zu leise, steht jetzt "Signal zu schwach" mit Anleitung (Musik oder Sprache, lauter,
   etwa 1 m) statt "unplausibel". Neue Zeile "Signalstärke" im Ergebnis, ab 0,10 brauchbar.
 - Nachtserie: Der Schalter schaltet sich nach einer gespeicherten Serie selbst aus.

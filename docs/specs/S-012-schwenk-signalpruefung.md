@@ -91,4 +91,4 @@ Sensor). Release nur auf Wunsch, gebündelt mit dem Nachtrag zu S-011.
   `sweep_prompt.png` (Anleitung), neu `sweep_weak.png`. Angesehen und übernommen.
 
 ## Ergebnis
-Noch offen.
+Release v0.1.127 (Lauf 38078450649, 10.10., 21:18 Uhr): alle Jobs grün, Emulator grün. Gerätetest (K5) offen.
