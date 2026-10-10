@@ -57,7 +57,7 @@ fun MicTestRoute(onBack: () -> Unit, viewModel: MicTestViewModel = hiltViewModel
     // das Verlassen des Bildschirms beendet den Lauf ueber das ViewModel.
     val activity = LocalActivity.current
     LifecycleStartEffect(Unit) { onStopOrDispose { if (activity?.isChangingConfigurations != true) viewModel.onStop() } }
-    // Bildschirm bleibt waehrend des Laufs an (Lauf etwa 35 s, Samsung schaltet oft nach 30 s ab)
+    // Bildschirm bleibt waehrend des Laufs an (Lauf etwa 50 s mit Klatsch-Probe und Pausen, Samsung schaltet oft nach 30 s ab)
     val view = LocalView.current
     DisposableEffect(state.running) {
         view.keepScreenOn = state.running

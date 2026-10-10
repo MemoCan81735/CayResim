@@ -35,7 +35,7 @@ object AudioMath {
          * Tiefe Raumgeraeusche erreichen zwei Mikrofone gleich und heben [correlation] bis 0,86; hier bleiben zwei
          * Mikrofone bei 0 und ein einzelnes bei etwa 0,6 (S-009, Geraetetest S24+).
          */
-        val diffCorrelation: Double = correlation,
+        val diffCorrelation: Double,
     ) {
         /**
          * Zwei wirklich verschiedene Mikrofone: nicht doppeltes Mono, nicht ein Mikrofon auf beiden Kanaelen
@@ -97,13 +97,11 @@ object AudioMath {
         val frames = ch[0].size
         val level = ch.map { x -> if (x.isEmpty()) Double.NEGATIVE_INFINITY else dbfs(sqrt(x.sumOf { it.toDouble() * it } / x.size)) }
         val peak = ch.map { x -> dbfs(x.maxOfOrNull { abs(it).toDouble() } ?: 0.0) }
-        if (channels < 2 || frames == 0) return RecordingStats(frames, channels, level, peak, 1.0, 1.0)
+        if (channels < 2 || frames == 0) return RecordingStats(frames, channels, level, peak, 1.0, 1.0, 1.0)
         val a = ch[0]; val b = ch[1]
         var same = 0
         for (i in 0 until frames) if (pcm[i * channels] == pcm[i * channels + 1]) same++
-        val da = FloatArray(maxOf(0, frames - 1)) { a[it + 1] - a[it] }
-        val db = FloatArray(da.size) { b[it + 1] - b[it] }
-        return RecordingStats(frames, channels, level, peak, same.toDouble() / frames, pearson(a, b, 0, 0, frames), pearson(da, db, 0, 0, da.size))
+        return RecordingStats(frames, channels, level, peak, same.toDouble() / frames, pearson(a, b, 0, 0, frames), diffPearson(a, b))
     }
 
     /**
@@ -126,6 +124,21 @@ object AudioMath {
         val s = (delaySeconds - c.centerSeconds) / c.halfSpanSeconds
         if (abs(s) > 1.1) return null
         return Math.toDegrees(asin(s.coerceIn(-1.0, 1.0)))
+    }
+
+    /** Korrelation der Aenderungen von a und b, ohne Kopien gerechnet (Zweitpruefung S-009, R27). */
+    private fun diffPearson(a: FloatArray, b: FloatArray): Double {
+        val n = minOf(a.size, b.size) - 1
+        if (n <= 1) return 0.0
+        var sa = 0.0; var sb = 0.0
+        for (i in 0 until n) { sa += a[i + 1] - a[i]; sb += b[i + 1] - b[i] }
+        val ma = sa / n; val mb = sb / n
+        var sab = 0.0; var saa = 0.0; var sbb = 0.0
+        for (i in 0 until n) {
+            val x = a[i + 1] - a[i] - ma; val y = b[i + 1] - b[i] - mb
+            sab += x * y; saa += x * x; sbb += y * y
+        }
+        return if (saa <= 0 || sbb <= 0) 0.0 else sab / sqrt(saa * sbb)
     }
 
     private fun median(v: List<Double>): Double {

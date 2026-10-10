@@ -221,6 +221,9 @@ class AudioMathTest {
         // Spanne 2 ms entspricht 34 cm wirksamem Abstand: unplausibel
         assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.IMPLAUSIBLE),
             AudioMath.calibrate(s(listOf(-1.0, -1.0, -1.0)), s(listOf(1.0, 1.0, 1.0))))
+        // Unterschied 0,12 ms reicht, ergibt aber nur 2,1 cm wirksamen Abstand: unplausibel
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.IMPLAUSIBLE),
+            AudioMath.calibrate(s(listOf(-0.06, -0.06, -0.06)), s(listOf(0.06, 0.06, 0.06))))
         // Vorzeichen des Geraets egal: vertauschte Seiten ergeben wieder links -90, rechts +90
         val r = AudioMath.calibrate(s(querRechts), s(querLinks)) as AudioMath.CalibrationResult.Ok
         assertEquals(-90.0, assertNotNull(AudioMath.calibratedAngle(0.0004, r.calibration)), 0.5)
