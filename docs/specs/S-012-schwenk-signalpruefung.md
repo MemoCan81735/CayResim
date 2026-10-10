@@ -91,4 +91,7 @@ Sensor). Release nur auf Wunsch, gebündelt mit dem Nachtrag zu S-011.
   `sweep_prompt.png` (Anleitung), neu `sweep_weak.png`. Angesehen und übernommen.
 
 ## Ergebnis
-Release v0.1.127 (Lauf 38078450649, 10.10., 21:18 Uhr): alle Jobs grün, Emulator grün. Gerätetest (K5) offen.
+Release v0.1.127 (Lauf 38078450649, 10.10., 21:18 Uhr): alle Jobs grün, Emulator grün. Gerätetest K5 (10.10., 22:14 Uhr, Musik in etwa 1 m): Meldung "Signal zu schwach" erscheint richtig (Median 0,088);
+der zweite Teil von K5 (Musik ergibt über 0,10) ist **nicht erfüllt**. Ursache laut Auswertung nicht die Lautstärke,
+sondern der Hall im Raum zusammen mit der PHAT-Gewichtung; Details und Gegenprobe im Plan F12
+(`docs/plan-f12-schwenk-ortung.md`, zweiter echter Lauf).

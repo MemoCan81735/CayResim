@@ -78,6 +78,31 @@ Richtung; zuerst muss das Signal stimmen (lauter, näher, Musik oder Sprache sta
 Rauschunterdrückung gleichmäßiges Rauschen dämpft). Daraus für die App: bei schwachem Signal "Signal zu schwach"
 statt "unplausibel" melden.
 
+Zweiter echter Lauf (S24+, v0.1.127, 10.10., 22:14 Uhr, `Schwenk-20261010-221421`, Musik vom zweiten Handy in
+etwa 1 m): App meldet richtig "Signal zu schwach" (Median der Spitze 0,088, 182 von 440 Fenstern über 0,1, Gleichlauf
+21,3 ms, Lage 125 Hz). Pegel im Median −49 dBFS, also rund 25 dB über dem ruhigen Raum (−70 bis −79 dBFS im
+Mikrofon-Test); am Pegel liegt es nicht. Kohärenz der beiden Kanäle in Blöcken von 250 ms: 0,84 (100 bis 300 Hz),
+0,54 (300 bis 1000 Hz), 0,18 (1 bis 3 kHz), 0,15 (3 bis 8 kHz). Das entspricht fast genau einem Hallfeld bei 15 cm
+Abstand: Das Handy hört vor allem den Raum, nicht den direkten Schall. GCC-PHAT gewichtet alle Frequenzen gleich und
+ertränkt so den brauchbaren tiefen Teil.
+
+Gegenprobe mit kohärenzgewichteter GCC (Hannan-Thomson, Kreuzspektrum über 250 ms gemittelt, 80 bis 4000 Hz,
+`tools/schwenk-modell/kohaerenz.py`) auf derselben Datei:
+
+| Block | Abstand | Richtung seitlich / Höhe (M1) | (M3 robust) | Korrelation Laufzeit zu Drehung |
+|---|---|---|---|---|
+| 0,15 s | 10,7 cm | −24 / +19 | −12 / +23 | 0,36 |
+| 0,25 s | 13,5 cm | −33 / +13 | −16 / +22 | 0,41 |
+| 0,5 s | 12,9 cm | −24 / +20 | −14 / +23 | 0,46 |
+
+Mit GCC-PHAT (App heute): Abstand 0 bis 2,7 cm, keine Richtung. Die Quelle stand laut Anleitung vor der Kamera;
+das Ergebnis passt dazu nur mit **umgekehrtem Vorzeichen der Mikrofonachse** (sonst +147 bis +164°, also hinten).
+Damit ist das Vorzeichen aus S-010 K9 vorläufig bestimmt (Bestätigung durch Arslan und einen Lauf mit Quelle 90°
+rechts offen). Der verbleibende, über alle Blocklängen gleiche Versatz von etwa −15° seitlich und +20° Höhe passt zur
+geneigten Mikrofonachse (Modell: Achse 10° geneigt ergibt 11°) und wäre Sache der Eichung je Gerät (Schritt 2).
+Der erste Lauf (Rauschen) bleibt auch so unbrauchbar (Abstand 6 bis 8 cm, Richtung beliebig): Samsungs
+Rauschunterdrückung.
+
 Empfohlene Reihenfolge für die App (je eigene Spec):
 1. Signalprüfung (Median der GCC-Spitze) mit klarer Meldung. Umgesetzt in S-012 (Grenze 0,10).
 2. Eichschwenk je Gerät, Achse speichern (neues Speichern von Daten, Freigabe nötig).
