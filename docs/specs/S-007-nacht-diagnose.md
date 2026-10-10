@@ -93,3 +93,9 @@ Nullen, Stufen 69,5 / 68,2 / 64,6. Entscheidung richtig (Signal 80-mal über der
 abgeschnitten ist, gilt das Rauschen an fast 40 % der Pixel als schätzbar. Vermutlich zählen Kanten und Restversatz
 nach dem Wackeln als Streuung (wie die breite Testszene im Labor, siehe K3). Die Vorhang-Szene im Dunkeln fehlt noch.
 
+Selbsttest S24+ v0.1.102 (8:48 Uhr): "Optischer Stabilisator: ja, aktiv: kein Aufnahmeergebnis". Damit ist die Ursache
+von "unbekannt" gefunden, und sie liegt bei uns: Der Rückruf, der den Wert liest, hängt am Sucher (`Preview`). Im
+Selbsttest ist kein Sucher sichtbar; Bilder laufen erst mit der Ersatz-Fläche bei der ersten Aufnahme (`ensureSurface`).
+Die Prüfung der Gerätewerte liegt davor. Ob Samsung den Wert meldet, ist damit weiter offen. RAW-Serie bei Tageslicht:
+Schwarz 0/0/0/0, Werte genau 0: 1,5 %, Signal über Schwarz 327,4, Rauschen 39,5 Stufen; Nachtweg 8 Bit.
+
