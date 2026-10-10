@@ -3,7 +3,8 @@
 # Kompiliert alle Hauptquellen dieser Module und die genannten Testklassen aus core/*/src/test.
 # Aufruf:  tools/run-core-tests.sh MicTestUseCaseTest NightUseCaseTest   (Kurznamen, Paket app.cayresim.core.control)
 #          tools/run-core-tests.sh app.cayresim.core.boundary.FakeCameraBoundaryContractTest
-# Grenzen: runTest laeuft mit echter Zeit (tools/pure-tests/CoroutinesTestStub.kt), Turbine fehlt.
+# Grenzen: runTest laeuft mit echter Zeit (tools/pure-tests/CoroutinesTestStub.kt), Turbine fehlt. Tests mit
+# advanceTimeBy setzen voraus, dass Arbeit ohne Wartezeit lokal schneller fertig ist (auf langsamen Maschinen moeglich flackernd).
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 LIB=$(ls -d /opt/gradle-*/lib 2>/dev/null | sort -V | tail -1)

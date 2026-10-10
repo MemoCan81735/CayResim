@@ -24,7 +24,8 @@ enum class SourceUi { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED }
 enum class DirectionUi { NONE, TOWARDS_USER, AWAY_FROM_USER }
 enum class MicFailureUi { NO_PERMISSION, NOT_OFFERED, INIT_FAILED, READ_FAILED }
 enum class ClapPhaseUi { LEFT, RIGHT, FRONT }
-enum class MicStepUi { IDLE, INVENTORY, SOURCES, CLAP, DONE }
+enum class MicStepUi { IDLE, INVENTORY, SOURCES, PREPARE, CLAP, DONE }
+enum class CalibrationFailureUi { TOO_FEW_CLAPS, SIDES_NOT_DISTINCT, IMPLAUSIBLE }
 
 @Immutable data class MicUi(val id: Int, val address: String, val location: String, val pattern: String, val position: List<Float>?, val sensitivityDb: Float?)
 @Immutable data class InputDeviceUi(val id: Int, val kind: String, val address: String, val channels: List<Int>)
@@ -40,6 +41,8 @@ data class SourceRowUi(
     val levelDb: List<Double> = emptyList(),
     val identicalShare: Double = 0.0,
     val correlation: Double = 0.0,
+    /** Korrelation der Aenderungen, entscheidet ueber "verschieden" (S-009). */
+    val diffCorrelation: Double = 0.0,
     val routedDeviceId: Int? = null,
     val activeMics: List<Int> = emptyList(),
     val saved: Boolean = false,
@@ -47,6 +50,8 @@ data class SourceRowUi(
 
 @Immutable data class ClapUi(val timeSeconds: Double, val delayMs: Double, val angleDegrees: Double?, val similarity: Double, val levelDiffDb: Double)
 @Immutable data class ClapRowUi(val phase: ClapPhaseUi, val claps: List<ClapUi>, val failure: MicFailureUi?)
+/** Eichung aus links und rechts (S-009): wirksamer Abstand und Mitte der Laufzeiten. */
+@Immutable data class CalibrationUi(val spacingCm: Double, val centerMs: Double)
 
 @Immutable
 data class MicTestResultUi(
@@ -61,6 +66,8 @@ data class MicTestResultUi(
     val durationSeconds: Double,
     val folder: String?,
     val storageFailed: Boolean,
+    val calibration: CalibrationUi? = null,
+    val calibrationFailure: CalibrationFailureUi? = null,
 )
 
 @Immutable
@@ -72,13 +79,14 @@ data class MicTestUiState(
     val currentSource: SourceRowUi? = null,
     val clapPhase: ClapPhaseUi? = null,
     val clapSeconds: Int = 0,
+    val prepareSeconds: Int = 0,
     val result: MicTestResultUi? = null,
     val permissionDenied: Boolean = false,
     /** Unerwarteter Fehler im Lauf (R24): Anzeige statt Absturz. */
     val failed: Boolean = false,
 )
 
-/** Mikrofon-Test (S-008). Startet erst nach erteilter Berechtigung; Verlassen des Bildschirms bricht ab (R28). */
+/** Mikrofon-Test (S-008, S-009). Startet erst nach erteilter Berechtigung; Verlassen des Bildschirms bricht ab (R28). */
 @HiltViewModel
 class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) : ViewModel() {
     private val _state = MutableStateFlow(MicTestUiState())
@@ -106,6 +114,9 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
                     MicTestEvent.Inventory -> _state.update { it.copy(step = MicStepUi.INVENTORY) }
                     is MicTestEvent.Source -> _state.update {
                         it.copy(step = MicStepUi.SOURCES, sourceIndex = e.index, sourceTotal = e.total, currentSource = rowOf(e.request, null))
+                    }
+                    is MicTestEvent.ClapPrepare -> _state.update {
+                        it.copy(step = MicStepUi.PREPARE, clapPhase = ClapPhaseUi.valueOf(e.phase.name), prepareSeconds = (e.millis / 1000).toInt())
                     }
                     is MicTestEvent.ClapPrompt -> _state.update {
                         it.copy(step = MicStepUi.CLAP, clapPhase = ClapPhaseUi.valueOf(e.phase.name), clapSeconds = e.seconds)
@@ -144,7 +155,7 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
                     is SourceOutcome.Failed -> rowOf(s.request, o.reason)
                     is SourceOutcome.Recorded -> rowOf(s.request, null).copy(
                         channels = o.stats.channels, distinct = o.stats.distinctChannels, levelDb = o.stats.levelDbfs,
-                        identicalShare = o.stats.identicalShare, correlation = o.stats.correlation,
+                        identicalShare = o.stats.identicalShare, correlation = o.stats.correlation, diffCorrelation = o.stats.diffCorrelation,
                         routedDeviceId = o.routedDeviceId, activeMics = o.activeMicIds, saved = o.fileUri != null,
                     )
                 }
@@ -162,6 +173,8 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
             durationSeconds = sourcesMillis / 1000.0,
             folder = folder,
             storageFailed = storageFailed,
+            calibration = calibration?.let { CalibrationUi(it.spacingMeters * 100, it.centerSeconds * 1000) },
+            calibrationFailure = calibrationFailure?.let { CalibrationFailureUi.valueOf(it.name) },
         )
     }
 }

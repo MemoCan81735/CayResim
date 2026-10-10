@@ -16,6 +16,7 @@ import app.cayresim.core.boundary.fake.FakeAudioFileBoundary
 import app.cayresim.core.boundary.fake.FakeMicrophoneBoundary
 import app.cayresim.core.control.MicTestUseCase
 import app.cayresim.core.designsystem.CayResimTheme
+import app.cayresim.feature.settings.control.CalibrationFailureUi
 import app.cayresim.feature.settings.control.ClapPhaseUi
 import app.cayresim.feature.settings.control.MicStepUi
 import app.cayresim.feature.settings.control.MicTestUiState
@@ -47,7 +48,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** S-008 K12: Mikrofon-Test im ViewModel und auf dem Bildschirm, mit kuenstlichem Ton. */
+/** S-008 K12 und S-009 K6: Mikrofon-Test im ViewModel und auf dem Bildschirm, mit kuenstlichem Ton. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
@@ -86,19 +87,26 @@ class MicTestTest {
     private fun vm(mic: FakeMicrophoneBoundary = FakeMicrophoneBoundary(), files: FakeAudioFileBoundary = FakeAudioFileBoundary()) =
         MicTestViewModel(MicTestUseCase(mic, files, clock, main))
 
-    private fun stereoMic() = FakeMicrophoneBoundary().apply {
+    /** Klatscher links mit +14, rechts mit -14 und vorne mit 0 Abtastwerten Versatz; hochkant ueberall 0. */
+    private fun stereoMic(upright: Boolean = false) = FakeMicrophoneBoundary().apply {
         sound = { r, ch ->
+            val phase = requests.count { it.millis == 4_000 }
             when {
                 r.millis != 4_000 -> if (r.source == AudioSourceKey.UNPROCESSED) dualMono(r, ch) else noise(r, ch)
-                else -> claps(r, ch, if (requests.count { it.millis == 4_000 } == 1) 14 else if (requests.count { it.millis == 4_000 } == 2) -14 else 0)
+                upright -> claps(r, ch, 0)
+                else -> claps(r, ch, if (phase == 1) 14 else if (phase == 2) -14 else 0)
             }
         }
         onRecord = { t += it.millis + 120L }
     }
 
+    /** Startet den Lauf und laesst die virtuelle Zeit laufen (Pausen vor den Klatsch-Phasen, S-009). */
+    private fun MicTestViewModel.runToEnd(): MicTestUiState { onStart(); main.scheduler.advanceUntilIdle(); return uiState.value }
+
     @Test fun `S-008 ViewModel fuellt das Ergebnis`() {
         val v = vm(stereoMic())
         v.onPermissionResult(true)
+        main.scheduler.advanceUntilIdle()
         val s = v.uiState.value
         assertFalse(s.running); assertEquals(MicStepUi.DONE, s.step)
         val r = assertNotNull(s.result)
@@ -137,27 +145,29 @@ class MicTestTest {
 
     @Test fun `S-008 Fehler einer Quelle wird angezeigt`() {
         val mic = stereoMic().apply { failures[AudioSourceKey.CAMCORDER] = MicFailure.INIT_FAILED }
-        val v = vm(mic); v.onStart()
-        val s = v.uiState.value
+        val s = vm(mic).runToEnd()
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("source_1"))
         compose.onNodeWithText("Aufnahme ließ sich nicht starten", substring = true).assertExists()
     }
 
     @Test fun mikrotest_ergebnis() {
-        val v = vm(stereoMic()); v.onStart()
-        val s = v.uiState.value
+        val s = vm(stereoMic()).runToEnd()
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithText("Echtes Stereo mit Quelle", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/mictest_result.png")
     }
 
     @Test fun mikrotest_klatsch_ergebnis() {
-        val v = vm(stereoMic()); v.onStart()
-        val s = v.uiState.value
+        val s = vm(stereoMic()).runToEnd()
+        val r = assertNotNull(s.result)
+        // S-009: 14 Abtastwerte bei 48 kHz sind 0,29 ms, also 10,0 cm wirksamer Abstand; links -90, rechts +90 Grad
+        assertEquals(10.0, assertNotNull(r.calibration).spacingCm, 0.2)
+        assertTrue(assertNotNull(r.claps[0].claps.first().angleDegrees) <= -80.0)
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("clap_0"))
         compose.onNodeWithText("Laufzeit (ms) +0,29", substring = true).assertExists()
+        compose.onNodeWithText("Geeicht aus links und rechts", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/mictest_claps.png")
     }
 
@@ -169,6 +179,37 @@ class MicTestTest {
         compose.setContent { CayResimTheme(dark = false) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithText("Ortung ist so nicht möglich", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/mictest_no_stereo.png")
+    }
+
+    @Test fun mikrotest_nicht_geeicht() {
+        val s = vm(stereoMic(upright = true)).runToEnd()
+        assertEquals(CalibrationFailureUi.SIDES_NOT_DISTINCT, s.result?.calibrationFailure)
+        assertNull(s.result?.calibration)
+        compose.setContent { CayResimTheme(dark = false) { MicTestContent(s, {}, {}) } }
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("mictest_calibration"))
+        compose.onNodeWithText("Handy hochkant gehalten?", substring = true).assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/mictest_not_calibrated.png")
+    }
+
+    @Test fun `S-009 Vorbereitung vor jeder Klatsch-Phase`() {
+        val mic = stereoMic()
+        val v = vm(mic); v.onStart()
+        // Quellen sind durch, die erste Pause laeuft: noch keine Klatsch-Aufnahme
+        val s = v.uiState.value
+        assertEquals(MicStepUi.PREPARE, s.step); assertEquals(ClapPhaseUi.LEFT, s.clapPhase); assertEquals(2, s.prepareSeconds)
+        assertFalse(mic.requests.any { it.millis == 4_000 })
+        main.scheduler.advanceTimeBy(2_001)
+        assertTrue(mic.requests.count { it.millis == 4_000 } >= 1, "nach der Pause wird aufgenommen")
+        main.scheduler.advanceUntilIdle()
+        assertEquals(MicStepUi.DONE, v.uiState.value.step)
+    }
+
+    @Test fun mikrotest_vorbereiten() {
+        val state = MicTestUiState(running = true, step = MicStepUi.PREPARE, clapPhase = ClapPhaseUi.LEFT, prepareSeconds = 2)
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(state, {}, {}) } }
+        compose.onNodeWithText("Gleich links klatschen").assertExists()
+        compose.onNodeWithText("Pause in Sekunden: 2", substring = true).assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/mictest_prepare.png")
     }
 
     @Test fun `S-008 unerwarteter Fehler beendet nur den Lauf`() {

@@ -6,12 +6,14 @@ import app.cayresim.core.boundary.MicFailure
 import app.cayresim.core.boundary.MicRequest
 import app.cayresim.core.boundary.fake.FakeAudioFileBoundary
 import app.cayresim.core.boundary.fake.FakeMicrophoneBoundary
+import app.cayresim.core.pure.AudioMath
 import app.cayresim.core.pure.Clock
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -170,5 +172,71 @@ class MicTestUseCaseTest {
         assertEquals(MicTestUseCase.DEFAULT_SPACING to false, MicTestUseCase.spacing(none))
         assertEquals("07-MIC-geraet1-v1.wav", MicTestUseCase.fileName(6, MicRequest(AudioSourceKey.MIC, deviceId = 1)))
         assertEquals("05-MIC-TOWARDS_USER-v1.wav", MicTestUseCase.fileName(4, MicRequest(AudioSourceKey.MIC, direction = MicDirectionKey.TOWARDS_USER)))
+    }
+
+    /** Klatscher je Phase mit eigenem Versatz in Abtastwerten (Kanal 0 hoert spaeter, wenn positiv). */
+    private fun clapsWithLags(lags: List<Int>): (MicRequest, Int) -> ShortArray {
+        var phase = 0
+        return { r, ch ->
+            if (r.millis != 4_000) stereoNoise(r, ch) else {
+                val lag = lags[phase++]
+                val frames = r.sampleRate * r.millis / 1000; val pcm = ShortArray(frames * ch); val rnd = Random(4 + phase)
+                for (at in listOf(24_000, 72_000, 120_000, 168_000)) for (i in 0 until 480) {
+                    val v = (rnd.nextDouble(-1.0, 1.0) * 12_000 * exp(-i / 120.0)).toInt().toShort()
+                    pcm[(at + i + maxOf(0, lag)) * ch] = v; pcm[(at + i + maxOf(0, -lag)) * ch + 1] = v
+                }
+                pcm
+            }
+        }
+    }
+
+    @Test fun `S-009 Pause vor jeder Klatsch-Phase`() = runTest {
+        val (mic, files, clock) = setup()
+        val prepared = mutableListOf<Pair<ClapPhase, Long>>()
+        val recorded = mutableListOf<Long>()
+        mic.onRecord = { clock.t += it.millis + 150L; if (it.millis == 4_000) recorded += testScheduler.currentTime }
+        MicTestUseCase(mic, files, clock, here()).run().onEach { e ->
+            if (e is MicTestEvent.ClapPrepare) {
+                assertEquals(MicTestUseCase.PREPARE_MILLIS, e.millis)
+                prepared += e.phase to testScheduler.currentTime
+            }
+        }.toList()
+        assertEquals(ClapPhase.entries, prepared.map { it.first }, "vor jeder Phase vorbereiten")
+        assertEquals(3, recorded.size)
+        prepared.zip(recorded).forEach { (p, t) -> assertTrue(t - p.second >= 2_000, "${p.first}: Aufnahme ${t - p.second} ms nach der Ansage") }
+        // Abbruch waehrend der Vorbereitung: keine Klatsch-Aufnahme
+        val (mic2, files2, clock2) = setup()
+        val events = mutableListOf<MicTestEvent>()
+        val job = launch { MicTestUseCase(mic2, files2, clock2, here()).run().toList(events) }
+        advanceTimeBy(1_000)
+        assertTrue(events.last() is MicTestEvent.ClapPrepare, "letztes Ereignis ${events.last()}")
+        job.cancel(); job.join()
+        assertFalse(mic2.requests.any { it.millis == 4_000 }, "keine Aufnahme nach Abbruch in der Vorbereitung")
+    }
+
+    @Test fun `S-009 Bericht mit und ohne Eichung`() = runTest {
+        val (mic, files, clock) = setup()
+        mic.sound = clapsWithLags(listOf(-10, 8, -1))
+        val r = report(mic, files, clock)
+        val c = assertNotNull(r.calibration, "Eichung, Grund ${r.calibrationFailure}")
+        assertNull(r.calibrationFailure)
+        assertEquals(-1.0 / 48_000, c.centerSeconds, 0.000005)
+        val angles = r.claps.associate { it.phase to it.claps.map { k -> assertNotNull(k.angleDegrees) } }
+        // nahe +-90 Grad ist der Winkel empfindlich; geprueft wird die Seite (Zweitpruefung S-009)
+        angles.getValue(ClapPhase.LEFT).forEach { assertTrue(it <= -80.0, "links $it") }
+        angles.getValue(ClapPhase.RIGHT).forEach { assertTrue(it >= 80.0, "rechts $it") }
+        angles.getValue(ClapPhase.FRONT).forEach { assertEquals(0.0, it, 5.0) }
+        assertEquals(4, angles.getValue(ClapPhase.FRONT).size)
+        // hochkant: alle Phasen gleich, keine Eichung, Winkel wie bisher aus dem Abstand
+        val (mic2, files2, clock2) = setup()
+        mic2.sound = clapsWithLags(listOf(0, 0, 0))
+        val r2 = report(mic2, files2, clock2)
+        assertNull(r2.calibration)
+        assertEquals(AudioMath.CalibrationFailure.SIDES_NOT_DISTINCT, r2.calibrationFailure)
+        r2.claps.flatMap { it.claps }.forEach { assertEquals(0.0, assertNotNull(it.angleDegrees), 2.0) }
+        // ohne Klatsch-Probe: weder Eichung noch Grund
+        val (mic3, files3, clock3) = setup()
+        val r3 = report(mic3, files3, clock3, claps = false)
+        assertNull(r3.calibration); assertNull(r3.calibrationFailure)
     }
 }

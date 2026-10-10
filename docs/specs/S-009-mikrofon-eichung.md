@@ -1,6 +1,6 @@
 # S-009: Mikrofon-Test mit Pause, Eichung und besserem Stereo-Kriterium
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe durch Arslan
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 12:48 Uhr: Spec wie Entwurf, ein Release), umgesetzt, Zweitprüfung abgearbeitet
 **Anlass:** Gerätetest S-008 auf dem S24+ (v0.1.109, 10.10., 12:22 und 12:33 Uhr), nachgerechnet aus den WAV-Dateien
 (Ergebnis in S-008):
 - Quer gehalten funktioniert die Ortung: links −0,48 bis −0,50 ms, rechts +0,39 bis +0,44 ms, vorne −0,05 bis 0,00 ms.
@@ -31,8 +31,8 @@ unterscheiden sind (Handy hochkant). "verschieden" bedeutet wirklich zwei Mikrof
 
 ## Ablauf auf dem Gerät (geändert gegenüber S-008)
 1. Quellen-Durchlauf wie bisher.
-2. Vor jeder Klatsch-Phase 2 s Vorbereitung ohne Aufnahme: "Gleich links klatschen. Jetzt hinstellen, Handy nicht
-   berühren." Danach "Jetzt links klatschen" mit 4 s Aufnahme wie bisher.
+2. Vor jeder Klatsch-Phase 2 s Vorbereitung ohne Aufnahme: "Gleich links klatschen. Jetzt hinstellen, noch nicht
+   klatschen. Das Handy nicht berühren." Danach wie bisher "Links neben dem Handy klatschen" mit 4 s Aufnahme.
 3. Nach den drei Phasen: Eichung aus links und rechts, danach alle Winkel geeicht.
 4. Im Ergebnis neu: wirksamer Mikrofonabstand und Mitte aus der Eichung, oder warum nicht geeicht wurde.
 
@@ -55,8 +55,8 @@ unterscheiden sind (Handy hochkant). "verschieden" bedeutet wirklich zwei Mikrof
 | K2 | Gründe ohne Eichung: Hochkant-Werte des ersten Laufs (alle Seiten innerhalb ±0,06 ms) ergeben "links und rechts gleich"; 2 Klatscher auf einer Seite "zu wenige"; Spanne 2 ms "unplausibel"; NaN-Laufzeiten zählen nicht mit | `AudioMathTest > S-009 Eichung lehnt Hochkant, zu wenige und Unsinn ab` |
 | K3 | Stereo-Kriterium über die Korrelation der Änderungen, Grenze 0,3: (a) ein Signal auf beiden Kanälen plus je eigenes Rauschen, Korrelation der Änderungen 0,6: nicht verschieden (rot mit altem Code, dort Korrelation 0,9 unter 0,99); (b) zwei unabhängige Rauschkanäle plus gemeinsames tiefes Brummen, Korrelation 0,85: verschieden; (c) doppeltes Mono mit Zittern ±1: nicht verschieden (K2 aus S-008 bleibt grün) | `AudioMathTest > S-009 Stereo nur bei zwei Mikrofonen` |
 | K4 | Vor jeder Phase das Ereignis "vorbereiten" mit 2 s; die Aufnahme der Phase beginnt frühestens 2 s danach (virtuelle Zeit); Abbruch während der Vorbereitung startet keine Aufnahme | `MicTestUseCaseTest > S-009 Pause vor jeder Klatsch-Phase` |
-| K5 | Lauf mit Fake: Klatscher links mit −10 Abtastwerten, rechts mit +8, vorne mit −1 ergeben Eichung im Bericht und geeichte Winkel (links −90° ± 2, rechts +90° ± 2, vorne 0° ± 2); alle Phasen mit Versatz 0 ergeben keine Eichung mit Grund "gleich" und Winkel aus dem Abstand | `MicTestUseCaseTest > S-009 Bericht mit und ohne Eichung` |
-| K6 | Bildschirm: Ergebnis mit Eichung (wirksamer Abstand, Mitte, Winkel "geeicht"), Ergebnis ohne Eichung mit Hinweis "Handy hochkant?", Ansage der Vorbereitung; je ein Screenshot pro Test, Texte aus Ressourcen, keine Gedankenstriche | `MicTestTest > mikrotest_klatsch_ergebnis` (Grundlage neu), `mikrotest_nicht_geeicht`, `mikrotest_vorbereiten` |
+| K5 | Lauf mit Fake: Klatscher links mit −10 Abtastwerten, rechts mit +8, vorne mit −1 ergeben Eichung im Bericht und geeichte Winkel (links ≤ −80°, rechts ≥ +80°, vorne 0° ± 5; nahe ±90° ist der Winkel empfindlich, deshalb keine engere Grenze); alle Phasen mit Versatz 0 ergeben keine Eichung mit Grund "gleich" und Winkel aus dem Abstand | `MicTestUseCaseTest > S-009 Bericht mit und ohne Eichung` |
+| K6 | Bildschirm: Ergebnis mit Eichung (wirksamer Abstand, Mitte, Winkel "geeicht"), Ergebnis ohne Eichung mit Hinweis "Handy hochkant?", Ansage der Vorbereitung; je ein Screenshot pro Test, Texte aus Ressourcen, keine Gedankenstriche. Neue Grundlagen: `mictest_not_calibrated`, `mictest_prepare`; geänderte: `mictest_claps`, `mictest_clap` (Ansagetext), `mictest_result` und `mictest_no_stereo` (Zeile der Quellen mit Korrelation der Änderungen) | `MicTestTest > mikrotest_klatsch_ergebnis`, `mikrotest_nicht_geeicht`, `mikrotest_vorbereiten`, `S-009 Vorbereitung vor jeder Klatsch-Phase` |
 | K7 | Gerätetest S24+ quer: Winkel links ≤ −75°, rechts ≥ +75°, vorne innerhalb ±15°, wirksamer Abstand 13 bis 19 cm, erster Klatscher von "rechts" hat das Vorzeichen von rechts; hochkant: Hinweis "Handy hochkant?" | Gerätetest |
 
 Für K1, K2, K3 und K5 laufen die Tests lokal vor dem Code rot (`tools/run-pure-tests.sh`, `tools/run-core-tests.sh`).
@@ -94,15 +94,40 @@ K6 ist rot, weil die neuen Texte und Screenshots fehlen (CI); K4 ist rot, weil d
 
 ## Risiken und Rückweg
 - Wer links oder rechts nicht seitlich, sondern schräg klatscht, verkleinert die Spanne; dann werden die Winkel zu groß.
-  Die Ansage sagt "seitlich neben dem Handy"; der Gerätetest prüft die Spanne gegen die Messung von heute (K7).
+  Die Ansage sagt "Links neben dem Handy"; der Gerätetest prüft die Spanne gegen die Messung von heute (K7).
+- S-008 K2 ändert sich: Ein um einen Abtastwert verschobenes Mono galt als "verschieden", jetzt nicht mehr (Korrelation
+  der Änderungen −0,5). Grenze: Bei 2 und mehr Abtastwerten Versatz desselben Mikrofons fällt diese Korrelation für
+  breites Rauschen auf etwa 0; solch ein Kanal gälte wieder als "verschieden". Auf dem Gerät nicht beobachtet.
+- Scheitert die Aufnahme einer Seite, lautet der Grund "zu wenige Klatscher"; der eigentliche Fehler steht in der
+  Zeile der Phase. Bekannt, nicht behoben.
 - Die Grenze 0,3 für die Korrelation der Änderungen beruht auf zwei Läufen eines Geräts. Rückweg: Grenze anpassen,
   beide Korrelationen stehen im Ergebnis.
 - Rückweg insgesamt: Commit zurücknehmen; nichts wird gespeichert.
 
 ## Kosten
-Etwa 2 kurze Läufe (zwei neue und eine geänderte Screenshot-Grundlage), 1 Release (etwa 30 Minuten). Unabhängige
+Etwa 3 kurze Läufe (zwei neue und vier geänderte Screenshot-Grundlagen, Lint), 1 Release (etwa 30 Minuten). Unabhängige
 Prüfung durch einen zweiten Agenten (über 150 Zeilen erwartet). Gerätetest durch Arslan: Mikrofon-Test einmal quer und
 einmal hochkant, Screenshots schicken (WAV-Dateien nur bei Auffälligkeiten).
+
+## Umsetzung und Zweitprüfung
+Tests zuerst rot: K1, K2, K4 und K5 lokal durch fehlende Funktionen (Kompilierfehler); K3 zusätzlich durch den Wert,
+nachgewiesen mit dem alten Kriterium (Korrelation unter 0,99): "ein Mikrofon ist kein Stereo" scheitert. Danach lokal
+grün: 150 Tests in `:core:pure`, 10 in `MicTestUseCaseTest`, Architektur 41 Proben, 0 Verstöße. Der lokale Ersatz für
+`runTest` bekam `testScheduler.currentTime` (echte Uhr), damit derselbe Testcode lokal und mit Gradle läuft.
+
+Erster kurzer Lauf auf `probe/s009` (38046760631): Kern und APKs grün, rot erwartungsgemäß 6 Screenshots und ein
+Lint-Fund `PluralsCandidate` ("%d Sekunden"; Text jetzt "Pause in Sekunden: %1$d"). Zweiter Lauf (38047345112): alles
+grün außer der fehlenden Grundlage `mictest_prepare`; alle sechs Bilder angesehen und übernommen.
+
+Unabhängige Prüfung (zweiter Agent, 10.10.), kein blockierender Befund; behoben:
+- Spec nannte nur eine geänderte Screenshot-Grundlage statt vier (K6, Kosten ergänzt),
+- Änderung an S-008 K2 nicht genannt (Risiken ergänzt),
+- Funktionsliste F10 noch "Entwurf",
+- Winkelgrenzen ±2° nahe ±90° zu empfindlich (jetzt ≤ −80° / ≥ +80°),
+- `diffCorrelation` mit stillem Standardwert (jetzt ohne) und zwei Kopien je Analyse (jetzt ohne Kopien),
+- untere Grenze von "unplausibel" ungetestet (Fall 2,1 cm ergänzt),
+- veralteter Kommentar zur Laufdauer, Grenze des lokalen Ersatzes im Kopf von `tools/run-core-tests.sh`.
+Bewusst nicht behoben: Grund "zu wenige Klatscher" bei gescheiterter Aufnahme (Risiken).
 
 ## Ergebnis
 Noch offen.

@@ -15,6 +15,7 @@ import app.cayresim.core.pure.AudioMath
 import app.cayresim.core.pure.Clock
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -56,11 +57,17 @@ data class MicTestReport(
     val failure: MicFailure? = null,
     /** Mindestens eine Datei konnte nicht gespeichert werden. */
     val storageFailed: Boolean = false,
+    /** Eichung aus links und rechts (S-009); dann sind alle Winkel geeicht. */
+    val calibration: AudioMath.Calibration? = null,
+    /** Warum nicht geeicht wurde; null, wenn geeicht oder keine Klatsch-Probe lief. */
+    val calibrationFailure: AudioMath.CalibrationFailure? = null,
 )
 
 sealed interface MicTestEvent {
     data object Inventory : MicTestEvent
     data class Source(val index: Int, val total: Int, val request: MicRequest) : MicTestEvent
+    /** Vorbereitung ohne Aufnahme (S-009): Zeit, um sich hinzustellen; Klatscher der vorigen Phase fallen so heraus. */
+    data class ClapPrepare(val phase: ClapPhase, val millis: Long) : MicTestEvent
     data class ClapPrompt(val phase: ClapPhase, val seconds: Int) : MicTestEvent
     data class Done(val report: MicTestReport) : MicTestEvent
 }
@@ -110,6 +117,8 @@ class MicTestUseCase @Inject constructor(
         val claps = mutableListOf<ClapResult>()
         if (withClaps && clapSource != null) {
             for (phase in ClapPhase.entries) {
+                emit(MicTestEvent.ClapPrepare(phase, PREPARE_MILLIS))
+                delay(PREPARE_MILLIS)
                 emit(MicTestEvent.ClapPrompt(phase, CLAP_SECONDS))
                 when (val r = mic.record(clapSource.copy(millis = CLAP_SECONDS * 1000))) {
                     is MicRecordResult.Failed -> claps += ClapResult(phase, emptyList(), null, r.reason)
@@ -122,13 +131,16 @@ class MicTestUseCase @Inject constructor(
                 }
             }
         }
-        emit(MicTestEvent.Done(MicTestReport(inv, sources, clapSource, claps, spacing, measured, sourcesMillis, folder, null, storageFailed)))
+        val (calibrated, calibration, calibrationFailure) = calibrate(claps)
+        emit(MicTestEvent.Done(MicTestReport(inv, sources, clapSource, calibrated, spacing, measured, sourcesMillis, folder, null, storageFailed,
+            calibration, calibrationFailure)))
     }.flowOn(compute)
 
     companion object {
         const val FOLDER_PREFIX = "Mikrotest"
         const val FORMAT = "v1"
         const val CLAP_SECONDS = 4
+        const val PREPARE_MILLIS = 2_000L
         const val DEFAULT_SPACING = 0.15
         const val MAX_DEVICES = 4
 
@@ -163,6 +175,22 @@ class MicTestUseCase @Inject constructor(
             if (r.direction != MicDirectionKey.NONE) append("-").append(r.direction.name)
             r.deviceId?.let { append("-geraet").append(it) }
             append("-").append(FORMAT).append(".wav")
+        }
+
+        /**
+         * Eicht aus den Phasen links und rechts und setzt dann alle Winkel neu (S-009). Ohne Eichung bleiben die Winkel
+         * aus dem Abstand. Ohne Klatsch-Probe weder Eichung noch Grund.
+         */
+        fun calibrate(claps: List<ClapResult>): Triple<List<ClapResult>, AudioMath.Calibration?, AudioMath.CalibrationFailure?> {
+            if (claps.isEmpty()) return Triple(claps, null, null)
+            fun delays(p: ClapPhase) = claps.filter { it.phase == p }.flatMap { r -> r.claps.map { it.delaySeconds } }
+            return when (val r = AudioMath.calibrate(delays(ClapPhase.LEFT), delays(ClapPhase.RIGHT))) {
+                is AudioMath.CalibrationResult.Failed -> Triple(claps, null, r.reason)
+                is AudioMath.CalibrationResult.Ok -> Triple(
+                    claps.map { c -> c.copy(claps = c.claps.map { k -> k.copy(angleDegrees = AudioMath.calibratedAngle(k.delaySeconds, r.calibration)) }) },
+                    r.calibration, null,
+                )
+            }
         }
 
         fun directions(pcm: ShortArray, channels: Int, sampleRate: Int, spacing: Double): List<AudioMath.Clap> {
