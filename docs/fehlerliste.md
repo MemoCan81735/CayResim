@@ -27,3 +27,5 @@ Regel ihn heute verhindert.
 | 10.10. | Laborbericht fehlte in Läufen, deren Tests aus dem Cache kamen; kein Vergleich möglich | Bericht war keine Testausgabe | CI-Umbau (S-005) | Ausgabe in `core/pure/build.gradle.kts` |
 | 10.10. | Nacht fast ohne Licht als blaugrauer Nebel | abgeschnittenes Rauschen als Signal aufgehellt, Boden-Modus nur über Pixel auf Stufe 0 oder 1 | Gerätetest S24+ mit Samsung-Vergleich | Laborszene Vorhang, Entscheidung über zurückgerechnetes Signal (S-006) |
 | 10.10. | Stabilisator "aktiv: unbekannt" | Wert vor dem ersten Aufnahmeergebnis gelesen | Selbsttest S24+ | Selbsttest wartet bis 1,5 s (S-006) |
+| 10.10. | Nebel im fast lichtlosen Raum trotz S-006 (Aufhellung x60,4, Boden-Modus griff nicht) | ungeklärt; Laborszene trifft das Gerät nicht, die Entscheidung wird nicht gemeldet | Gerätetest S24+ v0.1.98 | offen: Messwerte der Entscheidung in den Hinweis (Vorschlag S-007) |
+| 10.10. | Stabilisator weiter "aktiv: unbekannt" | ungeklärt; Samsung meldet den Wert vielleicht nicht im Aufnahmeergebnis | Selbsttest S24+ v0.1.98 | offen |

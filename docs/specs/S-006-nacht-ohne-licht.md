@@ -81,3 +81,12 @@ Selbsttest-Tests ohne weitergestellte Uhr (von der Zweitprüfung vorhergesagt) u
 nicht mehr, seit der Strom genau danach endet. Labor: Vorhang 21,9, Wand 7,4, Boden 6,3, Blau minus Rot 3,0, Vorhang
 warm (Rot minus Blau 13,2). Gerätetest offen: dieselbe Vorhang-Szene mit Hinweis (72 Bilder, Dauer unter 10 s?) und
 Samsung-Vergleich, Selbsttest (Stabilisator aktiv).
+
+Gerätetest S24+ v0.1.98 (10.10., 5:44 Uhr, dieselbe Vorhang-Szene): 67 Bilder, 0 verworfen, 1/10 s bei ISO 3200
+(Automatik 1/25 s, ISO 3200), Dauer 9,6 s, "Wackeln nicht messbar". Bilderzahl, Zeitbudget und Wackel-Anzeige
+erfüllt. Nicht erfüllt: das Foto ist weiter blaugrauer Nebel, Mittel RGB 39,0 / 39,2 / 48,5, Quantile q0,01 27,7,
+q0,5 42, q0,99 58,3 (v0.1.90: 39,2 / 39,3 / 47,9), kein Schwarz. Aufhellung x60,4 liegt unter dem Deckel 64 des
+normalen Wegs; der Boden-Modus hätte bis 128 erlaubt und auf q0,99 gezielt. Der Boden-Modus hat also nicht gegriffen.
+Warum, zeigt das Gerät nicht: geschätztes Rauschen, Mediansignal und Schwelle werden nicht gemeldet. Vermutung
+(ungeprüft): die Bildaufbereitung des Geräts entrauscht oder hebt den Schwarzwert an, bevor die 8-Bit-Bilder bei uns
+ankommen; dann stimmt das Modell aus der Laborszene nicht. Stabilisator weiter "aktiv: unbekannt" nach 1,5 s Warten.
