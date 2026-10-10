@@ -103,6 +103,30 @@ geneigten Mikrofonachse (Modell: Achse 10° geneigt ergibt 11°) und wäre Sache
 Der erste Lauf (Rauschen) bleibt auch so unbrauchbar (Abstand 6 bis 8 cm, Richtung beliebig): Samsungs
 Rauschunterdrückung.
 
+Modellprüfung der kohärenzgewichteten GCC (S-013, Arslan "Ok" 10.10., 22:20 Uhr, Bedingung: gute Fälle nicht
+schlechter). Neue Szenarien S7 und S8 mit Hallfeld (32 ebene Wellen aus zufälligen Richtungen) 6 bzw. 12 dB über dem
+direkten Schall. Fehler in Grad, Median aus 3 Läufen (M7 bis 4 kHz; Varianten bis 1,1 und 2 kHz aus 2 Läufen):
+
+| Szenario | M1 heute | M6 geeicht + Karte | M7 bis 4 kHz | M7 bis 2 kHz | M7 bis 1,1 kHz | PHAT-Median |
+|---|---|---|---|---|---|---|
+| S1 ideal | 0,1 | 11,0 (*) | 0,0 | | | 0,98 |
+| S2 realistisch | 12,9 | 2,1 | 13,1 | 10,1 | 14,7 | 0,52 |
+| S3 Ton 2 kHz | 21,8 | 2,5 | 72,7 | 72,3 | 62,6 | 0,28 |
+| S4 zwei Quellen | 12,8 | 2,2 | 18,0 | 31,1 | 26,3 | 0,31 |
+| S6 leise Quelle | 12,9 | 2,2 | 13,0 | | | 0,14 |
+| S7 Hallfeld 6 dB | 6,4 | 2,3 | 13,8 | 7,3 | 8,5 | 0,11 |
+| S8 Hallfeld 12 dB | 89,6 | 6,3 | 26,4 | 29,0 | 40,1 | 0,09 |
+
+Echter Lauf 22:14 Uhr mit M7 (Achse umgekehrt): bis 4 kHz 13,5 cm, −32/+13; bis 2 kHz 11,9 cm, −32/+25; bis 1,1 kHz
+7,3 cm, +3/+45 (Abstand unplausibel).
+
+Ergebnis: M7 ist **kein klarer Gewinn**. Es hilft nur bei starkem Hall (S8 von 90° auf 26°), verschlechtert reinen Ton
+(73° statt 22°) und zwei Quellen (18° statt 13°) und hängt beim echten Lauf deutlich vom Band ab. Am robustesten
+bleibt im Modell die Richtungskarte mit geeichter Achse (M6, auch bei 12 dB Hall 6°). Ein einziger echter Lauf mit
+unbestätigter Lage der Quelle reicht nicht für eine Änderung der App (CLAUDE.md 5 und 9). S-013 wird deshalb
+zurückgestellt, bis mehr echte Läufe vorliegen: Quelle vorne und 90° rechts, nah (etwa 40 cm, wenig Hall) und fern
+(1 bis 2 m), je mit festem Ablauf (S-014).
+
 Empfohlene Reihenfolge für die App (je eigene Spec):
 1. Signalprüfung (Median der GCC-Spitze) mit klarer Meldung. Umgesetzt in S-012 (Grenze 0,10).
 2. Eichschwenk je Gerät, Achse speichern (neues Speichern von Daten, Freigabe nötig).
