@@ -20,6 +20,10 @@ data class NightReport(
     val shakeMeasurable: Boolean = true,
     /** S-007: Werte der Boden-Entscheidung (nur 8 Bit). */
     val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
+    /** S-011: gespeicherte Nachtserie (Dateiname, Groesse); [seriesFailed] = eingeschaltet, aber nicht gespeichert. */
+    val seriesName: String? = null,
+    val seriesBytes: Long? = null,
+    val seriesFailed: Boolean = false,
 )
 
 sealed interface StackOutcome {

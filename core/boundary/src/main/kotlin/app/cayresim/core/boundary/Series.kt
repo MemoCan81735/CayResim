@@ -32,6 +32,11 @@ enum class Look { NONE, WARM, COOL, FILM, MONO }
 data class NightStats(
     val used: Int, val dropped: Int, val gain: Float, val maxShake: Int = 0, val shakeMeasurable: Boolean = true,
     val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
+    /**
+     * S-011: Messwerte je Eingangsbild fuer die gespeicherte Nachtserie. Ohne Standardwert, damit kein Aufrufer sie
+     * vergisst (Zweitpruefung S-011, B1: der GPU-Adapter gab sie nicht weiter).
+     */
+    val records: List<app.cayresim.core.pure.NightMerge.FrameRecord>,
 )
 
 sealed interface ProcessResult {

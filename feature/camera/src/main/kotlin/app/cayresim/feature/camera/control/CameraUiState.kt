@@ -47,7 +47,9 @@ data class UserMessage(val id: Long, val kind: MessageKind, val night: NightInfo
 data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val shortened: Boolean = false, val raw: Boolean = false, val durationMs: Long? = null,
     val meterExposureNs: Long? = null, val meterIso: Int? = null, val shakePx: Int? = null, val shakeMeasurable: Boolean = true,
     /** S-007: Werte der Boden-Entscheidung, null beim RAW-Weg. */
-    val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null)
+    val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
+    /** S-011: gespeicherte Nachtserie (Dateiname, Groesse in Byte); [seriesFailed] = eingeschaltet, aber nicht gespeichert. */
+    val seriesName: String? = null, val seriesBytes: Long? = null, val seriesFailed: Boolean = false)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable

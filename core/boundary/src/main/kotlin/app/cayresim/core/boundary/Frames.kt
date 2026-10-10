@@ -7,8 +7,11 @@ class FrameBurst(val width: Int, val height: Int, val frames: List<ByteArray>, v
     val pixels: Int get() = width * height
 }
 
-/** Ein einzelnes Bild aus dem Frame-Strom (RGB, 3 Bytes je Pixel). */
-class Frame(val width: Int, val height: Int, val rgb: ByteArray, val rotationDegrees: Int = 0)
+/**
+ * Ein einzelnes Bild aus dem Frame-Strom (RGB, 3 Bytes je Pixel). [timestampNs]: Aufnahmezeit in ns seit dem
+ * Einschalten (Zeitbasis der Lagesensoren, S-011); null, wenn unbekannt.
+ */
+class Frame(val width: Int, val height: Int, val rgb: ByteArray, val rotationDegrees: Int = 0, val timestampNs: Long? = null)
 
 /**
  * Ein RAW-Bild (Bayer, je Wert 16 Bit, [rowStride] Werte je Zeile) mit der Kalibrierung seiner Aufnahme.

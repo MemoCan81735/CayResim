@@ -13,7 +13,7 @@ import app.cayresim.feature.gallery.ui.GalleryRoute
 import app.cayresim.feature.settings.ui.MicTestRoute
 import app.cayresim.feature.settings.ui.SweepRoute
 import app.cayresim.feature.settings.ui.SelfTestRoute
-import app.cayresim.feature.settings.ui.SettingsContent
+import app.cayresim.feature.settings.ui.SettingsRoute
 import app.cayresim.feature.settings.ui.GuideContent
 
 @Composable
@@ -38,7 +38,7 @@ fun AppRoot() {
             }
             entry<GalleryKey> { GalleryRoute(onBack = { control.back() }) }
             entry<SettingsKey> {
-                SettingsContent(
+                SettingsRoute(
                     onGuide = { control.open(GuideKey) },
                     onSelfTest = { control.open(SelfTestKey) },
                     onBack = { control.back() },

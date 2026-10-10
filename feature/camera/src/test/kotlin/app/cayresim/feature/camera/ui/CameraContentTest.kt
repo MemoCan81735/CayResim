@@ -339,6 +339,30 @@ class CameraContentTest {
         compose.waitUntil(5_000) { compose.onAllNodesWithText("RAW, 1/10 s, ISO 3200, 36 Bilder", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test fun nacht_hinweis_serie() {
+        // S-011 K8: Dateiname und Groesse der Nachtserie in einer eigenen Zeile
+        show(running.copy(message = UserMessage(13, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 67, 0, 15.7f, seriesName = "Nachtserie-20261010-183012.zip", seriesBytes = 48_300_000))))
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Aufhellung x15,7\nNachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB)", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_night_series.png")
+    }
+
+    @Test fun nacht_hinweis_serie_nicht_gespeichert() {
+        // S-011 K5: Speicherfehler, Nachtbild trotzdem gespeichert
+        show(running.copy(message = UserMessage(14, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 67, 0, 15.7f, seriesFailed = true))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Aufhellung x15,7\nNachtserie nicht gespeichert", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun nacht_hinweis_ohne_serie() {
+        show(running.copy(message = UserMessage(15, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 67, 0, 15.7f))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Aufhellung x15,7", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("Nachtserie", substring = true).assertCountEquals(0)
+    }
+
     @Test fun nacht_hinweis_meldet_gekuerzte_serie() {
         show(running.copy(message = UserMessage(4, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 23, 0, 16f, shortened = true))))

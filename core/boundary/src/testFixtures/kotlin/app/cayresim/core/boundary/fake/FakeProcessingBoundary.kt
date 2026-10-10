@@ -56,7 +56,9 @@ class FakeProcessingBoundary : ProcessingBoundary {
         if (gpuFails) return ProcessResult.Failed(ProcessFailure.GPU)
         nightRuns += count
         val out = "content://fake/night/${++n}"; known += out
-        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f, nightShake, nightShakeMeasurable, nightDiagnosis))
+        // S-011: je Bild ein Eintrag mit erkennbarem Versatz (dx = Nummer, dy = -Nummer)
+        val records = List(count) { i -> app.cayresim.core.pure.NightMerge.FrameRecord(i, i, -i, false, false, i == 0, 100.0 - i, 10f, 0.25f) }
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 4f, nightShake, nightShakeMeasurable, nightDiagnosis, records))
     }
 
     val rawNightRuns = mutableListOf<Int>()
@@ -71,7 +73,7 @@ class FakeProcessingBoundary : ProcessingBoundary {
         if (rawFails || count < 3) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         rawNightRuns += count
         val out = "content://fake/nightraw/${++n}"; known += out; onRawSaved?.invoke(out)
-        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 3f))
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 3f, records = emptyList()))
     }
 
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {
