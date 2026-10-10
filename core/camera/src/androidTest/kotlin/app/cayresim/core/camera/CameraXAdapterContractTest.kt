@@ -57,6 +57,22 @@ class CameraXAdapterContractTest {
         val r = assertIs<CaptureResult.Saved>(adapter.capture()); adapter.delete(r.uri)
     }
 
+    /** S-011 K6: jedes Bild traegt seinen Aufnahme-Zeitstempel; steigend und waehrend des Stroms aufgenommen. */
+    @Test fun s011Zeitstempel() = run {
+        adapter.start()
+        val bootBefore = android.os.SystemClock.elapsedRealtimeNanos(); val monoBefore = System.nanoTime()
+        val got = withTimeout(20_000) { adapter.frames(5).toList() }
+        val bootAfter = android.os.SystemClock.elapsedRealtimeNanos(); val monoAfter = System.nanoTime()
+        val ts = got.map { assertNotNull(it.timestampNs, "Zeitstempel fehlt") }
+        assertTrue(ts.zipWithNext().all { (a, b) -> b > a }, "nicht steigend: $ts")
+        // Zeitbasis: seit dem Einschalten (wie die Sensoren) oder monoton; im Protokoll steht, welche
+        val boot = ts.all { it in bootBefore - 1_000_000_000L..bootAfter }
+        val mono = ts.all { it in monoBefore - 1_000_000_000L..monoAfter }
+        println("S-011 Zeitstempel: seit Einschalten=$boot, monoton=$mono")
+        assertTrue(boot || mono, "Zeitstempel ausserhalb des Stroms: $ts, boot $bootBefore..$bootAfter, mono $monoBefore..$monoAfter")
+        assertEquals(0, adapter.pipelineUserCount)
+    }
+
     @Test fun bildstromEndetWennDieKameraStoppt() = run {
         adapter.start()
         val job = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).async { adapter.frames(1_000).count() }

@@ -1,6 +1,6 @@
 # S-011: Nachtserie zum Nachmessen speichern (V3, erster Teil)
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe durch Arslan
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 18:56 Uhr: neues Speichern der ZIP-Datei in Downloads, Änderung am Kamera-Adapter für den Zeitstempel, ein Release)
 **Anlass:** Gerätetest Nacht S24+ (10.10., 18:30 Uhr, Innenraum Auto, freihändig) mit Samsung-Vergleich:
 
 | Messgröße | CayResim | Samsung |
@@ -43,7 +43,7 @@ Bit für Bit gleich.
 | K3 | Helligkeit berechnen und mit Stufe 1 packen für 1440 × 1080: höchstens 40 ms je Bild auf der JVM (bester von 5); Probe dunkle Szene höchstens 1 MB je Bild | `NightSeriesTest > S-011 Zeit und Groesse je Bild` |
 | K4 | `NightUseCase` mit Fakes: Schalter aus, kein Aufruf des Speichers; Schalter an, jedes Bild nach der Messphase in Reihenfolge abgelegt, danach `meta.json` mit den Einträgen aus K1; Lage läuft parallel und wird abgemeldet | `NightUseCaseTest > S-011 Serie aus und an` |
 | K5 | Abbruch während der Serie: halbe Datei wird gelöscht, Belichtung wiederhergestellt, Sensor abgemeldet (R17); Speicherfehler: Nachtbild trotzdem gespeichert, Hinweis "Serie nicht gespeichert" | `NightUseCaseTest > S-011 Abbruch und Speicherfehler` |
-| K6 | Kamera-Adapter: jedes Bild trägt den Zeitstempel der Aufnahme (Zeitbasis seit dem Einschalten wie die Sensoren); auf dem Emulator steigend und zwischen Start und Ende des Stroms | `CameraXCameraAdapterTest > s011Zeitstempel` (Emulator) |
+| K6 | Kamera-Adapter: jedes Bild trägt den Zeitstempel der Aufnahme (Zeitbasis seit dem Einschalten wie die Sensoren); auf dem Emulator steigend und zwischen Start und Ende des Stroms | `CameraXAdapterContractTest > s011Zeitstempel` (Emulator) |
 | K7 | Daten-Adapter: ZIP wird in `Download/CayResim/` geschrieben, ist danach unter seinem Namen lesbar; abgebrochene Datei ist weg | `MediaStoreSeriesAdapterTest > s011SchreibenUndAbbrechen` (Emulator) |
 | K8 | Oberfläche: Schalter in den Einstellungen mit Hinweis "bis zum Neustart, keine Personen fotografieren"; Hinweis nach der Nachtaufnahme mit Dateiname und Größe; je ein Screenshot | `SettingsAndGuideTest > einstellungen_nachtserie`, `CameraScreenTest > nacht_hinweis_serie` |
 | K9 | Gerätetest S24+: Serie wird gespeichert, Zahl der Y-Bilder = verwendet + verworfen; Bilder je Sekunde mit Speichern höchstens 10 % unter ohne Speichern (zwei Aufnahmen derselben Szene); Datei offline lesbar mit `tools/nacht-serie/auswerten.py` | Gerätetest |

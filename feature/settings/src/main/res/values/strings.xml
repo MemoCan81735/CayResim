@@ -3,6 +3,8 @@
     <string name="settings_title">Einstellungen</string>
     <string name="settings_guide">Anleitung</string>
     <string name="settings_guide_hint">So nutzt du alle Funktionen von CayResim</string>
+    <string name="settings_nightseries">Nachtserie speichern</string>
+    <string name="settings_nightseries_hint">Für Messungen: Nachtaufnahmen legen zusätzlich alle Einzelbilder als ZIP in Download/CayResim ab, etwa 50 MB je Aufnahme. Gilt bis zum Neustart. Bitte keine Personen fotografieren.</string>
     <string name="settings_selftest_hint">Prüft die Kamera, etwa eine Minute</string>
     <string name="guide_title">Anleitung</string>
     <string name="guide_intro">CayResim macht gute Fotos ohne Einstellen: Kamera öffnen, auf den großen runden Knopf tippen, fertig. Alles Weitere ist freiwillig.</string>

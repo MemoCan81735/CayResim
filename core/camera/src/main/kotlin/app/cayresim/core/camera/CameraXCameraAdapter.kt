@@ -143,6 +143,9 @@ class CameraXCameraAdapter @Inject constructor(
     private var pipelineUsers = 0
     private val analysisExecutor = Executors.newSingleThreadExecutor { r -> Thread(r, "cayresim-analysis") }
     private val frameListeners = CopyOnWriteArrayList<(ByteArray, Int, Int, Int) -> Unit>()
+
+    /** S-011: Zeitstempel des Bilds, das gerade an die Zuhoerer geht (ns, Zeitbasis des Sensors, meist seit dem Einschalten). */
+    @Volatile private var frameTimestampNs = 0L
     /** Wiederverwendeter Puffer des Analyse-Threads (R19): keine Allokation pro Frame. */
     private var analysisBuffer = ByteArray(0)
 
@@ -362,6 +365,8 @@ class CameraXCameraAdapter @Inject constructor(
             }
         }
         val rot = image.imageInfo.rotationDegrees
+        // S-011: Aufnahmezeit des Bilds fuer den Bildstrom (Analyse laeuft auf einem Thread, Zuhoerer synchron)
+        frameTimestampNs = image.imageInfo.timestamp
         frameListeners.forEach { it(out, w, h, rot) }
     }
 
@@ -471,7 +476,8 @@ class CameraXCameraAdapter @Inject constructor(
             // Nur kopieren, wenn Platz ist (Befund M7): sonst Bild auslassen statt Speicher zu verschwenden
             if (sent.get() < n && inFlight.get() < STREAM_BUFFER) {
                 inFlight.incrementAndGet()
-                if (trySend(Frame(w, h, bytes.copyOf(), rot)).isSuccess) sent.incrementAndGet() else inFlight.decrementAndGet()
+                val ts = frameTimestampNs.takeIf { it > 0 }
+                if (trySend(Frame(w, h, bytes.copyOf(), rot, ts)).isSuccess) sent.incrementAndGet() else inFlight.decrementAndGet()
             }
             if (sent.get() >= n) channel.close()
         }

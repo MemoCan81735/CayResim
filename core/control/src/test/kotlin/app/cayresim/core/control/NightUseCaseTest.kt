@@ -208,4 +208,72 @@ class NightUseCaseTest {
         assertFalse(r.night!!.raw)
         assertEquals((10 + NightUseCase.METER + NightUseCase.SETTLE + 10) * 100L, r.night!!.durationMs)
     }
+
+    // ---------- S-011: Nachtserie zum Nachmessen ----------
+
+    private fun motion() = app.cayresim.core.boundary.fake.FakeMotionSensorBoundary(samples = List(5) { i ->
+        app.cayresim.core.boundary.MotionSample(app.cayresim.core.boundary.MotionKind.ROTATION, 1_000_000_000L + i * 10_000_000L, 1f, 0f, 0f, 0f)
+    })
+
+    @Test fun `S-011 Serie aus und an`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        val archive = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary()
+        val sensors = motion()
+        // aus: kein Archiv, kein Sensor
+        val off = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(false), sensors)(10))
+        assertTrue(archive.sessions.isEmpty()); assertEquals(0, sensors.registrations); assertNull(off.night!!.seriesName)
+        // an
+        val debug = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true)
+        val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, debug, sensors)(10))
+        val s = archive.sessions.single()
+        assertTrue(s.finished)
+        val first = NightUseCase.METER + NightUseCase.SETTLE // erste Nummer nach Messen und Einschwingen
+        val yNames = s.entries.keys.filter { it.startsWith("y-") }
+        assertEquals((0 until 10).map { app.cayresim.core.pure.NightSeries.lumaName(it) }, yNames, "jedes Bild in Reihenfolge")
+        yNames.forEachIndexed { i, n -> assertTrue(s.entries.getValue(n).all { it.toInt() == first + i }, "Helligkeit Bild $i") }
+        assertTrue(s.entries.getValue(app.cayresim.core.pure.NightSeries.RGB_FIRST).all { it.toInt() == first })
+        assertTrue(s.entries.getValue(app.cayresim.core.pure.NightSeries.RGB_MID).all { it.toInt() == first + 5 })
+        assertTrue(s.entries.getValue(app.cayresim.core.pure.NightSeries.RGB_LAST).all { it.toInt() == first + 9 })
+        val meta = String(s.entries.getValue(app.cayresim.core.pure.NightSeries.META))
+        assertTrue("\"format\": 1" in meta && "\"used\": 10" in meta && "\"dx\": 9" in meta && "\"timestampNs\": ${1_000_000_000L + (first + 9) * 100_000_000L}" in meta, meta)
+        assertTrue("\"exposureNs\": 100000000" in meta && "\"meterExposureNs\": 66666666" in meta, meta)
+        val lage = String(s.entries.getValue(app.cayresim.core.pure.NightSeries.LAGE))
+        assertTrue(lage.startsWith("format=v1") && lage.lines().count { it.startsWith("ROTATION,") } == 5, lage)
+        assertEquals(0, sensors.active, "Sensor abgemeldet")
+        assertEquals(s.name, r.night!!.seriesName); assertTrue(r.night!!.seriesBytes!! > 0); assertFalse(r.night!!.seriesFailed)
+    }
+
+    @Test fun `S-011 Abbruch und Speicherfehler`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        val debug = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true)
+        // Abbruch waehrend der Serie: halbe Datei weg, Sensor abgemeldet, Automatik zurueck
+        val archive = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary()
+        val sensors = motion()
+        val slow = object : app.cayresim.core.boundary.ProcessingBoundary by proc {
+            override suspend fun night(frames: kotlinx.coroutines.flow.Flow<app.cayresim.core.boundary.Frame>) =
+                proc.night(frames.onEach { kotlinx.coroutines.delay(1_000) })
+        }
+        val job = launch { NightUseCase(cam, manual, frames, slow, null, null, archive, debug, sensors)(20) }
+        advanceTimeBy(10_500)
+        assertEquals(1, sensors.active, "Sensor laeuft waehrend der Serie")
+        job.cancel(); job.join()
+        val s = archive.sessions.single()
+        assertTrue(s.aborted && !s.finished, "halbe Datei geloescht")
+        assertEquals(0, sensors.active); assertNull(manual.manualState.value.exposureNanos)
+        // Schreibfehler: Nachtbild trotzdem gespeichert, Hinweis "nicht gespeichert"
+        val failing = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary().apply { failPutAfter = 3 }
+        val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, failing, debug, motion())(10))
+        assertTrue(r.night!!.seriesFailed); assertNull(r.night!!.seriesName)
+        assertTrue(failing.sessions.single().aborted)
+        // Datei laesst sich nicht anlegen: ebenso
+        val noOpen = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary().apply { failOpen = true }
+        val r2 = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, noOpen, debug, motion())(10))
+        assertTrue(r2.night!!.seriesFailed)
+        // Verarbeitung scheitert: Archiv abgebrochen
+        val archive3 = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary()
+        proc.gpuFails = true
+        assertIs<StackOutcome.Failed>(NightUseCase(cam, manual, frames, proc, null, null, archive3, debug, motion())(10))
+        assertTrue(archive3.sessions.single().aborted)
+        proc.gpuFails = false
+    }
 }

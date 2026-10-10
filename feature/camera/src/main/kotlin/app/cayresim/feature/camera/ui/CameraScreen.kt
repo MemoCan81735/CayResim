@@ -490,7 +490,15 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
     // S-001 K5: Dauer vom Ausloesen bis gespeichert, z. B. ", Dauer 4,2 s"
     val full = n.durationMs?.let { cut + stringResource(R.string.night_duration, String.format(java.util.Locale.GERMANY, "%.1f", it / 1000f)) } ?: cut
     val line = if (n.raw) stringResource(R.string.night_raw_prefix) + full else full
-    return n.diagnosis?.let { line + "\n" + nightDiagnosis(it) } ?: line
+    val withDiagnosis = n.diagnosis?.let { line + "\n" + nightDiagnosis(it) } ?: line
+    // S-011: Nachtserie als ZIP, z. B. "Nachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB)"
+    val series = when {
+        n.seriesName != null -> stringResource(R.string.night_series_saved, n.seriesName,
+            String.format(java.util.Locale.GERMANY, "%.1f", (n.seriesBytes ?: 0L) / 1_000_000f))
+        n.seriesFailed -> stringResource(R.string.night_series_failed)
+        else -> null
+    }
+    return series?.let { withDiagnosis + "\n" + it } ?: withDiagnosis
 }
 
 /**

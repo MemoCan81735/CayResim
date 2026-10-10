@@ -157,7 +157,26 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     /** S-003: Kopien der ersten Bilder, solange der Bezug noch wechseln darf (hoechstens [REF_CANDIDATES] - 1, R19). */
     private val early = ArrayList<ByteArray>(REF_CANDIDATES - 1)
+    /** S-011: Eingangsnummer je Kopie in [early], damit ein erneut geprueftes Bild seinen Eintrag behaelt. */
+    private val earlyIdx = ArrayList<Int>(REF_CANDIDATES - 1)
     private var seen = 0
+    private var linearSeen = 0
+
+    /**
+     * S-011: Messwerte je hinzugefuegtem Bild, fuer die gespeicherte Nachtserie. [dx], [dy]: angenommener Versatz;
+     * [shiftRejected]: Versatz nicht klar besser als keiner (dann 0/0); [dropped]: als verwackelt verworfen;
+     * [sharpness]: Kantenenergie des verkleinerten Bilds; [meanLuma], [zeroShare]: Helligkeit und Anteil Nullen,
+     * ebenfalls auf dem verkleinerten Bild (billig, R27).
+     */
+    data class FrameRecord(
+        val index: Int, val dx: Int, val dy: Int, val shiftRejected: Boolean, val dropped: Boolean, val reference: Boolean,
+        val sharpness: Double, val meanLuma: Float, val zeroShare: Float,
+    )
+
+    private val recordMap = java.util.TreeMap<Int, FrameRecord>()
+
+    /** S-011: ein Eintrag je Eingangsbild in Reihenfolge; nach einem Bezugswechsel mit den neuen Werten. */
+    val records: List<FrameRecord> get() = recordMap.values.toList()
 
     /** Anteil der Pixel mit Helligkeit 0 oder 1 im ersten Bild: hoch heisst "fast kein Licht" (siehe NightTone.FLOOR_SHARE). */
     var floorShare = 0f; private set
@@ -173,18 +192,19 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     fun add(frame: ByteArray): Boolean {
         require(frame.size == pixels * 3) { "Bild hat die falsche Groesse" }
         seen++
+        val idx = seen - 1
         // Zweitpruefung S-003: robustes Mass, ein bewegtes helles Objekt darf den Bezug nicht uebernehmen
         if (seen in 2..REF_CANDIDATES && refSmall != null && robustSharpness(downscale(frame)) > REF_SWITCH * refRobust) {
-            val before = early.toList()
+            val before = early.toList(); val beforeIdx = earlyIdx.toList()
             restart()
-            addInternal(frame, null)
-            before.forEach { addInternal(it, null) }
+            addInternal(frame, null, idx)
+            before.forEachIndexed { i, f -> addInternal(f, null, beforeIdx[i]) }
             // solange noch ein Wechsel moeglich ist, alle bisherigen Bilder behalten
-            if (seen < REF_CANDIDATES) { early += frame.copyOf(); early += before }
+            if (seen < REF_CANDIDATES) { early += frame.copyOf(); earlyIdx += idx; early += before; earlyIdx += beforeIdx }
             return true
         }
-        val ok = addInternal(frame, null)
-        if (seen < REF_CANDIDATES) early += frame.copyOf() else early.clear()
+        val ok = addInternal(frame, null, idx)
+        if (seen < REF_CANDIDATES) { early += frame.copyOf(); earlyIdx += idx } else { early.clear(); earlyIdx.clear() }
         return ok
     }
 
@@ -193,7 +213,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         sum.fill(0f); weight.fill(0f); sumSq?.fill(0f)
         refSmall = null; refLuma = null; refSharpness = 0.0; refRobust = 0.0
         used = 0; dropped = 0; maxShake = 0; floorShare = 0f; aligned = 0; rejected = 0
-        early.clear()
+        early.clear(); earlyIdx.clear()
     }
 
     /** Verstaerkung fuer die 8-Bit-Vorschau linearer Bilder (aus dem ersten Bild, fuer alle gleich). */
@@ -216,14 +236,15 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         }
         val g = previewGain
         val preview = ByteArray(linear.size) { (NightTone.linearToSrgb(linear[it] * g) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte() }
-        return addInternal(preview, linear)
+        return addInternal(preview, linear, linearSeen++)
     }
 
-    private fun addInternal(frame: ByteArray, linear: FloatArray?): Boolean {
+    private fun addInternal(frame: ByteArray, linear: FloatArray?, index: Int): Boolean {
         val small = downscale(frame)
         val ref = refSmall
         if (ref == null) {
             refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small); refRobust = robustSharpness(small)
+            recordMap[index] = record(index, small, 0, 0, shiftRejected = false, dropped = false, reference = true, sharp = refSharpness)
             // Bei RAW ist der Schwarzwert bekannt: kein Raten des Rauschbodens
             floorShare = if (linear != null) 0f else refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
             if (linear == null) measureFirst(frame)
@@ -233,10 +254,16 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             return true
         }
         // Verwackelte Bilder (deutlich weniger Kanten als die Referenz) verschlechtern das Ergebnis
-        if (refSharpness > 0 && sharpness(small) < BLUR_LIMIT * refSharpness) { dropped++; return false }
+        val sharp = sharpness(small)
+        if (refSharpness > 0 && sharp < BLUR_LIMIT * refSharpness) {
+            dropped++
+            recordMap[index] = record(index, small, 0, 0, shiftRejected = false, dropped = true, reference = false, sharp = sharp)
+            return false
+        }
         val rl = refLuma!!
         val (dx, dy) = aligner.shiftOf(ref, rl, small, frame)
         aligned++; if (aligner.lastRejected) rejected++
+        recordMap[index] = record(index, small, dx, dy, aligner.lastRejected, dropped = false, reference = false, sharp = sharp)
         maxShake = maxOf(maxShake, abs(dx), abs(dy))
         // Abweichung je Kachel nach dem Ausrichten
         val tiles = tilesX * tilesY
@@ -394,6 +421,14 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private fun luma(f: ByteArray) = aligner.luma(f)
 
     private fun lumaAt(f: ByteArray, i: Int) = FrameAligner.lumaAt(f, i)
+
+    /** S-011: Eintrag mit Helligkeit und Anteil Nullen auf dem verkleinerten Bild. */
+    private fun record(index: Int, small: ByteArray, dx: Int, dy: Int, shiftRejected: Boolean, dropped: Boolean, reference: Boolean, sharp: Double): FrameRecord {
+        val n = small.size / 3
+        var s = 0L; var zeros = 0
+        for (i in 0 until n) { val l = lumaAt(small, i * 3); s += l; if (l == 0) zeros++ }
+        return FrameRecord(index, dx, dy, shiftRejected, dropped, reference, sharp, if (n == 0) 0f else s.toFloat() / n, if (n == 0) 0f else zeros.toFloat() / n)
+    }
 
     /** Kantenenergie (Laplace) auf dem verkleinerten Bild. */
     private fun sharpness(s: ByteArray): Double {

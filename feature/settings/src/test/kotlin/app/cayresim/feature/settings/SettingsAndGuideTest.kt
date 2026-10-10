@@ -1,9 +1,14 @@
 package app.cayresim.feature.settings
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -43,6 +48,24 @@ class SettingsAndGuideTest {
         compose.onNodeWithTag("settings_mictest").performClick()
         compose.onNodeWithTag("back").performClick()
         assertEquals(listOf("guide", "selftest", "mictest", "back"), events)
+    }
+
+    @Test fun einstellungen_nachtserie() {
+        // S-011 K8: Schalter mit Hinweis, Zustand aus dem ViewModel; nach dem Einschalten ein Screenshot
+        val debug = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary()
+        val vm = app.cayresim.feature.settings.control.SettingsViewModel(debug)
+        compose.setContent {
+            val on by vm.saveNightSeries.collectAsState()
+            CayResimTheme { SettingsContent(onGuide = {}, onSelfTest = {}, onBack = {}, nightSeries = on, onNightSeries = vm::onSaveNightSeries) }
+        }
+        compose.onNodeWithTag("settings_nightseries").assertIsDisplayed().assertIsOff()
+        compose.onNodeWithText("Gilt bis zum Neustart. Bitte keine Personen fotografieren.", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("settings_nightseries").performClick()
+        compose.onNodeWithTag("settings_nightseries").assertIsOn()
+        assertTrue(debug.saveNightSeries.value)
+        compose.onRoot().captureRoboImage("src/test/screenshots/settings_nightseries.png")
+        compose.onNodeWithTag("settings_nightseries").performClick()
+        assertFalse(debug.saveNightSeries.value)
     }
 
     @Test fun bild_anleitung_anfang_dunkel() {

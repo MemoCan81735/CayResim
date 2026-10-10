@@ -9,6 +9,18 @@ import app.cayresim.core.boundary.ProcessResult
 import app.cayresim.core.boundary.ProcessingBoundary
 import app.cayresim.core.pure.NightPlan
 import app.cayresim.core.pure.Clock
+import app.cayresim.core.boundary.DebugOptionsBoundary
+import app.cayresim.core.boundary.Frame
+import app.cayresim.core.boundary.MotionSample
+import app.cayresim.core.boundary.MotionSensorBoundary
+import app.cayresim.core.boundary.SeriesArchiveBoundary
+import app.cayresim.core.boundary.SeriesArchiveSessionBoundary
+import app.cayresim.core.boundary.SeriesArchiveSnapshot
+import app.cayresim.core.pure.NightSeries
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -34,6 +46,11 @@ class NightUseCase @Inject constructor(
     private val nightPath: NightPathBoundary? = null,
     /** Misst die Dauer fuer den Hinweis (R2, R27); ohne Uhr keine Dauer. */
     private val clock: Clock? = null,
+    /** S-011: Ablage der Nachtserie zum Nachmessen; nur bei eingeschaltetem [debug]-Schalter. */
+    private val archive: SeriesArchiveBoundary? = null,
+    private val debug: DebugOptionsBoundary? = null,
+    /** S-011: Lage waehrend der Serie (R29). */
+    private val sensors: MotionSensorBoundary? = null,
 ) {
     /** Eigener Kern bei Dunkelheit oder wenn noch keine Messung vorliegt; bei gemessen hellem Licht Samsungs Modus. */
     fun shouldUseOwn(): Boolean {
@@ -60,6 +77,9 @@ class NightUseCase @Inject constructor(
         var meter: app.cayresim.core.boundary.LightSnapshot? = null
         // Strom fuer die groesste Serie anfordern, nach der Messung auf die gewaehlte Zahl kuerzen
         var chosen = count ?: NightPlan.FRAMES_DEEP
+        // S-011: Serie zum Nachmessen; scheitert das Speichern, geht das Nachtbild trotzdem vor (R14)
+        val recording = debug?.saveNightSeries?.value == true && archive != null
+        val rec = if (recording) SeriesRecorder(archive?.open(SERIES_PREFIX)) else null
         try {
             val stream = frames.frames(METER + SETTLE + (count ?: NightPlan.FRAMES_DEEP))
                 .withIndex()
@@ -78,19 +98,36 @@ class NightUseCase @Inject constructor(
                 .transformWhile { emit(it); it.index < METER + SETTLE + chosen - 1 && !overBudget(start) }
                 .filter { it.index >= METER + SETTLE }
                 .map { it.value }
-            return when (val r = processing.night(stream)) {
+                .onEach { f -> rec?.frame(f, chosen) }
+            val samples = ArrayList<MotionSample>()
+            val r = coroutineScope {
+                // Lage nur beim Speichern der Serie; sofort anmelden, abgemeldet wird beim Abbruch des Sammlers (R17, R29)
+                val motion = if (rec?.session != null && sensors != null) launch(start = CoroutineStart.UNDISPATCHED) { sensors.samples().collect { samples += it } } else null
+                processing.night(stream).also { motion?.cancelAndJoin() }
+            }
+            return when (r) {
                 is ProcessResult.Saved -> {
                     val used = r.night?.used ?: chosen
-                    StackOutcome.Saved(r.uri, used, used < chosen * 3 / 4,
-                        NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start),
-                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso, shakePx = r.night?.maxShake,
-                            shakeMeasurable = r.night?.shakeMeasurable ?: true, diagnosis = r.night?.diagnosis))
+                    var report = NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start),
+                        meterExposureNs = meter?.exposureNs, meterIso = meter?.iso, shakePx = r.night?.maxShake,
+                        shakeMeasurable = r.night?.shakeMeasurable ?: true, diagnosis = r.night?.diagnosis)
+                    if (rec != null) {
+                        val info = NightSeries.Info(rec.width, rec.height, rec.rotation, plan?.exposureNs, plan?.iso, meter?.exposureNs, meter?.iso,
+                            report.durationMs, used, report.dropped, report.gain, r.night?.maxShake ?: 0, rec.timestamps, r.night?.diagnosis)
+                        val saved = rec.finish(NightSeries.metaJson(info, r.night?.records.orEmpty()), SweepUseCase.csv(samples))
+                        report = report.copy(seriesName = saved?.name, seriesBytes = saved?.bytes, seriesFailed = saved == null)
+                    }
+                    StackOutcome.Saved(r.uri, used, used < chosen * 3 / 4, report)
                 }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
         } finally {
             // Auch bei Abbruch (Zurueck, Home): sonst bliebe die Nachtbelichtung im Singleton-Adapter haengen
-            withContext(NonCancellable) { manual.setExposure(before.exposureNanos, before.iso) }
+            withContext(NonCancellable) {
+                manual.setExposure(before.exposureNanos, before.iso)
+                // S-011: eine nicht fertige Serie wird geloescht (R17)
+                rec?.abortIfOpen()
+            }
         }
     }
 
@@ -119,7 +156,45 @@ class NightUseCase @Inject constructor(
 
     private fun since(start: Long?): Long? = if (start == null || clock == null) null else (clock.nowMillis() - start).coerceAtLeast(0)
 
+    /**
+     * S-011: legt jedes Bild der Serie ab (Helligkeit, dazu erstes, mittleres und letztes in Farbe). Nach dem ersten
+     * Schreibfehler wird nichts mehr geschrieben; am Ende wird die halbe Datei geloescht.
+     */
+    private class SeriesRecorder(val session: SeriesArchiveSessionBoundary?) {
+        var ok = session != null; private set
+        var finished = false; private set
+        val timestamps = ArrayList<Long?>()
+        var width = 0; var height = 0; var rotation = 0
+        private var last: ByteArray? = null
+
+        suspend fun frame(f: Frame, chosen: Int) {
+            val s = session ?: return
+            if (!ok) return
+            val i = timestamps.size
+            timestamps += f.timestampNs
+            if (i == 0) { width = f.width; height = f.height; rotation = f.rotationDegrees }
+            ok = s.put(NightSeries.lumaName(i), NightSeries.luma(f.rgb, f.width * f.height))
+            if (ok && i == 0) ok = s.put(NightSeries.RGB_FIRST, f.rgb)
+            if (ok && i == chosen / 2) ok = s.put(NightSeries.RGB_MID, f.rgb)
+            // Bilder sind Kopien des Adapters und werden nicht veraendert: Verweis statt Kopie (R19)
+            last = f.rgb
+        }
+
+        suspend fun finish(meta: String, lage: String): SeriesArchiveSnapshot? {
+            val s = session ?: return null
+            ok = ok && last?.let { s.put(NightSeries.RGB_LAST, it) } != false &&
+                s.put(NightSeries.META, meta.toByteArray(Charsets.UTF_8)) && s.put(NightSeries.LAGE, lage.toByteArray(Charsets.UTF_8))
+            if (!ok) return null
+            val snap = s.finish()
+            finished = snap != null
+            return snap
+        }
+
+        suspend fun abortIfOpen() { if (!finished) session?.abort() }
+    }
+
     companion object {
+        const val SERIES_PREFIX = "Nachtserie"
         /** Bilder mit Automatik zum Messen. */
         const val METER = 4
         /** S-006: Zeitbudget der Aufnahme; danach rechnet der Kern mit den vorhandenen Bildern (Grenze 10 s mit Speichern). */
