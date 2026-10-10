@@ -41,6 +41,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -166,7 +167,8 @@ fun CameraContent(
     val text = message?.let { m -> stringResource(messageRes(m.kind)) + (nightText?.let { "\n$it" } ?: "") }
     LaunchedEffect(message?.id) {
         if (message != null && text != null) {
-            snackbar.showSnackbar(text)
+            // S-007: Nachthinweis mit Messwerten laenger zeigen, damit ein Screenshot gelingt
+            snackbar.showSnackbar(text, duration = if (message.night != null) SnackbarDuration.Long else SnackbarDuration.Short)
             onMessageShown(message.id)
         }
     }
@@ -492,8 +494,9 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
 }
 
 /**
- * S-007: zweite Zeile mit den Werten der Boden-Entscheidung, linear mal 255 (1 = eine Stufe von Weiss), z. B.
- * "Boden-Modus nein: Signal 1,200, Schwelle 0,400, ...; Bezugsbild 41 % Nullen, Mittel 12,0 / 11,0 / 15,0".
+ * S-007: zweite Zeile mit den Werten der Boden-Entscheidung. Signal, Schwelle, Rauschen und Median sind lineares Licht
+ * mal 255 (1 = ein 255tel von Weiss); die Stufen des Bezugsbilds sind die 8-Bit-Werte der Kamera (sRGB), z. B.
+ * "Boden-Modus nein: Signal 1,200, ..., Median 2,000 (linear), ...; Bezugsbild 41 % Nullen, Stufen 12,0 / 11,0 / 15,0".
  */
 @Composable
 internal fun nightDiagnosis(d: app.cayresim.core.pure.NightDiagnosis): String {

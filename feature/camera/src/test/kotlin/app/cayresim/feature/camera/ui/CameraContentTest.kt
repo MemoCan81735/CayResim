@@ -293,8 +293,8 @@ class CameraContentTest {
         show(running.copy(message = UserMessage(10, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 72, 0, 60.4f, diagnosis = d))))
         compose.waitUntil(5_000) {
-            compose.onAllNodesWithText("Boden-Modus nein: Signal 1,200, Schwelle 0,400, Rauschen 3,100, Mittel 2,000, geschätzt an R 60 / G 55 / B 70 %; " +
-                "Bezugsbild 41 % Nullen, Mittel 12,0 / 11,0 / 15,0", substring = true).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithText("Boden-Modus nein: Signal 1,200, Schwelle 0,400, Rauschen 3,100, Median 2,000 (linear), geschätzt an R 60 / G 55 / B 70 %; " +
+                "Bezugsbild 41 % Nullen, Stufen 12,0 / 11,0 / 15,0", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
@@ -304,6 +304,17 @@ class CameraContentTest {
         show(running.copy(message = UserMessage(11, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 5, 0, 16f, diagnosis = d))))
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Boden-Modus nicht geprüft; Bezugsbild 50 % Nullen", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun nacht_hinweis_diagnose_kein_abschneiden() {
+        // S-007 K7b: Rauschen nicht schaetzbar (nirgends abgeschnitten)
+        val d = app.cayresim.core.pure.NightDiagnosis(true, false, 0f, 0f, 0f, 0f, 0.01f, 0.02f, 0.03f, 0f, 90f, 90f, 90f)
+        show(running.copy(message = UserMessage(12, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 36, 0, 2f, diagnosis = d))))
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Boden-Modus nein: kein Abschneiden erkannt, geschätzt an R 1 / G 2 / B 3 %; Bezugsbild 0 % Nullen, Stufen 90,0 / 90,0 / 90,0",
+                substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test fun selbstausloeser_zeigt_countdown_und_schalter() {

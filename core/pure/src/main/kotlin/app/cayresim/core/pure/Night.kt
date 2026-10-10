@@ -81,17 +81,6 @@ object NightPlan {
 }
 
 /**
- * Robuste, streamende Zusammenfuehrung: das erste Bild ist die Referenz, jedes weitere wird global
- * verschoben (Suche auf verkleinerter Helligkeit) und kachelweise gewichtet. Kacheln, die deutlich
- * mehr von der Referenz abweichen als ueblich (Bewegung), zaehlen wenig; verwackelte Bilder werden verworfen.
- *
- * Gewichte je Pixel (Nachttest S24+ am 9. Oktober, Auto bei Regen): Die Kachelgewichte werden bilinear zwischen
- * den Kachelmitten ueberblendet, damit keine Blockkanten entstehen (Befund M9), und Pixel, die ein verschobenes
- * Bild nie gesehen hat, zaehlen fuer dieses Bild nicht (vorher: Streifen durch wiederholte Randpixel).
- * Kacheln von 8 Pixeln: mit Ueberblenden allein zieht eine grosse "bewegte" Kachel ihr niedriges Gewicht in die
- * Nachbarn und das Doppelbild wird staerker; im Python-Modell waren 8 Pixel ohne Rauschnachteil (Geist 1,4, Kanten 0,3).
- */
-/**
  * S-007: Warum der Boden-Modus gewaehlt wurde oder nicht (Nachttest S24+ am 10. Oktober: Nebel trotz S-006, die Werte
  * fehlten). Nur Zahlen (R23). Linear heisst 1 = Weiss; der Hinweis zeigt sie mal 255.
  * [checked]: Entscheidung ueberhaupt gerechnet (8 Bit, mindestens [NightMerge.MIN_DECLIP_FRAMES] Bilder).
@@ -107,6 +96,17 @@ data class NightDiagnosis(
     val zeroShare: Float, val firstR: Float, val firstG: Float, val firstB: Float,
 )
 
+/**
+ * Robuste, streamende Zusammenfuehrung: das erste Bild ist die Referenz, jedes weitere wird global
+ * verschoben (Suche auf verkleinerter Helligkeit) und kachelweise gewichtet. Kacheln, die deutlich
+ * mehr von der Referenz abweichen als ueblich (Bewegung), zaehlen wenig; verwackelte Bilder werden verworfen.
+ *
+ * Gewichte je Pixel (Nachttest S24+ am 9. Oktober, Auto bei Regen): Die Kachelgewichte werden bilinear zwischen
+ * den Kachelmitten ueberblendet, damit keine Blockkanten entstehen (Befund M9), und Pixel, die ein verschobenes
+ * Bild nie gesehen hat, zaehlen fuer dieses Bild nicht (vorher: Streifen durch wiederholte Randpixel).
+ * Kacheln von 8 Pixeln: mit Ueberblenden allein zieht eine grosse "bewegte" Kachel ihr niedriges Gewicht in die
+ * Nachbarn und das Doppelbild wird staerker; im Python-Modell waren 8 Pixel ohne Rauschnachteil (Geist 1,4, Kanten 0,3).
+ */
 class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     init { require(width >= 32 && height >= 32 && tile >= 8) { "Bild zu klein" } }
 
@@ -362,16 +362,21 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private var firstZero = 0f
     private val firstMean = FloatArray(3)
 
-    private fun measureFirst(frame: ByteArray) {
+    internal fun measureFirst(frame: ByteArray) {
+        // ein Durchlauf je Pixel mit drei Summen (Zweitpruefung S-007: Rest-Division je Wert war doppelt so langsam)
         var zeros = 0
-        val s = LongArray(3)
-        for (i in frame.indices) {
-            val v = frame[i].toInt() and 0xFF
-            if (v == 0) zeros++
-            s[i % 3] += v.toLong()
+        var r = 0L; var g = 0L; var b = 0L
+        var i = 0
+        while (i < frame.size) {
+            val a = frame[i].toInt() and 0xFF; val c = frame[i + 1].toInt() and 0xFF; val d = frame[i + 2].toInt() and 0xFF
+            if (a == 0) zeros++
+            if (c == 0) zeros++
+            if (d == 0) zeros++
+            r += a; g += c; b += d
+            i += 3
         }
         firstZero = zeros.toFloat() / frame.size
-        for (c in 0 until 3) firstMean[c] = s[c].toFloat() / pixels
+        firstMean[0] = r.toFloat() / pixels; firstMean[1] = g.toFloat() / pixels; firstMean[2] = b.toFloat() / pixels
     }
 
     /** Mittlere Zahl der Bilder, die je Pixel wirklich beigetragen haben. */

@@ -234,6 +234,34 @@ class NightMergeTest {
         assertEquals(expect[2].toFloat(), d.firstB, 0.01f)
     }
 
+    @Test fun `S-007 Diagnose misst nach einem Bezugswechsel das neue Bezugsbild`() {
+        // weiches erstes Bild ohne Nullen, danach scharfe mit Nullen: die Werte gehoeren zum neuen Bezug
+        val rng = SeededRng(5)
+        val m = NightMerge(w, h)
+        m.add(ByteArray(w * h * 3) { 9 })
+        val sharp = (0 until 5).map { scene(0, 0, rng, noise = 6) }
+        sharp.forEach { m.add(it) }
+        m.finish()
+        assertEquals(1, m.dropped, "Bezug hat nicht gewechselt")
+        val expect = sharp[0].count { it.toInt() == 0 }.toFloat() / sharp[0].size
+        val d = assertNotNull(m.diagnosis)
+        assertTrue(expect > 0.01f, "Testszene ohne Nullen: $expect")
+        assertEquals(expect, d.zeroShare, 0.0001f)
+        assertEquals((1 until sharp[0].size step 3).map { sharp[0][it].toInt() and 0xFF }.average().toFloat(), d.firstG, 0.01f)
+    }
+
+    @Test fun `S-007 Messung des Bezugsbilds dauert bei 1,6 MP hoechstens 10 ms`() {
+        // R27: Zeitbudget gemessen statt geschaetzt (Zweitpruefung: erste Fassung 12 bis 26 ms)
+        val big = 1440 * 1080
+        val frame = ByteArray(big * 3) { (it * 7 % 251).toByte() }
+        val m = NightMerge(1440, 1080)
+        m.measureFirst(frame) // Aufwaermen
+        val runs = (0 until 5).map { val t0 = System.nanoTime(); m.measureFirst(frame); (System.nanoTime() - t0) / 1e6 }
+        val best = runs.min()
+        println("S-007 Messung des Bezugsbilds: ${"%.1f".format(best)} ms (5 Laeufe: ${runs.joinToString { "%.1f".format(it) }})")
+        assertTrue(best <= 10.0, "Messung des Bezugsbilds $best ms")
+    }
+
     @Test fun `S-007 Diagnose helle Szene ist kein Boden`() {
         // schwach beleuchtet, aber deutlich ueber dem Rauschen: Signal 0,01 bei Rauschen 0,003, teils abgeschnitten
         val rng = java.util.Random(8)

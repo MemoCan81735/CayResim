@@ -255,8 +255,16 @@ class SelfTestUseCaseTest {
 
     @Test fun `S-007 Stabilisator nicht gemeldet`() = runTest {
         // Geraet 10.10.: Aufnahmeergebnis ohne Stabilisator-Wert; das ist ein Ergebnis, kein Warten bis zum Ende
+        fun ois(cam: FakeCameraBoundary) = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive
         val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(OisState.NOT_REPORTED) }
-        assertEquals(OisState.NOT_REPORTED, SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+        assertEquals(OisState.NOT_REPORTED, ois(cam))
+        // erstes Ergebnis ohne Wert (vor der Anforderung), spaeter gemeldet: der gemeldete Wert gilt
+        val later = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(OisState.NOT_REPORTED) }
+        val job = launch { kotlinx.coroutines.delay(500); later.stabilize(OisState.ON) }
+        assertEquals(OisState.ON, ois(later))
+        job.join()
+        // gar kein Ergebnis in 1,5 s
+        assertEquals(null, ois(FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }))
     }
 
     @Test fun `Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen`() = runTest {

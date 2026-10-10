@@ -1,6 +1,8 @@
 package app.cayresim.feature.settings
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -111,6 +113,15 @@ class SelfTestTest {
         val state = vm.uiState.value.copy(rows = vm.uiState.value.rows.filter { it.kind == CheckKind.DEVICE })
         compose.setContent { CayResimTheme(dark = true) { SelfTestContent(state, {}, {}) } }
         compose.onNodeWithText("Optischer Stabilisator: ja, aktiv: vom Gerät nicht gemeldet (angefordert: ein)", substring = true).assertExists()
+    }
+
+    @Test fun `S-007 ohne Stabilisator kein Wert fuer aktiv`() {
+        val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { deviceReport = s24.copy(ois = false) }, clock, FakeSelfTestJournalBoundary()))
+        vm.onStart(); main.scheduler.advanceUntilIdle()
+        val state = vm.uiState.value.copy(rows = vm.uiState.value.rows.filter { it.kind == CheckKind.DEVICE })
+        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(state, {}, {}) } }
+        compose.onNodeWithText("Optischer Stabilisator: nein", substring = true).assertExists()
+        compose.onAllNodesWithText("aktiv:", substring = true).assertCountEquals(0)
     }
 
     @Test fun bild_raw_serie() {

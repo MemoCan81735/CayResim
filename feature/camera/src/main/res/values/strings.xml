@@ -71,12 +71,12 @@
     <string name="timer_short">2 s</string>
     <string name="pro_shake_warning">Verwacklungsgefahr: Handy abstützen oder Timer nutzen</string>
     <string name="night_duration">, Dauer %1$s s</string>
-    <string name="night_diag">Boden-Modus %1$s: Signal %2$s, Schwelle %3$s, Rauschen %4$s, Mittel %5$s, geschätzt an R %6$d / G %7$d / B %8$d %%</string>
+    <string name="night_diag">Boden-Modus %1$s: Signal %2$s, Schwelle %3$s, Rauschen %4$s, Median %5$s (linear), geschätzt an R %6$d / G %7$d / B %8$d %%</string>
     <string name="night_diag_no_clip">Boden-Modus nein: kein Abschneiden erkannt, geschätzt an R %1$d / G %2$d / B %3$d %%</string>
     <string name="night_diag_unchecked">Boden-Modus nicht geprüft</string>
     <string name="night_diag_yes">ja</string>
     <string name="night_diag_no">nein</string>
-    <string name="night_diag_frame">"; Bezugsbild %1$d %% Nullen, Mittel %2$s / %3$s / %4$s"</string>
+    <string name="night_diag_frame">"; Bezugsbild %1$d %% Nullen, Stufen %2$s / %3$s / %4$s"</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>
     <string name="msg_night_failed">Die Nachtaufnahme hat nicht geklappt.</string>
     <string name="msg_saved_with_raw">Foto und RAW-Datei gespeichert</string>

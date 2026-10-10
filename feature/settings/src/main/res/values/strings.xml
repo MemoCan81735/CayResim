@@ -71,6 +71,7 @@
     <string name="device_zsl">Verzögerungsfrei (ZSL): %1$s</string>
     <string name="device_ois">Optischer Stabilisator: %1$s, aktiv: %2$s</string>
     <string name="device_ois_none">kein Aufnahmeergebnis</string>
+    <string name="device_ois_absent">Optischer Stabilisator: nein</string>
     <string name="device_ois_not_reported">vom Gerät nicht gemeldet (angefordert: ein)</string>
     <string name="device_zoom">Zoom: %1$s bis %2$s</string>
     <string name="device_cameras">Kameras: %1$d</string>

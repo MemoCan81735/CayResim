@@ -247,10 +247,13 @@ class QualityLabTest {
             "Boden ${"%.1f".format(fL)}, Blau minus Rot am Boden ${"%.1f".format(cast)}, Vorhang Rot minus Blau ${"%.1f".format(warm)} " +
             "(Samsung: Vorhang 56, Wand 9, Boden 1; CayResim 0.1.90: alles 39 bis 43); Boden-Modus ${merge.noiseFloor}, Anteil 0/1 ${"%.2f".format(merge.floorShare)}\n\n" +
             // S-007: dieselben Werte, die der Hinweis auf dem Geraet zeigt (linear mal 255), zum Vergleich mit dem S24+
-            merge.diagnosis.let { d -> if (d == null) "Diagnose fehlt\n" else "Diagnose: Signal ${"%.2f".format(d.signal * 255)}, " +
-                "Schwelle ${"%.2f".format(d.threshold * 255)}, Rauschen ${"%.2f".format(d.noise * 255)}, Mittel ${"%.2f".format(d.median * 255)}, " +
-                "geschaetzt R/G/B ${"%.0f/%.0f/%.0f".format(d.estimatedR * 100, d.estimatedG * 100, d.estimatedB * 100)} %, " +
-                "Bezugsbild ${"%.0f".format(d.zeroShare * 100)} % Nullen, Mittel ${"%.1f/%.1f/%.1f".format(d.firstR, d.firstG, d.firstB)}\n" })
+            merge.diagnosis.let { d ->
+                fun lin(v: Float) = String.format(java.util.Locale.GERMANY, "%.3f", v * 255f)
+                if (d == null) "Diagnose fehlt\n" else "Diagnose wie im Hinweis: Signal ${lin(d.signal)}, Schwelle ${lin(d.threshold)}, " +
+                    "Rauschen ${lin(d.noise)}, Median ${lin(d.median)} (linear), geschaetzt an R ${(d.estimatedR * 100 + 0.5f).toInt()} / G ${(d.estimatedG * 100 + 0.5f).toInt()} / " +
+                    "B ${(d.estimatedB * 100 + 0.5f).toInt()} %; Bezugsbild ${(d.zeroShare * 100 + 0.5f).toInt()} % Nullen, Stufen " +
+                    String.format(java.util.Locale.GERMANY, "%.1f / %.1f / %.1f", d.firstR, d.firstG, d.firstB) + "\n"
+            })
         assertTrue(fL <= 10.0, "Boden aufgehellt (Rauschnebel): $fL")
         // Samsung hat etwa 2,2-mal mehr Licht (bis 8 s statt 7,2 s aus 72 Bildern mit nur 1/10 s): 15 statt 55 Stufen Abstand;
         // 0.1.90 kam auf 4 (Geraet) bzw. 8 (Labor)

@@ -2,6 +2,13 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## S-007 (10. Oktober 2026, Version folgt beim Release)
+- Nacht-Hinweis mit zweiter Zeile: ob der Boden-Modus gegriffen hat und nach welchen Werten (Signal, Schwelle, Rauschen,
+  Median, Anteil geschätzter Pixel), dazu Nullen und Helligkeit des Bezugsbilds. Der Hinweis bleibt 10 s stehen.
+- Selbsttest: Stabilisator "vom Gerät nicht gemeldet (angefordert: ein)" oder "kein Aufnahmeergebnis" statt "unbekannt".
+- Das Foto bleibt unverändert; es geht nur um Messwerte.
+- Gerät: die Vorhang-Szene noch einmal, Screenshot des Hinweises und des Selbsttests.
+
 ## 0.1.98 (10. Oktober 2026, S-006)
 - Nacht fast ohne Licht: Hintergrund bleibt schwarz statt blaugrauem Nebel, das wenige Licht bleibt sichtbar und warm.
 - Tiefe Dunkelheit: bis 72 statt 36 Bilder (etwa 9 s Aufnahme).
