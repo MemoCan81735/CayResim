@@ -85,3 +85,11 @@ Nachkommastellen und "Bezugsbild" statt "Bild 1", K7b bis K11 und die längere A
 Lauf 38024191642 grün (Kern, Oberfläche, Analyse, APK Debug und Release, Emulator), Release v0.1.102. Davor zwei rote
 Probeläufe: die erwartete Screenshot-Grundlage des Selbsttests und ein detekt-Fund, danach ein Kompilierfehler in einer
 eigenen Testhilfe (`suspend` fehlte). Gerätetest offen: Vorhang-Szene mit Hinweis-Screenshot, Selbsttest.
+
+Gerätetest S24+ v0.1.102, Gegenprobe im hellen Raum (10.10., 8:45 Uhr, Tageslicht): 1/10 s, ISO 779 (Automatik 1/33 s,
+ISO 1730), 36 Bilder, 0 verworfen, Aufhellung x1,0, Wackeln bis 35 px, Dauer 6,1 s. Diagnose: Boden-Modus nein, Signal
+12,996, Schwelle 0,162, Rauschen 0,970, Median 12,996 (linear), geschätzt an R 37 / G 38 / B 40 %; Bezugsbild 1 %
+Nullen, Stufen 69,5 / 68,2 / 64,6. Entscheidung richtig (Signal 80-mal über der Schwelle). Auffällig: Obwohl kaum etwas
+abgeschnitten ist, gilt das Rauschen an fast 40 % der Pixel als schätzbar. Vermutlich zählen Kanten und Restversatz
+nach dem Wackeln als Streuung (wie die breite Testszene im Labor, siehe K3). Die Vorhang-Szene im Dunkeln fehlt noch.
+
