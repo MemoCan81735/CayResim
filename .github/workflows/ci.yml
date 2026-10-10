@@ -47,7 +47,7 @@ jobs:
             else RANGE="$BEFORE..$GITHUB_SHA"; fi
             git log --format=%B $RANGE | grep -qF '[release]' && REL=true
             if [ "$EMU" = false ] && git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -qE \
-              '^(core/(camera|processing|data|audio)/|app/|feature/[^/]+/src/androidTest/|\.github/|gradle/|build-logic/|[^/]*\.gradle\.kts$|gradle\.properties$)'; then EMU=true; fi
+              '^(core/(camera|processing|data|audio|sensors)/|app/|feature/[^/]+/src/androidTest/|\.github/|gradle/|build-logic/|[^/]*\.gradle\.kts$|gradle\.properties$)'; then EMU=true; fi
           fi
           [ "$REL" = true ] && EMU=true
           if [ "$GITHUB_REF" != refs/heads/main ]; then EMU=false; REL=false; fi

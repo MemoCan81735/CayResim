@@ -8,6 +8,7 @@ import android.media.AudioDeviceInfo
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
+import android.media.AudioTimestamp
 import android.media.MediaRecorder
 import android.media.MicrophoneDirection
 import android.media.MicrophoneInfo
@@ -112,20 +113,24 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
                 MicDirectionKey.NONE -> Unit
             }
             rec.startRecording()
+            // grober Zeitbezug fuer den Fall ohne Zeitstempel (S-010)
+            val roughStart = SystemClock.elapsedRealtimeNanos()
             if (rec.recordingState != AudioRecord.RECORDSTATE_RECORDING) return MicRecordResult.Failed(MicFailure.INIT_FAILED)
             val channels = rec.format.channelCount.takeIf { it in 1..8 } ?: request.channels
             val chunk = request.sampleRate / 100 * channels
             // Frist (R27, Zweitpruefung S-008): Dauer plus Einschwingen plus 1 s; danach READ_FAILED statt endlos lesen.
             // Nicht blockierend gelesen, damit auch ein haengendes Geraet die Frist nicht aushebelt.
             val deadline = SystemClock.elapsedRealtime() + request.millis + WARMUP_MS + GRACE_MS
-            if (!fill(rec, ShortArray(request.sampleRate * WARMUP_MS / 1000 * channels), chunk, deadline)) {
+            val warmFrames = (request.sampleRate * WARMUP_MS / 1000).toLong()
+            if (!fill(rec, ShortArray(warmFrames.toInt() * channels), chunk, deadline)) {
                 return MicRecordResult.Failed(MicFailure.READ_FAILED)
             }
             val pcm = ShortArray((request.sampleRate.toLong() * request.millis / 1000).toInt() * channels)
             if (!fill(rec, pcm, chunk, deadline)) return MicRecordResult.Failed(MicFailure.READ_FAILED)
             val routed = rec.routedDevice?.id
             val active = runCatching { rec.activeMicrophones.map { it.id } }.getOrDefault(emptyList())
-            return MicRecordResult.Ok(MicCapture(request, rec.sampleRate, channels, pcm, routed, active))
+            val (start, exact) = startOfFirstFrame(rec, warmFrames, roughStart)
+            return MicRecordResult.Ok(MicCapture(request, rec.sampleRate, channels, pcm, routed, active, start, exact))
         } finally {
             // R28: genau ein Freigabeblock, auch bei Abbruch
             withContext(NonCancellable) {
@@ -137,6 +142,18 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Zeit des ersten Frames nach dem Einschwingen in ns seit dem Einschalten (Zeitbasis der Sensoren, S-010).
+     * Aus dem Zeitstempel der Aufnahme; ohne ihn grob aus der Startzeit.
+     */
+    private fun startOfFirstFrame(rec: AudioRecord, warmFrames: Long, roughStart: Long): Pair<Long, Boolean> {
+        val sr = rec.sampleRate.toLong().coerceAtLeast(1)
+        val ts = AudioTimestamp()
+        val ok = runCatching { rec.getTimestamp(ts, AudioTimestamp.TIMEBASE_BOOTTIME) == AudioRecord.SUCCESS }.getOrDefault(false)
+        return if (ok && ts.nanoTime > 0) (ts.nanoTime + (warmFrames - ts.framePosition) * 1_000_000_000L / sr) to true
+        else (roughStart + warmFrames * 1_000_000_000L / sr) to false
     }
 
     /** Liest [buf] voll; false bei Lesefehler oder ueberschrittener Frist. Prueft zwischen den Stuecken auf Abbruch (R17). */

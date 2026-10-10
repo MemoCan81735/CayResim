@@ -1,6 +1,6 @@
 # S-010: Schwenk-Messung (Ton und Lage gleichzeitig aufnehmen)
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe durch Arslan
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 15:00 Uhr: neue Regel R29, neues Speichern von Lage-CSV und Meta-JSON, ein Release)
 **Anlass:** Wunsch Arslan (10.10., 14:57 Uhr): "Schwenk-Ortung", Funktion F12. Zwei Handy-Mikrofone liefern je Messung
 nur den Winkel zur Mikrofonachse (S-008, S-009: links −0,48 ms, rechts +0,40 ms, quer gehalten). Die Quelle liegt
 damit auf einem Kegel um die Achse; vorne und hinten, oben und unten sind nicht zu unterscheiden. Dreht man das Handy,
@@ -101,6 +101,27 @@ Am Fotografieren ändert sich nichts.
 Etwa 2 bis 3 kurze Läufe (neue Screenshots, neues Modul), 1 Release mit Emulator (etwa 30 Minuten). Unabhängige
 Prüfung durch einen zweiten Agenten (deutlich über 150 Zeilen, geschätzt 700 bis 900). Gerätetest durch Arslan: zwei
 Schwenk-Messungen (Quelle vorne, Quelle rechts), Screenshots und den Ordner schicken (etwa 5 MB je Lauf).
+
+## Umsetzung
+Abweichungen vom Entwurf, mit Grund:
+- **Eine Datei statt drei:** Die Medienablage erlaubt unter `Recordings/` nur Tondateien. Lage (CSV, `format=v1`) und
+  Kenndaten (JSON, `"format": 1`) stehen deshalb als Zusatzblöcke `lage` und `meta` in der WAV-Datei
+  `schwenk-v1.wav`. Abspielprogramme überspringen sie; `Wav.chunks` liest sie (Test `S-010 WAV mit Zusatzbloecken`).
+  Inhalt wie freigegeben, nur ein Behälter.
+- **Fensterauswahl nur über die GCC-PHAT-Spitze (≥ 0,1):** Die Quelle tönt die ganze Zeit; ein Pegel über dem
+  Grundrauschen der Aufnahme hätte fast alle Fenster verworfen. Stille ergibt Spitze 0 und fällt weg (K4).
+- **Mindest-Abdeckung 0,02 statt 0,05:** Ein Schwenk von ±50° seitlich und ±35° in der Höhe ergab 0,042, die
+  Richtung war trotzdem auf wenige Grad genau. Flach oder ohne Drehung bleibt 0 (K2).
+- **Klopfer im Ton mit niedrigeren Schwellen** (12 dB über Grundrauschen, 10 dB Anstieg statt 18 und 15), weil die
+  Geräuschquelle beim Klopfen schon läuft.
+- Der Sensor wird angemeldet, bevor die Aufnahme beginnt (`CoroutineStart.UNDISPATCHED`); sonst fehlten die ersten
+  Lagewerte (im UseCase-Test aufgefallen).
+- Der Mikrofon-Test bekommt einen zweiten Knopf; dadurch ändern sich alle Screenshot-Grundlagen des Mikrofon-Tests
+  (`mictest_*`), neu sind `sweep_guide`, `sweep_prompt`, `sweep_result`.
+
+Tests zuerst rot: `SweepMathTest`, `SweepUseCaseTest`, `WavTest > S-010 ...` und die R29-Proben scheiterten ohne den
+Code (Kompilierfehler, 147 Fehlermeldungen bei `SweepMathTest`). Danach lokal grün: 158 Tests in `:core:pure`
+(Auswertung von 25 s: 356 ms, K5), 5 in `SweepUseCaseTest`, Architektur 45 Proben, 0 Verstöße in 75 Dateien.
 
 ## Ergebnis
 Noch offen.

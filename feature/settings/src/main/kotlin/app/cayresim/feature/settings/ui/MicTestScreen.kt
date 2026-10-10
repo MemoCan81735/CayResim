@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,7 +50,7 @@ import app.cayresim.feature.settings.control.SourceUi
 import java.util.Locale
 
 @Composable
-fun MicTestRoute(onBack: () -> Unit, viewModel: MicTestViewModel = hiltViewModel()) {
+fun MicTestRoute(onBack: () -> Unit, onSweep: () -> Unit = {}, viewModel: MicTestViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.onPermissionResult(it) }
@@ -70,11 +71,12 @@ fun MicTestRoute(onBack: () -> Unit, viewModel: MicTestViewModel = hiltViewModel
             if (granted) viewModel.onPermissionResult(true) else launcher.launch(Manifest.permission.RECORD_AUDIO)
         },
         onBack = onBack,
+        onSweep = onSweep,
     )
 }
 
 @Composable
-fun MicTestContent(state: MicTestUiState, onStart: () -> Unit, onBack: () -> Unit) {
+fun MicTestContent(state: MicTestUiState, onStart: () -> Unit, onBack: () -> Unit, onSweep: () -> Unit = {}) {
     Surface(Modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 16.dp).testTag("mictest"),
@@ -86,6 +88,12 @@ fun MicTestContent(state: MicTestUiState, onStart: () -> Unit, onBack: () -> Uni
             item {
                 Button(onClick = onStart, enabled = !state.running, modifier = Modifier.testTag("mictest_start")) {
                     Text(stringResource(if (state.running) R.string.mictest_running else R.string.mictest_start))
+                }
+            }
+            // S-010: Schwenk-Messung als eigener Bildschirm
+            item {
+                OutlinedButton(onClick = onSweep, enabled = !state.running, modifier = Modifier.testTag("mictest_sweep")) {
+                    Text(stringResource(R.string.mictest_sweep))
                 }
             }
             if (state.permissionDenied) item {

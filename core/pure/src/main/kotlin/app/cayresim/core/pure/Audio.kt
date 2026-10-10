@@ -284,18 +284,46 @@ object AudioMath {
 object Wav {
     class Decoded(val sampleRate: Int, val channels: Int, val samples: ShortArray)
 
-    fun encode(pcm: ShortArray, sampleRate: Int, channels: Int): ByteArray {
+    /**
+     * [extra]: zusaetzliche Bloecke nach den Tondaten (S-010: "lage" und "meta"), Kennung aus 4 ASCII-Zeichen.
+     * Abspielprogramme ueberspringen unbekannte Bloecke; die Tondaten bleiben bei Byte 44.
+     */
+    fun encode(pcm: ShortArray, sampleRate: Int, channels: Int, extra: Map<String, ByteArray> = emptyMap()): ByteArray {
         require(sampleRate > 0 && channels in 1..8)
+        require(extra.keys.all { id -> id.length == 4 && id.all { it.code in 32..126 } && id != "data" && id != "fmt " })
         val data = pcm.size * 2
-        val out = ByteArray(44 + data)
+        val extraSize = extra.values.sumOf { 8 + it.size + (it.size and 1) }
+        val out = ByteArray(44 + data + extraSize)
         fun ascii(o: Int, s: String) = s.forEachIndexed { i, c -> out[o + i] = c.code.toByte() }
         fun le32(o: Int, v: Int) { for (i in 0 until 4) out[o + i] = (v ushr (8 * i)).toByte() }
         fun le16(o: Int, v: Int) { out[o] = v.toByte(); out[o + 1] = (v ushr 8).toByte() }
-        ascii(0, "RIFF"); le32(4, 36 + data); ascii(8, "WAVE")
+        ascii(0, "RIFF"); le32(4, 36 + data + extraSize); ascii(8, "WAVE")
         ascii(12, "fmt "); le32(16, 16); le16(20, 1); le16(22, channels); le32(24, sampleRate)
         le32(28, sampleRate * channels * 2); le16(32, channels * 2); le16(34, 16)
         ascii(36, "data"); le32(40, data)
         for (i in pcm.indices) { val v = pcm[i].toInt(); out[44 + 2 * i] = v.toByte(); out[45 + 2 * i] = (v shr 8).toByte() }
+        var o = 44 + data
+        for ((id, bytes) in extra) {
+            ascii(o, id); le32(o + 4, bytes.size); bytes.copyInto(out, o + 8)
+            o += 8 + bytes.size + (bytes.size and 1)
+        }
+        return out
+    }
+
+    /** Zusatzbloecke nach den Tondaten, wie [encode] sie schreibt; leer, wenn keine oder die Datei fremd ist. */
+    fun chunks(bytes: ByteArray): Map<String, ByteArray> {
+        if (bytes.size < 44) return emptyMap()
+        fun le32(o: Int) = (0 until 4).sumOf { (bytes[o + it].toInt() and 0xFF) shl (8 * it) }
+        if (String(bytes, 36, 4, Charsets.US_ASCII) != "data") return emptyMap()
+        val out = LinkedHashMap<String, ByteArray>()
+        var o = 44L + (le32(40).toLong() and 0xFFFFFFFFL)
+        while (o + 8 <= bytes.size) {
+            val i = o.toInt()
+            val len = le32(i + 4).toLong() and 0xFFFFFFFFL
+            if (i + 8 + len > bytes.size) break
+            out[String(bytes, i, 4, Charsets.US_ASCII)] = bytes.copyOfRange(i + 8, i + 8 + len.toInt())
+            o += 8 + len + (len and 1)
+        }
         return out
     }
 

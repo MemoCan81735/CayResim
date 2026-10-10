@@ -50,6 +50,10 @@ class MicCapture(
     val pcm: ShortArray,
     val routedDeviceId: Int?,
     val activeMicIds: List<Int>,
+    /** Zeit des ersten Frames in ns seit dem Einschalten (Zeitbasis der Sensoren, S-010); null, wenn unbekannt. */
+    val startBootNanos: Long? = null,
+    /** true: aus dem Zeitstempel der Aufnahme; false: grob aus der Startzeit. */
+    val timeExact: Boolean = false,
 )
 
 /** READ_FAILED auch, wenn die Aufnahme ihre Frist ueberschreitet (Dauer plus 1 s, R27). */

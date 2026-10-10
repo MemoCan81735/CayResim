@@ -28,6 +28,7 @@ include(
     ":core:processing",
     ":core:data",
     ":core:audio",
+    ":core:sensors",
     ":architecture",
 )
 // S-005: Lint-Selbstpruefung. Das Probe-Modul enthaelt absichtlich einen Fund und wird nur im Analyse-Job

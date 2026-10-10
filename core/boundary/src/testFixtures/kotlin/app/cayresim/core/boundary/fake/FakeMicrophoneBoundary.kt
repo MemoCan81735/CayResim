@@ -36,6 +36,9 @@ class FakeMicrophoneBoundary(
         private set
     /** Wird bei jeder Aufnahme aufgerufen (z. B. um eine Uhr weiterzustellen). */
     var onRecord: (MicRequest) -> Unit = {}
+    /** Zeitbezug der Aufnahme (S-010). */
+    var startBootNanos: Long? = 1_000_000_000L
+    var timeExact: Boolean = true
 
     override fun hasPermission() = permission
     override suspend fun inventory() = inventory
@@ -50,7 +53,7 @@ class FakeMicrophoneBoundary(
             open++; opened = true; maxOpen = maxOf(maxOpen, open)
             if (recordDelayMillis > 0) delay(recordDelayMillis)
             val ch = channelsFor(request)
-            return MicRecordResult.Ok(MicCapture(request, request.sampleRate, ch, sound(request, ch), 1, listOf(1)))
+            return MicRecordResult.Ok(MicCapture(request, request.sampleRate, ch, sound(request, ch), 1, listOf(1), startBootNanos, timeExact))
         } finally {
             withContext(NonCancellable) { if (opened) open-- }
         }

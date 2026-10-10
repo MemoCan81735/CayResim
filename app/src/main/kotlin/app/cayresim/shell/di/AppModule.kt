@@ -1,9 +1,11 @@
 package app.cayresim.shell.di
 
 import app.cayresim.core.audio.AudioRecordMicrophoneAdapter
+import app.cayresim.core.sensors.MotionSensorAdapter
 import app.cayresim.core.boundary.AudioFileBoundary
 import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.MicrophoneBoundary
+import app.cayresim.core.boundary.MotionSensorBoundary
 import app.cayresim.core.data.MediaStoreAudioFileAdapter
 import app.cayresim.core.boundary.CameraDispatcher
 import app.cayresim.core.boundary.GpuDispatcher
@@ -49,6 +51,7 @@ abstract class BoundaryModule {
     @Binds @Singleton abstract fun nightPath(a: FileNightPathAdapter): NightPathBoundary
     @Binds @Singleton abstract fun microphone(a: AudioRecordMicrophoneAdapter): MicrophoneBoundary
     @Binds @Singleton abstract fun audioFiles(a: MediaStoreAudioFileAdapter): AudioFileBoundary
+    @Binds @Singleton abstract fun motion(a: MotionSensorAdapter): MotionSensorBoundary
 }
 
 @Module
