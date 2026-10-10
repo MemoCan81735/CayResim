@@ -2,7 +2,7 @@
 
 Diese Regeln gelten für jede Änderung am Code, an den Tests und an der Build-Konfiguration. Sie ergänzen die
 Architekturvorgaben (`claude/foto-app-architekturvorgaben.md`, Regeln R1 bis R28, Ausnahmen A1 bis A3) und das
-Testkonzept (`claude/foto-app-testkonzept.md`). Festgelegt mit Arslan am 9. Oktober 2026.
+Testkonzept (`claude/foto-app-testkonzept.md`); Testregeln für Android ausführlich in `claude/android-tests-ci.md`. Festgelegt mit Arslan am 9. Oktober 2026.
 
 ## 1. Ablauf jeder Änderung
 
@@ -75,6 +75,12 @@ ein zweiter Agent den Diff ohne die Begründungen des ersten, nur gegen Spec und
   7. bis 10. Oktober nur aus dem Cache und übersah einen Verstoß).
 - Jede sichtbare Änderung am Sucher oder an den Einstellungen ändert Screenshot-Grundlagen; fehlende oder abweichende
   lassen den Oberflächen-Job scheitern. Ablauf: kurzer Lauf, Bilder aus `ci-logs-fast/screenshots` ansehen, übernehmen, dann Release.
+- Je Test höchstens ein `captureRoboImage`, weil Roborazzi beim ersten fehlenden Bild abbricht und jedes weitere Bild erst
+  im nächsten Lauf entsteht.
+- Startwerte für Zufall in Testdaten nie aus `hashCode()` von Objekten mit Enums ableiten, weil sich der Enum-Hash von Lauf
+  zu Lauf ändert und Screenshots dadurch nicht reproduzierbar sind.
+- `StateFlow.value` nie innerhalb von `setContent` lesen, auch nicht in Tests, weil Lint Testquellen mitprüft
+  (`StateFlowValueCalledInComposition`); den Wert vorher in eine Variable holen.
 
 ## 4. Definition of Done
 
@@ -101,6 +107,8 @@ Eine Änderung ist fertig, wenn alles davon stimmt:
 - Gespart wird nur noch Zeit: Ein kurzer Lauf dauert etwa 5, ein Release etwa 30 Minuten. Ein absehbar scheiternder
   Lauf wird sofort abgebrochen.
 - Release: `[release]` in der Commit-Nachricht oder "Run workflow" auf GitHub.
+- Solange ein Lauf mit Emulator auf main läuft, nicht auf main pushen, weil der neue Lauf den alten abbricht;
+  Zwischenstände auf einen Seiten-Branch pushen.
 - Weil alles öffentlich ist, gilt Abschnitt 7 ohne Ausnahme.
 - Kurze, aussagekräftige Läufe gehen vor (Arslan, 9. Oktober 2026): Der Emulator startet weiter nur bei Änderungen
   an Kamera, Verarbeitung, Speicher, App-Shell, Gerätetests oder Build, die Zufallsbedienung macht außer vor einem
