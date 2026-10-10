@@ -59,6 +59,15 @@ Längere Einzelbilder (das S24+ erlaubt Drittanbietern 1/10 s); RAW (abgeschnitt
 | Abbruch | Strom wird nach der gewählten Zahl beendet (`takeWhile`), Rückstellung der Belichtung unverändert im `finally` |
 | neue Ausnahme | keine |
 
+Zweitprüfung (unabhängiger Agent): zwei Oberflächentests wären rot gewesen (der Selbsttest wartete 1,5 s auf eine
+virtuelle Uhr, die niemand weiterstellte), der erste Lauf bestätigte das. Umgesetzt: Tests stellen die Uhr weiter;
+Rauschschätzung als Stichprobe ohne Objektlisten (Desktop vorher 0,9 s und etwa 30 MB mehr je Aufnahme); höhere
+Aufhellung nur im neu erkannten Boden-Modus, nicht für RAW und den alten Auslöser; der Strom endet genau mit dem letzten
+gewählten Bild und spätestens nach 8,5 s Aufnahme (`CAPTURE_BUDGET_MS`). Bekannt und offen: ohne Messung der Automatik
+nimmt die Serie 72 Bilder; scheitert RAW, kommen die 8-Bit-Bilder dazu; bei heißem Gerät kürzt der Adapter auf 75 %
+der angeforderten 79 Bilder, eine 36-Bilder-Serie bleibt dann ungekürzt. Im Labor wird die Tür im lichtlosen Raum
+heller (46 auf 57), weil auch diese Szene jetzt als Boden erkannt wird; der Raum bleibt bei 0.
+
 ## Risiken und Rückweg
 Mehr Korn im Boden-Modus durch die höhere Aufhellung; Dauer nahe 10 s. Rückweg: `FLOOR_GAIN_FACTOR = 1`,
 `FRAMES_DEEP = 36`, `FLOOR_SNR = 0`.

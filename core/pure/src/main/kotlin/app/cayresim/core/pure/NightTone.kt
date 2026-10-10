@@ -196,7 +196,11 @@ object NightTone {
     const val FLOOR_BLACK = 0.5f
     const val FLOOR_BLACK_RAW = 0.9f
     const val FLOOR_HIGH_TARGET = 0.1f
-    /** S-006: Faktor auf die hoechste Verstaerkung im Boden-Modus. */
+    /**
+     * S-006: Faktor auf die hoechste Verstaerkung, wenn der Boden ueber das zurueckgerechnete Signal erkannt wurde
+     * (NightMerge.noiseFloor): der Hintergrund bleibt schwarz, die Verstaerkung trifft fast nur das Licht (Samsung im
+     * Nachttest 10.10. etwa 290-fach).
+     */
     const val FLOOR_GAIN_FACTOR = 2f
 
     /** D: Kantenerhaltendes Glaetten der Helligkeit: Radius und Staerke (Vielfaches des gemessenen Rauschens). */
@@ -233,9 +237,7 @@ object NightTone {
         val contrast: Float
         if (floor) {
             val hi = quantile(base, 0.99f)
-            // S-006: im Boden-Modus bleibt der Hintergrund schwarz, die Verstaerkung trifft fast nur das Licht; deshalb
-            // bis [FLOOR_GAIN_FACTOR]-mal weiter als sonst (Nachttest S24+ 10.10.: Vorhang bei Samsung etwa 290-fach)
-            gain = if (hi <= 0f) maxGain * FLOOR_GAIN_FACTOR else (FLOOR_HIGH_TARGET / hi).coerceIn(1f, maxGain * FLOOR_GAIN_FACTOR)
+            gain = if (hi <= 0f) maxGain else (FLOOR_HIGH_TARGET / hi).coerceIn(1f, maxGain)
             contrast = 1f
         } else {
             val median = quantile(base, 0.5f)

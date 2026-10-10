@@ -287,10 +287,14 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         noiseFloor = false
         if (!linearInput && q != null && used >= MIN_DECLIP_FRAMES) {
             // Rauschen je Kanal fuer das ganze Bild: Median der Schaetzungen je Pixel, wo das Abschneiden wirkt
+            // Stichprobe (jedes k-te Pixel, hoechstens etwa 65.536), ohne Listen von Objekten (Zweitpruefung S-006: 0,9 s und 30 MB)
+            val step = maxOf(1, pixels / 65_536)
+            val est = FloatArray((pixels + step - 1) / step)
             val sigma = FloatArray(3) { c ->
-                val est = ArrayList<Float>()
-                for (p in 0 until pixels) { val i = p * 3 + c; Declip.noise(mean[i], q[i] / weight[p])?.let { est += it } }
-                if (est.size < pixels / 20) 0f else est.toFloatArray().let { NightTone.quantile(it, 0.5f) }
+                var n = 0
+                var p = 0
+                while (p < pixels) { val i = p * 3 + c; Declip.noise(mean[i], q[i] / weight[p])?.let { est[n++] = it }; p += step }
+                if (n < est.size / 20) 0f else NightTone.quantile(est.copyOf(n), 0.5f)
             }
             if (sigma.any { it > 0f }) {
                 val sigmaL = kotlin.math.sqrt((0 until 3).sumOf { c -> ((LUMA[c] * sigma[c]) * (LUMA[c] * sigma[c])).toDouble() }).toFloat()
@@ -314,7 +318,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             for (p in 0 until pixels) if (0.2126f * mean[p * 3] + 0.7152f * mean[p * 3 + 1] + 0.0722f * mean[p * 3 + 2] <= NightTone.FLOOR_LINEAR) n++
             n.toFloat() / pixels
         } else floorShare
-        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), share,
+        // Hoehere Aufhellung nur im neu erkannten Boden-Modus (Zweitpruefung: nicht fuer RAW und den alten Ausloeser)
+        return NightTone.finishNight(mean, width, NightTone.maxGainFor(used) * (if (noiseFloor) NightTone.FLOOR_GAIN_FACTOR else 1f), share,
             if (linearInput) NightTone.FLOOR_BLACK_RAW else NightTone.FLOOR_BLACK)
     }
 

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.withIndex
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.transformWhile
 import javax.inject.Inject
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -74,7 +74,8 @@ class NightUseCase @Inject constructor(
                         plan = if (manual.setExposure(p.exposureNs, p.iso)) p else null
                     }
                 }
-                .takeWhile { it.index < METER + SETTLE + chosen }
+                // genau bis zum letzten gewaehlten Bild (kein zusaetzliches), hoechstens [CAPTURE_BUDGET_MS] (R27)
+                .transformWhile { emit(it); it.index < METER + SETTLE + chosen - 1 && !overBudget(start) }
                 .filter { it.index >= METER + SETTLE }
                 .map { it.value }
             return when (val r = processing.night(stream)) {
@@ -113,11 +114,16 @@ class NightUseCase @Inject constructor(
     }
 
     /** Nie negativ, auch wenn die Systemuhr zurueckspringt. */
+    /** S-006: die Aufnahme endet spaetestens nach [CAPTURE_BUDGET_MS], damit die Dauer unter 10 s bleibt. */
+    private fun overBudget(start: Long?): Boolean = start != null && clock != null && clock.nowMillis() - start >= CAPTURE_BUDGET_MS
+
     private fun since(start: Long?): Long? = if (start == null || clock == null) null else (clock.nowMillis() - start).coerceAtLeast(0)
 
     companion object {
         /** Bilder mit Automatik zum Messen. */
         const val METER = 4
+        /** S-006: Zeitbudget der Aufnahme; danach rechnet der Kern mit den vorhandenen Bildern (Grenze 10 s mit Speichern). */
+        const val CAPTURE_BUDGET_MS = 8_500L
         /** Bilder nach dem Umstellen, bis die neue Belichtung wirkt. */
         const val SETTLE = 3
         private const val FALLBACK_NS = 66_666_666L

@@ -46,7 +46,9 @@ class SelfTestTest {
     private var t = 0L
     private val clock = app.cayresim.core.pure.Clock { t += 7; t }
 
-    @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+    /** S-006: der Selbsttest wartet bis 1,5 s auf den Stabilisator-Wert; Tests lassen die virtuelle Uhr weiterlaufen. */
+    private val main = UnconfinedTestDispatcher()
+    @Before fun setUp() = Dispatchers.setMain(main)
     @After fun tearDown() = Dispatchers.resetMain()
 
     @Test fun viewmodel_guter_fall() {
@@ -76,7 +78,7 @@ class SelfTestTest {
 
     @Test fun viewmodel_reicht_geraetewerte_als_zahlen_weiter() {
         val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { deviceReport = s24 }, clock, FakeSelfTestJournalBoundary()))
-        vm.onStart()
+        vm.onStart(); main.scheduler.advanceUntilIdle()
         val d = vm.uiState.value.rows.single { it.kind == CheckKind.DEVICE }.device!!
         assertEquals("FULL", d.hardwareLevel)
         assertEquals(100_000_000L, d.exposureMaxNs); assertEquals(3200, d.isoMax); assertEquals(4080, d.sensorWidth)
@@ -91,7 +93,7 @@ class SelfTestTest {
 
     @Test fun bild_geraetewerte() {
         val vm = SelfTestViewModel(SelfTestUseCase(FakeCameraBoundary().apply { deviceReport = s24 }, clock, FakeSelfTestJournalBoundary()))
-        vm.onStart()
+        vm.onStart(); main.scheduler.advanceUntilIdle()
         val state = vm.uiState.value.copy(rows = vm.uiState.value.rows.filter { it.kind == CheckKind.DEVICE })
         compose.setContent { CayResimTheme(dark = true) { SelfTestContent(state, {}, {}) } }
         compose.onNodeWithText("Belichtung: 1/11765 s bis 1/10 s", substring = true).assertExists()
