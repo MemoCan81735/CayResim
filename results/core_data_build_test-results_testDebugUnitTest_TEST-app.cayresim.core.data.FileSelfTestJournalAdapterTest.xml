@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.data.FileSelfTestJournalAdapterTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:19:19.293Z" hostname="runnervmmprz5" time="0.206">
+  <properties/>
+  <testcase name="Fake erfuellt denselben Vertrag" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.055"/>
+  <testcase name="Fehlerfall kaputte Datei fuehrt nicht zum Absturz" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.026"/>
+  <testcase name="Fehlerfall nicht beschreibbarer Ort wirft nicht" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.026"/>
+  <testcase name="R18 Erzeugen greift nicht auf den Speicher zu" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.021"/>
+  <testcase name="Datei-Adapter erfuellt den Protokoll-Vertrag" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.055"/>
+  <testcase name="Stand uebersteht einen Neustart, neue Instanz liest ihn" classname="app.cayresim.core.data.FileSelfTestJournalAdapterTest" time="0.018"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.camera.control.CameraViewModelTest" tests="69" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:19:21.031Z" hostname="runnervmmprz5" time="5.826">
+  <properties/>
+  <testcase name="Foto mit Look ersetzt das Original" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="3.799"/>
+  <testcase name="Pro-Skala ist umkehrbar und begrenzt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.07"/>
+  <testcase name="Lautstaerketaste loest aus wie der Knopf" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.036"/>
+  <testcase name="Belegte Kamera fuehrt zu ERROR und Neuversuch klappt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.041"/>
+  <testcase name="Fokus-Stacking und Sterne speichern" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.078"/>
+  <testcase name="H2 doppelter Druck waehrend der Nachtaufnahme startet keine zweite" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.169"/>
+  <testcase name="Nacht mit gekuerzter Serie sagt es im Hinweis" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.039"/>
+  <testcase name="Pro warnt bei langer Belichtungszeit vor Verwackeln" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.096"/>
+  <testcase name="Veraltete Bestaetigung loescht keine neue Meldung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.039"/>
+  <testcase name="Fehlerfall Lautstaerketaste ohne laufende Kamera loest nicht aus" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.021"/>
+  <testcase name="Randfall Kamera ohne Zoom zeigt keine Schnellwahl" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.021"/>
+  <testcase name="Doppelklick wird still ignoriert" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.03"/>
+  <testcase name="Guter Fall Schnellwahl 3x und Anzeige" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.044"/>
+  <testcase name="Unsichtbar werden stoppt die Kamera" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.022"/>
+  <testcase name="Bestaetigte Meldung verschwindet" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.023"/>
+  <testcase name="Mehrfaches Start und Stopp bleibt stabil" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.193"/>
+  <testcase name="Nacht im Dunkeln nutzt den eigenen Kern und meldet die Werte" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.028"/>
+  <testcase name="Erlaubnis allein startet nicht, solange der Screen unsichtbar ist" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Ungueltiger Serienname wird gemeldet" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.034"/>
+  <testcase name="Verlassen des Screens entschaerft" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.07"/>
+  <testcase name="Menschen wegrechnen speichert das Ergebnis der Serie" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.044"/>
+  <testcase name="Speicher voll ergibt eigene Meldung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.026"/>
+  <testcase name="Selbstausloeser erneuter Druck bricht ab" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.032"/>
+  <testcase name="Gekuerzte Serie wird gemeldet" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.014"/>
+  <testcase name="Fokus-Stacking bei Fixfokus meldet das klar" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.03"/>
+  <testcase name="Overlay-Deckkraft wird begrenzt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.006"/>
+  <testcase name="M8 Automatik setzt den Adapter beim Start auf den normalen Modus" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.013"/>
+  <testcase name="Ohne Serie gibt es kein Overlay" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.002"/>
+  <testcase name="Eigene Moduswahl schaltet die Automatik ab, Auto schaltet sie wieder ein" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.017"/>
+  <testcase name="Fehlerfall unsinnige Geste aendert nichts" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Scharfer Ausloeser fotografiert bei jedem Signal" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.019"/>
+  <testcase name="Langzeit nutzt den Mittelwert" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.013"/>
+  <testcase name="Moduswahl wirkt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.011"/>
+  <testcase name="Kamera geschlossen ergibt Kamera-Meldung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.014"/>
+  <testcase name="Fehlerfall Antippen ohne Kamera passiert nichts" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.009"/>
+  <testcase name="Look wechselt reihum und kehrt zu NONE zurueck" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.011"/>
+  <testcase name="Unbekannter Fehler ergibt allgemeine Meldung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Ausloesen ohne Kamera meldet nicht bereit" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.008"/>
+  <testcase name="Selbstausloeser loest nach 2 s aus und zeigt den Countdown" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.016"/>
+  <testcase name="Moduswechsel entschaerft" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.015"/>
+  <testcase name="Ausloesen zeigt Meldung und merkt das letzte Foto" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Nacht bei hellem Licht nutzt Samsungs Modus" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.015"/>
+  <testcase name="Pro-Regler setzen Belichtung, ISO und Fokus" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.023"/>
+  <testcase name="Randfall Zoom bleibt in den Grenzen" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Normaler Modus im Dunkeln bleibt ein normales Foto" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.007"/>
+  <testcase name="C2 Verlassen des Screens bricht die Nachtaufnahme ab und gibt den Ausloeser frei" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="RAW-Schalter" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.006"/>
+  <testcase name="Antippen stellt auf den Punkt scharf" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.005"/>
+  <testcase name="GPU-Fehler meldet Foto ohne Look" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.017"/>
+  <testcase name="S-007 Nacht-Hinweis traegt die Diagnose" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.036"/>
+  <testcase name="Automatik bei Tageslicht macht ein normales Foto" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.021"/>
+  <testcase name="Serie ohne Kamera scheitert sauber" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.017"/>
+  <testcase name="Auto setzt die Automatik zurueck" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.02"/>
+  <testcase name="Ohne Erlaubnis startet die Kamera nicht" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.025"/>
+  <testcase name="L1 Lautstaerketaste ohne laufende Kamera bleibt Lautstaerke" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.024"/>
+  <testcase name="Guter Fall Zwei-Finger-Zoom summiert die Gesten" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.02"/>
+  <testcase name="Automatik mit Spezialaufnahme folgt der Spezialaufnahme" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.019"/>
+  <testcase name="Mit Erlaubnis und sichtbarem Screen laeuft die Kamera" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.015"/>
+  <testcase name="Im Pro-Modus loest der Ausloeser ein normales Foto aus" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.023"/>
+  <testcase name="Jeder Modus der Boundary hat eine UI-Entsprechung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.006"/>
+  <testcase name="Randfall Automatik ohne Messung macht ein normales Foto" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.012"/>
+  <testcase name="Geloeschte Serie ist nicht mehr gewaehlt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.026"/>
+  <testcase name="Nicht verfuegbarer Modus zeigt Rueckfall" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.018"/>
+  <testcase name="Foto in Serie erhoeht den Zaehler" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.043"/>
+  <testcase name="Selbstausloeser Verlassen des Screens bricht ab, ohne Timer sofort" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.015"/>
+  <testcase name="Fehlerfall Nachtaufnahme scheitert mit Meldung" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.018"/>
+  <testcase name="Automatik im Dunkeln nimmt den Nacht-Kern und zeigt den Hinweis" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.021"/>
+  <testcase name="Zweites Tippen entschaerft den Ausloeser" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.011"/>
+  <testcase name="Neue Serie wird angelegt und gewaehlt" classname="app.cayresim.feature.camera.control.CameraViewModelTest" time="0.01"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

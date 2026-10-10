@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.AudioMathTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:17.001Z" hostname="runnervmmprz5" time="1.386">
+  <properties/>
+  <testcase name="S-008 Grundrauschen und stummer Kanal" classname="app.cayresim.core.pure.AudioMathTest" time="0.797"/>
+  <testcase name="S-009 Quertest S24+ ergibt geeichte Winkel" classname="app.cayresim.core.pure.AudioMathTest" time="0.02"/>
+  <testcase name="S-008 erkennt doppeltes Mono" classname="app.cayresim.core.pure.AudioMathTest" time="0.015"/>
+  <testcase name="S-008 GCC-PHAT findet die Richtung synthetischer Klatscher" classname="app.cayresim.core.pure.AudioMathTest" time="0.047"/>
+  <testcase name="S-008 Randfaelle" classname="app.cayresim.core.pure.AudioMathTest" time="0.005"/>
+  <testcase name="S-008 findet Klatscher, nicht das Rauschen" classname="app.cayresim.core.pure.AudioMathTest" time="0.103"/>
+  <testcase name="S-008 GCC-PHAT ist schnell genug" classname="app.cayresim.core.pure.AudioMathTest" time="0.109"/>
+  <testcase name="S-009 Stereo nur bei zwei Mikrofonen" classname="app.cayresim.core.pure.AudioMathTest" time="0.178"/>
+  <testcase name="S-008 Richtung je Klatscher aus einer Stereo-Aufnahme" classname="app.cayresim.core.pure.AudioMathTest" time="0.093"/>
+  <testcase name="S-009 Eichung lehnt Hochkant, zu wenige und Unsinn ab" classname="app.cayresim.core.pure.AudioMathTest" time="0.007"/>
+  <testcase name="S-008 Pegel in dBFS" classname="app.cayresim.core.pure.AudioMathTest" time="0.0"/>
+  <system-out><![CDATA[GCC-PHAT 40 ms Fenster: 2081 us
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

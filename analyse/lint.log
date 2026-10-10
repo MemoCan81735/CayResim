@@ -1,0 +1,654 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :feature:camera:preDebugBuild UP-TO-DATE
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:processResources NO-SOURCE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preDebugBuild UP-TO-DATE
+> Task :feature:gallery:generateDebugResources FROM-CACHE
+> Task :feature:camera:generateDebugResources FROM-CACHE
+> Task :feature:gallery:packageDebugResources FROM-CACHE
+> Task :feature:gallery:processDebugNavigationResources FROM-CACHE
+> Task :feature:camera:packageDebugResources FROM-CACHE
+> Task :feature:camera:processDebugNavigationResources FROM-CACHE
+> Task :core:designsystem:writeDebugAarMetadata
+> Task :core:designsystem:generateDebugResources FROM-CACHE
+> Task :core:designsystem:packageDebugResources FROM-CACHE
+> Task :core:designsystem:processDebugNavigationResources FROM-CACHE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:designsystem:parseDebugLocalResources FROM-CACHE
+> Task :core:designsystem:generateDebugRFile FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebug FROM-CACHE
+> Task :feature:camera:parseDebugLocalResources FROM-CACHE
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preDebugBuild UP-TO-DATE
+> Task :feature:gallery:parseDebugLocalResources FROM-CACHE
+> Task :feature:gallery:checkDebugAarMetadata
+> Task :feature:settings:checkDebugAarMetadata
+> Task :feature:camera:checkDebugAarMetadata
+> Task :feature:camera:generateDebugRFile FROM-CACHE
+> Task :feature:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:camera:generateDebugAssets UP-TO-DATE
+> Task :feature:gallery:generateDebugRFile FROM-CACHE
+> Task :feature:gallery:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:gallery:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:generateDebugResources
+> Task :feature:camera:mergeDebugAssets
+> Task :feature:gallery:mergeDebugAssets
+> Task :feature:camera:javaPreCompileDebug FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebug FROM-CACHE
+> Task :feature:camera:prepareDebugArtProfile
+> Task :feature:gallery:prepareDebugArtProfile
+> Task :feature:camera:prepareLintJarForPublish
+> Task :feature:gallery:prepareLintJarForPublish
+> Task :feature:camera:processDebugManifest FROM-CACHE
+> Task :feature:gallery:processDebugManifest FROM-CACHE
+> Task :feature:camera:writeDebugAarMetadata
+> Task :feature:gallery:writeDebugAarMetadata
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preDebugBuild UP-TO-DATE
+> Task :feature:settings:packageDebugResources
+> Task :feature:settings:processDebugNavigationResources
+> Task :core:designsystem:checkDebugAarMetadata
+> Task :core:camera:checkDebugAarMetadata
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:designsystem:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:settings:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets
+> Task :feature:settings:mergeDebugAssets
+> Task :core:designsystem:prepareDebugArtProfile
+> Task :feature:settings:javaPreCompileDebug FROM-CACHE
+> Task :feature:settings:prepareDebugArtProfile
+> Task :core:designsystem:prepareLintJarForPublish
+> Task :core:designsystem:processDebugManifest FROM-CACHE
+> Task :feature:settings:prepareLintJarForPublish
+> Task :core:camera:generateDebugResources FROM-CACHE
+> Task :feature:settings:processDebugManifest FROM-CACHE
+> Task :feature:settings:writeDebugAarMetadata
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:camera:packageDebugResources FROM-CACHE
+> Task :core:camera:processDebugNavigationResources FROM-CACHE
+> Task :core:camera:parseDebugLocalResources FROM-CACHE
+> Task :core:camera:generateDebugRFile FROM-CACHE
+> Task :core:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:camera:generateDebugAssets UP-TO-DATE
+> Task :core:camera:mergeDebugAssets
+> Task :core:data:checkDebugAarMetadata
+> Task :core:data:generateDebugResources FROM-CACHE
+> Task :feature:settings:parseDebugLocalResources
+> Task :core:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:camera:prepareDebugArtProfile
+> Task :core:camera:prepareLintJarForPublish
+> Task :core:data:packageDebugResources FROM-CACHE
+> Task :core:data:processDebugNavigationResources FROM-CACHE
+> Task :core:camera:processDebugManifest FROM-CACHE
+> Task :core:data:parseDebugLocalResources FROM-CACHE
+> Task :core:camera:writeDebugAarMetadata
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :core:audio:preDebugBuild UP-TO-DATE
+> Task :core:data:generateDebugRFile FROM-CACHE
+> Task :core:data:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:audio:checkDebugAarMetadata
+> Task :core:data:mergeDebugAssets
+> Task :core:audio:generateDebugResources FROM-CACHE
+> Task :feature:settings:generateDebugRFile
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preDebugBuild UP-TO-DATE
+> Task :core:audio:packageDebugResources FROM-CACHE
+> Task :core:audio:processDebugNavigationResources FROM-CACHE
+> Task :core:data:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:checkDebugAarMetadata
+> Task :core:audio:parseDebugLocalResources FROM-CACHE
+> Task :core:data:prepareDebugArtProfile
+> Task :core:sensors:generateDebugResources FROM-CACHE
+> Task :core:data:prepareLintJarForPublish
+> Task :core:audio:generateDebugRFile FROM-CACHE
+> Task :core:audio:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:audio:generateDebugAssets UP-TO-DATE
+> Task :core:sensors:packageDebugResources FROM-CACHE
+> Task :core:sensors:processDebugNavigationResources FROM-CACHE
+> Task :core:sensors:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:mergeDebugAssets
+> Task :core:data:processDebugManifest FROM-CACHE
+> Task :core:audio:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:generateDebugRFile FROM-CACHE
+> Task :core:audio:prepareDebugArtProfile
+> Task :core:data:writeDebugAarMetadata
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:processing:preDebugBuild UP-TO-DATE
+> Task :core:sensors:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:sensors:generateDebugAssets UP-TO-DATE
+> Task :core:audio:prepareLintJarForPublish
+> Task :core:sensors:mergeDebugAssets
+> Task :core:sensors:javaPreCompileDebug FROM-CACHE
+> Task :core:audio:processDebugManifest FROM-CACHE
+> Task :core:sensors:prepareDebugArtProfile
+> Task :core:audio:writeDebugAarMetadata
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :core:sensors:prepareLintJarForPublish
+> Task :core:sensors:processDebugManifest FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:writeDebugAarMetadata
+> Task :core:audio:extractDeepLinksDebug FROM-CACHE
+> Task :core:camera:extractDeepLinksDebug FROM-CACHE
+> Task :app:mapDebugSourceSetPaths
+> Task :core:processing:checkDebugAarMetadata
+> Task :core:processing:generateDebugResources FROM-CACHE
+> Task :core:data:extractDeepLinksDebug FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :core:designsystem:extractDeepLinksDebug FROM-CACHE
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :core:sensors:extractDeepLinksDebug FROM-CACHE
+> Task :feature:camera:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:extractDeepLinksDebug FROM-CACHE
+> Task :feature:gallery:extractDeepLinksDebug FROM-CACHE
+> Task :core:processing:packageDebugResources FROM-CACHE
+> Task :core:audio:mapDebugSourceSetPaths
+> Task :core:processing:processDebugNavigationResources FROM-CACHE
+> Task :core:camera:mapDebugSourceSetPaths
+> Task :core:audio:compileDebugLibraryResources FROM-CACHE
+> Task :core:camera:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:parseDebugLocalResources FROM-CACHE
+> Task :core:data:mapDebugSourceSetPaths
+> Task :core:processing:generateDebugRFile FROM-CACHE
+> Task :core:processing:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:data:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mapDebugSourceSetPaths
+> Task :core:processing:mergeDebugAssets
+> Task :core:designsystem:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:mapDebugSourceSetPaths
+> Task :core:processing:prepareDebugArtProfile
+> Task :core:sensors:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:mapDebugSourceSetPaths
+> Task :core:processing:prepareLintJarForPublish
+> Task :feature:camera:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:processDebugManifest FROM-CACHE
+> Task :core:processing:writeDebugAarMetadata
+> Task :feature:gallery:mapDebugSourceSetPaths
+> Task :feature:gallery:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:extractDeepLinksDebug FROM-CACHE
+> Task :core:processing:mapDebugSourceSetPaths
+> Task :feature:settings:mapDebugSourceSetPaths
+> Task :core:processing:compileDebugLibraryResources FROM-CACHE
+> Task :core:audio:writeDebugLintModelMetadata
+> Task :core:camera:writeDebugLintModelMetadata
+> Task :core:data:writeDebugLintModelMetadata
+> Task :core:designsystem:writeDebugLintModelMetadata
+> Task :core:processing:writeDebugLintModelMetadata
+> Task :core:sensors:writeDebugLintModelMetadata
+> Task :feature:camera:writeDebugLintModelMetadata
+> Task :feature:gallery:writeDebugLintModelMetadata
+> Task :feature:settings:writeDebugLintModelMetadata
+> Task :core:audio:extractProguardFiles
+> Task :core:camera:extractProguardFiles
+> Task :core:data:extractProguardFiles
+> Task :core:designsystem:extractProguardFiles
+> Task :core:processing:extractProguardFiles
+> Task :core:sensors:extractProguardFiles
+> Task :feature:camera:extractProguardFiles
+> Task :feature:gallery:extractProguardFiles
+> Task :feature:settings:extractProguardFiles
+> Task :core:audio:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:audio:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:camera:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:camera:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:data:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:designsystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:processing:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:processing:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:sensors:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:sensors:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:camera:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:camera:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:gallery:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:gallery:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:settings:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:settings:preDebugUnitTestBuild UP-TO-DATE
+> Task :probe-lint:preBuild UP-TO-DATE
+> Task :probe-lint:preDebugBuild UP-TO-DATE
+> Task :probe-lint:checkDebugAarMetadata
+> Task :feature:settings:compileDebugLibraryResources
+> Task :probe-lint:generateDebugResources FROM-CACHE
+> Task :probe-lint:packageDebugResources FROM-CACHE
+> Task :probe-lint:processDebugNavigationResources FROM-CACHE
+> Task :probe-lint:parseDebugLocalResources FROM-CACHE
+> Task :probe-lint:generateDebugRFile FROM-CACHE
+> Task :probe-lint:extractDebugAnnotations FROM-CACHE
+> Task :probe-lint:extractDeepLinksForAarDebug FROM-CACHE
+> Task :probe-lint:generateDebugAssets UP-TO-DATE
+> Task :probe-lint:mergeDebugAssets
+> Task :probe-lint:compileDebugKotlin NO-SOURCE
+> Task :probe-lint:javaPreCompileDebug FROM-CACHE
+> Task :probe-lint:compileDebugJavaWithJavac NO-SOURCE
+> Task :probe-lint:mergeDebugGeneratedProguardFiles
+> Task :probe-lint:mergeDebugConsumerProguardFiles
+> Task :probe-lint:prepareDebugArtProfile
+> Task :probe-lint:prepareLintJarForPublish
+> Task :probe-lint:processDebugManifest FROM-CACHE
+> Task :probe-lint:processDebugJavaRes NO-SOURCE
+> Task :probe-lint:writeDebugAarMetadata
+> Task :probe-lint:bundleLibRuntimeToJarDebug
+> Task :probe-lint:createFullJarDebug
+> Task :probe-lint:preDebugAndroidTestBuild UP-TO-DATE
+> Task :probe-lint:writeDebugLintModelMetadata
+> Task :probe-lint:extractProguardFiles
+> Task :probe-lint:mergeDebugJavaResource
+> Task :probe-lint:generateDebugLintReportModel
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:generateDebugRFile FROM-CACHE
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :probe-lint:syncDebugLibJars FROM-CACHE
+> Task :probe-lint:bundleDebugLocalLintAar
+> Task :probe-lint:generateDebugAndroidTestLintModel
+> Task :probe-lint:preDebugUnitTestBuild UP-TO-DATE
+> Task :probe-lint:generateDebugUnitTestLintModel
+> Task :probe-lint:lintAnalyzeDebug FROM-CACHE
+> Task :probe-lint:lintAnalyzeDebugAndroidTest FROM-CACHE
+> Task :app:processDebugMainManifest
+> Task :probe-lint:lintAnalyzeDebugUnitTest FROM-CACHE
+> Task :app:mergeDebugResources
+> Task :app:processDebugManifest
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:extractProguardFiles
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+
+> Task :probe-lint:lintReportDebug
+Wrote HTML report to file:///home/runner/work/CayResim/CayResim/config/probes/lint/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///home/runner/work/CayResim/CayResim/config/probes/lint/build/reports/lint-results-debug.sarif
+Lint found 1 error. First failure:
+/home/runner/work/CayResim/CayResim/config/probes/lint/src/main/res/layout/probe_lint.xml:6: Error: Hardcoded string "Probe", should use @string resource [HardcodedText]
+    android:text="Probe" />
+    ~~~~~~~~~~~~~~~~~~~~
+
+
+> Task :probe-lint:lintDebug FAILED
+/home/runner/work/CayResim/CayResim/config/probes/lint/src/main/res/layout/probe_lint.xml:6: Error: Hardcoded string "Probe", should use @string resource [HardcodedText]
+    android:text="Probe" />
+    ~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "HardcodedText":
+   Hardcoding text attributes directly in layout files is bad for several
+   reasons:
+
+   * When creating configuration variations (for example for landscape or
+   portrait) you have to repeat the actual text (and keep it up to date when
+   making changes)
+
+   * The application cannot be translated to other languages by just adding
+   new translations for existing string resources.
+
+   There are quickfixes to automatically extract this hardcoded string into a
+   resource lookup.
+
+1 error
+
+> Task :core:pure:compileKotlin
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:designsystem:extractDebugAnnotations
+> Task :core:designsystem:compileDebugKotlin
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug
+> Task :core:designsystem:bundleLibCompileToJarDebug
+> Task :core:designsystem:mergeDebugGeneratedProguardFiles
+> Task :core:designsystem:mergeDebugConsumerProguardFiles
+> Task :core:designsystem:processDebugJavaRes
+> Task :core:designsystem:createFullJarDebug
+> Task :core:entity:compileKotlin
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:designsystem:mergeDebugJavaResource
+> Task :core:designsystem:generateDebugLintModel
+> Task :core:designsystem:syncDebugLibJars FROM-CACHE
+> Task :core:designsystem:bundleDebugLocalLintAar
+> Task :core:designsystem:generateDebugAndroidTestLintModel
+> Task :core:designsystem:generateDebugUnitTestLintModel
+> Task :core:boundary:compileKotlin
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+> Task :core:designsystem:lintAnalyzeDebugAndroidTest
+> Task :core:designsystem:lintAnalyzeDebugUnitTest
+
+> Task :core:control:compileKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:94:56 Unnecessary safe call on a non-null receiver of type 'SeriesArchiveBoundary'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:124:62 Unnecessary safe call on a non-null receiver of type 'NightUseCase.SeriesRecorder'.
+
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :core:camera:kspDebugKotlin
+> Task :feature:camera:kspDebugKotlin
+> Task :core:data:kspDebugKotlin
+> Task :feature:camera:extractDebugAnnotations
+> Task :core:designsystem:lintAnalyzeDebug
+> Task :core:camera:extractDebugAnnotations
+> Task :feature:gallery:kspDebugKotlin
+> Task :feature:gallery:extractDebugAnnotations
+> Task :feature:settings:kspDebugKotlin
+> Task :feature:settings:extractDebugAnnotations
+> Task :feature:gallery:compileDebugKotlin
+> Task :feature:gallery:compileDebugJavaWithJavac
+> Task :feature:gallery:transformDebugClassesWithAsm
+> Task :feature:gallery:mergeDebugGeneratedProguardFiles
+> Task :feature:gallery:mergeDebugConsumerProguardFiles
+> Task :feature:gallery:processDebugJavaRes
+> Task :feature:gallery:mergeDebugJavaResource
+> Task :feature:gallery:syncDebugLibJars FROM-CACHE
+> Task :feature:gallery:bundleDebugLocalLintAar
+> Task :core:data:extractDebugAnnotations
+
+> Task :core:camera:compileDebugKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt:1081:78 Unnecessary safe call on a non-null receiver of type 'CameraDevice'.
+
+> Task :feature:camera:compileDebugKotlin
+> Task :core:camera:compileDebugJavaWithJavac
+> Task :core:camera:transformDebugClassesWithAsm
+> Task :core:camera:mergeDebugGeneratedProguardFiles
+> Task :core:camera:mergeDebugConsumerProguardFiles
+> Task :core:camera:processDebugJavaRes
+> Task :core:camera:mergeDebugJavaResource
+> Task :core:camera:syncDebugLibJars FROM-CACHE
+> Task :core:camera:bundleDebugLocalLintAar
+> Task :feature:camera:compileDebugJavaWithJavac
+> Task :feature:camera:transformDebugClassesWithAsm
+> Task :feature:camera:mergeDebugGeneratedProguardFiles
+> Task :feature:camera:mergeDebugConsumerProguardFiles
+> Task :feature:camera:processDebugJavaRes
+> Task :feature:camera:mergeDebugJavaResource
+> Task :feature:camera:syncDebugLibJars FROM-CACHE
+> Task :feature:camera:bundleDebugLocalLintAar
+> Task :core:audio:kspDebugKotlin
+> Task :core:audio:extractDebugAnnotations
+> Task :core:sensors:kspDebugKotlin
+> Task :core:sensors:extractDebugAnnotations
+> Task :core:data:compileDebugKotlin
+> Task :core:sensors:compileDebugKotlin
+> Task :core:sensors:compileDebugJavaWithJavac
+> Task :core:sensors:transformDebugClassesWithAsm
+> Task :core:sensors:mergeDebugGeneratedProguardFiles
+> Task :core:sensors:mergeDebugConsumerProguardFiles
+> Task :core:sensors:processDebugJavaRes
+> Task :core:data:compileDebugJavaWithJavac
+> Task :core:sensors:mergeDebugJavaResource
+> Task :core:sensors:syncDebugLibJars FROM-CACHE
+> Task :core:data:processDebugJavaRes
+> Task :core:data:transformDebugClassesWithAsm
+> Task :core:data:mergeDebugJavaResource
+> Task :core:data:mergeDebugGeneratedProguardFiles
+> Task :core:data:mergeDebugConsumerProguardFiles
+> Task :core:sensors:bundleDebugLocalLintAar
+> Task :core:data:syncDebugLibJars FROM-CACHE
+> Task :core:data:bundleDebugLocalLintAar
+> Task :core:camera:bundleLibCompileToJarDebug
+> Task :core:data:bundleLibCompileToJarDebug
+> Task :core:sensors:bundleLibCompileToJarDebug
+> Task :core:audio:compileDebugKotlin
+> Task :feature:camera:bundleLibCompileToJarDebug
+> Task :feature:gallery:bundleLibCompileToJarDebug
+> Task :feature:camera:bundleLibRuntimeToJarDebug
+> Task :feature:gallery:bundleLibRuntimeToJarDebug
+> Task :core:camera:bundleLibRuntimeToJarDebug
+> Task :core:data:bundleLibRuntimeToJarDebug
+> Task :core:sensors:bundleLibRuntimeToJarDebug
+> Task :core:camera:createFullJarDebug
+> Task :core:data:createFullJarDebug
+> Task :core:sensors:createFullJarDebug
+> Task :core:audio:compileDebugJavaWithJavac
+> Task :feature:camera:createFullJarDebug
+> Task :core:audio:processDebugJavaRes
+> Task :core:audio:transformDebugClassesWithAsm
+> Task :core:audio:mergeDebugJavaResource
+> Task :feature:gallery:createFullJarDebug
+> Task :feature:settings:compileDebugKotlin
+> Task :core:audio:mergeDebugGeneratedProguardFiles
+> Task :core:audio:mergeDebugConsumerProguardFiles
+> Task :core:audio:syncDebugLibJars FROM-CACHE
+> Task :core:audio:bundleDebugLocalLintAar
+> Task :core:audio:bundleLibCompileToJarDebug
+> Task :core:audio:bundleLibRuntimeToJarDebug
+> Task :core:audio:createFullJarDebug
+> Task :core:camera:generateDebugLintModel
+> Task :core:audio:generateDebugLintModel
+> Task :core:data:generateDebugLintModel
+> Task :core:sensors:generateDebugLintModel
+> Task :feature:gallery:generateDebugLintModel
+> Task :feature:camera:generateDebugLintModel
+> Task :feature:settings:compileDebugJavaWithJavac
+> Task :feature:settings:transformDebugClassesWithAsm
+> Task :feature:settings:mergeDebugGeneratedProguardFiles
+> Task :feature:settings:mergeDebugConsumerProguardFiles
+> Task :feature:settings:processDebugJavaRes
+> Task :feature:settings:mergeDebugJavaResource
+> Task :feature:settings:syncDebugLibJars
+> Task :feature:settings:bundleDebugLocalLintAar
+> Task :feature:settings:bundleLibCompileToJarDebug
+> Task :feature:settings:bundleLibRuntimeToJarDebug
+> Task :feature:settings:createFullJarDebug
+> Task :feature:settings:generateDebugLintModel
+> Task :core:processing:kspDebugKotlin
+> Task :core:processing:extractDebugAnnotations
+
+> Task :core:processing:compileDebugKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/processing/src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt:24:71 'constructor(p0: (Mutable)List<EditedMediaItem>): EditedMediaItemSequence.Builder' is deprecated. Deprecated in Java.
+
+> Task :core:processing:compileDebugJavaWithJavac
+> Task :core:processing:transformDebugClassesWithAsm
+> Task :core:processing:mergeDebugGeneratedProguardFiles
+> Task :core:processing:mergeDebugConsumerProguardFiles
+> Task :core:processing:processDebugJavaRes
+> Task :core:processing:mergeDebugJavaResource
+> Task :core:processing:syncDebugLibJars FROM-CACHE
+> Task :core:processing:bundleDebugLocalLintAar
+> Task :core:processing:bundleLibCompileToJarDebug
+> Task :core:audio:lintAnalyzeDebug
+> Task :core:processing:bundleLibRuntimeToJarDebug
+> Task :core:processing:createFullJarDebug
+> Task :core:processing:generateDebugLintModel
+> Task :app:kspDebugKotlin
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltCollectClassesDebug
+> Task :app:hiltAggregateDepsDebug FROM-CACHE
+> Task :core:data:lintAnalyzeDebug
+> Task :core:sensors:lintAnalyzeDebug
+> Task :app:hiltJavaCompileDebug
+> Task :app:bundleDebugClassesToCompileJar
+> Task :core:processing:lintAnalyzeDebug
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :core:camera:lintAnalyzeDebug
+> Task :feature:gallery:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :core:audio:generateDebugUnitTestLintModel
+> Task :core:audio:lintAnalyzeDebugUnitTest
+> Task :core:camera:generateDebugUnitTestLintModel
+> Task :core:camera:lintAnalyzeDebugUnitTest
+> Task :core:processing:generateDebugAndroidTestLintModel
+> Task :core:processing:generateDebugUnitTestLintModel
+> Task :core:boundary:compileTestFixturesKotlin
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+> Task :core:audio:generateDebugAndroidTestLintModel
+> Task :core:audio:lintAnalyzeDebugAndroidTest
+> Task :core:camera:generateDebugAndroidTestLintModel
+> Task :core:processing:lintAnalyzeDebugAndroidTest
+> Task :core:data:generateDebugAndroidTestLintModel
+> Task :core:data:generateDebugUnitTestLintModel
+> Task :feature:camera:lintAnalyzeDebug
+> Task :core:data:lintAnalyzeDebugAndroidTest
+> Task :core:processing:lintAnalyzeDebugUnitTest
+> Task :core:sensors:generateDebugAndroidTestLintModel
+> Task :core:sensors:generateDebugUnitTestLintModel
+> Task :core:sensors:lintAnalyzeDebugAndroidTest
+> Task :core:sensors:lintAnalyzeDebugUnitTest
+> Task :feature:camera:generateDebugAndroidTestLintModel
+> Task :feature:camera:generateDebugUnitTestLintModel
+> Task :core:camera:lintAnalyzeDebugAndroidTest
+> Task :core:data:lintAnalyzeDebugUnitTest
+> Task :feature:camera:lintAnalyzeDebugAndroidTest
+> Task :feature:gallery:generateDebugAndroidTestLintModel
+> Task :feature:settings:generateDebugAndroidTestLintModel
+> Task :feature:gallery:generateDebugUnitTestLintModel
+> Task :feature:settings:generateDebugUnitTestLintModel
+> Task :feature:gallery:lintAnalyzeDebugAndroidTest
+> Task :feature:settings:lintAnalyzeDebugAndroidTest
+> Task :feature:gallery:lintAnalyzeDebugUnitTest
+> Task :core:audio:generateDebugLintReportModel
+
+> Task :core:audio:lintReportDebug
+Lint found no errors or warnings
+
+> Task :core:audio:lintDebug
+> Task :core:camera:generateDebugLintReportModel
+
+> Task :core:camera:lintReportDebug
+Lint found no new issues (and 40 errors filtered by baseline lint-baseline.xml)
+
+> Task :core:camera:lintDebug
+> Task :core:data:generateDebugLintReportModel
+
+> Task :core:data:lintReportDebug
+Lint found no errors or warnings
+
+> Task :core:data:lintDebug
+> Task :core:designsystem:generateDebugLintReportModel
+
+> Task :core:designsystem:lintReportDebug
+Lint found no errors or warnings
+
+> Task :core:designsystem:lintDebug
+> Task :core:processing:generateDebugLintReportModel
+
+> Task :core:processing:lintReportDebug
+Lint found no new issues (and 32 errors filtered by baseline lint-baseline.xml)
+
+> Task :core:processing:lintDebug
+> Task :core:sensors:generateDebugLintReportModel
+
+> Task :core:sensors:lintReportDebug
+Lint found no errors or warnings
+
+> Task :core:sensors:lintDebug
+> Task :feature:camera:generateDebugLintReportModel
+> Task :feature:gallery:generateDebugLintReportModel
+
+> Task :feature:gallery:lintReportDebug
+Lint found no new issues (and 1 error filtered by baseline lint-baseline.xml)
+
+> Task :feature:gallery:lintDebug
+> Task :feature:settings:generateDebugLintReportModel
+> Task :feature:settings:lintAnalyzeDebug
+> Task :feature:camera:lintAnalyzeDebugUnitTest
+
+> Task :feature:camera:lintReportDebug
+Lint found no new issues (and 2 errors filtered by baseline lint-baseline.xml)
+
+> Task :feature:camera:lintDebug
+> Task :feature:settings:lintAnalyzeDebugUnitTest
+
+> Task :feature:settings:lintReportDebug
+Lint found no new issues (and 5 errors filtered by baseline lint-baseline.xml)
+
+> Task :feature:settings:lintDebug
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Lint found no new issues (and 6 errors filtered by baseline lint-baseline.xml)
+
+> Task :app:lintDebug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791667061326.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':probe-lint:lintDebug' (registered by plugin 'com.android.internal.library').
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  /home/runner/work/CayResim/CayResim/config/probes/lint/src/main/res/layout/probe_lint.xml:6: Error: Hardcoded string "Probe", should use @string resource [HardcodedText]
+      android:text="Probe" />
+      ~~~~~~~~~~~~~~~~~~~~
+  
+     Explanation for issues of type "HardcodedText":
+     Hardcoding text attributes directly in layout files is bad for several
+     reasons:
+  
+     * When creating configuration variations (for example for landscape or
+     portrait) you have to repeat the actual text (and keep it up to date when
+     making changes)
+  
+     * The application cannot be translated to other languages by just adding
+     new translations for existing string resources.
+  
+     There are quickfixes to automatically extract this hardcoded string into a
+     resource lookup.
+  
+  1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2m 33s
+447 actionable tasks: 327 executed, 120 from cache

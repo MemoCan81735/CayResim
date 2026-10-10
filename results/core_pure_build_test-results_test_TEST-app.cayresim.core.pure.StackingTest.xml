@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.StackingTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:31.555Z" hostname="runnervmmprz5" time="0.051">
+  <properties/>
+  <testcase name="Mittelwert senkt Rauschen messbar" classname="app.cayresim.core.pure.StackingTest" time="0.008"/>
+  <testcase name="Ein einzelnes Bild bleibt unveraendert" classname="app.cayresim.core.pure.StackingTest" time="0.003"/>
+  <testcase name="Median ist der untere Wert bei gerader Anzahl" classname="app.cayresim.core.pure.StackingTest" time="0.0"/>
+  <testcase name="Bewegungsmass ist 0 bei gleichen Bildern und gross bei Bewegung" classname="app.cayresim.core.pure.StackingTest" time="0.001"/>
+  <testcase name="Einfarbige Serie bleibt einfarbig" classname="app.cayresim.core.pure.StackingTest" time="0.01"/>
+  <testcase name="Median findet den Hintergrund pixelgenau wieder" classname="app.cayresim.core.pure.StackingTest" time="0.007"/>
+  <testcase name="Median auch mit kleinen Kacheln identisch" classname="app.cayresim.core.pure.StackingTest" time="0.006"/>
+  <testcase name="Leere oder ungleich grosse Serie wird abgelehnt" classname="app.cayresim.core.pure.StackingTest" time="0.0"/>
+  <testcase name="Bewegungsmass ist symmetrisch (Eigenschaft)" classname="app.cayresim.core.pure.StackingTest" time="0.015"/>
+  <testcase name="Mittelwert rundet und bleibt bei 255" classname="app.cayresim.core.pure.StackingTest" time="0.0"/>
+  <testcase name="Abbruch zwischen den Kacheln" classname="app.cayresim.core.pure.StackingTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.settings.SettingsAndGuideTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:20:30.404Z" hostname="runnervmmprz5" time="1.411">
+  <properties/>
+  <testcase name="bild_einstellungen" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.217"/>
+  <testcase name="jeder_abschnitt_ist_erreichbar_und_sichtbar" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.241"/>
+  <testcase name="bild_anleitung_spezialaufnahmen" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.2"/>
+  <testcase name="bild_anleitung_anfang_dunkel" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.15"/>
+  <testcase name="einstellungen_oeffnen_anleitung_und_selbsttest" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.078"/>
+  <testcase name="zurueck_aus_der_anleitung" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.07"/>
+  <testcase name="texte_ohne_gedankenstriche_und_nicht_leer" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.031"/>
+  <testcase name="einstellungen_nachtserie" classname="app.cayresim.feature.settings.SettingsAndGuideTest" time="0.414"/>
+  <system-out><![CDATA[Roborazzi: settings.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: guide_special.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: guide_top.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: settings_nightseries.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

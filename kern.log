@@ -1,0 +1,135 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:control:processResources NO-SOURCE
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:boundary:koverFindJar
+> Task :core:entity:koverFindJar
+> Task :core:control:koverFindJar
+> Task :core:boundary:processTestResources NO-SOURCE
+> Task :architecture:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:processTestResources NO-SOURCE
+> Task :core:entity:processTestResources NO-SOURCE
+> Task :architecture:compileKotlin FROM-CACHE
+> Task :architecture:compileJava NO-SOURCE
+> Task :architecture:processResources NO-SOURCE
+> Task :architecture:classes UP-TO-DATE
+> Task :architecture:jar
+> Task :architecture:compileTestKotlin FROM-CACHE
+> Task :architecture:compileTestJava NO-SOURCE
+> Task :architecture:koverFindJar
+> Task :architecture:processTestResources NO-SOURCE
+> Task :architecture:testClasses UP-TO-DATE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:koverFindJar
+> Task :core:pure:processTestResources NO-SOURCE
+> Task :architecture:test
+> Task :core:pure:compileKotlin
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:entity:compileKotlin
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:boundary:compileKotlin
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+> Task :core:entity:compileTestKotlin
+> Task :core:entity:compileTestJava NO-SOURCE
+> Task :core:entity:testClasses UP-TO-DATE
+> Task :core:entity:test
+> Task :core:entity:koverGenerateArtifactJvm
+> Task :core:entity:koverGenerateArtifact
+> Task :core:entity:koverCachedVerify FROM-CACHE
+> Task :core:entity:koverVerify
+> Task :core:boundary:compileTestFixturesKotlin
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+
+> Task :core:control:compileKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:94:56 Unnecessary safe call on a non-null receiver of type 'SeriesArchiveBoundary'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:124:62 Unnecessary safe call on a non-null receiver of type 'NightUseCase.SeriesRecorder'.
+
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :core:boundary:compileTestKotlin
+> Task :core:boundary:compileTestJava NO-SOURCE
+> Task :core:boundary:testClasses UP-TO-DATE
+> Task :core:pure:compileTestKotlin
+> Task :core:pure:compileTestJava NO-SOURCE
+> Task :core:pure:testClasses UP-TO-DATE
+> Task :core:boundary:test
+
+> Task :core:control:compileTestKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/MicTestUseCaseTest.kt:90:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/MicTestUseCaseTest.kt:197:105 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/MicTestUseCaseTest.kt:201:54 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/MicTestUseCaseTest.kt:211:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:34:78 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:34:118 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:92:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:111:61 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:124:62 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:144:88 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:145:35 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:147:92 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:180:66 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:200:64 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:209:90 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:245:71 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:245:113 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:259:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:269:63 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NightReport'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:288:32 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:303:34 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/NightUseCaseTest.kt:303:98 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/ProUseCasesTest.kt:74:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/SweepUseCaseTest.kt:149:133 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/test/kotlin/app/cayresim/core/control/SweepUseCaseTest.kt:185:9 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+
+> Task :core:control:compileTestJava NO-SOURCE
+> Task :core:control:testClasses UP-TO-DATE
+> Task :core:control:test
+> Task :core:control:koverGenerateArtifactJvm
+> Task :core:control:koverGenerateArtifact
+> Task :core:control:koverCachedVerify
+> Task :core:control:koverVerify
+> Task :core:pure:test
+> Task :core:pure:koverGenerateArtifactJvm
+> Task :core:pure:koverGenerateArtifact
+> Task :core:pure:koverCachedVerify
+> Task :core:pure:koverVerify
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791667041582.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 20s
+48 actionable tasks: 39 executed, 9 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html

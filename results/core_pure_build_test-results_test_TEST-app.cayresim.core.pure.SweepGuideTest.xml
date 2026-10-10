@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.SweepGuideTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:31.637Z" hostname="runnervmmprz5" time="0.016">
+  <properties/>
+  <testcase name="S-014 Ablauf" classname="app.cayresim.core.pure.SweepGuideTest" time="0.004"/>
+  <testcase name="S-014 Abdeckung laufend wie am Ende" classname="app.cayresim.core.pure.SweepGuideTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

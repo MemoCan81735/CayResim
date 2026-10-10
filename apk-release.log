@@ -1,0 +1,488 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:control:processResources NO-SOURCE
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :core:audio:preReleaseBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preReleaseBuild UP-TO-DATE
+> Task :core:audio:mergeReleaseJniLibFolders
+> Task :core:camera:mergeReleaseJniLibFolders
+> Task :core:camera:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:audio:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:data:mergeReleaseJniLibFolders
+> Task :core:camera:copyReleaseJniLibsProjectOnly
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preReleaseBuild UP-TO-DATE
+> Task :core:audio:copyReleaseJniLibsProjectOnly
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:processing:preReleaseBuild UP-TO-DATE
+> Task :core:data:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:data:copyReleaseJniLibsProjectOnly
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preReleaseBuild UP-TO-DATE
+> Task :core:processing:mergeReleaseJniLibFolders
+> Task :core:designsystem:mergeReleaseJniLibFolders
+> Task :core:processing:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:designsystem:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:sensors:mergeReleaseJniLibFolders
+> Task :core:processing:copyReleaseJniLibsProjectOnly
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :feature:camera:preReleaseBuild UP-TO-DATE
+> Task :core:designsystem:copyReleaseJniLibsProjectOnly
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preReleaseBuild UP-TO-DATE
+> Task :core:sensors:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:sensors:copyReleaseJniLibsProjectOnly
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preReleaseBuild UP-TO-DATE
+> Task :feature:gallery:mergeReleaseJniLibFolders
+> Task :feature:camera:mergeReleaseJniLibFolders
+> Task :feature:camera:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:gallery:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:camera:copyReleaseJniLibsProjectOnly
+> Task :feature:gallery:copyReleaseJniLibsProjectOnly
+> Task :feature:settings:mergeReleaseJniLibFolders
+> Task :core:designsystem:generateReleaseResources FROM-CACHE
+> Task :feature:settings:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:camera:generateReleaseResources FROM-CACHE
+> Task :feature:settings:copyReleaseJniLibsProjectOnly
+> Task :feature:gallery:generateReleaseResources FROM-CACHE
+> Task :core:designsystem:packageReleaseResources FROM-CACHE
+> Task :feature:camera:packageReleaseResources FROM-CACHE
+> Task :feature:camera:processReleaseNavigationResources FROM-CACHE
+> Task :core:designsystem:processReleaseNavigationResources FROM-CACHE
+> Task :feature:gallery:packageReleaseResources FROM-CACHE
+> Task :feature:gallery:processReleaseNavigationResources FROM-CACHE
+> Task :feature:gallery:parseReleaseLocalResources FROM-CACHE
+> Task :core:pure:processResources NO-SOURCE
+> Task :feature:gallery:generateReleaseRFile FROM-CACHE
+> Task :core:designsystem:parseReleaseLocalResources FROM-CACHE
+> Task :feature:gallery:javaPreCompileRelease FROM-CACHE
+> Task :feature:camera:parseReleaseLocalResources FROM-CACHE
+> Task :core:designsystem:generateReleaseRFile FROM-CACHE
+> Task :feature:camera:generateReleaseRFile FROM-CACHE
+> Task :core:designsystem:javaPreCompileRelease FROM-CACHE
+> Task :core:camera:generateReleaseResources FROM-CACHE
+> Task :feature:camera:javaPreCompileRelease FROM-CACHE
+> Task :core:data:generateReleaseResources FROM-CACHE
+> Task :core:camera:packageReleaseResources FROM-CACHE
+> Task :feature:settings:generateReleaseResources
+> Task :core:camera:processReleaseNavigationResources FROM-CACHE
+> Task :core:data:packageReleaseResources FROM-CACHE
+> Task :core:camera:parseReleaseLocalResources FROM-CACHE
+> Task :core:data:processReleaseNavigationResources FROM-CACHE
+> Task :core:camera:generateReleaseRFile FROM-CACHE
+> Task :core:data:parseReleaseLocalResources FROM-CACHE
+> Task :core:camera:javaPreCompileRelease FROM-CACHE
+> Task :core:data:generateReleaseRFile FROM-CACHE
+> Task :core:audio:generateReleaseResources FROM-CACHE
+> Task :core:audio:packageReleaseResources FROM-CACHE
+> Task :core:audio:processReleaseNavigationResources FROM-CACHE
+> Task :core:audio:parseReleaseLocalResources FROM-CACHE
+> Task :core:data:javaPreCompileRelease FROM-CACHE
+> Task :core:sensors:generateReleaseResources FROM-CACHE
+> Task :core:audio:generateReleaseRFile FROM-CACHE
+> Task :core:audio:javaPreCompileRelease FROM-CACHE
+> Task :core:processing:generateReleaseResources FROM-CACHE
+> Task :core:sensors:packageReleaseResources FROM-CACHE
+> Task :core:sensors:processReleaseNavigationResources FROM-CACHE
+> Task :core:sensors:parseReleaseLocalResources FROM-CACHE
+> Task :core:processing:packageReleaseResources FROM-CACHE
+> Task :core:processing:processReleaseNavigationResources FROM-CACHE
+> Task :core:sensors:generateReleaseRFile FROM-CACHE
+> Task :core:processing:parseReleaseLocalResources FROM-CACHE
+> Task :core:processing:generateReleaseRFile FROM-CACHE
+> Task :core:sensors:javaPreCompileRelease FROM-CACHE
+> Task :core:processing:javaPreCompileRelease FROM-CACHE
+> Task :core:audio:prepareReleaseArtProfile
+> Task :core:camera:prepareReleaseArtProfile
+> Task :core:data:prepareReleaseArtProfile
+> Task :core:designsystem:prepareReleaseArtProfile
+> Task :core:processing:prepareReleaseArtProfile
+> Task :core:sensors:prepareReleaseArtProfile
+> Task :feature:camera:prepareReleaseArtProfile
+> Task :feature:gallery:prepareReleaseArtProfile
+> Task :feature:settings:packageReleaseResources
+> Task :feature:settings:processReleaseNavigationResources
+> Task :core:audio:writeReleaseAarMetadata
+> Task :core:camera:writeReleaseAarMetadata
+> Task :core:data:writeReleaseAarMetadata
+> Task :feature:settings:javaPreCompileRelease FROM-CACHE
+> Task :feature:settings:prepareReleaseArtProfile
+> Task :core:designsystem:writeReleaseAarMetadata
+> Task :core:processing:writeReleaseAarMetadata
+> Task :core:sensors:writeReleaseAarMetadata
+> Task :feature:camera:writeReleaseAarMetadata
+> Task :feature:gallery:writeReleaseAarMetadata
+> Task :feature:settings:writeReleaseAarMetadata
+> Task :core:audio:extractDeepLinksRelease FROM-CACHE
+> Task :feature:settings:parseReleaseLocalResources
+> Task :core:audio:processReleaseManifest FROM-CACHE
+> Task :core:camera:extractDeepLinksRelease FROM-CACHE
+> Task :core:camera:processReleaseManifest FROM-CACHE
+> Task :core:data:extractDeepLinksRelease FROM-CACHE
+> Task :core:data:processReleaseManifest FROM-CACHE
+> Task :core:designsystem:extractDeepLinksRelease FROM-CACHE
+> Task :core:designsystem:processReleaseManifest FROM-CACHE
+> Task :core:processing:extractDeepLinksRelease FROM-CACHE
+> Task :core:processing:processReleaseManifest FROM-CACHE
+> Task :feature:settings:generateReleaseRFile
+> Task :core:sensors:extractDeepLinksRelease FROM-CACHE
+> Task :feature:camera:extractDeepLinksRelease FROM-CACHE
+> Task :core:sensors:processReleaseManifest FROM-CACHE
+> Task :feature:gallery:extractDeepLinksRelease FROM-CACHE
+> Task :feature:camera:processReleaseManifest FROM-CACHE
+> Task :feature:settings:extractDeepLinksRelease FROM-CACHE
+> Task :feature:gallery:processReleaseManifest FROM-CACHE
+> Task :feature:settings:processReleaseManifest FROM-CACHE
+> Task :core:audio:mapReleaseSourceSetPaths
+> Task :core:camera:mapReleaseSourceSetPaths
+> Task :core:audio:compileReleaseLibraryResources FROM-CACHE
+> Task :core:data:mapReleaseSourceSetPaths
+> Task :core:data:compileReleaseLibraryResources FROM-CACHE
+> Task :core:camera:compileReleaseLibraryResources FROM-CACHE
+> Task :core:designsystem:mapReleaseSourceSetPaths
+> Task :core:processing:mapReleaseSourceSetPaths
+> Task :core:processing:compileReleaseLibraryResources FROM-CACHE
+> Task :core:designsystem:compileReleaseLibraryResources FROM-CACHE
+> Task :core:sensors:mapReleaseSourceSetPaths
+> Task :feature:camera:mapReleaseSourceSetPaths
+> Task :core:sensors:compileReleaseLibraryResources FROM-CACHE
+> Task :feature:camera:compileReleaseLibraryResources FROM-CACHE
+> Task :feature:gallery:mapReleaseSourceSetPaths
+> Task :feature:settings:mapReleaseSourceSetPaths
+> Task :feature:gallery:compileReleaseLibraryResources FROM-CACHE
+> Task :core:audio:generateReleaseAssets UP-TO-DATE
+> Task :core:audio:mergeReleaseAssets
+> Task :core:camera:generateReleaseAssets UP-TO-DATE
+> Task :feature:settings:compileReleaseLibraryResources
+> Task :core:data:generateReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseAssets
+> Task :core:designsystem:generateReleaseAssets UP-TO-DATE
+> Task :core:camera:mergeReleaseAssets
+> Task :core:processing:generateReleaseAssets UP-TO-DATE
+> Task :core:processing:mergeReleaseAssets
+> Task :core:sensors:generateReleaseAssets UP-TO-DATE
+> Task :core:designsystem:mergeReleaseAssets
+> Task :feature:camera:generateReleaseAssets UP-TO-DATE
+> Task :feature:camera:mergeReleaseAssets
+> Task :feature:gallery:generateReleaseAssets UP-TO-DATE
+> Task :core:sensors:mergeReleaseAssets
+> Task :feature:gallery:mergeReleaseAssets
+> Task :feature:settings:generateReleaseAssets UP-TO-DATE
+> Task :feature:settings:mergeReleaseAssets
+> Task :app:checkReleaseDuplicateClasses
+> Task :core:audio:checkReleaseAarMetadata
+> Task :core:audio:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:audio:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:audio:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:audio:prepareLintJarForPublish
+> Task :core:camera:checkReleaseAarMetadata
+> Task :core:camera:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:camera:copyReleaseJniLibsProjectAndLocalJars
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:mergeReleaseArtProfile
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :core:camera:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:camera:prepareLintJarForPublish
+> Task :app:processReleaseNavigationResources FROM-CACHE
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:generateReleaseRFile FROM-CACHE
+> Task :core:audio:mergeReleaseResources FROM-CACHE
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :core:camera:mergeReleaseResources FROM-CACHE
+> Task :core:audio:verifyReleaseResources FROM-CACHE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:compileReleaseNavigationResources FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :core:camera:verifyReleaseResources FROM-CACHE
+> Task :core:data:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:data:checkReleaseAarMetadata
+> Task :core:data:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:data:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:data:prepareLintJarForPublish
+> Task :core:data:mergeReleaseResources FROM-CACHE
+> Task :core:data:verifyReleaseResources FROM-CACHE
+> Task :core:processing:checkReleaseAarMetadata
+> Task :core:designsystem:checkReleaseAarMetadata
+> Task :core:designsystem:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:processing:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:designsystem:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:designsystem:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:designsystem:prepareLintJarForPublish
+> Task :core:processing:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:processing:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:processing:prepareLintJarForPublish
+> Task :core:designsystem:mergeReleaseResources FROM-CACHE
+> Task :core:processing:mergeReleaseResources FROM-CACHE
+> Task :core:processing:verifyReleaseResources FROM-CACHE
+> Task :core:designsystem:verifyReleaseResources FROM-CACHE
+> Task :core:sensors:checkReleaseAarMetadata
+> Task :core:sensors:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:sensors:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:sensors:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:sensors:prepareLintJarForPublish
+> Task :feature:camera:checkReleaseAarMetadata
+> Task :feature:camera:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:camera:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:camera:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:camera:prepareLintJarForPublish
+> Task :core:sensors:mergeReleaseResources FROM-CACHE
+> Task :core:sensors:verifyReleaseResources FROM-CACHE
+> Task :feature:camera:mergeReleaseResources FROM-CACHE
+> Task :feature:gallery:checkReleaseAarMetadata
+> Task :feature:gallery:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:gallery:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:gallery:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:gallery:prepareLintJarForPublish
+> Task :feature:camera:verifyReleaseResources FROM-CACHE
+> Task :feature:settings:checkReleaseAarMetadata
+> Task :feature:settings:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:settings:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:settings:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:settings:prepareLintJarForPublish
+> Task :feature:gallery:mergeReleaseResources FROM-CACHE
+> Task :feature:gallery:verifyReleaseResources FROM-CACHE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :feature:settings:mergeReleaseResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:processReleaseManifestForPackage
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseStartupProfile
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:mergeReleaseResources
+> Task :app:collectReleaseDependencies
+> Task :feature:settings:verifyReleaseResources
+> Task :app:sdkReleaseDependencyData
+> Task :app:processReleaseResources
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :core:pure:compileKotlin
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:designsystem:extractReleaseAnnotations
+> Task :core:designsystem:compileReleaseKotlin
+> Task :core:designsystem:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibRuntimeToJarRelease
+> Task :core:designsystem:bundleLibCompileToJarRelease
+> Task :core:designsystem:mergeReleaseGeneratedProguardFiles
+> Task :core:designsystem:exportReleaseConsumerProguardFiles
+> Task :core:designsystem:processReleaseJavaRes
+> Task :core:designsystem:mergeReleaseConsumerProguardFiles
+> Task :core:designsystem:mergeReleaseJavaResource
+> Task :core:designsystem:syncReleaseLibJars FROM-CACHE
+> Task :core:designsystem:bundleReleaseAar
+> Task :core:designsystem:assembleRelease
+> Task :core:entity:compileKotlin
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:boundary:compileKotlin
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+
+> Task :core:control:compileKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:94:56 Unnecessary safe call on a non-null receiver of type 'SeriesArchiveBoundary'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:124:62 Unnecessary safe call on a non-null receiver of type 'NightUseCase.SeriesRecorder'.
+
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :app:mergeReleaseNativeLibs
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :core:audio:kspReleaseKotlin
+> Task :feature:camera:kspReleaseKotlin
+> Task :feature:gallery:kspReleaseKotlin
+> Task :core:data:kspReleaseKotlin
+> Task :core:camera:kspReleaseKotlin
+> Task :feature:settings:kspReleaseKotlin
+> Task :feature:gallery:compileReleaseKotlin
+> Task :feature:gallery:compileReleaseJavaWithJavac
+> Task :feature:gallery:transformReleaseClassesWithAsm
+> Task :feature:gallery:mergeReleaseGeneratedProguardFiles
+> Task :feature:gallery:exportReleaseConsumerProguardFiles
+
+> Task :core:camera:compileReleaseKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt:1081:78 Unnecessary safe call on a non-null receiver of type 'CameraDevice'.
+
+> Task :core:camera:compileReleaseJavaWithJavac
+> Task :feature:camera:compileReleaseKotlin
+> Task :core:camera:transformReleaseClassesWithAsm
+> Task :core:camera:mergeReleaseGeneratedProguardFiles
+> Task :core:camera:exportReleaseConsumerProguardFiles
+> Task :feature:camera:compileReleaseJavaWithJavac
+> Task :feature:camera:transformReleaseClassesWithAsm
+> Task :feature:camera:mergeReleaseGeneratedProguardFiles
+> Task :feature:camera:exportReleaseConsumerProguardFiles
+> Task :core:sensors:kspReleaseKotlin
+> Task :core:audio:compileReleaseKotlin
+> Task :core:data:compileReleaseKotlin
+> Task :core:sensors:compileReleaseKotlin
+> Task :core:audio:compileReleaseJavaWithJavac
+> Task :core:audio:transformReleaseClassesWithAsm
+> Task :core:audio:mergeReleaseGeneratedProguardFiles
+> Task :core:audio:exportReleaseConsumerProguardFiles
+> Task :core:data:compileReleaseJavaWithJavac
+> Task :core:sensors:compileReleaseJavaWithJavac
+> Task :core:sensors:transformReleaseClassesWithAsm
+> Task :core:sensors:mergeReleaseGeneratedProguardFiles
+> Task :core:sensors:exportReleaseConsumerProguardFiles
+> Task :core:data:transformReleaseClassesWithAsm
+> Task :core:audio:bundleLibCompileToJarRelease
+> Task :core:data:mergeReleaseGeneratedProguardFiles
+> Task :core:data:exportReleaseConsumerProguardFiles
+> Task :core:camera:bundleLibCompileToJarRelease
+> Task :core:sensors:bundleLibCompileToJarRelease
+> Task :core:data:bundleLibCompileToJarRelease
+> Task :feature:camera:bundleLibCompileToJarRelease
+> Task :feature:gallery:bundleLibCompileToJarRelease
+> Task :feature:gallery:bundleLibRuntimeToJarRelease
+> Task :feature:camera:bundleLibRuntimeToJarRelease
+> Task :core:data:bundleLibRuntimeToJarRelease
+> Task :core:camera:bundleLibRuntimeToJarRelease
+> Task :core:sensors:bundleLibRuntimeToJarRelease
+> Task :core:audio:bundleLibRuntimeToJarRelease
+> Task :core:audio:processReleaseJavaRes
+> Task :core:camera:processReleaseJavaRes
+> Task :core:data:processReleaseJavaRes
+> Task :core:sensors:processReleaseJavaRes
+> Task :feature:gallery:processReleaseJavaRes
+> Task :feature:camera:processReleaseJavaRes
+> Task :core:camera:extractReleaseAnnotations
+> Task :core:camera:mergeReleaseConsumerProguardFiles
+> Task :core:audio:extractReleaseAnnotations
+> Task :core:audio:mergeReleaseConsumerProguardFiles
+> Task :core:camera:mergeReleaseJavaResource
+> Task :core:camera:syncReleaseLibJars FROM-CACHE
+> Task :core:audio:mergeReleaseJavaResource
+> Task :core:audio:syncReleaseLibJars FROM-CACHE
+> Task :core:camera:bundleReleaseAar
+> Task :core:camera:assembleRelease
+> Task :core:audio:bundleReleaseAar
+> Task :core:audio:assembleRelease
+> Task :core:data:extractReleaseAnnotations
+> Task :core:data:mergeReleaseConsumerProguardFiles
+> Task :core:data:mergeReleaseJavaResource
+> Task :core:sensors:extractReleaseAnnotations
+> Task :core:data:syncReleaseLibJars FROM-CACHE
+> Task :core:sensors:mergeReleaseConsumerProguardFiles
+> Task :core:data:bundleReleaseAar
+> Task :core:data:assembleRelease
+> Task :core:sensors:mergeReleaseJavaResource
+> Task :core:sensors:syncReleaseLibJars FROM-CACHE
+> Task :core:sensors:bundleReleaseAar
+> Task :core:sensors:assembleRelease
+> Task :feature:camera:extractReleaseAnnotations
+> Task :feature:camera:mergeReleaseConsumerProguardFiles
+> Task :feature:camera:mergeReleaseJavaResource
+> Task :feature:camera:syncReleaseLibJars FROM-CACHE
+> Task :feature:gallery:extractReleaseAnnotations
+> Task :feature:gallery:mergeReleaseConsumerProguardFiles
+> Task :feature:gallery:mergeReleaseJavaResource
+> Task :feature:gallery:syncReleaseLibJars FROM-CACHE
+> Task :feature:camera:bundleReleaseAar
+> Task :feature:camera:assembleRelease
+> Task :feature:gallery:bundleReleaseAar
+> Task :feature:gallery:assembleRelease
+> Task :feature:settings:extractReleaseAnnotations
+> Task :feature:settings:compileReleaseKotlin
+> Task :core:processing:kspReleaseKotlin
+> Task :core:processing:extractReleaseAnnotations
+> Task :feature:settings:compileReleaseJavaWithJavac
+> Task :feature:settings:processReleaseJavaRes
+> Task :feature:settings:mergeReleaseJavaResource
+> Task :feature:settings:transformReleaseClassesWithAsm
+> Task :feature:settings:mergeReleaseGeneratedProguardFiles
+> Task :feature:settings:exportReleaseConsumerProguardFiles
+> Task :feature:settings:mergeReleaseConsumerProguardFiles
+> Task :feature:settings:bundleLibCompileToJarRelease
+> Task :feature:settings:bundleLibRuntimeToJarRelease
+> Task :feature:settings:syncReleaseLibJars
+> Task :feature:settings:bundleReleaseAar
+> Task :feature:settings:assembleRelease
+
+> Task :core:processing:compileReleaseKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/processing/src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt:24:71 'constructor(p0: (Mutable)List<EditedMediaItem>): EditedMediaItemSequence.Builder' is deprecated. Deprecated in Java.
+
+> Task :core:processing:compileReleaseJavaWithJavac
+> Task :core:processing:processReleaseJavaRes
+> Task :core:processing:mergeReleaseJavaResource
+> Task :core:processing:transformReleaseClassesWithAsm
+> Task :core:processing:mergeReleaseGeneratedProguardFiles
+> Task :core:processing:exportReleaseConsumerProguardFiles
+> Task :core:processing:mergeReleaseConsumerProguardFiles
+> Task :core:processing:bundleLibCompileToJarRelease
+> Task :core:processing:bundleLibRuntimeToJarRelease
+> Task :core:processing:syncReleaseLibJars FROM-CACHE
+> Task :core:processing:bundleReleaseAar
+> Task :core:processing:assembleRelease
+> Task :app:kspReleaseKotlin
+> Task :app:compileReleaseKotlin
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:hiltCollectClassesRelease
+> Task :app:hiltAggregateDepsRelease FROM-CACHE
+> Task :app:hiltJavaCompileRelease
+> Task :app:processReleaseJavaRes
+> Task :app:transformReleaseClassesWithAsm
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseJavaResource
+> Task :app:produceReleaseComposeMapping
+> Task :app:reportReleaseComposeMappingErrors
+> Task :app:minifyReleaseWithR8
+> Task :app:mergeReleaseComposeMapping
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791667050340.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3m 38s
+380 actionable tasks: 255 executed, 125 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html

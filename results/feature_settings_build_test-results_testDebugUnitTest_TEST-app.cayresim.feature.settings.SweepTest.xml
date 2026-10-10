@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.settings.SweepTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:20:31.827Z" hostname="runnervmmprz5" time="1.741">
+  <properties/>
+  <testcase name="S-014 Fortschritt wird abgebildet" classname="app.cayresim.feature.settings.SweepTest" time="0.044"/>
+  <testcase name="texte_ohne_gedankenstriche" classname="app.cayresim.feature.settings.SweepTest" time="0.037"/>
+  <testcase name="S-010 Verlassen gibt Mikrofon und Sensor frei" classname="app.cayresim.feature.settings.SweepTest" time="0.059"/>
+  <testcase name="schwenk_ansage" classname="app.cayresim.feature.settings.SweepTest" time="0.188"/>
+  <testcase name="S-010 einseitiger Schwenk wird erklaert" classname="app.cayresim.feature.settings.SweepTest" time="0.099"/>
+  <testcase name="schwenk_signal_zu_schwach" classname="app.cayresim.feature.settings.SweepTest" time="0.198"/>
+  <testcase name="S-010 Bericht wird abgebildet" classname="app.cayresim.feature.settings.SweepTest" time="0.037"/>
+  <testcase name="schwenk_anleitung" classname="app.cayresim.feature.settings.SweepTest" time="0.162"/>
+  <testcase name="schwenk_ergebnis" classname="app.cayresim.feature.settings.SweepTest" time="0.187"/>
+  <testcase name="S-010 ViewModel ohne Signal meldet Signal zu schwach" classname="app.cayresim.feature.settings.SweepTest" time="0.388"/>
+  <testcase name="S-010 fehlende Lage wird erklaert" classname="app.cayresim.feature.settings.SweepTest" time="0.094"/>
+  <testcase name="S-010 ohne Berechtigung keine Messung" classname="app.cayresim.feature.settings.SweepTest" time="0.034"/>
+  <testcase name="schwenk_ansage_quer" classname="app.cayresim.feature.settings.SweepTest" time="0.139"/>
+  <testcase name="S-010 Knopf im Mikrofon-Test oeffnet die Schwenk-Messung" classname="app.cayresim.feature.settings.SweepTest" time="0.057"/>
+  <system-out><![CDATA[Roborazzi: sweep_prompt.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: sweep_weak.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: sweep_guide.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: sweep_result.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: sweep_prompt_land.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=2673, height=1233) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

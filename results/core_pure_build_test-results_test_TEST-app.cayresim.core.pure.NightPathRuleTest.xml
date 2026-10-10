@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightPathRuleTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:22.331Z" hostname="runnervmmprz5" time="0.007">
+  <properties/>
+  <testcase name="Randfall genau an den Grenzen gilt noch als gut" classname="app.cayresim.core.pure.NightPathRuleTest" time="0.006"/>
+  <testcase name="Fehlerfall jede verletzte Bedingung ergibt 8 Bit mit Grund" classname="app.cayresim.core.pure.NightPathRuleTest" time="0.0"/>
+  <testcase name="Guter Fall schneller Strom, keine Nullen, kalibriert, Probenacht gelungen ergibt RAW" classname="app.cayresim.core.pure.NightPathRuleTest" time="0.0"/>
+  <testcase name="Nachttest S24+ Schwarzwert 0 gilt als abgeschnitten, auch ohne Nullen im hellen Raum" classname="app.cayresim.core.pure.NightPathRuleTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

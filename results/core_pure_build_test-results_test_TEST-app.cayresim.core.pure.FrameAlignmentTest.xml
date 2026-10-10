@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.FrameAlignmentTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:18.757Z" hostname="runnervmmprz5" time="0.205">
+  <properties/>
+  <testcase name="Fokus-Stacking aus der Hand wird durch Ausrichtung deutlich genauer" classname="app.cayresim.core.pure.FrameAlignmentTest" time="0.104"/>
+  <testcase name="Guter Fall Verschiebung wird exakt gefunden und die Bilder liegen danach auf dem ersten" classname="app.cayresim.core.pure.FrameAlignmentTest" time="0.069"/>
+  <testcase name="Randfall kleine Bilder bleiben unveraendert, jedes Bild wird gemeldet" classname="app.cayresim.core.pure.FrameAlignmentTest" time="0.028"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

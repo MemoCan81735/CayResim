@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.LutTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:19.408Z" hostname="runnervmmprz5" time="0.1">
+  <properties/>
+  <testcase name="Warm hebt Rot gegenueber Blau" classname="app.cayresim.core.pure.LutTest" time="0.016"/>
+  <testcase name="Eingaben ausserhalb von 0 bis 1 werden begrenzt" classname="app.cayresim.core.pure.LutTest" time="0.001"/>
+  <testcase name="Kleinste LUT mit zwei Stuetzstellen funktioniert" classname="app.cayresim.core.pure.LutTest" time="0.0"/>
+  <testcase name="Interpolation ist monoton fuer monotone LUT" classname="app.cayresim.core.pure.LutTest" time="0.011"/>
+  <testcase name="Stuetzstellen werden exakt getroffen" classname="app.cayresim.core.pure.LutTest" time="0.001"/>
+  <testcase name="Mono macht alle Kanaele gleich" classname="app.cayresim.core.pure.LutTest" time="0.014"/>
+  <testcase name="Ausgabe bleibt immer im 8-Bit-Bereich (Eigenschaft)" classname="app.cayresim.core.pure.LutTest" time="0.043"/>
+  <testcase name="Falsche LUT-Daten werden abgelehnt" classname="app.cayresim.core.pure.LutTest" time="0.001"/>
+  <testcase name="Identitaet aendert keine Farbe (alle 8-Bit-Werte einer Achse)" classname="app.cayresim.core.pure.LutTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightPlanTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:22.343Z" hostname="runnervmmprz5" time="0.006">
+  <properties/>
+  <testcase name="Nachttest S24+ beleuchteter Raum wird hoechstens 4-mal so hell wie die Automatik" classname="app.cayresim.core.pure.NightPlanTest" time="0.005"/>
+  <testcase name="Randfall Geraet erlaubt mehr als 1 durch 10 s, Serie bleibt freihand bei 1 durch 10 s" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Fehlerfall unsinnige Messwerte" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Nachttest S24+ Automatik am Anschlag nimmt die volle ISO" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Dunkel oder nicht" classname="app.cayresim.core.pure.NightPlanTest" time="0.001"/>
+  <testcase name="Guter Fall maessig dunkel ergibt mittlere ISO" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Nachttest S24+ zweiter Versuch Automatik mit voller ISO bei 1 durch 25 s" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Randfall knapp unter dem Anschlag bleibt beim 1,5-fachen" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Guter Fall dunkle Szene nutzt die volle Zeit und passende ISO" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <testcase name="Randfall helle Szene kuerzt die Zeit statt ISO unter das Minimum zu druecken" classname="app.cayresim.core.pure.NightPlanTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

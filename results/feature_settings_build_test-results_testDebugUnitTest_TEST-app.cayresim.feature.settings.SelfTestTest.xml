@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.settings.SelfTestTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:20:29.159Z" hostname="runnervmmprz5" time="1.239">
+  <properties/>
+  <testcase name="bild_geraetewerte" classname="app.cayresim.feature.settings.SelfTestTest" time="0.222"/>
+  <testcase name="nachtweg_wird_mit_grund_angezeigt" classname="app.cayresim.feature.settings.SelfTestTest" time="0.082"/>
+  <testcase name="knopf_startet" classname="app.cayresim.feature.settings.SelfTestTest" time="0.072"/>
+  <testcase name="knopf_gesperrt_waehrend_lauf" classname="app.cayresim.feature.settings.SelfTestTest" time="0.06"/>
+  <testcase name="viewmodel_jede_pruefung_hat_eine_anzeige" classname="app.cayresim.feature.settings.SelfTestTest" time="0.033"/>
+  <testcase name="belichtung_lesbar" classname="app.cayresim.feature.settings.SelfTestTest" time="0.04"/>
+  <testcase name="viewmodel_guter_fall" classname="app.cayresim.feature.settings.SelfTestTest" time="0.038"/>
+  <testcase name="S-007 Stabilisator nicht gemeldet" classname="app.cayresim.feature.settings.SelfTestTest" time="0.073"/>
+  <testcase name="leerer_zustand_ist_nicht_gruen" classname="app.cayresim.feature.settings.SelfTestTest" time="0.035"/>
+  <testcase name="bild_raw_serie" classname="app.cayresim.feature.settings.SelfTestTest" time="0.087"/>
+  <testcase name="bild_ergebnis_gruen_hell" classname="app.cayresim.feature.settings.SelfTestTest" time="0.16"/>
+  <testcase name="viewmodel_kamera_belegt" classname="app.cayresim.feature.settings.SelfTestTest" time="0.033"/>
+  <testcase name="S-007 ohne Stabilisator kein Wert fuer aktiv" classname="app.cayresim.feature.settings.SelfTestTest" time="0.089"/>
+  <testcase name="viewmodel_reicht_geraetewerte_als_zahlen_weiter" classname="app.cayresim.feature.settings.SelfTestTest" time="0.043"/>
+  <testcase name="bild_ergebnis_rot" classname="app.cayresim.feature.settings.SelfTestTest" time="0.153"/>
+  <system-out><![CDATA[Roborazzi: selftest_device.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: selftest_ok_light.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: selftest_failed.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

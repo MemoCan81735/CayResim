@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.settings.MicTestTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:20:03.982Z" hostname="runnervmmprz5" time="25.156">
+  <properties/>
+  <testcase name="mikrotest_klatsch_ergebnis" classname="app.cayresim.feature.settings.MicTestTest" time="17.681"/>
+  <testcase name="texte_ohne_gedankenstriche" classname="app.cayresim.feature.settings.MicTestTest" time="0.191"/>
+  <testcase name="mikrotest_fortschritt" classname="app.cayresim.feature.settings.MicTestTest" time="0.303"/>
+  <testcase name="S-009 Vorbereitung vor jeder Klatsch-Phase" classname="app.cayresim.feature.settings.MicTestTest" time="0.207"/>
+  <testcase name="mikrotest_klatschen_ansage" classname="app.cayresim.feature.settings.MicTestTest" time="0.505"/>
+  <testcase name="S-008 Zahlen deutsch und Stille lesbar" classname="app.cayresim.feature.settings.MicTestTest" time="0.115"/>
+  <testcase name="mikrotest_ohne_stereo" classname="app.cayresim.feature.settings.MicTestTest" time="0.421"/>
+  <testcase name="S-008 ohne Berechtigung kein Lauf" classname="app.cayresim.feature.settings.MicTestTest" time="0.096"/>
+  <testcase name="mikrotest_vorbereiten" classname="app.cayresim.feature.settings.MicTestTest" time="0.196"/>
+  <testcase name="mikrotest_ergebnis" classname="app.cayresim.feature.settings.MicTestTest" time="0.285"/>
+  <testcase name="S-008 ViewModel fuellt das Ergebnis" classname="app.cayresim.feature.settings.MicTestTest" time="0.104"/>
+  <testcase name="S-008 Verlassen bricht ab und gibt frei" classname="app.cayresim.feature.settings.MicTestTest" time="0.043"/>
+  <testcase name="mikrotest_nicht_geeicht" classname="app.cayresim.feature.settings.MicTestTest" time="0.367"/>
+  <testcase name="S-008 unerwarteter Fehler beendet nur den Lauf" classname="app.cayresim.feature.settings.MicTestTest" time="0.078"/>
+  <testcase name="mikrotest_start_und_zurueck" classname="app.cayresim.feature.settings.MicTestTest" time="0.26"/>
+  <testcase name="S-008 Fehler einer Quelle wird angezeigt" classname="app.cayresim.feature.settings.MicTestTest" time="0.176"/>
+  <system-out><![CDATA[Roborazzi: mictest_claps.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: mictest_clap.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: mictest_no_stereo.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: mictest_prepare.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: mictest_result.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: mictest_not_calibrated.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

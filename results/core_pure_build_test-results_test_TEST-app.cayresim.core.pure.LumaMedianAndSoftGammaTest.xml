@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:19.378Z" hostname="runnervmmprz5" time="0.018">
+  <properties/>
+  <testcase name="Median ueber Helligkeit entfernt einen Passanten" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.0"/>
+  <testcase name="Weiches Gamma aendert ruhige Flaechen nicht" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.013"/>
+  <testcase name="Weiches Gamma laesst Lichtspuren heller als der Mittelwert" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.004"/>
+  <testcase name="Fehlerfall ungueltiges k und leere Serie" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.001"/>
+  <testcase name="Median ueber Helligkeit uebernimmt die Farbe eines echten Bildes" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.0"/>
+  <testcase name="Weiches Gamma mit k gleich 1 ist der Mittelwert" classname="app.cayresim.core.pure.LumaMedianAndSoftGammaTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

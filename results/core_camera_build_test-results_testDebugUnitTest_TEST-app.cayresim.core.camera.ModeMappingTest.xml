@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.camera.ModeMappingTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:19:02.568Z" hostname="runnervmmprz5" time="0.768">
+  <properties/>
+  <testcase name="CameraX-Fehler werden auf Ergebnistypen abgebildet" classname="app.cayresim.core.camera.ModeMappingTest" time="0.664"/>
+  <testcase name="Jeder Boundary-Modus hat einen Entity-Schluessel und zurueck" classname="app.cayresim.core.camera.ModeMappingTest" time="0.013"/>
+  <testcase name="NORMAL ist keine Extension, alle anderen schon" classname="app.cayresim.core.camera.ModeMappingTest" time="0.06"/>
+  <testcase name="S-007 Stabilisator ohne Wert im Ergebnis heisst nicht gemeldet, ueberschreibt aber keinen Wert" classname="app.cayresim.core.camera.ModeMappingTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

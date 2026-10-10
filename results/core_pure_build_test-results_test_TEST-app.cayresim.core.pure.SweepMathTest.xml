@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.SweepMathTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:31.658Z" hostname="runnervmmprz5" time="3.221">
+  <properties/>
+  <testcase name="S-010 Gruende ohne Richtung sind getrennt" classname="app.cayresim.core.pure.SweepMathTest" time="0.868"/>
+  <testcase name="S-010 Ausgleich findet Quelle vorne, schraeg und hinten" classname="app.cayresim.core.pure.SweepMathTest" time="0.006"/>
+  <testcase name="S-010 Startlage aus der Ruhe vor dem Schwenk" classname="app.cayresim.core.pure.SweepMathTest" time="0.0"/>
+  <testcase name="S-012 schwaches Signal wird erkannt" classname="app.cayresim.core.pure.SweepMathTest" time="0.924"/>
+  <testcase name="S-010 Laufzeit je Fenster" classname="app.cayresim.core.pure.SweepMathTest" time="0.043"/>
+  <testcase name="S-010 Klopfer misst den Gleichlauf" classname="app.cayresim.core.pure.SweepMathTest" time="0.012"/>
+  <testcase name="S-010 Richtung relativ zur Startlage" classname="app.cayresim.core.pure.SweepMathTest" time="0.001"/>
+  <testcase name="S-010 Auswertung ist schnell genug" classname="app.cayresim.core.pure.SweepMathTest" time="1.363"/>
+  <testcase name="S-010 einseitiger Schwenk wird erkannt" classname="app.cayresim.core.pure.SweepMathTest" time="0.002"/>
+  <testcase name="S-010 Lage dreht die Achse" classname="app.cayresim.core.pure.SweepMathTest" time="0.001"/>
+  <system-out><![CDATA[Quelle 0.0/0.0: Fehler 1.16 Grad, Abdeckung 0.093
+Quelle 30.0/10.0: Fehler 0.40 Grad, Abdeckung 0.097
+Quelle 160.0/-5.0: Fehler 0.55 Grad, Abdeckung 0.099
+S-012 schwach: Median 0.0733438249289242, Fenster mit Spitze 55, Failed(reason=WEAK_SIGNAL, coverage=0.2198694651529366, used=55)
+Schwenk-Auswertung 25 s: 319 ms
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

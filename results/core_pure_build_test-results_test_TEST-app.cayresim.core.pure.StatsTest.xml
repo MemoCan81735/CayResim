@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.StatsTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:18:31.610Z" hostname="runnervmmprz5" time="0.024">
+  <properties/>
+  <testcase name="Median liegt immer zwischen Minimum und Maximum" classname="app.cayresim.core.pure.StatsTest" time="0.016"/>
+  <testcase name="Einfarbige Serie bleibt einfarbig" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Ein einzelner Wert ist sein eigener Median und Mittelwert" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Median ignoriert eine Minderheit von Ausreissern" classname="app.cayresim.core.pure.StatsTest" time="0.007"/>
+  <testcase name="Median einer geraden Liste ist der untere Wert" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Median einer ungeraden Liste" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Leere Eingabe oder falsches count wird abgelehnt" classname="app.cayresim.core.pure.StatsTest" time="0.001"/>
+  <testcase name="Median veraendert die Eingabe nicht" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Median beruecksichtigt nur count Werte" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="Mittelwert wird kaufmaennisch gerundet" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <testcase name="SeededRng ist reproduzierbar und bleibt im Bereich" classname="app.cayresim.core.pure.StatsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

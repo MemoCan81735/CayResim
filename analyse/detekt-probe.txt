@@ -1,0 +1,1 @@
+ExplicitGarbageCollectionCall - [probe] at /home/runner/work/CayResim/CayResim/config/probes/detekt/Probe.kt:5:12 - Signature=Probe.kt$gc()
