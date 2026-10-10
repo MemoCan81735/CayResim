@@ -243,13 +243,8 @@ class NightUseCase @Inject constructor(
         suspend fun abortIfOpen() { queue.close(); if (!finished) session?.abort() }
 
         /** Ein Fehler beim Ablegen beendet nur das Speichern, nie das Nachtbild (R14). */
-        private inline fun write(block: () -> Boolean): Boolean = try {
-            block()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            false
-        }
+        private inline fun write(block: () -> Boolean): Boolean =
+            runCatching(block).onFailure { if (it is CancellationException) throw it }.getOrDefault(false)
     }
 
     companion object {
