@@ -1,6 +1,6 @@
 # S-004: Ausrichtung für Langzeit, Menschen wegrechnen und Fokus-Stacking, Warnung im Pro-Modus
 
-**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 22:52)
+**Stand:** 9. Oktober 2026 · **Status:** umgesetzt in v0.1.90, Gerätetest offen
 **Anlass:** Prüfung "Schutz gegen Verwackeln" am 9. Oktober. Langzeit (Mittelwert) und Menschen wegrechnen (Median)
 mitteln etwa 20 Bilder ohne Ausrichtung; aus der Hand gibt das Doppelbilder oder Unschärfe. Fokus-Stacking setzt Blöcke
 aus unausgerichteten Bildern zusammen. Der Pro-Modus erlaubt lange Zeiten ohne Hinweis.
@@ -65,4 +65,16 @@ Am Bildrand wiederholte Randpixel (Streifen bis zur Größe des Versatzes). Rüc
 Ein kurzer Lauf für die neuen Screenshots (Pro-Hinweis), ein Release.
 
 ## Ergebnis
-(nach dem Lauf eintragen)
+Lauf 38014887134 grün (schneller Job, Emulator mit den Stapel-Tests, Release v0.1.90); davor ein Lauf rot nur wegen
+der neuen Screenshot-Grundlage (Pro-Hinweis, angesehen, übernommen).
+
+| Kriterium | Wert | Grenze |
+|---|---|---|
+| K1 Ausrichtung | Verschiebungen exakt | exakt |
+| K2 Langzeit freihand | Struktur 0,288 gegen 0,279 Stativ (103 %), ohne Ausrichtung 0,055 | mindestens 90 %, ohne unter 70 % |
+| K3 Wegrechnen freihand | Geist 0,52 Stufen, Struktur 0,289 gegen 0,297 (97 %) | unter 3 Stufen, mindestens 90 % |
+| K4 Fokus-Stacking | grün | höchstens halb so große Abweichung |
+| K5 Nacht | alle Laborwerte unverändert | |
+| K6, K7 | Tests grün | |
+
+Offen: Gerätetest mit Zeitmessung der Serienmodi (robuste Suche etwa 100 ms je Bild auf dem Desktop).
