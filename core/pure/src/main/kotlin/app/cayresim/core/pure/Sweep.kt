@@ -36,6 +36,11 @@ object SweepMath {
     const val MIN_COVERAGE = 0.02
     /** Mindesthoehe der GCC-PHAT-Spitze; darunter hat das Fenster keine klare Quelle. */
     const val MIN_PEAK = 0.1
+    /**
+     * S-012: Mindest-Median der Spitze ueber alle Fenster. Darunter ist die Quelle zu leise ("Signal zu schwach"):
+     * S24+ am 10.10. mit 0,074 unbrauchbar, Modell mit Hall und geneigter Achse ab 0,14 sicher.
+     */
+    const val MIN_MEDIAN_PEAK = 0.10
     /** Groesste gesuchte Laufzeit: 41 cm Abstand, genug fuer jedes Handy. */
     const val MAX_LAG_SECONDS = 0.0012
     const val MIN_SPACING = 0.03
@@ -68,9 +73,10 @@ object SweepMath {
     /**
      * Gruende ohne Richtung (Zweitpruefung S-010, W2: jede Ursache eigen, damit der Hinweis stimmt):
      * NO_STEREO nur ein Kanal; TOO_FEW_MEASUREMENTS zu wenige Fenster mit klarem Signal; NO_POSE Fenster da, aber keine
-     * Lage zur Tonzeit (Zeitbezug falsch oder Sensor-Luecke); ONE_SIDED zu einseitig gedreht; IMPLAUSIBLE Abstand unsinnig.
+     * Lage zur Tonzeit (Zeitbezug falsch oder Sensor-Luecke); ONE_SIDED zu einseitig gedreht; IMPLAUSIBLE Abstand unsinnig;
+     * WEAK_SIGNAL (S-012) das typische Fenster hat keine klare Spitze, Quelle zu leise.
      */
-    enum class SweepFailure { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE }
+    enum class SweepFailure { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE, WEAK_SIGNAL }
 
     sealed interface Estimate {
         val coverage: Double
@@ -101,6 +107,8 @@ object SweepMath {
         val relElevationDeg: Double?,
         /** Fenster mit klarer GCC-PHAT-Spitze, mit oder ohne Lage. */
         val framesWithPeak: Int = framesUsed,
+        /** S-012: Median der GCC-PHAT-Spitze ueber alle Fenster nach der Klopfphase (0 bei Stille). */
+        val peakMedian: Double = 0.0,
     )
 
     fun rotate(q: Pose, v: Vec3): Vec3 {
@@ -133,28 +141,37 @@ object SweepMath {
     fun frameDelays(a: FloatArray, b: FloatArray, sampleRate: Int, maxLagSeconds: Double = MAX_LAG_SECONDS): List<FrameDelay> {
         val len = (FRAME_SECONDS * sampleRate).toInt()
         val n = minOf(a.size, b.size) / maxOf(1, len)
-        return framesOf(n, len, sampleRate, maxLagSeconds) { from, wa, wb -> a.copyInto(wa, 0, from, from + len); b.copyInto(wb, 0, from, from + len) }
+        return framesOf(n, len, sampleRate, maxLagSeconds, null) { from, wa, wb -> a.copyInto(wa, 0, from, from + len); b.copyInto(wb, 0, from, from + len) }
     }
 
     /**
      * Wie [frameDelays], aber direkt aus verschraenktem PCM ab Frame [startFrame]: nur zwei Fensterpuffer statt Kopien
      * der ganzen Aufnahme (Zweitpruefung S-010, W4: 25 s Stereo sind 4,8 MB, getrennt und als Float das Doppelte).
      */
-    fun frameDelaysInterleaved(pcm: ShortArray, channels: Int, sampleRate: Int, startFrame: Int, maxLagSeconds: Double = MAX_LAG_SECONDS): List<FrameDelay> {
+    fun frameDelaysInterleaved(
+        pcm: ShortArray, channels: Int, sampleRate: Int, startFrame: Int, maxLagSeconds: Double = MAX_LAG_SECONDS,
+        /** S-012: nimmt die Spitzenhoehe jedes Fensters auf, auch unter [MIN_PEAK] (fuer den Median). */
+        allPeaks: MutableList<Double>? = null,
+    ): List<FrameDelay> {
         val len = (FRAME_SECONDS * sampleRate).toInt()
         val frames = pcm.size / channels - startFrame
         val n = maxOf(0, frames) / maxOf(1, len)
-        return framesOf(n, len, sampleRate, maxLagSeconds) { from, wa, wb ->
+        return framesOf(n, len, sampleRate, maxLagSeconds, allPeaks) { from, wa, wb ->
             for (i in 0 until len) { val f = (startFrame + from + i) * channels; wa[i] = pcm[f] / 32768f; wb[i] = pcm[f + 1] / 32768f }
         }
     }
 
-    private inline fun framesOf(n: Int, len: Int, sampleRate: Int, maxLagSeconds: Double, fill: (Int, FloatArray, FloatArray) -> Unit): List<FrameDelay> {
+    private inline fun framesOf(
+        n: Int, len: Int, sampleRate: Int, maxLagSeconds: Double, allPeaks: MutableList<Double>?, fill: (Int, FloatArray, FloatArray) -> Unit,
+    ): List<FrameDelay> {
         val out = ArrayList<FrameDelay>(n)
         val wa = FloatArray(len); val wb = FloatArray(len)
         for (k in 0 until n) {
             fill(k * len, wa, wb)
-            val d = AudioMath.gccPhat(wa, wb, sampleRate, maxLagSeconds) ?: continue
+            val d = AudioMath.gccPhat(wa, wb, sampleRate, maxLagSeconds)
+            // Stille ergibt keine Spitze und zaehlt fuer den Median als 0
+            allPeaks?.add(d?.peak?.takeIf { it.isFinite() } ?: 0.0)
+            if (d == null) continue
             if (d.peak >= MIN_PEAK) out += FrameDelay((k + 0.5) * FRAME_SECONDS, d.seconds, d.peak)
         }
         return out
@@ -304,16 +321,22 @@ object SweepMath {
         val tapFrames = (tapSeconds * sampleRate).toInt().coerceIn(0, totalFrames)
         val mono = FloatArray(tapFrames) { i -> maxOf(abs(pcm[i * channels].toInt()), abs(pcm[i * channels + 1].toInt())) / 32768f }
         val sync = tapOffsetSeconds(accel, mono, sampleRate, audioStartNanos, tapSeconds)
-        val frames = frameDelaysInterleaved(pcm, channels, sampleRate, tapFrames)
+        val peaks = ArrayList<Double>()
+        val frames = frameDelaysInterleaved(pcm, channels, sampleRate, tapFrames, allPeaks = peaks)
+        val peakMedian = if (peaks.isEmpty()) 0.0 else peaks.sorted()[peaks.size / 2]
         val total = (totalFrames - tapFrames) / (FRAME_SECONDS * sampleRate).toInt().coerceAtLeast(1)
         val m = frames.mapNotNull { f ->
             val t = audioStartNanos + ((tapSeconds + f.centerSeconds) * 1e9).toLong()
             poseAt(poses, t)?.let { Measurement(rotate(it, axisDevice), f.delaySeconds) }
         }
-        val est = if (frames.size >= MIN_FRAMES && m.size < MIN_FRAMES) Estimate.Failed(SweepFailure.NO_POSE, coverage(m.map { it.axis }), m.size)
-        else solve(m)
+        val est = when {
+            // S-012: zuerst die Signalstaerke, sonst fuehren Zufallsspitzen zu "unplausibel" (S24+ 10.10., 16:05 Uhr)
+            peaks.isNotEmpty() && peakMedian < MIN_MEDIAN_PEAK -> Estimate.Failed(SweepFailure.WEAK_SIGNAL, coverage(m.map { it.axis }), m.size)
+            frames.size >= MIN_FRAMES && m.size < MIN_FRAMES -> Estimate.Failed(SweepFailure.NO_POSE, coverage(m.map { it.axis }), m.size)
+            else -> solve(m)
+        }
         val start = startPose(poses, audioStartNanos, tapSeconds)
         val rel = if (est is Estimate.Ok && start != null) relativeToView(start, est.direction) else null
-        return SweepReport(sync, rate, total, m.size, est, rel?.first, rel?.second, frames.size)
+        return SweepReport(sync, rate, total, m.size, est, rel?.first, rel?.second, frames.size, peakMedian)
     }
 }

@@ -66,7 +66,7 @@ class SweepTest {
             analysis = SweepMath.SweepReport(
                 syncSeconds = 0.006, sensorRateHz = 99.6, framesTotal = 440, framesUsed = 412,
                 estimate = SweepMath.Estimate.Ok(Vec3(0.2, 0.97, -0.07), 0.151, -0.00004, 0.000031, 0.083, 412),
-                relAzimuthDeg = 12.2, relElevationDeg = -4.3, framesWithPeak = 430,
+                relAzimuthDeg = 12.2, relElevationDeg = -4.3, framesWithPeak = 430, peakMedian = 0.52,
             ),
             failure = null, timeExact = true, fileUri = "content://x", folder = "Recordings/CayResim/Schwenk-20261010-153000",
         ),
@@ -78,10 +78,10 @@ class SweepTest {
         assertEquals(12.2, assertNotNull(r.azimuthDeg), 1e-9); assertEquals(-4.3, assertNotNull(r.elevationDeg), 1e-9)
         assertEquals(15.1, assertNotNull(r.spacingCm), 1e-9); assertEquals(0.031, assertNotNull(r.residualMs), 1e-9)
         assertEquals(6.0, assertNotNull(r.syncMs), 1e-9); assertEquals(412, r.framesUsed); assertEquals(0.083, r.coverage, 1e-9)
-        assertEquals(430, r.framesWithPeak); assertFalse(r.noStartPose)
+        assertEquals(430, r.framesWithPeak); assertFalse(r.noStartPose); assertEquals(0.52, r.peakMedian, 1e-9)
     }
 
-    @Test fun `S-010 ViewModel ohne Signal meldet zu wenige Messungen`() {
+    @Test fun `S-010 ViewModel ohne Signal meldet Signal zu schwach`() {
         val v = vm()
         v.onPermissionResult(true)
         main.scheduler.advanceUntilIdle()
@@ -89,7 +89,8 @@ class SweepTest {
         assertFalse(s.running); assertEquals(SweepStepUi.DONE, s.step)
         val r = assertNotNull(s.result)
         assertNull(r.failure)
-        assertEquals(SweepEstimateFailureUi.TOO_FEW_MEASUREMENTS, r.estimateFailure)
+        // S-012: Stille ist "Signal zu schwach" (vorher "zu wenige Messfenster")
+        assertEquals(SweepEstimateFailureUi.WEAK_SIGNAL, r.estimateFailure)
         assertNotNull(r.folder)
     }
 
@@ -142,6 +143,18 @@ class SweepTest {
         compose.setContent { CayResimTheme { SweepContent(state, {}, {}) } }
         compose.onNodeWithTag("sweep").performScrollToNode(hasTestTag("sweep_result"))
         compose.onNodeWithText("keine Lage passt zeitlich dazu", substring = true).assertExists()
+    }
+
+    @Test fun schwenk_signal_zu_schwach() {
+        // S-012 K4: Werte wie beim S24+ am 10.10., 16:05 Uhr
+        val state = SweepUiState(step = SweepStepUi.DONE, result = SweepResultUi(failure = null, estimateFailure = SweepEstimateFailureUi.WEAK_SIGNAL,
+            coverage = 0.22, framesWithPeak = 100, framesUsed = 100, framesTotal = 440, peakMedian = 0.074, syncMs = 19.5, sensorRateHz = 125.0,
+            timeExact = true, folder = "Recordings/CayResim/Schwenk-20261010-160510"))
+        compose.setContent { CayResimTheme { SweepContent(state, {}, {}) } }
+        compose.onNodeWithTag("sweep").performScrollToNode(hasTestTag("sweep_result"))
+        compose.onNodeWithText("Signal zu schwach. Musik oder Sprache", substring = true).assertExists()
+        compose.onNodeWithText("ab 0,10 brauchbar): 0,07", substring = true).assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/sweep_weak.png")
     }
 
     @Test fun `S-010 einseitiger Schwenk wird erklaert`() {

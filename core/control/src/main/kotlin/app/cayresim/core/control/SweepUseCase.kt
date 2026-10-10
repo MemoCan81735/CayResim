@@ -146,6 +146,8 @@ class SweepUseCase @Inject constructor(
                 append("  \"framesTotal\": ").append(a.framesTotal).append(",\n")
                 append("  \"framesUsed\": ").append(a.framesUsed).append(",\n")
                 append("  \"framesWithPeak\": ").append(a.framesWithPeak).append(",\n")
+                // S-012: Signalstaerke, Feld kommt in Formatversion 1 nur dazu
+                append("  \"peakMedian\": ").append(n(a.peakMedian)).append(",\n")
                 append("  \"coverage\": ").append(n(e.coverage)).append(",\n")
                 append("  \"failure\": ").append((e as? SweepMath.Estimate.Failed)?.let { "\"${it.reason.name}\"" } ?: "null").append(",\n")
                 append("  \"direction\": ").append(ok?.direction?.let { "[${n(it.x)}, ${n(it.y)}, ${n(it.z)}]" } ?: "null").append(",\n")

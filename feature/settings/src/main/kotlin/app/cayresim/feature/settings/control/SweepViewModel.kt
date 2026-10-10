@@ -21,7 +21,7 @@ import javax.inject.Inject
 /** Spiegel der Control-Typen fuer die UI (R1); nur Zahlen und Schluessel, den Text baut die UI (R23). */
 enum class SweepStepUi { IDLE, TAP, SWEEP, ANALYZING, DONE }
 enum class SweepFailureUi { NO_PERMISSION, NO_SENSOR, RECORD_FAILED }
-enum class SweepEstimateFailureUi { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE }
+enum class SweepEstimateFailureUi { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE, WEAK_SIGNAL }
 
 @Immutable
 data class SweepResultUi(
@@ -35,6 +35,8 @@ data class SweepResultUi(
     val framesUsed: Int = 0,
     val framesWithPeak: Int = 0,
     val framesTotal: Int = 0,
+    /** S-012: Median der GCC-PHAT-Spitze (Signalstaerke, Grenze 0,10). */
+    val peakMedian: Double = 0.0,
     /** Richtung berechnet, aber keine Startlage fuer "relativ zum Kamerablick". */
     val noStartPose: Boolean = false,
     val syncMs: Double? = null,
@@ -114,6 +116,7 @@ class SweepViewModel @Inject constructor(private val useCase: SweepUseCase) : Vi
                 framesWithPeak = a?.framesWithPeak ?: 0,
                 noStartPose = ok != null && a.relAzimuthDeg == null,
                 framesTotal = a?.framesTotal ?: 0,
+                peakMedian = a?.peakMedian ?: 0.0,
                 syncMs = a?.syncSeconds?.times(1000),
                 sensorRateHz = a?.sensorRateHz ?: 0.0,
                 timeExact = r.timeExact,

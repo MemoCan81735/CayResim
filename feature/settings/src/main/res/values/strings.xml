@@ -4,7 +4,7 @@
     <string name="settings_guide">Anleitung</string>
     <string name="settings_guide_hint">So nutzt du alle Funktionen von CayResim</string>
     <string name="settings_nightseries">Nachtserie speichern</string>
-    <string name="settings_nightseries_hint">Für Messungen: Nachtaufnahmen legen zusätzlich alle Einzelbilder als ZIP in Download/CayResim ab, etwa 50 MB je Aufnahme. Gilt bis zum Neustart. Bitte keine Personen fotografieren.</string>
+    <string name="settings_nightseries_hint">Für Messungen: Die nächste Nachtaufnahme legt zusätzlich alle Einzelbilder als ZIP in Download/CayResim ab, etwa 50 MB. Danach schaltet sich der Schalter selbst aus. Bitte keine Personen fotografieren.</string>
     <string name="settings_selftest_hint">Prüft die Kamera, etwa eine Minute</string>
     <string name="guide_title">Anleitung</string>
     <string name="guide_intro">CayResim macht gute Fotos ohne Einstellen: Kamera öffnen, auf den großen runden Knopf tippen, fertig. Alles Weitere ist freiwillig.</string>
@@ -142,7 +142,7 @@
     <string name="mictest_storage_failed">Mindestens eine Datei konnte nicht gespeichert werden.</string>
     <string name="mictest_sweep">Schwenk-Messung (25 s)</string>
     <string name="sweep_title">Schwenk-Messung</string>
-    <string name="sweep_intro">Misst, ob sich eine Geräuschquelle durch Drehen des Handys orten lässt. Dafür ein zweites Handy oder Radio mit gleichmäßigem Rauschen 1,5 bis 2 Meter entfernt fest hinstellen.</string>
+    <string name="sweep_intro">Misst, ob sich eine Geräuschquelle durch Drehen des Handys orten lässt. Dafür ein zweites Handy oder Radio mit Musik oder Sprache, gut hörbar laut, etwa 1 Meter entfernt fest hinstellen.</string>
     <string name="sweep_steps">1. Kamera auf die Quelle richten und Start tippen.\n2. Zweimal auf die Rückseite tippen.\n3. Langsam schwenken: nach links und rechts drehen, auf hochkant kippen, schräg halten, etwas nach oben und unten. An derselben Stelle bleiben.\nDauer in Sekunden: 25</string>
     <string name="sweep_start">Schwenk-Messung starten</string>
     <string name="sweep_running">Läuft …</string>
@@ -159,6 +159,8 @@
     <string name="sweep_sync_none">Gleichlauf: kein Klopfer erkannt</string>
     <string name="sweep_time_rough">Zeitbezug der Aufnahme nur grob (kein Zeitstempel)</string>
     <string name="sweep_rate">Lagesensor (Hz): %1$s</string>
+    <string name="sweep_fail_weak">Keine Richtung: Signal zu schwach. Musik oder Sprache statt Rauschen abspielen, lauter stellen und auf etwa 1 m heran.</string>
+    <string name="sweep_signal">Signalstärke (Median der Spitze, ab 0,10 brauchbar): %1$s</string>
     <string name="sweep_fail_too_few">Keine Richtung: zu wenige Messfenster mit klarem Geräusch. Quelle lauter stellen oder näher heran.</string>
     <string name="sweep_fail_one_sided">Keine Richtung: zu einseitig geschwenkt. Auch hochkant und schräg kippen.</string>
     <string name="sweep_fail_no_stereo">Keine Richtung: die Aufnahme hat nur einen Kanal.</string>

@@ -137,6 +137,8 @@ class NightUseCase @Inject constructor(
                         // Texte (einige tausend Zeilen Lage) abseits des Aufrufers bauen (Zweitpruefung S-011, B9)
                         val (meta, lage) = withContext(ctx) { NightSeries.metaJson(info, records) to SweepUseCase.csv(samples) }
                         val saved = series.finish(meta, lage)
+                        // S-011 Nachtrag (Arslan, 10.10.): eine Serie je Einschalten; nach einem Fehler bleibt er an
+                        if (saved != null) debug?.setSaveNightSeries(false)
                         report = report.copy(seriesName = saved?.name, seriesBytes = saved?.bytes, seriesFailed = saved == null)
                     }
                     StackOutcome.Saved(r.uri, used, used < chosen * 3 / 4, report)

@@ -79,7 +79,7 @@ Rauschunterdrückung gleichmäßiges Rauschen dämpft). Daraus für die App: bei
 statt "unplausibel" melden.
 
 Empfohlene Reihenfolge für die App (je eigene Spec):
-1. Signalprüfung (Median der GCC-Spitze) mit klarer Meldung.
+1. Signalprüfung (Median der GCC-Spitze) mit klarer Meldung. Umgesetzt in S-012 (Grenze 0,10).
 2. Eichschwenk je Gerät, Achse speichern (neues Speichern von Daten, Freigabe nötig).
 3. Richtungskarte plus robuste Rechnung mit der geeichten Achse (M6), Ergebnis mit Fehlerkreis.
 4. Live-Hilfe beim Schwenken (fehlende Richtung als Ansage).

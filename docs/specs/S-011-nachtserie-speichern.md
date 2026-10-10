@@ -133,7 +133,7 @@ Samsung-Foto derselben Szene.
 | B14 | Testname K8 falsch | Hinweis | korrigiert |
 | B15 | Spec versprach Bilder je Sekunde im Hinweis | Hinweis | Spec angepasst, Werkzeug zeigt sie |
 | B16 | MediaStore benennt bei gleichem Namen um, Hinweis zeigte den alten | Hinweis | Name nach dem Anlegen gelesen |
-| B17 | Schalter bleibt an, solange die App im Speicher ist, unter Umständen tagelang | Hinweis | offen, Frage an Arslan: Schalter nach einer Aufnahme selbst ausschalten? |
+| B17 | Schalter bleibt an, solange die App im Speicher ist, unter Umständen tagelang | Hinweis | entschieden von Arslan (10.10., 20:16 Uhr): Schalter schaltet sich nach der gespeicherten Serie aus, siehe Nachtrag |
 
 Nicht beanstandet: Schichten und Importe, `api(...)`, Abbruch löscht die halbe Datei, Fehlerweg mit Hinweis,
 gültiges JSON, Vorzeichen und Rand im Werkzeug, Zeitstempel im Kamera-Adapter (ein Thread, `@Volatile` reicht).
@@ -143,6 +143,18 @@ v0.1.122 (Lauf 38073283167, 10.10., 20:02 Uhr): alle Jobs grün, Emulator mit `s
 Einschalten: ja, steigend: ja, also dieselbe Zeitbasis wie der Lagesensor) und `s011SchreibenUndAbbrechen`.
 Kurze Läufe bis dahin: 5, davon rot durch fehlende Screenshot-Grundlagen (erwartet), zwei Kompilierfehler in
 `:core:data` (lokal nicht prüfbar), die Zeitgrenze K3 auf dem CI-Runner und zwei detekt-Funde.
+
+## Nachtrag: Schalter nach der Serie aus (freigegeben von Arslan, 10.10., 20:16 Uhr)
+Anlass: Zweitprüfung B17. Entscheidung: Der Schalter schaltet sich nach jeder **gespeicherten** Nachtserie selbst aus;
+scheitert das Speichern, bleibt er an, damit der nächste Versuch wieder speichert. Texte: Hinweis am Schalter "Die
+nächste Nachtaufnahme legt ... ab. Danach schaltet sich der Schalter selbst aus.", Hinweiszeile nach der Aufnahme
+endet mit "Schalter wieder aus".
+
+| Nr. | Kriterium | Test |
+|---|---|---|
+| K11 | Nach gespeicherter Serie ist der Schalter aus, die nächste Aufnahme legt nichts ab; nach Speicherfehler bleibt er an | `NightUseCaseTest > S-011 Schalter schaltet sich nach der gespeicherten Serie aus` (lokal rot mit dem Code von v0.1.122, dann grün) |
+
+Geänderte Screenshot-Grundlagen: `settings.png`, `settings_nightseries.png`, `camera_night_series.png`.
 
 ## Ergebnis
 Gerätetest offen.

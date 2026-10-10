@@ -126,6 +126,8 @@ private fun Measured(r: SweepResultUi) {
     val spacing = r.spacingCm; val residual = r.residualMs
     if (spacing != null && residual != null) Text(stringResource(R.string.sweep_spacing, dec1(spacing), dec2(residual)), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.sweep_coverage, dec2(r.coverage), r.framesWithPeak, r.framesUsed, r.framesTotal), style = MaterialTheme.typography.bodySmall)
+    // S-012: Signalstaerke als Zahl, damit Geraetetests sie mitliefern
+    Text(stringResource(R.string.sweep_signal, dec2(r.peakMedian)), style = MaterialTheme.typography.bodySmall)
     val sync = r.syncMs
     Text(sync?.let { stringResource(R.string.sweep_sync, signed1(it)) } ?: stringResource(R.string.sweep_sync_none), style = MaterialTheme.typography.bodySmall)
     if (!r.timeExact) Text(stringResource(R.string.sweep_time_rough), style = MaterialTheme.typography.bodySmall)
@@ -147,4 +149,5 @@ private fun estimateFailureText(f: SweepEstimateFailureUi) = when (f) {
     SweepEstimateFailureUi.NO_POSE -> R.string.sweep_fail_no_pose
     SweepEstimateFailureUi.ONE_SIDED -> R.string.sweep_fail_one_sided
     SweepEstimateFailureUi.IMPLAUSIBLE -> R.string.sweep_fail_implausible
+    SweepEstimateFailureUi.WEAK_SIGNAL -> R.string.sweep_fail_weak
 }

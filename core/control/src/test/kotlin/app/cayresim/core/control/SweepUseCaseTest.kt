@@ -128,6 +128,17 @@ class SweepUseCaseTest {
         assertFalse(r.storageFailed)
     }
 
+    @Test fun `S-012 Signalstaerke in meta`() = runTest {
+        val (mic, sensors, files) = setup()
+        val r = report(mic, sensors, files)
+        val a = assertNotNull(r.analysis)
+        assertTrue(a.peakMedian > 0.5, "Median ${a.peakMedian}")
+        val meta = String(Wav.chunks(files.files.values.single()).getValue("meta"))
+        val m = assertNotNull(Regex("\"peakMedian\": ([0-9.eE+-]+)").find(meta), meta)
+        assertEquals(a.peakMedian, m.groupValues[1].toDouble(), 1e-6)
+        assertTrue("\"format\": 1" in meta, meta)
+    }
+
     @Test fun `S-010 Ansagen in fester Reihenfolge`() = runTest {
         val (mic, sensors, files) = setup()
         mic.recordDelayMillis = SweepUseCase.TOTAL_SECONDS * 1000L

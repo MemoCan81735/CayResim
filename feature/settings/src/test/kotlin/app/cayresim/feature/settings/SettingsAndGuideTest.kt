@@ -59,7 +59,7 @@ class SettingsAndGuideTest {
             CayResimTheme { SettingsContent(onGuide = {}, onSelfTest = {}, onBack = {}, nightSeries = on, onNightSeries = vm::onSaveNightSeries) }
         }
         compose.onNodeWithTag("settings_nightseries").assertIsDisplayed().assertIsOff()
-        compose.onNodeWithText("Gilt bis zum Neustart. Bitte keine Personen fotografieren.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Danach schaltet sich der Schalter selbst aus. Bitte keine Personen fotografieren.", substring = true).assertIsDisplayed()
         compose.onNodeWithTag("settings_nightseries").performClick()
         compose.onNodeWithTag("settings_nightseries").assertIsOn()
         assertTrue(debug.saveNightSeries.value)
