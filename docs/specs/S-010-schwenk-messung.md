@@ -148,4 +148,6 @@ CI auf `probe/s010` (38055170819, 38056315999): Kern, Analyse (Lint, detekt, Fal
 die erwarteten 9 Screenshots (3 neu, 6 Mikrofon-Test wegen des neuen Knopfs). Alle angesehen und übernommen.
 
 ## Ergebnis
-Noch offen.
+CI auf main (38056602121, mit Emulator und Release): alle Jobs grün, Release v0.1.115. Emulator (K7):
+`s010AnUndAbmelden` grün, Drehvektor ohne Kompass (GAME) vorhanden; `s010Zeitbezug` grün mit genauem Zeitstempel
+(`getTimestamp`), erster Frame 157 ms nach dem Aufruf. Gerätetest (K9) offen.

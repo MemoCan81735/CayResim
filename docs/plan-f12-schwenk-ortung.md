@@ -1,6 +1,6 @@
 # F12 Schwenk-Ortung: Plan, offene Punkte und Risiken
 
-**Stand:** 10.10.2026 · Funktion F12 in `docs/ideen.md` · Stufe 1 ist S-010 (Schwenk-Messung, Release im Bau)
+**Stand:** 10.10.2026 · Funktion F12 in `docs/ideen.md` · Stufe 1 ist S-010 (Schwenk-Messung, v0.1.115)
 
 ## Stufen
 1. **Messung (S-010):** 25 s Ton und Lage, Richtung einer festen Quelle relativ zum Kamerablick am Start, alle

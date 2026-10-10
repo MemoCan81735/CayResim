@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Schwenk-Messung (10. Oktober 2026, S-010)
+## 0.1.115 Schwenk-Messung (10. Oktober 2026, S-010)
 - Neu im Mikrofon-Test: Knopf "Schwenk-Messung (25 s)". Nimmt Ton und Lage (Drehvektor, Beschleunigung, je 200 Hz)
   gleichzeitig auf, während das Handy um eine feste Geräuschquelle geschwenkt wird, und schätzt daraus die Richtung
   der Quelle gegenüber dem Kamerablick am Start, mit wirksamem Mikrofonabstand, Abdeckung und Gleichlauf.
