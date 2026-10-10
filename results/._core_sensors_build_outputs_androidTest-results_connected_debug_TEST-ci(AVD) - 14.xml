@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="1" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-10T22:22:43" hostname="localhost">
+  <testsuite name="app.cayresim.core.sensors.MotionSensorAdapterTest" tests="1" failures="0" errors="0" skipped="0" time="1.080" timestamp="2026-10-10T22:22:43" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="s010AnUndAbmelden" classname="app.cayresim.core.sensors.MotionSensorAdapterTest" time="1.080" />
+  </testsuite>
+</testsuites>

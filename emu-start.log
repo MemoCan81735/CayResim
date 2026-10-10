@@ -1,0 +1,17 @@
+== Platz schaffen
+/dev/root       145G   54G   92G  37% /
+== Systembibliotheken
+ok
+== KVM
+crw-rw-rw- 1 root kvm 10, 232 Oct 10 22:13 /dev/kvm
+== Pakete
+yes: standard output: Broken pipe
+=====         ] 77% Unzipping... x86_64/data/misc/mode[==============================         ] 77% Unzipping... x86_64/data/misc/pixe[==============================         ] 78% Unzipping... x86_64/data/misc/pixe[=======================================] 100% Unzipping... x86_64/data/misc/pix
+
+== AVD
+Loading local repository...                                                     [=========                              ] 25% Loading local repository...       [=========                              ] 25% Fetch remote repository...        [=======================================] 100% Fetch remote repository...       
+Auto-selecting single ABI x86_64
+== Emulator-Version
+Android emulator version 37.2.12.0 (build_id 16428233) (CL:N/A)
+Copyright (C) 2006-2024 The Android Open Source Project and many others.
+Gestartet nach 30 s

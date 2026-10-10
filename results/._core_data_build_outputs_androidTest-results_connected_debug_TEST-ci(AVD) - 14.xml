@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="2" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-10T22:19:32" hostname="localhost">
+  <testsuite name="app.cayresim.core.data.MediaStoreAudioFileAdapterDeviceTest" tests="1" failures="0" errors="0" skipped="0" time="0.185" timestamp="2026-10-10T22:19:32" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="s008WavSpeichernUndLesen" classname="app.cayresim.core.data.MediaStoreAudioFileAdapterDeviceTest" time="0.185" />
+  </testsuite>
+  <testsuite name="app.cayresim.core.data.MediaStoreSeriesAdapterTest" tests="1" failures="0" errors="0" skipped="0" time="1.097" timestamp="2026-10-10T22:19:32" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="s011SchreibenUndAbbrechen" classname="app.cayresim.core.data.MediaStoreSeriesAdapterTest" time="1.097" />
+  </testsuite>
+</testsuites>

@@ -1,0 +1,60 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 520684 Realtime: 520684
+
+** MEMINFO in pid 8862 [app.cayresim] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap     1897     1336      528    16804     5152    59184    14498    41161
+  Dalvik Heap      154       20       32    54392     8016    69105    44529    24576
+ Dalvik Other     9597     6468       84      704    13252                           
+        Stack      780      692       88     4972      788                           
+       Ashmem        9        0        0        0      556                           
+    Other dev       20        0       16        0      340                           
+     .so mmap     1819      288       68        0    41724                           
+    .jar mmap     3009        0      248        0    42744                           
+    .apk mmap    45484        0    45240        0    47360                           
+    .ttf mmap      251        0       44        0     1092                           
+    .dex mmap       81        0        0        0      932                           
+    .oat mmap       22        0        0        0     1848                           
+    .art mmap      451        8      148     5808    21332                           
+   Other mmap      178        8       76        0     2392                           
+      Unknown      483      464       16       28     1076                           
+        TOTAL   146943     9284    46588    82708   188604   128289    59027    65737
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:      176                          29348
+         Native Heap:     1336                           5152
+                Code:    45908                         141816
+               Stack:      692                            788
+            Graphics:        0                              0
+       Private Other:     7760
+              System:    91071
+             Unknown:                                   11500
+ 
+           TOTAL PSS:   146943            TOTAL RSS:   188604       TOTAL SWAP PSS:    82708
+ 
+ Objects
+               Views:       28         ViewRootImpl:        1
+         AppContexts:       11           Activities:        2
+              Assets:       18        AssetManagers:        0
+       Local Binders:       31        Proxy Binders:       53
+       Parcel memory:       19         Parcel count:       78
+    Death Recipients:        2             WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      278
+  PAGECACHE_OVERFLOW:       96          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       36             12     7    78     1  /data/user/0/app.cayresim/databases/series.db
+         4        8                    0     0     0    (attached) temp
+         4       36             18    20    19     1  /data/user/0/app.cayresim/databases/series.db (2)
+         4       36             20    22    30     1  /data/user/0/app.cayresim/databases/series.db (1)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+             29           121           150  /data/user/0/app.cayresim/databases/series.db

@@ -1,0 +1,889 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :app:preBuild UP-TO-DATE
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :core:control:processResources NO-SOURCE
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :core:audio:preDebugBuild UP-TO-DATE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :core:camera:processDebugNavigationResources FROM-CACHE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:audio:processDebugNavigationResources FROM-CACHE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:data:processDebugNavigationResources FROM-CACHE
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:processing:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources FROM-CACHE
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preDebugBuild UP-TO-DATE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :feature:camera:preDebugBuild UP-TO-DATE
+> Task :core:processing:processDebugNavigationResources FROM-CACHE
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preDebugBuild UP-TO-DATE
+> Task :core:sensors:processDebugNavigationResources FROM-CACHE
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preDebugBuild UP-TO-DATE
+> Task :feature:camera:processDebugNavigationResources FROM-CACHE
+> Task :feature:gallery:processDebugNavigationResources FROM-CACHE
+> Task :core:audio:generateDebugResources FROM-CACHE
+> Task :core:camera:generateDebugResources FROM-CACHE
+> Task :core:audio:packageDebugResources FROM-CACHE
+> Task :core:camera:packageDebugResources FROM-CACHE
+> Task :feature:settings:processDebugNavigationResources
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:camera:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:generateDebugRFile FROM-CACHE
+> Task :core:camera:generateDebugRFile FROM-CACHE
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:audio:javaPreCompileDebug FROM-CACHE
+> Task :core:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:generateDebugResources FROM-CACHE
+> Task :core:data:generateDebugResources FROM-CACHE
+> Task :core:data:packageDebugResources FROM-CACHE
+> Task :core:designsystem:packageDebugResources FROM-CACHE
+> Task :core:data:parseDebugLocalResources FROM-CACHE
+> Task :core:designsystem:parseDebugLocalResources FROM-CACHE
+> Task :core:data:generateDebugRFile FROM-CACHE
+> Task :core:designsystem:generateDebugRFile FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebug FROM-CACHE
+> Task :core:processing:generateDebugResources FROM-CACHE
+> Task :core:processing:packageDebugResources FROM-CACHE
+> Task :core:processing:parseDebugLocalResources FROM-CACHE
+> Task :core:data:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:generateDebugResources FROM-CACHE
+> Task :core:processing:generateDebugRFile FROM-CACHE
+> Task :core:sensors:packageDebugResources FROM-CACHE
+> Task :core:processing:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:parseDebugLocalResources FROM-CACHE
+> Task :feature:camera:generateDebugResources FROM-CACHE
+> Task :core:sensors:generateDebugRFile FROM-CACHE
+> Task :feature:camera:packageDebugResources FROM-CACHE
+> Task :core:sensors:javaPreCompileDebug FROM-CACHE
+> Task :feature:camera:parseDebugLocalResources FROM-CACHE
+> Task :feature:gallery:generateDebugResources FROM-CACHE
+> Task :feature:camera:generateDebugRFile FROM-CACHE
+> Task :feature:camera:javaPreCompileDebug FROM-CACHE
+> Task :feature:gallery:packageDebugResources FROM-CACHE
+> Task :feature:gallery:parseDebugLocalResources FROM-CACHE
+> Task :feature:settings:generateDebugResources
+> Task :feature:gallery:generateDebugRFile FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebug FROM-CACHE
+> Task :core:audio:generateDebugAssets UP-TO-DATE
+> Task :app:generateDebugRFile FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :core:camera:generateDebugAssets UP-TO-DATE
+> Task :core:audio:mergeDebugAssets
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:camera:mergeDebugAssets
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets
+> Task :core:processing:generateDebugAssets UP-TO-DATE
+> Task :core:data:mergeDebugAssets
+> Task :core:sensors:generateDebugAssets UP-TO-DATE
+> Task :core:processing:mergeDebugAssets
+> Task :feature:camera:generateDebugAssets UP-TO-DATE
+> Task :core:sensors:mergeDebugAssets
+> Task :feature:gallery:generateDebugAssets UP-TO-DATE
+> Task :feature:gallery:mergeDebugAssets
+> Task :feature:camera:mergeDebugAssets
+> Task :core:audio:writeDebugAarMetadata
+> Task :app:generateDebugGlobalSynthetics FROM-CACHE
+> Task :core:camera:writeDebugAarMetadata
+> Task :core:data:writeDebugAarMetadata
+> Task :feature:settings:packageDebugResources
+> Task :core:designsystem:writeDebugAarMetadata
+> Task :feature:settings:javaPreCompileDebug FROM-CACHE
+> Task :feature:settings:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:mergeDebugAssets
+> Task :app:checkDebugDuplicateClasses
+> Task :core:processing:writeDebugAarMetadata
+> Task :core:sensors:writeDebugAarMetadata
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :feature:camera:writeDebugAarMetadata
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :feature:gallery:writeDebugAarMetadata
+> Task :feature:settings:parseDebugLocalResources
+> Task :feature:settings:writeDebugAarMetadata
+> Task :core:audio:extractDeepLinksDebug FROM-CACHE
+> Task :core:audio:processDebugManifest FROM-CACHE
+> Task :core:camera:extractDeepLinksDebug FROM-CACHE
+> Task :core:camera:processDebugManifest FROM-CACHE
+> Task :core:data:extractDeepLinksDebug FROM-CACHE
+> Task :core:data:processDebugManifest FROM-CACHE
+> Task :core:designsystem:extractDeepLinksDebug FROM-CACHE
+> Task :core:designsystem:processDebugManifest FROM-CACHE
+> Task :core:processing:extractDeepLinksDebug FROM-CACHE
+> Task :core:processing:processDebugManifest FROM-CACHE
+> Task :core:sensors:extractDeepLinksDebug FROM-CACHE
+> Task :core:sensors:processDebugManifest FROM-CACHE
+> Task :feature:camera:extractDeepLinksDebug FROM-CACHE
+> Task :feature:camera:processDebugManifest FROM-CACHE
+> Task :feature:gallery:extractDeepLinksDebug FROM-CACHE
+> Task :feature:gallery:processDebugManifest FROM-CACHE
+> Task :feature:settings:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:processDebugManifest FROM-CACHE
+> Task :core:audio:mapDebugSourceSetPaths
+> Task :core:audio:compileDebugLibraryResources FROM-CACHE
+> Task :core:camera:mapDebugSourceSetPaths
+> Task :feature:settings:generateDebugRFile
+> Task :core:camera:compileDebugLibraryResources FROM-CACHE
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :core:data:mapDebugSourceSetPaths
+> Task :core:designsystem:mapDebugSourceSetPaths
+> Task :core:designsystem:compileDebugLibraryResources FROM-CACHE
+> Task :core:data:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:mapDebugSourceSetPaths
+> Task :core:sensors:mapDebugSourceSetPaths
+> Task :core:sensors:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:mapDebugSourceSetPaths
+> Task :feature:gallery:mapDebugSourceSetPaths
+> Task :feature:camera:compileDebugLibraryResources FROM-CACHE
+> Task :feature:gallery:compileDebugLibraryResources FROM-CACHE
+> Task :feature:settings:mapDebugSourceSetPaths
+> Task :core:audio:mergeDebugJniLibFolders
+> Task :feature:settings:compileDebugLibraryResources
+> Task :core:audio:mergeDebugNativeLibs NO-SOURCE
+> Task :core:camera:mergeDebugJniLibFolders
+> Task :core:camera:mergeDebugNativeLibs NO-SOURCE
+> Task :core:audio:copyDebugJniLibsProjectOnly
+> Task :core:camera:copyDebugJniLibsProjectOnly
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :core:data:mergeDebugJniLibFolders
+> Task :core:data:mergeDebugNativeLibs NO-SOURCE
+> Task :core:designsystem:mergeDebugJniLibFolders
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :core:data:copyDebugJniLibsProjectOnly
+> Task :core:designsystem:mergeDebugNativeLibs NO-SOURCE
+> Task :core:processing:mergeDebugJniLibFolders
+> Task :core:processing:mergeDebugNativeLibs NO-SOURCE
+> Task :core:designsystem:copyDebugJniLibsProjectOnly
+> Task :core:processing:copyDebugJniLibsProjectOnly
+> Task :core:sensors:mergeDebugJniLibFolders
+> Task :core:sensors:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:camera:mergeDebugJniLibFolders
+> Task :core:sensors:copyDebugJniLibsProjectOnly
+> Task :feature:camera:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:gallery:mergeDebugJniLibFolders
+> Task :feature:camera:copyDebugJniLibsProjectOnly
+> Task :feature:gallery:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:settings:mergeDebugJniLibFolders
+> Task :feature:settings:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:gallery:copyDebugJniLibsProjectOnly
+> Task :feature:settings:copyDebugJniLibsProjectOnly
+> Task :core:audio:checkDebugAarMetadata
+> Task :core:camera:checkDebugAarMetadata
+> Task :core:audio:stripDebugDebugSymbols NO-SOURCE
+> Task :core:camera:stripDebugDebugSymbols NO-SOURCE
+> Task :core:audio:copyDebugJniLibsProjectAndLocalJars
+> Task :core:camera:copyDebugJniLibsProjectAndLocalJars
+> Task :core:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:audio:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:audio:prepareDebugArtProfile
+> Task :core:camera:prepareDebugArtProfile
+> Task :core:audio:prepareLintJarForPublish
+> Task :core:camera:prepareLintJarForPublish
+> Task :core:data:checkDebugAarMetadata
+> Task :core:data:stripDebugDebugSymbols NO-SOURCE
+> Task :core:data:copyDebugJniLibsProjectAndLocalJars
+> Task :core:data:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:data:prepareDebugArtProfile
+> Task :core:data:prepareLintJarForPublish
+> Task :core:processing:checkDebugAarMetadata
+> Task :core:processing:stripDebugDebugSymbols NO-SOURCE
+> Task :core:processing:copyDebugJniLibsProjectAndLocalJars
+> Task :core:processing:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:designsystem:checkDebugAarMetadata
+> Task :core:designsystem:stripDebugDebugSymbols NO-SOURCE
+> Task :core:processing:prepareDebugArtProfile
+> Task :core:designsystem:copyDebugJniLibsProjectAndLocalJars
+> Task :core:designsystem:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:processing:prepareLintJarForPublish
+> Task :core:designsystem:prepareDebugArtProfile
+> Task :core:designsystem:prepareLintJarForPublish
+> Task :core:sensors:checkDebugAarMetadata
+> Task :core:sensors:stripDebugDebugSymbols NO-SOURCE
+> Task :core:sensors:copyDebugJniLibsProjectAndLocalJars
+> Task :core:sensors:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:sensors:prepareDebugArtProfile
+> Task :core:sensors:prepareLintJarForPublish
+> Task :feature:camera:checkDebugAarMetadata
+> Task :feature:camera:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:camera:copyDebugJniLibsProjectAndLocalJars
+> Task :feature:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:camera:prepareDebugArtProfile
+> Task :feature:camera:prepareLintJarForPublish
+> Task :feature:gallery:checkDebugAarMetadata
+> Task :feature:gallery:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:gallery:copyDebugJniLibsProjectAndLocalJars
+> Task :feature:gallery:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:gallery:prepareDebugArtProfile
+> Task :feature:gallery:prepareLintJarForPublish
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:audio:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:audio:generateDebugAndroidTestResources FROM-CACHE
+> Task :core:audio:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:audio:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:settings:checkDebugAarMetadata
+> Task :core:audio:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :feature:settings:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:settings:copyDebugJniLibsProjectAndLocalJars
+> Task :core:audio:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:audio:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:audio:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :feature:settings:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:settings:prepareDebugArtProfile
+> Task :feature:settings:prepareLintJarForPublish
+> Task :core:camera:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:camera:generateDebugAndroidTestResources FROM-CACHE
+> Task :core:camera:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:camera:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:camera:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:camera:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:camera:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:camera:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:audio:mergeDebugAndroidTestAssets
+> Task :core:audio:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:camera:mergeDebugAndroidTestAssets
+> Task :core:camera:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:audio:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:camera:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:audio:checkDebugAndroidTestDuplicateClasses
+> Task :core:audio:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :core:camera:checkDebugAndroidTestDuplicateClasses
+> Task :core:camera:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :core:audio:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:audio:checkDebugAndroidTestAarMetadata
+> Task :core:audio:mapDebugAndroidTestSourceSetPaths
+> Task :core:audio:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:camera:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:audio:mergeDebugAndroidTestResources FROM-CACHE
+> Task :core:camera:checkDebugAndroidTestAarMetadata
+> Task :core:camera:mapDebugAndroidTestSourceSetPaths
+> Task :core:camera:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:camera:mergeDebugAndroidTestResources FROM-CACHE
+> Task :core:audio:mergeDebugAndroidTestManifest
+> Task :core:audio:processDebugAndroidTestManifest
+> Task :core:camera:mergeDebugAndroidTestManifest
+> Task :core:camera:processDebugAndroidTestManifest
+> Task :core:audio:processDebugAndroidTestResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :core:camera:processDebugAndroidTestResources FROM-CACHE
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :core:audio:mergeDebugAndroidTestJniLibFolders
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugResources
+> Task :app:validateSigningDebug
+> Task :core:audio:validateSigningDebugAndroidTest
+> Task :app:processDebugManifestForPackage
+> Task :core:camera:mergeDebugAndroidTestJniLibFolders
+> Task :core:camera:validateSigningDebugAndroidTest
+> Task :core:camera:writeDebugAndroidTestSigningConfigVersions
+> Task :core:audio:writeDebugAndroidTestSigningConfigVersions
+> Task :core:data:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:designsystem:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:designsystem:generateDebugAndroidTestResources FROM-CACHE
+> Task :core:data:generateDebugAndroidTestResources FROM-CACHE
+> Task :core:data:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:designsystem:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:data:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:designsystem:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:designsystem:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:data:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:designsystem:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:data:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:designsystem:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:data:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:data:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAndroidTestAssets
+> Task :core:data:mergeDebugAndroidTestAssets
+> Task :core:designsystem:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:data:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:designsystem:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:data:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:data:checkDebugAndroidTestDuplicateClasses
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResources FROM-CACHE
+> Task :app:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:designsystem:checkDebugAndroidTestDuplicateClasses
+> Task :app:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:data:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :app:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :app:generateDebugAndroidTestRFile FROM-CACHE
+> Task :app:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:data:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:data:checkDebugAndroidTestAarMetadata
+> Task :core:data:mapDebugAndroidTestSourceSetPaths
+> Task :core:data:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :app:mergeDebugAndroidTestAssets
+> Task :app:compressDebugAndroidTestAssets FROM-CACHE
+> Task :app:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:data:mergeDebugAndroidTestResources FROM-CACHE
+> Task :app:checkDebugAndroidTestDuplicateClasses
+> Task :app:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :app:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:data:mergeDebugAndroidTestManifest
+> Task :core:data:processDebugAndroidTestManifest
+> Task :app:checkDebugAndroidTestAarMetadata
+> Task :app:mapDebugAndroidTestSourceSetPaths
+> Task :app:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:data:processDebugAndroidTestResources FROM-CACHE
+> Task :core:data:mergeDebugAndroidTestJniLibFolders
+> Task :core:data:validateSigningDebugAndroidTest
+> Task :core:data:writeDebugAndroidTestSigningConfigVersions
+> Task :core:designsystem:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :app:mergeDebugAndroidTestResources FROM-CACHE
+> Task :app:mergeDebugAndroidTestManifest
+> Task :app:processDebugAndroidTestManifest
+> Task :core:designsystem:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :app:processDebugResources
+> Task :core:processing:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:processing:generateDebugAndroidTestResources FROM-CACHE
+> Task :app:processDebugAndroidTestResources FROM-CACHE
+> Task :core:processing:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:designsystem:checkDebugAndroidTestAarMetadata
+> Task :core:designsystem:mapDebugAndroidTestSourceSetPaths
+> Task :core:processing:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :app:mergeDebugAndroidTestJniLibFolders
+> Task :core:processing:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:designsystem:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :app:validateSigningDebugAndroidTest
+> Task :app:writeDebugAndroidTestSigningConfigVersions
+> Task :core:processing:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:sensors:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:processing:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:processing:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:sensors:generateDebugAndroidTestResources FROM-CACHE
+> Task :core:sensors:packageDebugAndroidTestResources FROM-CACHE
+> Task :core:sensors:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:sensors:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:processing:mergeDebugAndroidTestAssets
+> Task :core:sensors:generateDebugAndroidTestRFile FROM-CACHE
+> Task :core:processing:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:sensors:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :core:sensors:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:processing:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:sensors:mergeDebugAndroidTestAssets
+> Task :core:processing:checkDebugAndroidTestDuplicateClasses
+> Task :core:processing:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :core:sensors:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:sensors:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:designsystem:mergeDebugAndroidTestResources FROM-CACHE
+> Task :core:sensors:checkDebugAndroidTestDuplicateClasses
+> Task :core:sensors:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :core:designsystem:mergeDebugAndroidTestManifest
+> Task :core:designsystem:processDebugAndroidTestManifest
+> Task :core:sensors:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:sensors:checkDebugAndroidTestAarMetadata
+> Task :core:sensors:mapDebugAndroidTestSourceSetPaths
+> Task :core:sensors:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:designsystem:processDebugAndroidTestResources FROM-CACHE
+> Task :core:designsystem:mergeDebugAndroidTestJniLibFolders
+> Task :core:designsystem:validateSigningDebugAndroidTest
+> Task :core:designsystem:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:camera:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:camera:generateDebugAndroidTestResources FROM-CACHE
+> Task :feature:camera:packageDebugAndroidTestResources FROM-CACHE
+> Task :feature:camera:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:camera:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :feature:camera:generateDebugAndroidTestRFile FROM-CACHE
+> Task :feature:camera:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :feature:camera:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:sensors:mergeDebugAndroidTestResources FROM-CACHE
+> Task :core:processing:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :core:processing:checkDebugAndroidTestAarMetadata
+> Task :core:processing:mapDebugAndroidTestSourceSetPaths
+> Task :core:processing:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:camera:mergeDebugAndroidTestAssets
+> Task :feature:camera:compressDebugAndroidTestAssets FROM-CACHE
+> Task :feature:camera:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:sensors:mergeDebugAndroidTestManifest
+> Task :core:sensors:processDebugAndroidTestManifest
+> Task :feature:camera:checkDebugAndroidTestDuplicateClasses
+> Task :core:processing:mergeDebugAndroidTestResources FROM-CACHE
+> Task :feature:camera:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :core:sensors:processDebugAndroidTestResources FROM-CACHE
+> Task :core:sensors:mergeDebugAndroidTestJniLibFolders
+> Task :core:sensors:validateSigningDebugAndroidTest
+> Task :core:sensors:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:gallery:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:gallery:generateDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:packageDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :core:processing:mergeDebugAndroidTestManifest
+> Task :feature:gallery:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :core:processing:processDebugAndroidTestManifest
+> Task :feature:gallery:generateDebugAndroidTestRFile FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :feature:gallery:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :core:processing:processDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:mergeDebugAndroidTestAssets
+> Task :core:processing:mergeDebugAndroidTestJniLibFolders
+> Task :feature:gallery:compressDebugAndroidTestAssets FROM-CACHE
+> Task :core:processing:validateSigningDebugAndroidTest
+> Task :feature:gallery:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :core:processing:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:settings:preDebugAndroidTestBuild UP-TO-DATE
+> Task :feature:settings:generateDebugAndroidTestResources FROM-CACHE
+> Task :feature:settings:packageDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :feature:gallery:checkDebugAndroidTestDuplicateClasses
+> Task :feature:settings:processDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:gallery:checkDebugAndroidTestAarMetadata
+> Task :feature:settings:parseDebugAndroidTestLocalResources FROM-CACHE
+> Task :feature:settings:generateDebugAndroidTestRFile FROM-CACHE
+> Task :feature:settings:javaPreCompileDebugAndroidTest FROM-CACHE
+> Task :feature:settings:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :feature:settings:mergeDebugAndroidTestAssets
+> Task :feature:settings:compressDebugAndroidTestAssets FROM-CACHE
+> Task :feature:settings:generateDebugAndroidTestGlobalSynthetics FROM-CACHE
+> Task :feature:settings:checkDebugAndroidTestDuplicateClasses
+> Task :feature:settings:desugarDebugAndroidTestFileDependencies FROM-CACHE
+> Task :feature:camera:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :feature:camera:checkDebugAndroidTestAarMetadata
+> Task :feature:camera:mapDebugAndroidTestSourceSetPaths
+> Task :feature:camera:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:camera:mergeDebugAndroidTestResources FROM-CACHE
+> Task :feature:camera:mergeDebugAndroidTestManifest
+> Task :feature:camera:processDebugAndroidTestManifest
+> Task :feature:settings:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :feature:settings:checkDebugAndroidTestAarMetadata
+> Task :feature:settings:mapDebugAndroidTestSourceSetPaths
+> Task :feature:settings:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:camera:processDebugAndroidTestResources FROM-CACHE
+> Task :feature:camera:mergeDebugAndroidTestJniLibFolders
+> Task :feature:camera:validateSigningDebugAndroidTest
+> Task :feature:camera:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:gallery:mergeExtDexDebugAndroidTest FROM-CACHE
+> Task :feature:gallery:mapDebugAndroidTestSourceSetPaths
+> Task :feature:gallery:compileDebugAndroidTestNavigationResources FROM-CACHE
+> Task :feature:gallery:mergeDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:mergeDebugAndroidTestManifest
+> Task :feature:gallery:processDebugAndroidTestManifest
+> Task :feature:gallery:processDebugAndroidTestResources FROM-CACHE
+> Task :feature:gallery:mergeDebugAndroidTestJniLibFolders
+> Task :feature:gallery:validateSigningDebugAndroidTest
+> Task :feature:gallery:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:settings:mergeDebugAndroidTestManifest
+> Task :feature:settings:processDebugAndroidTestManifest
+> Task :feature:settings:mergeDebugAndroidTestJniLibFolders
+> Task :feature:settings:validateSigningDebugAndroidTest
+> Task :feature:settings:writeDebugAndroidTestSigningConfigVersions
+> Task :feature:settings:mergeDebugAndroidTestResources
+> Task :feature:settings:processDebugAndroidTestResources
+> Task :core:pure:compileKotlin
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:boundary:compileKotlin
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+> Task :core:designsystem:compileDebugKotlin
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarDebug
+> Task :core:entity:compileKotlin
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+
+> Task :core:control:compileKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:94:56 Unnecessary safe call on a non-null receiver of type 'SeriesArchiveBoundary'.
+w: file:///home/runner/work/CayResim/CayResim/core/control/src/main/kotlin/app/cayresim/core/control/NightUseCase.kt:124:62 Unnecessary safe call on a non-null receiver of type 'NightUseCase.SeriesRecorder'.
+
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :core:audio:kspDebugKotlin
+> Task :core:sensors:kspDebugKotlin
+> Task :core:audio:compileDebugKotlin
+> Task :core:processing:kspDebugKotlin
+> Task :core:camera:kspDebugKotlin
+> Task :core:data:kspDebugKotlin
+> Task :core:audio:compileDebugJavaWithJavac
+> Task :core:audio:transformDebugClassesWithAsm
+> Task :core:audio:bundleLibCompileToJarDebug
+
+> Task :core:processing:compileDebugKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/processing/src/main/kotlin/app/cayresim/core/processing/TimelapseExporter.kt:24:71 'constructor(p0: (Mutable)List<EditedMediaItem>): EditedMediaItemSequence.Builder' is deprecated. Deprecated in Java.
+
+> Task :core:sensors:compileDebugKotlin
+> Task :core:sensors:compileDebugJavaWithJavac
+> Task :core:sensors:transformDebugClassesWithAsm
+> Task :core:sensors:bundleLibCompileToJarDebug
+> Task :core:designsystem:bundleLibRuntimeToJarDebug
+> Task :core:processing:compileDebugJavaWithJavac
+> Task :core:processing:transformDebugClassesWithAsm
+> Task :core:processing:bundleLibCompileToJarDebug
+> Task :core:data:compileDebugKotlin
+> Task :core:data:compileDebugJavaWithJavac
+> Task :core:data:transformDebugClassesWithAsm
+> Task :core:data:bundleLibCompileToJarDebug
+> Task :feature:gallery:kspDebugKotlin
+
+> Task :core:camera:compileDebugKotlin
+w: file:///home/runner/work/CayResim/CayResim/core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt:1081:78 Unnecessary safe call on a non-null receiver of type 'CameraDevice'.
+
+> Task :feature:camera:kspDebugKotlin
+> Task :core:camera:compileDebugJavaWithJavac
+> Task :core:camera:transformDebugClassesWithAsm
+> Task :core:camera:bundleLibCompileToJarDebug
+> Task :core:audio:processDebugJavaRes
+> Task :core:camera:processDebugJavaRes
+> Task :core:data:processDebugJavaRes
+> Task :core:designsystem:processDebugJavaRes
+> Task :core:processing:processDebugJavaRes
+> Task :core:sensors:processDebugJavaRes
+> Task :core:designsystem:bundleLibRuntimeToDirDebug
+> Task :feature:settings:kspDebugKotlin
+> Task :feature:gallery:compileDebugKotlin
+> Task :feature:gallery:compileDebugJavaWithJavac
+> Task :feature:gallery:transformDebugClassesWithAsm
+> Task :feature:gallery:bundleLibCompileToJarDebug
+> Task :feature:gallery:processDebugJavaRes
+> Task :feature:gallery:bundleLibRuntimeToDirDebug
+> Task :core:camera:bundleLibRuntimeToDirDebug
+> Task :core:data:bundleLibRuntimeToDirDebug
+> Task :core:audio:bundleLibRuntimeToDirDebug
+> Task :core:sensors:bundleLibRuntimeToDirDebug
+> Task :core:processing:bundleLibRuntimeToDirDebug
+> Task :feature:gallery:bundleLibRuntimeToJarDebug
+> Task :core:camera:bundleLibRuntimeToJarDebug
+> Task :core:audio:bundleLibRuntimeToJarDebug
+> Task :core:data:bundleLibRuntimeToJarDebug
+> Task :core:sensors:bundleLibRuntimeToJarDebug
+> Task :core:processing:bundleLibRuntimeToJarDebug
+> Task :core:audio:extractDebugAnnotations
+> Task :core:audio:mergeDebugGeneratedProguardFiles
+> Task :core:audio:mergeDebugConsumerProguardFiles
+> Task :app:mergeDebugNativeLibs
+> Task :core:audio:mergeDebugJavaResource
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :core:audio:syncDebugLibJars FROM-CACHE
+> Task :core:audio:bundleDebugAar
+> Task :core:audio:assembleDebug
+> Task :core:camera:extractDebugAnnotations
+> Task :core:camera:mergeDebugGeneratedProguardFiles
+> Task :core:camera:mergeDebugConsumerProguardFiles
+> Task :core:camera:mergeDebugJavaResource
+> Task :core:data:extractDebugAnnotations
+> Task :core:camera:syncDebugLibJars FROM-CACHE
+> Task :core:data:mergeDebugGeneratedProguardFiles
+> Task :core:data:mergeDebugConsumerProguardFiles
+> Task :core:camera:bundleDebugAar
+> Task :core:camera:assembleDebug
+> Task :core:data:mergeDebugJavaResource
+> Task :core:data:syncDebugLibJars FROM-CACHE
+> Task :core:designsystem:extractDebugAnnotations
+> Task :core:designsystem:mergeDebugGeneratedProguardFiles
+> Task :core:data:bundleDebugAar
+> Task :core:data:assembleDebug
+> Task :core:designsystem:mergeDebugConsumerProguardFiles
+> Task :core:designsystem:mergeDebugJavaResource
+> Task :core:processing:extractDebugAnnotations
+> Task :core:processing:mergeDebugGeneratedProguardFiles
+> Task :core:processing:mergeDebugConsumerProguardFiles
+> Task :core:designsystem:syncDebugLibJars FROM-CACHE
+> Task :core:designsystem:bundleDebugAar
+> Task :core:designsystem:assembleDebug
+> Task :core:processing:mergeDebugJavaResource
+> Task :core:processing:syncDebugLibJars FROM-CACHE
+> Task :core:sensors:extractDebugAnnotations
+> Task :core:sensors:mergeDebugGeneratedProguardFiles
+> Task :core:sensors:mergeDebugConsumerProguardFiles
+> Task :core:processing:bundleDebugAar
+> Task :core:processing:assembleDebug
+> Task :core:sensors:mergeDebugJavaResource
+> Task :core:sensors:syncDebugLibJars FROM-CACHE
+> Task :core:sensors:bundleDebugAar
+> Task :core:sensors:assembleDebug
+> Task :feature:camera:extractDebugAnnotations
+> Task :feature:gallery:extractDebugAnnotations
+> Task :feature:gallery:mergeDebugGeneratedProguardFiles
+> Task :feature:gallery:mergeDebugConsumerProguardFiles
+> Task :feature:settings:extractDebugAnnotations
+> Task :feature:gallery:mergeDebugJavaResource
+> Task :feature:gallery:syncDebugLibJars FROM-CACHE
+> Task :feature:gallery:bundleDebugAar
+> Task :feature:gallery:assembleDebug
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :core:designsystem:compileDebugAndroidTestKotlin NO-SOURCE
+> Task :core:designsystem:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:processDebugAndroidTestJavaRes NO-SOURCE
+> Task :core:designsystem:mergeDebugAndroidTestJavaResource
+> Task :core:designsystem:mergeLibDexDebugAndroidTest
+> Task :core:designsystem:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:designsystem:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :core:designsystem:mergeDebugAndroidTestNativeLibs
+
+> Task :core:designsystem:stripDebugAndroidTestDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :core:designsystem:packageDebugAndroidTest
+> Task :core:designsystem:createDebugAndroidTestApkListingFileRedirect
+> Task :core:designsystem:assembleDebugAndroidTest
+> Task :core:processing:kspDebugAndroidTestKotlin
+> Task :feature:camera:compileDebugKotlin
+> Task :feature:camera:compileDebugJavaWithJavac
+> Task :feature:camera:transformDebugClassesWithAsm
+> Task :feature:camera:bundleLibCompileToJarDebug
+> Task :feature:camera:processDebugJavaRes
+> Task :feature:camera:bundleLibRuntimeToDirDebug
+> Task :feature:camera:bundleLibRuntimeToJarDebug
+> Task :feature:camera:mergeDebugGeneratedProguardFiles
+> Task :feature:camera:mergeDebugConsumerProguardFiles
+> Task :feature:camera:mergeDebugJavaResource
+> Task :feature:camera:syncDebugLibJars FROM-CACHE
+> Task :feature:camera:bundleDebugAar
+> Task :feature:camera:assembleDebug
+> Task :core:boundary:compileTestFixturesKotlin
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+> Task :core:audio:kspDebugAndroidTestKotlin
+> Task :core:processing:mergeLibDexDebugAndroidTest
+> Task :core:processing:compileDebugAndroidTestKotlin
+> Task :core:audio:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :core:audio:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :core:camera:kspDebugAndroidTestKotlin
+> Task :core:audio:compileDebugAndroidTestKotlin
+> Task :core:audio:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:audio:processDebugAndroidTestJavaRes
+> Task :feature:settings:compileDebugKotlin
+> Task :core:audio:mergeDebugAndroidTestJavaResource
+> Task :core:audio:hiltCollectClassesDebugAndroidTest
+> Task :core:audio:mergeLibDexDebugAndroidTest
+> Task :core:audio:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :core:audio:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :feature:settings:compileDebugJavaWithJavac
+> Task :core:audio:transformDebugAndroidTestClassesWithAsm
+> Task :feature:settings:processDebugJavaRes
+> Task :feature:settings:mergeDebugJavaResource
+> Task :core:camera:mergeLibDexDebugAndroidTest
+> Task :core:audio:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:audio:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :core:camera:mergeDebugAndroidTestNativeLibs
+
+> Task :core:camera:stripDebugAndroidTestDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :core:data:kspDebugAndroidTestKotlin
+> Task :feature:settings:transformDebugClassesWithAsm
+> Task :core:audio:packageDebugAndroidTest
+> Task :feature:settings:bundleLibCompileToJarDebug
+> Task :feature:settings:bundleLibRuntimeToDirDebug
+> Task :core:camera:compileDebugAndroidTestKotlin
+> Task :feature:settings:bundleLibRuntimeToJarDebug
+> Task :feature:settings:mergeDebugGeneratedProguardFiles
+> Task :feature:settings:mergeDebugConsumerProguardFiles
+> Task :feature:settings:syncDebugLibJars
+> Task :feature:settings:bundleDebugAar
+> Task :feature:settings:assembleDebug
+> Task :core:audio:createDebugAndroidTestApkListingFileRedirect
+> Task :core:audio:assembleDebugAndroidTest
+> Task :core:camera:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:camera:processDebugAndroidTestJavaRes
+> Task :core:data:compileDebugAndroidTestKotlin
+> Task :core:camera:hiltCollectClassesDebugAndroidTest
+> Task :core:camera:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :core:camera:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :core:camera:transformDebugAndroidTestClassesWithAsm
+> Task :core:camera:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:camera:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :core:data:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:data:processDebugAndroidTestJavaRes
+> Task :core:camera:mergeDebugAndroidTestJavaResource
+> Task :core:camera:packageDebugAndroidTest
+> Task :core:camera:createDebugAndroidTestApkListingFileRedirect
+> Task :core:camera:assembleDebugAndroidTest
+> Task :core:data:mergeDebugAndroidTestJavaResource
+> Task :core:data:hiltCollectClassesDebugAndroidTest
+> Task :core:data:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :core:data:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :core:data:transformDebugAndroidTestClassesWithAsm
+> Task :core:data:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:data:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :core:data:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :core:data:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :core:processing:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:processing:processDebugAndroidTestJavaRes
+> Task :core:data:mergeLibDexDebugAndroidTest
+> Task :core:data:packageDebugAndroidTest
+> Task :core:data:createDebugAndroidTestApkListingFileRedirect
+> Task :core:data:assembleDebugAndroidTest
+> Task :core:processing:hiltCollectClassesDebugAndroidTest
+> Task :core:processing:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :core:processing:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :core:processing:transformDebugAndroidTestClassesWithAsm
+> Task :core:processing:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:processing:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :core:processing:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :core:processing:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :core:sensors:kspDebugAndroidTestKotlin
+> Task :core:processing:mergeDebugAndroidTestJavaResource
+> Task :core:processing:packageDebugAndroidTest
+> Task :core:processing:createDebugAndroidTestApkListingFileRedirect
+> Task :core:processing:assembleDebugAndroidTest
+> Task :core:sensors:mergeLibDexDebugAndroidTest
+> Task :app:mergeLibDexDebugAndroidTest FROM-CACHE
+> Task :core:sensors:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :core:sensors:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :feature:camera:kspDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:camera:compileDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:camera:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :feature:camera:processDebugAndroidTestJavaRes NO-SOURCE
+> Task :core:sensors:compileDebugAndroidTestKotlin
+> Task :core:sensors:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :core:sensors:processDebugAndroidTestJavaRes
+> Task :app:mergeLibDexDebug
+> Task :core:sensors:hiltCollectClassesDebugAndroidTest
+> Task :core:sensors:mergeDebugAndroidTestJavaResource
+> Task :core:sensors:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :core:sensors:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :core:sensors:transformDebugAndroidTestClassesWithAsm
+> Task :core:sensors:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :core:sensors:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :feature:camera:mergeLibDexDebugAndroidTest
+> Task :feature:camera:hiltCollectClassesDebugAndroidTest
+> Task :core:sensors:packageDebugAndroidTest
+> Task :core:sensors:createDebugAndroidTestApkListingFileRedirect
+> Task :core:sensors:assembleDebugAndroidTest
+> Task :feature:gallery:kspDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:gallery:compileDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:gallery:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :feature:gallery:processDebugAndroidTestJavaRes NO-SOURCE
+> Task :feature:camera:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :feature:camera:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :feature:camera:transformDebugAndroidTestClassesWithAsm
+> Task :feature:camera:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :feature:camera:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :feature:camera:mergeDebugAndroidTestNativeLibs
+
+> Task :feature:camera:stripDebugAndroidTestDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :feature:camera:mergeDebugAndroidTestJavaResource
+> Task :feature:gallery:mergeLibDexDebugAndroidTest
+> Task :feature:gallery:hiltCollectClassesDebugAndroidTest
+> Task :feature:gallery:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :feature:gallery:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :feature:camera:packageDebugAndroidTest
+> Task :feature:camera:createDebugAndroidTestApkListingFileRedirect
+> Task :feature:camera:assembleDebugAndroidTest
+> Task :feature:settings:kspDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:settings:compileDebugAndroidTestKotlin NO-SOURCE
+> Task :feature:settings:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :feature:gallery:transformDebugAndroidTestClassesWithAsm
+> Task :feature:settings:processDebugAndroidTestJavaRes NO-SOURCE
+> Task :feature:gallery:mergeDebugAndroidTestNativeLibs
+> Task :feature:gallery:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :feature:gallery:mergeProjectDexDebugAndroidTest FROM-CACHE
+
+> Task :feature:gallery:stripDebugAndroidTestDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :feature:gallery:mergeDebugAndroidTestJavaResource
+> Task :app:kspDebugKotlin
+> Task :feature:gallery:packageDebugAndroidTest
+> Task :feature:gallery:createDebugAndroidTestApkListingFileRedirect
+> Task :feature:gallery:assembleDebugAndroidTest
+> Task :feature:settings:hiltCollectClassesDebugAndroidTest
+> Task :feature:settings:mergeLibDexDebugAndroidTest
+> Task :feature:settings:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :feature:settings:hiltJavaCompileDebugAndroidTest NO-SOURCE
+> Task :feature:settings:mergeDebugAndroidTestNativeLibs
+> Task :feature:settings:mergeDebugAndroidTestJavaResource
+> Task :feature:settings:transformDebugAndroidTestClassesWithAsm
+
+> Task :feature:settings:stripDebugAndroidTestDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :feature:settings:dexBuilderDebugAndroidTest
+> Task :feature:settings:mergeProjectDexDebugAndroidTest
+> Task :feature:settings:packageDebugAndroidTest
+> Task :feature:settings:createDebugAndroidTestApkListingFileRedirect
+> Task :feature:settings:assembleDebugAndroidTest
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:hiltCollectClassesDebug
+> Task :app:hiltAggregateDepsDebug FROM-CACHE
+> Task :app:mergeDebugJavaResource
+> Task :app:hiltJavaCompileDebug
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:transformDebugClassesWithAsm
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:kspDebugAndroidTestKotlin
+
+> Task :app:compileDebugAndroidTestKotlin
+w: file:///home/runner/work/CayResim/CayResim/app/src/androidTest/kotlin/app/cayresim/EndToEndTest.kt:45:27 'fun <reified A : ComponentActivity> createAndroidComposeRule(effectContext: CoroutineContext = ...): AndroidComposeTestRule<ActivityScenarioRule<A>, A>' is deprecated. Use `androidx.compose.ui.test.junit4.v2.createAndroidComposeRule` instead. The v2 APIs use StandardTestDispatcher instead of UnconfinedTestDispatcher, which aligns with standard coroutine behavior by queuing tasks rather than executing them immediately. Tests relying on immediate execution may require explicit synchronization. Please refer to the migration guide for more details.
+
+> Task :app:compileDebugAndroidTestJavaWithJavac
+> Task :app:processDebugAndroidTestJavaRes
+> Task :app:hiltCollectClassesDebugAndroidTest
+> Task :app:hiltAggregateDepsDebugAndroidTest FROM-CACHE
+> Task :app:mergeDebugAndroidTestJavaResource
+> Task :app:hiltJavaCompileDebugAndroidTest
+> Task :app:transformDebugAndroidTestClassesWithAsm
+> Task :app:dexBuilderDebugAndroidTest FROM-CACHE
+> Task :app:mergeProjectDexDebugAndroidTest FROM-CACHE
+> Task :app:packageDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect
+> Task :app:assembleDebugAndroidTest
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1791670447497.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 16s
+683 actionable tasks: 416 executed, 267 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html

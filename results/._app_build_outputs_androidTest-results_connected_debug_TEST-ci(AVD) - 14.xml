@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="10" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-10T22:22:25" hostname="localhost">
+  <testsuite name="app.cayresim.EndToEndTest" tests="10" failures="0" errors="0" skipped="0" time="78.106" timestamp="2026-10-10T22:22:25" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="anleitungIstUeberDasZahnradErreichbar" classname="app.cayresim.EndToEndTest" time="10.289" />
+    <testcase name="schnellesMehrfachAusloesenStuerztNichtAb" classname="app.cayresim.EndToEndTest" time="4.696" />
+    <testcase name="hintergrundUndZurueckStartetKameraNeu" classname="app.cayresim.EndToEndTest" time="5.600" />
+    <testcase name="lautstaerketasteIstAngemeldet" classname="app.cayresim.EndToEndTest" time="3.511" />
+    <testcase name="drehenMittenImBetriebBehaeltLaufendeKamera" classname="app.cayresim.EndToEndTest" time="4.652" />
+    <testcase name="lautstaerketasteUeberDieActivityLoestAus" classname="app.cayresim.EndToEndTest" time="3.800" />
+    <testcase name="galerieZeigtAufgenommenesFoto" classname="app.cayresim.EndToEndTest" time="10.566" />
+    <testcase name="sucherStartetUndAusloesenSpeichert" classname="app.cayresim.EndToEndTest" time="4.121" />
+    <testcase name="ohneExtensionFaelltNachtZurueckUndFotografiertTrotzdem" classname="app.cayresim.EndToEndTest" time="8.409" />
+    <testcase name="selbsttestLaeuftAufDemEmulatorGruen" classname="app.cayresim.EndToEndTest" time="22.462" />
+  </testsuite>
+</testsuites>

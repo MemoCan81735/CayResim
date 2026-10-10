@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="39" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-10T22:21:02" hostname="localhost">
+  <testsuite name="app.cayresim.core.camera.CameraXAdapterContractTest" tests="39" failures="0" errors="0" skipped="0" time="80.575" timestamp="2026-10-10T22:21:02" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="vertragStoppUndNeustart" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="6.465" />
+    <testcase name="selbsttestAblaufOhneSucherMehrfach" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="6.755" />
+    <testcase name="mehrereAufnahmenHintereinander" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.924" />
+    <testcase name="vertragModusUeberstehtNeustart" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.836" />
+    <testcase name="abbruchWaehrendDesStartsGibtDiePipelineFrei" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.425" />
+    <testcase name="moduswechselWaehrendLaufenderKamera" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="4.277" />
+    <testcase name="moduswechselDirektVorDemAusloesenOhneSucher" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="5.761" />
+    <testcase name="faehigkeitenSindPlausibel" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.169" />
+    <testcase name="suchlerBekommtEinenSurfaceRequest" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.214" />
+    <testcase name="vertragFokusAusserhalb" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.235" />
+    <testcase name="vertragAufnahmeVorStart" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.009" />
+    <testcase name="ultraHdrNurWennUnterstuetzt" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.882" />
+    <testcase name="manuelleFaehigkeitenSindBekannt" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.278" />
+    <testcase name="vertragZoomInDenGrenzen" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.265" />
+    <testcase name="zoomUeberstehtModuswechsel" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.616" />
+    <testcase name="vertragZoomUndFokusVorStart" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.020" />
+    <testcase name="aufnahmeNachVerlorenerFlaecheHeiltSich" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.398" />
+    <testcase name="loeschenUnbekannterUriLiefertFalse" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.024" />
+    <testcase name="nachDerSerieFotografiertDieKameraNormalWeiter" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="4.701" />
+    <testcase name="vertragDoppeltesStopp" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.008" />
+    <testcase name="s011Zeitstempel" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.878" />
+    <testcase name="vertragAufnahmeSpeichertUndLoescht" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.618" />
+    <testcase name="ohneSucherKeinUmwegUeberDieSelbstheilung" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="5.075" />
+    <testcase name="serieOhneKameraIstNichtBereit" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.008" />
+    <testcase name="jederExtensionModusFaelltZurueck" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.367" />
+    <testcase name="serieAusDemFrameStrom" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.144" />
+    <testcase name="sucherErsatzLaesstSichAnlegenUndFreigeben" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.012" />
+    <testcase name="aufnahmeHaengtNieLaengerAlsDieZeitgrenze" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.366" />
+    <testcase name="rawStromLiefertRohbilderUndGibtDieKameraZurueck" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.276" />
+    <testcase name="fokusreiheBeiFixfokusWirdAbgelehnt" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.358" />
+    <testcase name="vertragStart" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.112" />
+    <testcase name="ungueltigeManuelleWerteWerdenBegrenzt" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="0.117" />
+    <testcase name="rawMessungStelltBindungUndBelichtungWiederHer" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="6.432" />
+    <testcase name="belichtungUndIsoKommenInDerAufnahmeAn" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.147" />
+    <testcase name="rawErzeugtGueltigesDngUndJpeg" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="1.709" />
+    <testcase name="bildstromEndetWennDieKameraStoppt" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="2.131" />
+    <testcase name="ausloeserLaesstSichStartenUndBeenden" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="3.998" />
+    <testcase name="bildstromLiefertHoechstensNBilderUndGibtFrei" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="3.351" />
+    <testcase name="fokusAufDieMitteHaengtNicht" classname="app.cayresim.core.camera.CameraXAdapterContractTest" time="3.214" />
+  </testsuite>
+</testsuites>
