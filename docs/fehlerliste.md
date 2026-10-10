@@ -23,3 +23,5 @@ Regel ihn heute verhindert.
 | 9.10. | Nachtbild im hellen Raum grau und flau | Regel "Automatik am Anschlag" nahm volle ISO schon bei 1/20 s, bis 10-fach zu hell | Gerätetest S24+ (Jeans) | Grenze 4-fach in `NightPlan`, Hinweis zeigt die Automatik (S-002) |
 | 9.10. | RAW-Wahl hing vom Raumlicht ab | Abschneiden nur über Nullen im Bild erkannt | Selbsttest im hellen Raum (0,0 % Nullen) | Schwarzwert 0 gilt als abgeschnitten (S-002) |
 | 9.10. | CI rot ohne Codefehler | gelöschte oder neue Screenshot-Grundlagen lassen `verifyAndRecord` scheitern | CI (S-003) | Grundlagen aus `ci-logs-fast/screenshots` nach Sichtprüfung übernehmen, dann erst Release |
+| 10.10. | Architekturtest kam vom 7. bis 10.10. nur aus dem Build-Cache; Import von `MutableCoordinateTransformer` im Sucher (R11) blieb unentdeckt | Test meldete die gelesenen Quelldateien nicht als Gradle-Eingaben | CI-Umbau (S-005) | Eingaben in `architecture/build.gradle.kts`; A1 erweitert (Arslan); Falle in CLAUDE.md |
+| 10.10. | Laborbericht fehlte in Läufen, deren Tests aus dem Cache kamen; kein Vergleich möglich | Bericht war keine Testausgabe | CI-Umbau (S-005) | Ausgabe in `core/pure/build.gradle.kts` |

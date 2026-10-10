@@ -66,13 +66,17 @@ ein zweiter Agent den Diff ohne die Begründungen des ersten, nur gegen Spec und
 - Keine zwei Zeitblöcke (`withTimeoutOrNull`) um eine Ressource, die beim Abbruch geschlossen werden muss; ein geöffnetes
   Gerät mit `resume(wert) { ... schließen }` übergeben.
 - Testberichte vor den Prüfungen schreiben (oder im `finally`), sonst fehlen die Werte genau im roten Lauf.
+- Ein Test, der Dateien außerhalb seines Moduls liest (Konsist) oder einen Bericht schreibt (Testlabor), meldet sie als
+  Gradle-Eingabe oder -Ausgabe; sonst liefert der Build-Cache ein altes Ergebnis (S-005: der Architekturtest kam vom
+  7. bis 10. Oktober nur aus dem Cache und übersah einen Verstoß).
 - Jede sichtbare Änderung am Sucher oder an den Einstellungen ändert Screenshot-Grundlagen; fehlende oder abweichende
-  lassen den schnellen Job scheitern. Ablauf: kurzer Lauf, Bilder aus `ci-logs-fast/screenshots` ansehen, übernehmen, dann Release.
+  lassen den Oberflächen-Job scheitern. Ablauf: kurzer Lauf, Bilder aus `ci-logs-fast/screenshots` ansehen, übernehmen, dann Release.
 
 ## 4. Definition of Done
 
 Eine Änderung ist fertig, wenn alles davon stimmt:
-- alle Akzeptanzkriterien der Spec durch Tests belegt, schneller Job und, falls betroffen, Emulator-Job grün
+- alle Akzeptanzkriterien der Spec durch Tests belegt, alle Jobs des kurzen Laufs (Kern, Oberfläche, Analyse, APK Debug,
+  APK Release) und, falls betroffen, Emulator-Job grün; Zusammenfassung auf der Lauf-Seite und in `ci-logs-fast/summary.md`
 - Testlabor-Bericht angesehen, Werte in der Spec eingetragen
 - Architekturvorgaben und Testkonzept synchron: Projektdokument und Tab im Claude Doc "Foto-App Plan"
 - Änderungsprotokoll `docs/CHANGELOG.md` ergänzt
@@ -129,7 +133,7 @@ Jede Maßnahme wird mit eigener Spec umgesetzt, sofern sie Code betrifft. Der St
 | V5 | Bericht als Datei: Knopf "Bericht teilen" erzeugt eine ZIP mit Messwerten (JSON) und kleinen Vorschaubildern | Kein Abtippen von Screenshots | offen, Spec |
 | V6 | Automatische Updates auf dem S24+ mit Obtainium aus den GitHub-Releases (bei privatem Repository mit Zugangsschlüssel) | Kein Herunterladen und Installieren von Hand | offen, Einrichtung durch Arslan |
 | V7 | Eine Quelle der Wahrheit: Bildrechnung nur in Kotlin (`:core:pure`) mit einem kleinen Kommandozeilenwerkzeug für Bildordner. Ein Python-Modell, falls noch nötig, liegt versioniert unter `tools/`, nie nur im Arbeitsordner einer Sitzung. Regeln stehen in dieser Datei; das Projektdokument spiegelt sie nur | Keine abweichenden Rechnungen, weniger Abgleich | offen; danach Abschnitt 1 Punkt 4 und Abschnitt 5 anpassen |
-| V8 | Statische Analyse im schnellen Job: detekt und Android Lint. Die Fallen aus Abschnitt 3 werden, wo möglich, zu automatischen Regeln | Fehler vor dem Lauf statt im Lauf | Spec S-005 (Entwurf, mit parallelem kurzem Lauf) |
+| V8 | Statische Analyse im schnellen Job: detekt und Android Lint. Die Fallen aus Abschnitt 3 werden, wo möglich, zu automatischen Regeln | Fehler vor dem Lauf statt im Lauf | umgesetzt in S-005 (10.10.): detekt, Android Lint und Fallen-Skript im Analyse-Job, je mit Probe; alte Funde in Baselines |
 | V9 | Fertig-Kriterium je Modus in Zahlen gegen die Szenenbibliothek, zum Beispiel für Nacht der Abstand zu Samsung je Messgröße. Danach kein weiteres Abstimmen ohne neuen Befund. Höchstens ein Modus gleichzeitig in Arbeit | Das Abstimmen endet planbar | offen, Zahlen mit Arslan festlegen |
 
 Vorgeschlagene Reihenfolge: V1 und V2, dann V3 und V4, dann der Rest.

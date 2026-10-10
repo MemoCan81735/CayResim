@@ -78,4 +78,29 @@ Minuten frei (öffentliches Repository). Etwa 4 bis 6 Läufe für Einrichtung un
 kein Gerätetest.
 
 ## Ergebnis
-Noch offen.
+Umgesetzt am 10. Oktober 2026 auf dem Zweig `probe/s-005` (5 Probeläufe), danach auf main.
+
+| Nr. | Ergebnis |
+|---|---|
+| K1 | Kern nach 2,7 / 2,7 / 2,8 / 2,6 min fertig (Probeläufe 2 bis 5); Messung auf main siehe unten |
+| K2 | alles nach 4,9 / 6,7 / 6,5 min, solange APK Debug und Release ein Job waren (R8 plus doppeltes Kompilieren, 5 min 51 s Gradle-Zeit); nach der Teilung in zwei Jobs 5,0 und 4,5 min |
+| K3 | fünf statt vier parallele Jobs: APK Debug und APK Release getrennt (Abweichung von der Spec, wegen K2) |
+| K4 | Probelauf rot (Zweig `probe/s-005-rot`, Lauf 38017341210): roter Test in `:core:pure`, Kompilierfehler in `:feature:gallery`, Falle in `strings.xml`; alle fünf Jobs liefen zu Ende, jeder meldete seinen Befund |
+| K5 | detekt 1.23.8 als eigenes Programm (unabhängig von Kotlin 2.4), nur Regeln mit Fehlerbezug, 23 alte Funde in `config/detekt/baseline.xml`; Android Lint für alle Android-Module, 94 alte Funde in 8 Baselines. JVM-Module prüft nur detekt (Lint findet dort kaum etwas). Alle drei Proben in jedem Lauf erkannt |
+| K6 | `fallen.sh` erkennt Leerzeichen am Textende; Probe erkannt, im Probelauf rot den echten Fund gemeldet |
+| K7 | Zusammenfassung auf der Lauf-Seite und in `ci-logs-fast/summary.md` (Probezweige: `ci-logs-probe`); gleiche Kompilierfehler mehrerer Jobs stehen einmal da. Laborvergleich lokal mit absichtlich verschlechtertem Bericht geprüft (Rauschen +19 % ergibt eine Warnung) |
+| K8 | `ci-logs-fast` schreibt nur der Bericht-Job; `fast.log` bleibt als Zusammenfassung aller Protokolle |
+| K9, K10, K11 | erfüllt (Workflow-Datei) |
+
+**Nebenbefunde, die der Umbau aufgedeckt hat:**
+- Der Architekturtest kam vom 7. Oktober 09:58 bis zum Umbau nur aus dem Build-Cache (`FROM-CACHE`), weil er die gelesenen
+  Quelldateien nicht als Eingaben meldete. Er übersah so einen Verstoß gegen R11 (`MutableCoordinateTransformer` im
+  Sucher, seit dem 7. Oktober 23:50). Behoben in `architecture/build.gradle.kts`; A1 um den Umrechner erweitert (Arslan,
+  10. Oktober), mit Mutationsprobe.
+- Aus demselben Grund fehlte der Laborbericht in Läufen, deren Tests aus dem Cache kamen (auch im letzten Lauf auf main
+  vor dem Umbau). Behoben in `core/pure/build.gradle.kts`.
+- Lint fand unter anderem `UnsafeOptInUsageError` (Camera2-Interop ohne `@OptIn`) und `RestrictedApi`
+  (`SurfaceRequest.isServiced`) im Kamera-Adapter. Sie stehen in der Baseline und sollten bei Gelegenheit behoben werden.
+
+**Offen:** Die Probezweige `probe/s-005` und `probe/s-005-rot` lassen sich aus dieser Umgebung nicht löschen (der
+Proxy sperrt das Löschen von Zweigen); sie stören nicht.

@@ -2,6 +2,15 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Kurzer Lauf (10. Oktober 2026, S-005)
+- CI prüft parallel in fünf Jobs (Kern, Oberfläche, Analyse, APK Debug, APK Release); der Kern meldet sich nach etwa
+  3 Minuten, alles nach etwa 5. Die Lauf-Seite zeigt rote Tests, Kompilierfehler, Analysefunde und Laborwerte im
+  Vergleich zum letzten Lauf auf main (Warnung ab 10 % schlechter).
+- Neu bei jedem Push: detekt, Android Lint und Fallen-Skript, je mit Probe; alte Funde stehen in Baselines.
+- Behoben: Architekturtest und Laborbericht kamen aus dem Build-Cache, ohne wirklich zu laufen. A1 erlaubt jetzt auch
+  den Koordinaten-Umrechner des Suchers (Arslan, 10.10.).
+- Keine Änderung an der App, kein Gerätetest nötig.
+
 ## Werkzeug (10. Oktober 2026)
 - `tools/run-pure-tests.sh`: Tests von `:core:pure` lokal in etwa einer Minute, ohne Netz. Keine Änderung an der App.
 
