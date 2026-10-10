@@ -84,7 +84,11 @@ Sensor). Release nur auf Wunsch, gebündelt mit dem Nachtrag zu S-011.
   Aufnahmen mit klarem Signal (Test angepasst, ebenso der ViewModel-Test mit stillem Mikrofon).
 - Lokal: `:core:pure` 166 Tests, `SweepUseCaseTest` und `MicTestUseCaseTest` 17 Tests, Architekturregeln 0 Verstöße,
   Fallen-Skript ohne Funde, neue Strukturprüfung ohne Funde.
-- Geänderte Screenshot-Grundlagen: `sweep_result.png` (neue Zeile Signalstärke), neu `sweep_weak.png`.
+- Anleitung der Schwenk-Messung angepasst: Musik oder Sprache, gut hörbar, etwa 1 Meter statt "gleichmäßiges Rauschen,
+  1,5 bis 2 Meter" (sonst hätte die Anleitung der neuen Meldung widersprochen; Samsungs Rauschunterdrückung dämpft
+  gleichmäßiges Rauschen).
+- Geänderte Screenshot-Grundlagen: `sweep_result.png` (neue Zeile Signalstärke), `sweep_guide.png` und
+  `sweep_prompt.png` (Anleitung), neu `sweep_weak.png`. Angesehen und übernommen.
 
 ## Ergebnis
 Noch offen.

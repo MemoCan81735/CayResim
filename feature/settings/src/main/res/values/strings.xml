@@ -142,7 +142,7 @@
     <string name="mictest_storage_failed">Mindestens eine Datei konnte nicht gespeichert werden.</string>
     <string name="mictest_sweep">Schwenk-Messung (25 s)</string>
     <string name="sweep_title">Schwenk-Messung</string>
-    <string name="sweep_intro">Misst, ob sich eine Geräuschquelle durch Drehen des Handys orten lässt. Dafür ein zweites Handy oder Radio mit gleichmäßigem Rauschen 1,5 bis 2 Meter entfernt fest hinstellen.</string>
+    <string name="sweep_intro">Misst, ob sich eine Geräuschquelle durch Drehen des Handys orten lässt. Dafür ein zweites Handy oder Radio mit Musik oder Sprache, gut hörbar laut, etwa 1 Meter entfernt fest hinstellen.</string>
     <string name="sweep_steps">1. Kamera auf die Quelle richten und Start tippen.\n2. Zweimal auf die Rückseite tippen.\n3. Langsam schwenken: nach links und rechts drehen, auf hochkant kippen, schräg halten, etwas nach oben und unten. An derselben Stelle bleiben.\nDauer in Sekunden: 25</string>
     <string name="sweep_start">Schwenk-Messung starten</string>
     <string name="sweep_running">Läuft …</string>
