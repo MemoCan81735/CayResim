@@ -1,0 +1,1531 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:processResources NO-SOURCE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:control:koverFindJar
+> Task :core:entity:koverFindJar
+> Task :core:boundary:koverFindJar
+> Task :core:boundary:processTestResources NO-SOURCE
+> Task :core:entity:processTestResources NO-SOURCE
+> Task :core:control:processTestResources NO-SOURCE
+> Task :architecture:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :architecture:compileKotlin FROM-CACHE
+> Task :architecture:compileJava NO-SOURCE
+> Task :architecture:processResources NO-SOURCE
+> Task :architecture:classes UP-TO-DATE
+> Task :architecture:jar
+> Task :core:pure:compileKotlin FROM-CACHE
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :architecture:compileTestKotlin FROM-CACHE
+> Task :architecture:compileTestJava NO-SOURCE
+> Task :architecture:koverFindJar
+> Task :architecture:processTestResources NO-SOURCE
+> Task :architecture:testClasses UP-TO-DATE
+> Task :core:pure:compileTestKotlin FROM-CACHE
+> Task :core:pure:compileTestJava NO-SOURCE
+> Task :core:pure:koverFindJar
+> Task :core:entity:compileKotlin FROM-CACHE
+> Task :core:pure:processTestResources NO-SOURCE
+> Task :core:pure:testClasses UP-TO-DATE
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:boundary:compileKotlin FROM-CACHE
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:boundary:jar
+> Task :core:pure:test FROM-CACHE
+> Task :architecture:test FROM-CACHE
+> Task :core:pure:koverGenerateArtifactJvm
+> Task :core:entity:compileTestKotlin FROM-CACHE
+> Task :core:entity:compileTestJava NO-SOURCE
+> Task :core:entity:testClasses UP-TO-DATE
+> Task :core:pure:koverGenerateArtifact
+> Task :core:pure:koverCachedVerify FROM-CACHE
+> Task :core:entity:test FROM-CACHE
+> Task :core:entity:koverGenerateArtifactJvm
+> Task :core:entity:koverGenerateArtifact
+> Task :core:entity:koverCachedVerify FROM-CACHE
+> Task :core:boundary:compileTestFixturesKotlin FROM-CACHE
+> Task :core:control:compileKotlin FROM-CACHE
+> Task :core:entity:koverVerify
+> Task :core:pure:koverVerify
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+> Task :core:control:jar
+> Task :core:boundary:compileTestKotlin FROM-CACHE
+> Task :core:boundary:compileTestJava NO-SOURCE
+> Task :core:boundary:testClasses UP-TO-DATE
+> Task :core:boundary:test FROM-CACHE
+> Task :core:control:compileTestKotlin FROM-CACHE
+> Task :core:control:compileTestJava NO-SOURCE
+> Task :core:control:testClasses UP-TO-DATE
+> Task :core:control:test FROM-CACHE
+> Task :core:control:koverGenerateArtifactJvm
+> Task :core:control:koverGenerateArtifact
+> Task :core:control:koverCachedVerify FROM-CACHE
+> Task :core:control:koverVerify
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791670445537.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 36s
+48 actionable tasks: 23 executed, 25 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:processResources NO-SOURCE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :core:audio:preDebugBuild UP-TO-DATE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preDebugBuild UP-TO-DATE
+> Task :core:audio:processDebugNavigationResources FROM-CACHE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:camera:processDebugNavigationResources FROM-CACHE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :core:data:processDebugNavigationResources FROM-CACHE
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:processing:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources FROM-CACHE
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preDebugBuild UP-TO-DATE
+> Task :core:processing:processDebugNavigationResources FROM-CACHE
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :feature:camera:preDebugBuild UP-TO-DATE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preDebugBuild UP-TO-DATE
+> Task :core:sensors:processDebugNavigationResources FROM-CACHE
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preDebugBuild UP-TO-DATE
+> Task :feature:camera:processDebugNavigationResources FROM-CACHE
+> Task :feature:settings:processDebugNavigationResources FROM-CACHE
+> Task :feature:gallery:processDebugNavigationResources FROM-CACHE
+> Task :core:audio:generateDebugResources FROM-CACHE
+> Task :core:camera:generateDebugResources FROM-CACHE
+> Task :core:audio:packageDebugResources FROM-CACHE
+> Task :core:camera:packageDebugResources FROM-CACHE
+> Task :core:pure:compileKotlin FROM-CACHE
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:boundary:compileKotlin FROM-CACHE
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+> Task :core:control:compileKotlin FROM-CACHE
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :core:entity:compileKotlin FROM-CACHE
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:data:generateDebugResources FROM-CACHE
+> Task :core:data:packageDebugResources FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :core:audio:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:generateDebugRFile FROM-CACHE
+> Task :core:camera:parseDebugLocalResources FROM-CACHE
+> Task :core:camera:generateDebugRFile FROM-CACHE
+> Task :core:data:parseDebugLocalResources FROM-CACHE
+> Task :core:data:generateDebugRFile FROM-CACHE
+> Task :core:audio:kspDebugKotlin FROM-CACHE
+> Task :core:camera:kspDebugKotlin FROM-CACHE
+> Task :core:data:kspDebugKotlin FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:generateDebugRFile FROM-CACHE
+> Task :core:designsystem:generateDebugResources FROM-CACHE
+> Task :core:designsystem:packageDebugResources FROM-CACHE
+> Task :core:designsystem:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:compileDebugKotlin FROM-CACHE
+> Task :core:designsystem:generateDebugRFile FROM-CACHE
+> Task :core:camera:compileDebugKotlin FROM-CACHE
+> Task :core:data:compileDebugKotlin FROM-CACHE
+> Task :core:audio:javaPreCompileDebug FROM-CACHE
+> Task :core:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:data:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:compileDebugKotlin FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarDebug
+> Task :core:processing:generateDebugResources FROM-CACHE
+> Task :core:processing:packageDebugResources FROM-CACHE
+> Task :core:processing:parseDebugLocalResources FROM-CACHE
+> Task :core:processing:generateDebugRFile FROM-CACHE
+> Task :core:processing:kspDebugKotlin FROM-CACHE
+> Task :core:processing:compileDebugKotlin FROM-CACHE
+> Task :core:processing:javaPreCompileDebug FROM-CACHE
+> Task :core:audio:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:data:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:camera:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:processing:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:audio:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:data:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:processing:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:camera:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:audio:bundleLibCompileToJarDebug
+> Task :core:data:bundleLibCompileToJarDebug
+> Task :core:sensors:generateDebugResources FROM-CACHE
+> Task :core:processing:bundleLibCompileToJarDebug
+> Task :feature:camera:generateDebugResources FROM-CACHE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug
+> Task :core:camera:bundleLibCompileToJarDebug
+> Task :feature:gallery:generateDebugResources FROM-CACHE
+> Task :core:sensors:packageDebugResources FROM-CACHE
+> Task :feature:settings:generateDebugResources FROM-CACHE
+> Task :feature:gallery:packageDebugResources FROM-CACHE
+> Task :core:sensors:parseDebugLocalResources FROM-CACHE
+> Task :feature:camera:packageDebugResources FROM-CACHE
+> Task :feature:gallery:parseDebugLocalResources FROM-CACHE
+> Task :feature:camera:parseDebugLocalResources FROM-CACHE
+> Task :feature:settings:packageDebugResources FROM-CACHE
+> Task :feature:settings:parseDebugLocalResources FROM-CACHE
+> Task :core:sensors:generateDebugRFile FROM-CACHE
+> Task :feature:gallery:generateDebugRFile FROM-CACHE
+> Task :feature:camera:generateDebugRFile FROM-CACHE
+> Task :feature:settings:generateDebugRFile FROM-CACHE
+> Task :core:sensors:kspDebugKotlin FROM-CACHE
+> Task :core:sensors:compileDebugKotlin FROM-CACHE
+> Task :core:sensors:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:sensors:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:camera:kspDebugKotlin FROM-CACHE
+> Task :feature:settings:kspDebugKotlin FROM-CACHE
+> Task :feature:gallery:kspDebugKotlin FROM-CACHE
+> Task :core:sensors:bundleLibCompileToJarDebug
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :core:camera:bundleLibRuntimeToJarDebug
+> Task :feature:gallery:compileDebugKotlin FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebug FROM-CACHE
+> Task :core:data:bundleLibRuntimeToJarDebug
+> Task :core:audio:bundleLibRuntimeToJarDebug
+> Task :feature:gallery:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:sensors:bundleLibRuntimeToJarDebug
+> Task :feature:settings:compileDebugKotlin FROM-CACHE
+> Task :feature:camera:compileDebugKotlin FROM-CACHE
+> Task :feature:settings:javaPreCompileDebug FROM-CACHE
+> Task :feature:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:processing:bundleLibRuntimeToJarDebug
+> Task :core:audio:writeDebugAarMetadata
+> Task :feature:gallery:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:camera:writeDebugAarMetadata
+> Task :feature:settings:compileDebugJavaWithJavac FROM-CACHE
+> Task :feature:gallery:bundleLibCompileToJarDebug
+> Task :core:data:writeDebugAarMetadata
+> Task :feature:camera:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:designsystem:writeDebugAarMetadata
+> Task :feature:gallery:bundleLibRuntimeToJarDebug
+> Task :core:processing:writeDebugAarMetadata
+> Task :feature:gallery:writeDebugAarMetadata
+> Task :core:sensors:writeDebugAarMetadata
+> Task :core:audio:extractDeepLinksDebug FROM-CACHE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :core:audio:processDebugManifest FROM-CACHE
+> Task :core:camera:extractDeepLinksDebug FROM-CACHE
+> Task :core:camera:processDebugManifest FROM-CACHE
+> Task :core:data:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:camera:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:data:processDebugManifest FROM-CACHE
+> Task :feature:camera:bundleLibCompileToJarDebug
+> Task :feature:settings:bundleLibRuntimeToJarDebug
+> Task :feature:camera:bundleLibRuntimeToJarDebug
+> Task :feature:camera:writeDebugAarMetadata
+> Task :core:designsystem:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:writeDebugAarMetadata
+> Task :feature:settings:bundleLibCompileToJarDebug
+> Task :core:processing:extractDeepLinksDebug FROM-CACHE
+> Task :core:designsystem:processDebugManifest FROM-CACHE
+> Task :core:sensors:extractDeepLinksDebug FROM-CACHE
+> Task :core:processing:processDebugManifest FROM-CACHE
+> Task :feature:camera:extractDeepLinksDebug FROM-CACHE
+> Task :core:sensors:processDebugManifest FROM-CACHE
+> Task :feature:settings:extractDeepLinksDebug FROM-CACHE
+> Task :feature:gallery:extractDeepLinksDebug FROM-CACHE
+> Task :feature:camera:processDebugManifest FROM-CACHE
+> Task :feature:settings:processDebugManifest FROM-CACHE
+> Task :feature:gallery:processDebugManifest FROM-CACHE
+> Task :core:audio:mapDebugSourceSetPaths
+> Task :core:camera:mapDebugSourceSetPaths
+> Task :core:audio:compileDebugLibraryResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :core:camera:compileDebugLibraryResources FROM-CACHE
+> Task :core:data:mapDebugSourceSetPaths
+> Task :core:data:compileDebugLibraryResources FROM-CACHE
+> Task :core:designsystem:mapDebugSourceSetPaths
+> Task :core:processing:mapDebugSourceSetPaths
+> Task :core:sensors:mapDebugSourceSetPaths
+> Task :core:designsystem:compileDebugLibraryResources FROM-CACHE
+> Task :core:processing:compileDebugLibraryResources FROM-CACHE
+> Task :core:sensors:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:mapDebugSourceSetPaths
+> Task :feature:settings:mapDebugSourceSetPaths
+> Task :feature:gallery:mapDebugSourceSetPaths
+> Task :feature:gallery:compileDebugLibraryResources FROM-CACHE
+> Task :feature:settings:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:compileDebugLibraryResources FROM-CACHE
+> Task :core:camera:processDebugJavaRes
+> Task :core:data:processDebugJavaRes
+> Task :core:audio:processDebugJavaRes
+> Task :core:sensors:processDebugJavaRes
+> Task :core:designsystem:processDebugJavaRes
+> Task :core:processing:processDebugJavaRes
+> Task :feature:gallery:processDebugJavaRes
+> Task :core:audio:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:audio:generateDebugAssets UP-TO-DATE
+> Task :feature:camera:processDebugJavaRes
+> Task :feature:settings:processDebugJavaRes
+> Task :core:camera:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:camera:generateDebugAssets UP-TO-DATE
+> Task :app:kspDebugKotlin FROM-CACHE
+> Task :core:boundary:compileTestFixturesKotlin FROM-CACHE
+> Task :core:camera:mergeDebugAssets
+> Task :core:camera:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:audio:mergeDebugAssets
+> Task :core:audio:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+> Task :core:data:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :app:compileDebugKotlin FROM-CACHE
+> Task :core:camera:mergeDebugUnitTestAssets
+> Task :core:data:mergeDebugAssets
+> Task :core:data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:audio:mergeDebugUnitTestAssets
+> Task :app:compileDebugJavaWithJavac FROM-CACHE
+> Task :app:hiltCollectClassesDebug UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestAssets
+> Task :core:audio:mapDebugUnitTestSourceSetPaths
+> Task :core:audio:generateDebugUnitTestResources FROM-CACHE
+> Task :core:audio:checkDebugUnitTestAarMetadata
+> Task :core:camera:checkDebugUnitTestAarMetadata
+> Task :core:camera:mapDebugUnitTestSourceSetPaths
+> Task :core:camera:generateDebugUnitTestResources FROM-CACHE
+> Task :core:data:checkDebugUnitTestAarMetadata
+> Task :core:data:mapDebugUnitTestSourceSetPaths
+> Task :core:data:generateDebugUnitTestResources FROM-CACHE
+> Task :app:hiltAggregateDepsDebug FROM-CACHE
+> Task :core:audio:mergeDebugUnitTestResources FROM-CACHE
+> Task :core:camera:mergeDebugUnitTestResources FROM-CACHE
+> Task :core:data:mergeDebugUnitTestResources FROM-CACHE
+> Task :app:hiltJavaCompileDebug FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :core:data:mergeDebugUnitTestManifest
+> Task :core:audio:mergeDebugUnitTestManifest
+> Task :core:camera:mergeDebugUnitTestManifest
+> Task :core:camera:processDebugUnitTestManifest
+> Task :core:audio:processDebugUnitTestManifest
+> Task :core:data:processDebugUnitTestManifest
+> Task :core:audio:processDebugUnitTestResources FROM-CACHE
+> Task :core:data:processDebugUnitTestResources FROM-CACHE
+> Task :core:camera:processDebugUnitTestResources FROM-CACHE
+> Task :core:data:packageDebugUnitTestForUnitTest
+> Task :core:audio:packageDebugUnitTestForUnitTest
+> Task :core:camera:packageDebugUnitTestForUnitTest
+> Task :core:audio:generateDebugUnitTestConfig
+> Task :core:camera:generateDebugUnitTestConfig
+> Task :core:data:generateDebugUnitTestConfig
+> Task :app:processDebugMainManifest
+> Task :core:data:koverFindJar
+> Task :core:camera:koverFindJar
+> Task :core:audio:koverFindJar
+> Task :core:audio:kspDebugUnitTestKotlin NO-SOURCE
+> Task :core:audio:compileDebugUnitTestKotlin NO-SOURCE
+> Task :app:processDebugManifest
+> Task :core:audio:processDebugUnitTestJavaRes NO-SOURCE
+> Task :core:audio:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:camera:kspDebugUnitTestKotlin FROM-CACHE
+> Task :core:audio:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:audio:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :app:processDebugManifestForPackage
+> Task :core:data:kspDebugUnitTestKotlin FROM-CACHE
+> Task :core:camera:compileDebugUnitTestKotlin FROM-CACHE
+> Task :core:camera:processDebugUnitTestJavaRes
+> Task :core:camera:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:camera:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:camera:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:audio:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :core:audio:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:audio:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :core:data:compileDebugUnitTestKotlin FROM-CACHE
+> Task :core:data:processDebugUnitTestJavaRes
+> Task :core:camera:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :core:data:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:camera:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:data:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:camera:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :core:data:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :core:data:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:camera:testDebugUnitTest FROM-CACHE
+> Task :core:designsystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:audio:testDebugUnitTest FROM-CACHE
+> Task :core:processing:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:processing:generateDebugAssets UP-TO-DATE
+> Task :core:processing:mergeDebugAssets
+> Task :core:processing:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:data:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :core:data:testDebugUnitTest FROM-CACHE
+> Task :core:sensors:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:sensors:generateDebugAssets UP-TO-DATE
+> Task :core:sensors:mergeDebugAssets
+> Task :core:sensors:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:processing:mergeDebugUnitTestAssets
+> Task :core:processing:checkDebugUnitTestAarMetadata
+> Task :core:sensors:mergeDebugUnitTestAssets
+> Task :core:designsystem:checkDebugUnitTestAarMetadata
+> Task :core:processing:mapDebugUnitTestSourceSetPaths
+> Task :core:designsystem:mapDebugUnitTestSourceSetPaths
+> Task :core:designsystem:generateDebugUnitTestResources FROM-CACHE
+> Task :core:processing:generateDebugUnitTestResources FROM-CACHE
+> Task :core:sensors:checkDebugUnitTestAarMetadata
+> Task :core:sensors:mapDebugUnitTestSourceSetPaths
+> Task :core:sensors:generateDebugUnitTestResources FROM-CACHE
+> Task :core:processing:mergeDebugUnitTestResources FROM-CACHE
+> Task :core:sensors:mergeDebugUnitTestManifest
+> Task :core:designsystem:mergeDebugUnitTestResources FROM-CACHE
+> Task :core:processing:mergeDebugUnitTestManifest
+> Task :core:sensors:mergeDebugUnitTestResources FROM-CACHE
+> Task :core:processing:processDebugUnitTestManifest
+> Task :core:sensors:processDebugUnitTestManifest
+> Task :core:designsystem:mergeDebugUnitTestManifest
+> Task :core:designsystem:processDebugUnitTestManifest
+> Task :core:processing:processDebugUnitTestResources FROM-CACHE
+> Task :core:sensors:processDebugUnitTestResources FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:processing:packageDebugUnitTestForUnitTest
+> Task :core:sensors:packageDebugUnitTestForUnitTest
+> Task :core:processing:generateDebugUnitTestConfig
+> Task :core:processing:koverFindJar
+> Task :core:sensors:generateDebugUnitTestConfig
+> Task :core:processing:kspDebugUnitTestKotlin NO-SOURCE
+> Task :core:processing:compileDebugUnitTestKotlin NO-SOURCE
+> Task :core:processing:processDebugUnitTestJavaRes NO-SOURCE
+> Task :core:processing:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:sensors:koverFindJar
+> Task :core:processing:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:processing:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:sensors:kspDebugUnitTestKotlin NO-SOURCE
+> Task :core:sensors:compileDebugUnitTestKotlin NO-SOURCE
+> Task :core:sensors:processDebugUnitTestJavaRes NO-SOURCE
+> Task :core:sensors:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:designsystem:processDebugUnitTestResources FROM-CACHE
+> Task :core:sensors:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:compileDebugUnitTestKotlin NO-SOURCE
+> Task :core:sensors:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:designsystem:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :core:processing:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :core:sensors:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :core:designsystem:mergeDebugAssets
+> Task :core:sensors:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:processing:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:processing:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :core:sensors:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :core:sensors:testDebugUnitTest FROM-CACHE
+> Task :feature:camera:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:camera:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugUnitTestAssets
+> Task :feature:camera:mergeDebugAssets
+> Task :feature:camera:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:processing:testDebugUnitTest FROM-CACHE
+> Task :core:designsystem:packageDebugUnitTestForUnitTest
+> Task :feature:gallery:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:gallery:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:generateDebugUnitTestConfig
+> Task :feature:gallery:mergeDebugAssets
+> Task :feature:gallery:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:koverFindJar
+> Task :core:designsystem:processDebugUnitTestJavaRes NO-SOURCE
+> Task :core:designsystem:testDebugUnitTest NO-SOURCE
+> Task :feature:settings:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:settings:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:mergeDebugAssets
+> Task :feature:settings:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:camera:mergeDebugUnitTestAssets
+> Task :feature:gallery:mergeDebugUnitTestAssets
+> Task :app:processDebugResources
+> Task :feature:settings:mergeDebugUnitTestAssets
+> Task :feature:settings:checkDebugUnitTestAarMetadata
+> Task :feature:gallery:checkDebugUnitTestAarMetadata
+> Task :feature:camera:checkDebugUnitTestAarMetadata
+> Task :feature:camera:mapDebugUnitTestSourceSetPaths
+> Task :feature:settings:mapDebugUnitTestSourceSetPaths
+> Task :feature:gallery:mapDebugUnitTestSourceSetPaths
+> Task :app:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:settings:generateDebugUnitTestResources FROM-CACHE
+> Task :feature:gallery:generateDebugUnitTestResources FROM-CACHE
+> Task :feature:camera:generateDebugUnitTestResources FROM-CACHE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:kspDebugUnitTestKotlin FROM-CACHE
+> Task :feature:gallery:mergeDebugUnitTestResources FROM-CACHE
+> Task :app:compileDebugUnitTestKotlin FROM-CACHE
+> Task :feature:settings:mergeDebugUnitTestResources FROM-CACHE
+> Task :feature:camera:mergeDebugUnitTestResources FROM-CACHE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :app:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :app:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :app:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :feature:settings:mergeDebugUnitTestManifest
+> Task :feature:settings:processDebugUnitTestManifest
+> Task :feature:gallery:mergeDebugUnitTestManifest
+> Task :feature:camera:mergeDebugUnitTestManifest
+> Task :feature:gallery:processDebugUnitTestManifest
+> Task :feature:camera:processDebugUnitTestManifest
+> Task :feature:gallery:processDebugUnitTestResources FROM-CACHE
+> Task :feature:camera:processDebugUnitTestResources FROM-CACHE
+> Task :feature:settings:processDebugUnitTestResources FROM-CACHE
+> Task :feature:gallery:packageDebugUnitTestForUnitTest
+> Task :app:testDebugUnitTest FROM-CACHE
+> Task :feature:camera:packageDebugUnitTestForUnitTest
+> Task :feature:settings:packageDebugUnitTestForUnitTest
+> Task :feature:gallery:generateDebugUnitTestConfig
+> Task :feature:gallery:koverFindJar
+> Task :feature:camera:generateDebugUnitTestConfig
+> Task :feature:settings:generateDebugUnitTestConfig
+> Task :feature:camera:koverFindJar
+> Task :feature:settings:koverFindJar
+> Task :feature:camera:kspDebugUnitTestKotlin FROM-CACHE
+> Task :feature:gallery:kspDebugUnitTestKotlin FROM-CACHE
+> Task :feature:settings:kspDebugUnitTestKotlin FROM-CACHE
+> Task :feature:gallery:compileDebugUnitTestKotlin FROM-CACHE
+> Task :feature:gallery:processDebugUnitTestJavaRes
+> Task :feature:settings:compileDebugUnitTestKotlin FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :feature:gallery:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:gallery:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:camera:compileDebugUnitTestKotlin FROM-CACHE
+> Task :feature:settings:processDebugUnitTestJavaRes
+> Task :feature:settings:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :feature:settings:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:settings:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:camera:processDebugUnitTestJavaRes
+> Task :feature:camera:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :feature:camera:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:camera:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:camera:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :feature:gallery:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :feature:settings:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :feature:camera:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:gallery:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:settings:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:camera:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :feature:settings:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :feature:gallery:transformDebugUnitTestClassesWithAsm FROM-CACHE
+> Task :feature:settings:testDebugUnitTest FROM-CACHE
+> Task :feature:settings:finalizeTestRoborazziDebug
+> Task :feature:settings:verifyAndRecordRoborazziDebug UP-TO-DATE
+> Task :feature:gallery:testDebugUnitTest FROM-CACHE
+> Task :feature:gallery:finalizeTestRoborazziDebug
+> Task :feature:gallery:verifyAndRecordRoborazziDebug UP-TO-DATE
+> Task :feature:camera:testDebugUnitTest FROM-CACHE
+> Task :feature:camera:finalizeTestRoborazziDebug
+> Task :feature:camera:verifyAndRecordRoborazziDebug UP-TO-DATE
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791670439104.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 39s
+369 actionable tasks: 153 executed, 216 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:control:processResources NO-SOURCE
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :core:audio:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :core:audio:processDebugNavigationResources FROM-CACHE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:camera:processDebugNavigationResources FROM-CACHE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:processing:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources FROM-CACHE
+> Task :core:data:processDebugNavigationResources FROM-CACHE
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preDebugBuild UP-TO-DATE
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :feature:camera:preDebugBuild UP-TO-DATE
+> Task :core:processing:processDebugNavigationResources FROM-CACHE
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preDebugBuild UP-TO-DATE
+> Task :core:sensors:processDebugNavigationResources FROM-CACHE
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preDebugBuild UP-TO-DATE
+> Task :feature:camera:processDebugNavigationResources FROM-CACHE
+> Task :feature:gallery:processDebugNavigationResources FROM-CACHE
+> Task :core:audio:generateDebugResources FROM-CACHE
+> Task :feature:settings:processDebugNavigationResources FROM-CACHE
+> Task :core:camera:generateDebugResources FROM-CACHE
+> Task :core:audio:packageDebugResources FROM-CACHE
+> Task :core:camera:packageDebugResources FROM-CACHE
+> Task :core:pure:compileKotlin FROM-CACHE
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:boundary:compileKotlin FROM-CACHE
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:boundary:jar
+> Task :core:control:compileKotlin FROM-CACHE
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:compileKotlin FROM-CACHE
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:data:generateDebugResources FROM-CACHE
+> Task :core:data:packageDebugResources FROM-CACHE
+> Task :app:processDebugNavigationResources FROM-CACHE
+> Task :core:camera:parseDebugLocalResources FROM-CACHE
+> Task :core:camera:generateDebugRFile FROM-CACHE
+> Task :core:audio:parseDebugLocalResources FROM-CACHE
+> Task :core:audio:generateDebugRFile FROM-CACHE
+> Task :core:data:parseDebugLocalResources FROM-CACHE
+> Task :core:data:generateDebugRFile FROM-CACHE
+> Task :core:camera:kspDebugKotlin FROM-CACHE
+> Task :core:audio:kspDebugKotlin FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:generateDebugRFile FROM-CACHE
+> Task :core:audio:compileDebugKotlin FROM-CACHE
+> Task :core:designsystem:generateDebugResources FROM-CACHE
+> Task :core:audio:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:packageDebugResources FROM-CACHE
+> Task :core:data:kspDebugKotlin FROM-CACHE
+> Task :core:designsystem:parseDebugLocalResources FROM-CACHE
+> Task :core:designsystem:generateDebugRFile FROM-CACHE
+> Task :core:camera:compileDebugKotlin FROM-CACHE
+> Task :core:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:data:compileDebugKotlin FROM-CACHE
+> Task :core:data:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:compileDebugKotlin FROM-CACHE
+> Task :core:designsystem:javaPreCompileDebug FROM-CACHE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarDebug
+> Task :core:processing:generateDebugResources FROM-CACHE
+> Task :core:processing:packageDebugResources FROM-CACHE
+> Task :core:processing:parseDebugLocalResources FROM-CACHE
+> Task :core:processing:generateDebugRFile FROM-CACHE
+> Task :core:processing:kspDebugKotlin FROM-CACHE
+> Task :core:processing:compileDebugKotlin FROM-CACHE
+> Task :core:processing:javaPreCompileDebug FROM-CACHE
+> Task :core:data:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:camera:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:audio:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:audio:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:data:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:audio:bundleLibCompileToJarDebug
+> Task :core:camera:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:data:bundleLibCompileToJarDebug
+> Task :core:sensors:generateDebugResources FROM-CACHE
+> Task :feature:camera:generateDebugResources FROM-CACHE
+> Task :core:sensors:packageDebugResources FROM-CACHE
+> Task :feature:camera:packageDebugResources FROM-CACHE
+> Task :core:camera:bundleLibCompileToJarDebug
+> Task :feature:camera:parseDebugLocalResources FROM-CACHE
+> Task :core:sensors:parseDebugLocalResources FROM-CACHE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug
+> Task :core:sensors:generateDebugRFile FROM-CACHE
+> Task :feature:gallery:generateDebugResources FROM-CACHE
+> Task :feature:camera:generateDebugRFile FROM-CACHE
+> Task :feature:gallery:packageDebugResources FROM-CACHE
+> Task :feature:gallery:parseDebugLocalResources FROM-CACHE
+> Task :feature:gallery:generateDebugRFile FROM-CACHE
+> Task :core:sensors:kspDebugKotlin FROM-CACHE
+> Task :core:processing:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:sensors:compileDebugKotlin FROM-CACHE
+> Task :core:sensors:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:sensors:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:processing:transformDebugClassesWithAsm FROM-CACHE
+> Task :core:sensors:bundleLibCompileToJarDebug
+> Task :core:processing:bundleLibCompileToJarDebug
+> Task :feature:camera:kspDebugKotlin FROM-CACHE
+> Task :feature:settings:generateDebugResources FROM-CACHE
+> Task :feature:gallery:kspDebugKotlin FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :core:audio:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:packageDebugResources FROM-CACHE
+> Task :feature:settings:parseDebugLocalResources FROM-CACHE
+> Task :feature:settings:generateDebugRFile FROM-CACHE
+> Task :core:audio:mergeDebugAssets
+> Task :core:camera:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:kspDebugKotlin FROM-CACHE
+> Task :feature:gallery:compileDebugKotlin FROM-CACHE
+> Task :core:camera:mergeDebugAssets
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :feature:camera:compileDebugKotlin FROM-CACHE
+> Task :feature:gallery:javaPreCompileDebug FROM-CACHE
+> Task :feature:camera:javaPreCompileDebug FROM-CACHE
+> Task :core:data:mergeDebugAssets
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets
+> Task :core:processing:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:compileDebugKotlin FROM-CACHE
+> Task :core:processing:mergeDebugAssets
+> Task :core:sensors:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:javaPreCompileDebug FROM-CACHE
+> Task :core:sensors:mergeDebugAssets
+> Task :app:generateDebugGlobalSynthetics FROM-CACHE
+> Task :core:audio:processDebugJavaRes
+> Task :core:camera:processDebugJavaRes
+> Task :feature:gallery:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:data:processDebugJavaRes
+> Task :core:designsystem:processDebugJavaRes
+> Task :feature:camera:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:processing:processDebugJavaRes
+> Task :feature:settings:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:sensors:processDebugJavaRes
+> Task :feature:gallery:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:camera:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:settings:transformDebugClassesWithAsm FROM-CACHE
+> Task :feature:gallery:bundleLibCompileToJarDebug
+> Task :feature:camera:generateDebugAssets UP-TO-DATE
+> Task :feature:camera:mergeDebugAssets
+> Task :feature:gallery:generateDebugAssets UP-TO-DATE
+> Task :feature:camera:bundleLibCompileToJarDebug
+> Task :feature:settings:generateDebugAssets UP-TO-DATE
+> Task :feature:gallery:mergeDebugAssets
+> Task :feature:settings:mergeDebugAssets
+> Task :feature:settings:bundleLibCompileToJarDebug
+> Task :feature:gallery:processDebugJavaRes
+> Task :feature:camera:processDebugJavaRes
+> Task :feature:settings:processDebugJavaRes
+> Task :app:checkDebugDuplicateClasses
+> Task :feature:gallery:bundleLibRuntimeToDirDebug
+> Task :feature:camera:bundleLibRuntimeToDirDebug
+> Task :feature:settings:bundleLibRuntimeToDirDebug
+> Task :core:designsystem:bundleLibRuntimeToDirDebug
+> Task :core:camera:bundleLibRuntimeToDirDebug
+> Task :app:kspDebugKotlin FROM-CACHE
+> Task :core:sensors:bundleLibRuntimeToDirDebug
+> Task :core:audio:bundleLibRuntimeToDirDebug
+> Task :core:data:bundleLibRuntimeToDirDebug
+> Task :core:processing:bundleLibRuntimeToDirDebug
+> Task :app:compileDebugKotlin FROM-CACHE
+> Task :feature:camera:bundleLibRuntimeToJarDebug
+> Task :feature:gallery:bundleLibRuntimeToJarDebug
+> Task :feature:settings:bundleLibRuntimeToJarDebug
+> Task :core:data:bundleLibRuntimeToJarDebug
+> Task :core:camera:bundleLibRuntimeToJarDebug
+> Task :core:audio:bundleLibRuntimeToJarDebug
+> Task :core:processing:bundleLibRuntimeToJarDebug
+> Task :core:sensors:bundleLibRuntimeToJarDebug
+> Task :core:audio:writeDebugAarMetadata
+> Task :core:data:writeDebugAarMetadata
+> Task :core:camera:writeDebugAarMetadata
+> Task :app:compileDebugJavaWithJavac FROM-CACHE
+> Task :core:designsystem:writeDebugAarMetadata
+> Task :core:processing:writeDebugAarMetadata
+> Task :core:sensors:writeDebugAarMetadata
+> Task :feature:gallery:writeDebugAarMetadata
+> Task :core:audio:extractDeepLinksDebug FROM-CACHE
+> Task :core:audio:processDebugManifest FROM-CACHE
+> Task :core:camera:extractDeepLinksDebug FROM-CACHE
+> Task :core:camera:processDebugManifest FROM-CACHE
+> Task :core:data:extractDeepLinksDebug FROM-CACHE
+> Task :core:data:processDebugManifest FROM-CACHE
+> Task :feature:camera:writeDebugAarMetadata
+> Task :core:designsystem:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:writeDebugAarMetadata
+> Task :core:processing:extractDeepLinksDebug FROM-CACHE
+> Task :app:mergeDebugAssets
+> Task :core:sensors:extractDeepLinksDebug FROM-CACHE
+> Task :core:processing:processDebugManifest FROM-CACHE
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :core:designsystem:processDebugManifest FROM-CACHE
+> Task :feature:gallery:extractDeepLinksDebug FROM-CACHE
+> Task :feature:camera:extractDeepLinksDebug FROM-CACHE
+> Task :core:sensors:processDebugManifest FROM-CACHE
+> Task :app:processDebugJavaRes
+> Task :feature:settings:extractDeepLinksDebug FROM-CACHE
+> Task :feature:gallery:processDebugManifest FROM-CACHE
+> Task :feature:camera:processDebugManifest FROM-CACHE
+> Task :feature:settings:processDebugManifest FROM-CACHE
+> Task :core:audio:mapDebugSourceSetPaths
+> Task :core:camera:mapDebugSourceSetPaths
+> Task :core:data:mapDebugSourceSetPaths
+> Task :core:audio:compileDebugLibraryResources FROM-CACHE
+> Task :core:data:compileDebugLibraryResources FROM-CACHE
+> Task :core:camera:compileDebugLibraryResources FROM-CACHE
+> Task :core:designsystem:mapDebugSourceSetPaths
+> Task :core:processing:mapDebugSourceSetPaths
+> Task :core:designsystem:compileDebugLibraryResources FROM-CACHE
+> Task :core:sensors:mapDebugSourceSetPaths
+> Task :core:processing:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:mapDebugSourceSetPaths
+> Task :core:sensors:compileDebugLibraryResources FROM-CACHE
+> Task :feature:camera:compileDebugLibraryResources FROM-CACHE
+> Task :feature:gallery:mapDebugSourceSetPaths
+> Task :feature:settings:mapDebugSourceSetPaths
+> Task :feature:gallery:compileDebugLibraryResources FROM-CACHE
+> Task :feature:settings:compileDebugLibraryResources FROM-CACHE
+> Task :core:audio:mergeDebugJniLibFolders
+> Task :core:audio:mergeDebugNativeLibs NO-SOURCE
+> Task :core:data:mergeDebugJniLibFolders
+> Task :core:camera:mergeDebugJniLibFolders
+> Task :core:data:mergeDebugNativeLibs NO-SOURCE
+> Task :core:camera:mergeDebugNativeLibs NO-SOURCE
+> Task :core:audio:copyDebugJniLibsProjectOnly
+> Task :core:data:copyDebugJniLibsProjectOnly
+> Task :core:camera:copyDebugJniLibsProjectOnly
+> Task :core:designsystem:mergeDebugJniLibFolders
+> Task :core:designsystem:mergeDebugNativeLibs NO-SOURCE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :core:designsystem:copyDebugJniLibsProjectOnly
+> Task :core:processing:mergeDebugJniLibFolders
+> Task :core:processing:mergeDebugNativeLibs NO-SOURCE
+> Task :core:processing:copyDebugJniLibsProjectOnly
+> Task :core:sensors:mergeDebugJniLibFolders
+> Task :core:sensors:mergeDebugNativeLibs NO-SOURCE
+> Task :core:sensors:copyDebugJniLibsProjectOnly
+> Task :feature:camera:mergeDebugJniLibFolders
+> Task :feature:camera:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:gallery:mergeDebugJniLibFolders
+> Task :feature:camera:copyDebugJniLibsProjectOnly
+> Task :feature:gallery:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:gallery:copyDebugJniLibsProjectOnly
+> Task :feature:settings:mergeDebugJniLibFolders
+> Task :feature:settings:mergeDebugNativeLibs NO-SOURCE
+> Task :feature:settings:copyDebugJniLibsProjectOnly
+> Task :core:audio:checkDebugAarMetadata
+> Task :core:audio:stripDebugDebugSymbols NO-SOURCE
+> Task :core:audio:copyDebugJniLibsProjectAndLocalJars
+> Task :core:camera:checkDebugAarMetadata
+> Task :core:camera:stripDebugDebugSymbols NO-SOURCE
+> Task :core:camera:copyDebugJniLibsProjectAndLocalJars
+> Task :core:audio:extractDebugAnnotations FROM-CACHE
+> Task :core:camera:extractDebugAnnotations FROM-CACHE
+> Task :core:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:audio:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:audio:mergeDebugGeneratedProguardFiles
+> Task :core:camera:mergeDebugGeneratedProguardFiles
+> Task :core:camera:mergeDebugConsumerProguardFiles
+> Task :core:audio:mergeDebugConsumerProguardFiles
+> Task :core:camera:prepareDebugArtProfile
+> Task :core:audio:prepareDebugArtProfile
+> Task :core:audio:prepareLintJarForPublish
+> Task :core:camera:prepareLintJarForPublish
+> Task :core:camera:mergeDebugJavaResource
+> Task :core:audio:mergeDebugJavaResource
+> Task :core:audio:syncDebugLibJars FROM-CACHE
+> Task :core:camera:syncDebugLibJars FROM-CACHE
+> Task :core:audio:bundleDebugAar
+> Task :core:audio:assembleDebug
+> Task :core:camera:bundleDebugAar
+> Task :core:camera:assembleDebug
+> Task :core:data:checkDebugAarMetadata
+> Task :core:data:stripDebugDebugSymbols NO-SOURCE
+> Task :core:data:copyDebugJniLibsProjectAndLocalJars
+> Task :core:data:extractDebugAnnotations FROM-CACHE
+> Task :core:data:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:data:mergeDebugGeneratedProguardFiles
+> Task :core:data:mergeDebugConsumerProguardFiles
+> Task :core:data:prepareDebugArtProfile
+> Task :core:data:prepareLintJarForPublish
+> Task :core:data:mergeDebugJavaResource
+> Task :core:data:syncDebugLibJars FROM-CACHE
+> Task :core:data:bundleDebugAar
+> Task :core:data:assembleDebug
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :core:processing:checkDebugAarMetadata
+> Task :core:designsystem:stripDebugDebugSymbols NO-SOURCE
+> Task :core:designsystem:checkDebugAarMetadata
+> Task :core:designsystem:copyDebugJniLibsProjectAndLocalJars
+> Task :core:processing:stripDebugDebugSymbols NO-SOURCE
+> Task :core:processing:copyDebugJniLibsProjectAndLocalJars
+> Task :app:mergeLibDexDebug FROM-CACHE
+> Task :app:hiltCollectClassesDebug UP-TO-DATE
+> Task :core:designsystem:extractDebugAnnotations FROM-CACHE
+> Task :core:processing:extractDebugAnnotations FROM-CACHE
+> Task :core:processing:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:designsystem:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:processing:mergeDebugGeneratedProguardFiles
+> Task :core:designsystem:mergeDebugGeneratedProguardFiles
+> Task :core:processing:mergeDebugConsumerProguardFiles
+> Task :core:designsystem:mergeDebugConsumerProguardFiles
+> Task :core:processing:prepareDebugArtProfile
+> Task :core:designsystem:prepareDebugArtProfile
+> Task :core:designsystem:prepareLintJarForPublish
+> Task :core:processing:prepareLintJarForPublish
+> Task :core:designsystem:mergeDebugJavaResource
+> Task :core:designsystem:syncDebugLibJars FROM-CACHE
+> Task :core:designsystem:bundleDebugAar
+> Task :core:designsystem:assembleDebug
+> Task :core:processing:mergeDebugJavaResource
+> Task :core:sensors:checkDebugAarMetadata
+> Task :app:hiltAggregateDepsDebug FROM-CACHE
+> Task :core:processing:syncDebugLibJars FROM-CACHE
+> Task :core:sensors:stripDebugDebugSymbols NO-SOURCE
+> Task :core:sensors:copyDebugJniLibsProjectAndLocalJars
+> Task :core:processing:bundleDebugAar
+> Task :core:processing:assembleDebug
+> Task :core:sensors:extractDebugAnnotations FROM-CACHE
+> Task :core:sensors:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:sensors:mergeDebugGeneratedProguardFiles
+> Task :core:sensors:mergeDebugConsumerProguardFiles
+> Task :core:sensors:prepareDebugArtProfile
+> Task :core:sensors:prepareLintJarForPublish
+> Task :core:sensors:mergeDebugJavaResource
+> Task :feature:camera:checkDebugAarMetadata
+> Task :feature:camera:stripDebugDebugSymbols NO-SOURCE
+> Task :core:sensors:syncDebugLibJars FROM-CACHE
+> Task :feature:camera:copyDebugJniLibsProjectAndLocalJars
+> Task :app:hiltJavaCompileDebug FROM-CACHE
+> Task :core:sensors:bundleDebugAar
+> Task :core:sensors:assembleDebug
+> Task :feature:camera:extractDebugAnnotations FROM-CACHE
+> Task :feature:camera:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:gallery:checkDebugAarMetadata
+> Task :feature:camera:mergeDebugGeneratedProguardFiles
+> Task :feature:gallery:stripDebugDebugSymbols NO-SOURCE
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :feature:gallery:copyDebugJniLibsProjectAndLocalJars
+> Task :feature:camera:mergeDebugConsumerProguardFiles
+> Task :app:compileDebugNavigationResources FROM-CACHE
+> Task :feature:camera:prepareDebugArtProfile
+> Task :feature:gallery:extractDebugAnnotations FROM-CACHE
+> Task :feature:camera:prepareLintJarForPublish
+> Task :feature:camera:mergeDebugJavaResource
+> Task :feature:gallery:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:gallery:mergeDebugGeneratedProguardFiles
+> Task :feature:camera:syncDebugLibJars FROM-CACHE
+> Task :feature:gallery:mergeDebugConsumerProguardFiles
+> Task :feature:gallery:prepareDebugArtProfile
+> Task :feature:gallery:prepareLintJarForPublish
+> Task :feature:gallery:mergeDebugJavaResource
+> Task :feature:gallery:syncDebugLibJars FROM-CACHE
+> Task :feature:camera:bundleDebugAar
+> Task :feature:camera:assembleDebug
+> Task :feature:gallery:bundleDebugAar
+> Task :feature:gallery:assembleDebug
+> Task :feature:settings:stripDebugDebugSymbols NO-SOURCE
+> Task :feature:settings:copyDebugJniLibsProjectAndLocalJars
+> Task :feature:settings:checkDebugAarMetadata
+> Task :feature:settings:extractDebugAnnotations FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :feature:settings:extractDeepLinksForAarDebug FROM-CACHE
+> Task :feature:settings:mergeDebugGeneratedProguardFiles
+> Task :app:createDebugCompatibleScreenManifests
+> Task :feature:settings:mergeDebugConsumerProguardFiles
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :feature:settings:prepareDebugArtProfile
+> Task :feature:settings:prepareLintJarForPublish
+> Task :feature:settings:mergeDebugJavaResource
+> Task :feature:settings:syncDebugLibJars FROM-CACHE
+> Task :feature:settings:bundleDebugAar
+> Task :feature:settings:assembleDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:mergeDebugJniLibFolders
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :app:processDebugResources
+> Task :app:validateSigningDebug
+> Task :app:transformDebugClassesWithAsm FROM-CACHE
+> Task :app:dexBuilderDebug FROM-CACHE
+> Task :app:mergeProjectDexDebug FROM-CACHE
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791670445261.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 47s
+352 actionable tasks: 179 executed, 173 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:audio:preBuild UP-TO-DATE
+> Task :core:audio:preReleaseBuild UP-TO-DATE
+> Task :core:control:processResources NO-SOURCE
+> Task :core:camera:preBuild UP-TO-DATE
+> Task :core:camera:preReleaseBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :core:pure:compileKotlin FROM-CACHE
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:audio:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseJniLibFolders
+> Task :core:camera:mergeReleaseJniLibFolders
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preReleaseBuild UP-TO-DATE
+> Task :core:audio:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:camera:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:data:mergeReleaseJniLibFolders
+> Task :core:camera:copyReleaseJniLibsProjectOnly
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:audio:copyReleaseJniLibsProjectOnly
+> Task :core:data:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:processing:preBuild UP-TO-DATE
+> Task :core:designsystem:preReleaseBuild UP-TO-DATE
+> Task :core:processing:preReleaseBuild UP-TO-DATE
+> Task :core:pure:jar
+> Task :core:designsystem:mergeReleaseJniLibFolders
+> Task :core:processing:mergeReleaseJniLibFolders
+> Task :core:data:copyReleaseJniLibsProjectOnly
+> Task :core:designsystem:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:designsystem:copyReleaseJniLibsProjectOnly
+> Task :core:processing:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:processing:copyReleaseJniLibsProjectOnly
+> Task :core:sensors:preBuild UP-TO-DATE
+> Task :core:sensors:preReleaseBuild UP-TO-DATE
+> Task :feature:camera:preBuild UP-TO-DATE
+> Task :feature:camera:preReleaseBuild UP-TO-DATE
+> Task :core:sensors:mergeReleaseJniLibFolders
+> Task :feature:camera:mergeReleaseJniLibFolders
+> Task :feature:camera:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:sensors:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:camera:copyReleaseJniLibsProjectOnly
+> Task :feature:gallery:preBuild UP-TO-DATE
+> Task :feature:gallery:preReleaseBuild UP-TO-DATE
+> Task :core:sensors:copyReleaseJniLibsProjectOnly
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preReleaseBuild UP-TO-DATE
+> Task :core:entity:compileKotlin FROM-CACHE
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :feature:gallery:mergeReleaseJniLibFolders
+> Task :feature:gallery:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:settings:mergeReleaseJniLibFolders
+> Task :feature:settings:mergeReleaseNativeLibs NO-SOURCE
+> Task :feature:gallery:copyReleaseJniLibsProjectOnly
+> Task :core:entity:jar
+> Task :feature:settings:copyReleaseJniLibsProjectOnly
+> Task :feature:camera:generateReleaseResources FROM-CACHE
+> Task :core:boundary:compileKotlin FROM-CACHE
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:designsystem:generateReleaseResources FROM-CACHE
+> Task :feature:gallery:generateReleaseResources FROM-CACHE
+> Task :feature:camera:packageReleaseResources FROM-CACHE
+> Task :feature:camera:processReleaseNavigationResources FROM-CACHE
+> Task :core:designsystem:packageReleaseResources FROM-CACHE
+> Task :feature:gallery:packageReleaseResources FROM-CACHE
+> Task :core:designsystem:processReleaseNavigationResources FROM-CACHE
+> Task :feature:gallery:processReleaseNavigationResources FROM-CACHE
+> Task :core:boundary:jar
+> Task :core:control:compileKotlin FROM-CACHE
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:control:jar
+> Task :app:mergeReleaseNativeLibs
+> Task :core:designsystem:parseReleaseLocalResources FROM-CACHE
+> Task :core:designsystem:generateReleaseRFile FROM-CACHE
+> Task :feature:gallery:parseReleaseLocalResources FROM-CACHE
+> Task :feature:gallery:generateReleaseRFile FROM-CACHE
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :feature:gallery:javaPreCompileRelease FROM-CACHE
+> Task :feature:settings:generateReleaseResources FROM-CACHE
+> Task :core:camera:generateReleaseResources FROM-CACHE
+> Task :feature:camera:parseReleaseLocalResources FROM-CACHE
+> Task :feature:settings:packageReleaseResources FROM-CACHE
+> Task :feature:settings:processReleaseNavigationResources FROM-CACHE
+> Task :feature:camera:generateReleaseRFile FROM-CACHE
+> Task :core:camera:packageReleaseResources FROM-CACHE
+> Task :core:camera:processReleaseNavigationResources FROM-CACHE
+> Task :feature:settings:parseReleaseLocalResources FROM-CACHE
+> Task :feature:camera:javaPreCompileRelease FROM-CACHE
+> Task :core:camera:parseReleaseLocalResources FROM-CACHE
+> Task :core:data:generateReleaseResources FROM-CACHE
+> Task :feature:settings:generateReleaseRFile FROM-CACHE
+> Task :core:data:packageReleaseResources FROM-CACHE
+> Task :core:camera:generateReleaseRFile FROM-CACHE
+> Task :core:data:processReleaseNavigationResources FROM-CACHE
+> Task :core:data:parseReleaseLocalResources FROM-CACHE
+> Task :feature:settings:javaPreCompileRelease FROM-CACHE
+> Task :core:data:generateReleaseRFile FROM-CACHE
+> Task :core:audio:generateReleaseResources FROM-CACHE
+> Task :core:audio:packageReleaseResources FROM-CACHE
+> Task :core:audio:processReleaseNavigationResources FROM-CACHE
+> Task :core:designsystem:compileReleaseKotlin FROM-CACHE
+> Task :core:audio:parseReleaseLocalResources FROM-CACHE
+> Task :core:designsystem:javaPreCompileRelease FROM-CACHE
+> Task :core:audio:generateReleaseRFile FROM-CACHE
+> Task :core:designsystem:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:camera:kspReleaseKotlin FROM-CACHE
+> Task :core:audio:kspReleaseKotlin FROM-CACHE
+> Task :core:data:kspReleaseKotlin FROM-CACHE
+> Task :core:designsystem:mergeReleaseGeneratedProguardFiles
+> Task :core:designsystem:exportReleaseConsumerProguardFiles
+> Task :core:designsystem:bundleLibRuntimeToJarRelease
+> Task :core:designsystem:bundleLibCompileToJarRelease
+> Task :core:audio:compileReleaseKotlin FROM-CACHE
+> Task :core:data:compileReleaseKotlin FROM-CACHE
+> Task :core:camera:compileReleaseKotlin FROM-CACHE
+> Task :core:camera:javaPreCompileRelease FROM-CACHE
+> Task :feature:gallery:kspReleaseKotlin FROM-CACHE
+> Task :feature:settings:kspReleaseKotlin FROM-CACHE
+> Task :feature:camera:kspReleaseKotlin FROM-CACHE
+> Task :feature:gallery:compileReleaseKotlin FROM-CACHE
+> Task :feature:camera:compileReleaseKotlin FROM-CACHE
+> Task :feature:settings:compileReleaseKotlin FROM-CACHE
+> Task :feature:gallery:compileReleaseJavaWithJavac FROM-CACHE
+> Task :feature:camera:compileReleaseJavaWithJavac FROM-CACHE
+> Task :core:camera:compileReleaseJavaWithJavac FROM-CACHE
+> Task :feature:settings:compileReleaseJavaWithJavac FROM-CACHE
+> Task :feature:gallery:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:camera:transformReleaseClassesWithAsm FROM-CACHE
+> Task :feature:camera:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:camera:mergeReleaseGeneratedProguardFiles
+> Task :feature:gallery:mergeReleaseGeneratedProguardFiles
+> Task :feature:camera:mergeReleaseGeneratedProguardFiles
+> Task :feature:settings:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:camera:exportReleaseConsumerProguardFiles
+> Task :feature:gallery:exportReleaseConsumerProguardFiles
+> Task :feature:settings:mergeReleaseGeneratedProguardFiles
+> Task :feature:camera:exportReleaseConsumerProguardFiles
+> Task :feature:settings:exportReleaseConsumerProguardFiles
+> Task :core:sensors:generateReleaseResources FROM-CACHE
+> Task :core:data:javaPreCompileRelease FROM-CACHE
+> Task :core:audio:javaPreCompileRelease FROM-CACHE
+> Task :core:processing:generateReleaseResources FROM-CACHE
+> Task :core:sensors:packageReleaseResources FROM-CACHE
+> Task :core:processing:packageReleaseResources FROM-CACHE
+> Task :core:processing:processReleaseNavigationResources FROM-CACHE
+> Task :core:sensors:processReleaseNavigationResources FROM-CACHE
+> Task :core:sensors:parseReleaseLocalResources FROM-CACHE
+> Task :core:processing:parseReleaseLocalResources FROM-CACHE
+> Task :core:sensors:generateReleaseRFile FROM-CACHE
+> Task :core:audio:compileReleaseJavaWithJavac FROM-CACHE
+> Task :core:processing:generateReleaseRFile FROM-CACHE
+> Task :core:data:compileReleaseJavaWithJavac FROM-CACHE
+> Task :core:sensors:kspReleaseKotlin FROM-CACHE
+> Task :core:audio:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:audio:mergeReleaseGeneratedProguardFiles
+> Task :core:data:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:data:mergeReleaseGeneratedProguardFiles
+> Task :core:audio:exportReleaseConsumerProguardFiles
+> Task :core:sensors:compileReleaseKotlin FROM-CACHE
+> Task :core:data:exportReleaseConsumerProguardFiles
+> Task :core:sensors:javaPreCompileRelease FROM-CACHE
+> Task :core:audio:prepareReleaseArtProfile
+> Task :core:processing:kspReleaseKotlin FROM-CACHE
+> Task :core:camera:prepareReleaseArtProfile
+> Task :core:data:prepareReleaseArtProfile
+> Task :core:designsystem:prepareReleaseArtProfile
+> Task :feature:camera:prepareReleaseArtProfile
+> Task :feature:gallery:prepareReleaseArtProfile
+> Task :core:sensors:compileReleaseJavaWithJavac FROM-CACHE
+> Task :feature:settings:prepareReleaseArtProfile
+> Task :core:audio:bundleLibCompileToJarRelease
+> Task :core:sensors:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:sensors:mergeReleaseGeneratedProguardFiles
+> Task :core:sensors:exportReleaseConsumerProguardFiles
+> Task :core:sensors:prepareReleaseArtProfile
+> Task :core:processing:compileReleaseKotlin FROM-CACHE
+> Task :core:processing:javaPreCompileRelease FROM-CACHE
+> Task :core:camera:bundleLibCompileToJarRelease
+> Task :core:data:bundleLibCompileToJarRelease
+> Task :core:processing:compileReleaseJavaWithJavac FROM-CACHE
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :core:sensors:bundleLibCompileToJarRelease
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :core:processing:transformReleaseClassesWithAsm FROM-CACHE
+> Task :feature:camera:bundleLibCompileToJarRelease
+> Task :core:processing:mergeReleaseGeneratedProguardFiles
+> Task :app:checkReleaseDuplicateClasses
+> Task :core:processing:prepareReleaseArtProfile
+> Task :feature:gallery:bundleLibCompileToJarRelease
+> Task :core:processing:exportReleaseConsumerProguardFiles
+> Task :core:processing:bundleLibCompileToJarRelease
+> Task :app:processReleaseNavigationResources FROM-CACHE
+> Task :feature:settings:bundleLibCompileToJarRelease
+> Task :feature:camera:bundleLibRuntimeToJarRelease
+> Task :feature:settings:bundleLibRuntimeToJarRelease
+> Task :feature:gallery:bundleLibRuntimeToJarRelease
+> Task :core:data:bundleLibRuntimeToJarRelease
+> Task :core:camera:bundleLibRuntimeToJarRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :core:audio:bundleLibRuntimeToJarRelease
+> Task :core:sensors:bundleLibRuntimeToJarRelease
+> Task :core:processing:bundleLibRuntimeToJarRelease
+> Task :app:generateReleaseRFile FROM-CACHE
+> Task :core:camera:writeReleaseAarMetadata
+> Task :core:audio:writeReleaseAarMetadata
+> Task :core:data:writeReleaseAarMetadata
+> Task :core:designsystem:writeReleaseAarMetadata
+> Task :core:processing:writeReleaseAarMetadata
+> Task :core:sensors:writeReleaseAarMetadata
+> Task :feature:camera:writeReleaseAarMetadata
+> Task :feature:gallery:writeReleaseAarMetadata
+> Task :core:audio:extractDeepLinksRelease FROM-CACHE
+> Task :feature:settings:writeReleaseAarMetadata
+> Task :core:camera:extractDeepLinksRelease FROM-CACHE
+> Task :core:data:extractDeepLinksRelease FROM-CACHE
+> Task :core:audio:processReleaseManifest FROM-CACHE
+> Task :core:designsystem:extractDeepLinksRelease FROM-CACHE
+> Task :core:camera:processReleaseManifest FROM-CACHE
+> Task :core:processing:extractDeepLinksRelease FROM-CACHE
+> Task :core:data:processReleaseManifest FROM-CACHE
+> Task :core:designsystem:processReleaseManifest FROM-CACHE
+> Task :feature:camera:extractDeepLinksRelease FROM-CACHE
+> Task :core:sensors:extractDeepLinksRelease FROM-CACHE
+> Task :core:processing:processReleaseManifest FROM-CACHE
+> Task :feature:camera:processReleaseManifest FROM-CACHE
+> Task :app:kspReleaseKotlin FROM-CACHE
+> Task :feature:gallery:extractDeepLinksRelease FROM-CACHE
+> Task :feature:settings:extractDeepLinksRelease FROM-CACHE
+> Task :core:sensors:processReleaseManifest FROM-CACHE
+> Task :feature:gallery:processReleaseManifest FROM-CACHE
+> Task :feature:settings:processReleaseManifest FROM-CACHE
+> Task :core:data:mapReleaseSourceSetPaths
+> Task :core:audio:mapReleaseSourceSetPaths
+> Task :core:camera:mapReleaseSourceSetPaths
+> Task :core:data:compileReleaseLibraryResources FROM-CACHE
+> Task :core:camera:compileReleaseLibraryResources FROM-CACHE
+> Task :core:designsystem:mapReleaseSourceSetPaths
+> Task :core:audio:compileReleaseLibraryResources FROM-CACHE
+> Task :core:designsystem:compileReleaseLibraryResources FROM-CACHE
+> Task :core:processing:mapReleaseSourceSetPaths
+> Task :core:sensors:mapReleaseSourceSetPaths
+> Task :feature:camera:mapReleaseSourceSetPaths
+> Task :core:processing:compileReleaseLibraryResources FROM-CACHE
+> Task :core:sensors:compileReleaseLibraryResources FROM-CACHE
+> Task :feature:camera:compileReleaseLibraryResources FROM-CACHE
+> Task :feature:gallery:mapReleaseSourceSetPaths
+> Task :feature:settings:mapReleaseSourceSetPaths
+> Task :feature:gallery:compileReleaseLibraryResources FROM-CACHE
+> Task :app:compileReleaseKotlin FROM-CACHE
+> Task :core:audio:processReleaseJavaRes
+> Task :feature:settings:compileReleaseLibraryResources FROM-CACHE
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :core:camera:processReleaseJavaRes
+> Task :core:data:processReleaseJavaRes
+> Task :core:designsystem:processReleaseJavaRes
+> Task :core:processing:processReleaseJavaRes
+> Task :core:sensors:processReleaseJavaRes
+> Task :feature:camera:processReleaseJavaRes
+> Task :core:audio:generateReleaseAssets UP-TO-DATE
+> Task :feature:gallery:processReleaseJavaRes
+> Task :core:camera:generateReleaseAssets UP-TO-DATE
+> Task :feature:settings:processReleaseJavaRes
+> Task :core:data:generateReleaseAssets UP-TO-DATE
+> Task :core:camera:mergeReleaseAssets
+> Task :core:designsystem:generateReleaseAssets UP-TO-DATE
+> Task :core:audio:mergeReleaseAssets
+> Task :core:processing:generateReleaseAssets UP-TO-DATE
+> Task :core:designsystem:mergeReleaseAssets
+> Task :core:sensors:generateReleaseAssets UP-TO-DATE
+> Task :core:processing:mergeReleaseAssets
+> Task :feature:camera:generateReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseAssets
+> Task :feature:gallery:generateReleaseAssets UP-TO-DATE
+> Task :app:compileReleaseJavaWithJavac FROM-CACHE
+> Task :app:hiltCollectClassesRelease UP-TO-DATE
+> Task :feature:camera:mergeReleaseAssets
+> Task :feature:settings:generateReleaseAssets UP-TO-DATE
+> Task :core:sensors:mergeReleaseAssets
+> Task :feature:gallery:mergeReleaseAssets
+> Task :feature:settings:mergeReleaseAssets
+> Task :core:data:checkReleaseAarMetadata
+> Task :core:camera:checkReleaseAarMetadata
+> Task :core:audio:checkReleaseAarMetadata
+> Task :app:hiltAggregateDepsRelease FROM-CACHE
+> Task :core:camera:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:audio:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:data:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:audio:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:data:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:audio:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:camera:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:camera:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:data:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:audio:extractReleaseAnnotations FROM-CACHE
+> Task :core:camera:extractReleaseAnnotations FROM-CACHE
+> Task :app:hiltJavaCompileRelease FROM-CACHE
+> Task :core:data:extractReleaseAnnotations FROM-CACHE
+> Task :core:camera:mergeReleaseConsumerProguardFiles
+> Task :core:audio:mergeReleaseConsumerProguardFiles
+> Task :core:data:mergeReleaseConsumerProguardFiles
+> Task :core:audio:prepareLintJarForPublish
+> Task :core:camera:prepareLintJarForPublish
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:compileReleaseNavigationResources FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :core:audio:mergeReleaseResources FROM-CACHE
+> Task :core:camera:mergeReleaseJavaResource
+> Task :core:audio:mergeReleaseJavaResource
+> Task :core:data:prepareLintJarForPublish
+> Task :core:camera:syncReleaseLibJars FROM-CACHE
+> Task :core:audio:verifyReleaseResources FROM-CACHE
+> Task :core:data:mergeReleaseJavaResource
+> Task :core:audio:syncReleaseLibJars FROM-CACHE
+> Task :core:data:syncReleaseLibJars FROM-CACHE
+> Task :core:audio:bundleReleaseAar
+> Task :core:audio:assembleRelease
+> Task :core:camera:bundleReleaseAar
+> Task :core:data:bundleReleaseAar
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :core:camera:mergeReleaseResources FROM-CACHE
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :core:data:mergeReleaseResources FROM-CACHE
+> Task :core:data:verifyReleaseResources FROM-CACHE
+> Task :core:data:assembleRelease
+> Task :core:camera:verifyReleaseResources FROM-CACHE
+> Task :core:camera:assembleRelease
+> Task :core:processing:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:processing:checkReleaseAarMetadata
+> Task :core:processing:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:designsystem:checkReleaseAarMetadata
+> Task :core:designsystem:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:processing:extractReleaseAnnotations FROM-CACHE
+> Task :core:designsystem:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:designsystem:extractReleaseAnnotations FROM-CACHE
+> Task :core:processing:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:designsystem:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:designsystem:mergeReleaseConsumerProguardFiles
+> Task :core:processing:mergeReleaseConsumerProguardFiles
+> Task :core:designsystem:prepareLintJarForPublish
+> Task :core:processing:prepareLintJarForPublish
+> Task :core:designsystem:mergeReleaseJavaResource
+> Task :core:processing:mergeReleaseJavaResource
+> Task :core:sensors:checkReleaseAarMetadata
+> Task :core:designsystem:syncReleaseLibJars FROM-CACHE
+> Task :core:processing:syncReleaseLibJars FROM-CACHE
+> Task :core:sensors:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:designsystem:bundleReleaseAar
+> Task :core:sensors:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:sensors:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:processing:bundleReleaseAar
+> Task :core:sensors:extractReleaseAnnotations FROM-CACHE
+> Task :core:sensors:mergeReleaseConsumerProguardFiles
+> Task :core:sensors:prepareLintJarForPublish
+> Task :core:sensors:mergeReleaseJavaResource
+> Task :core:sensors:syncReleaseLibJars FROM-CACHE
+> Task :core:sensors:bundleReleaseAar
+> Task :core:processing:mergeReleaseResources FROM-CACHE
+> Task :core:designsystem:mergeReleaseResources FROM-CACHE
+> Task :core:sensors:mergeReleaseResources FROM-CACHE
+> Task :core:processing:verifyReleaseResources FROM-CACHE
+> Task :core:sensors:verifyReleaseResources FROM-CACHE
+> Task :core:sensors:assembleRelease
+> Task :core:processing:assembleRelease
+> Task :core:designsystem:verifyReleaseResources FROM-CACHE
+> Task :core:designsystem:assembleRelease
+> Task :feature:gallery:checkReleaseAarMetadata
+> Task :feature:gallery:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:settings:checkReleaseAarMetadata
+> Task :feature:settings:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:camera:checkReleaseAarMetadata
+> Task :feature:camera:stripReleaseDebugSymbols NO-SOURCE
+> Task :feature:gallery:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:gallery:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:camera:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:camera:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:settings:copyReleaseJniLibsProjectAndLocalJars
+> Task :feature:gallery:extractReleaseAnnotations FROM-CACHE
+> Task :feature:camera:extractReleaseAnnotations FROM-CACHE
+> Task :feature:settings:extractDeepLinksForAarRelease FROM-CACHE
+> Task :feature:gallery:mergeReleaseConsumerProguardFiles
+> Task :feature:camera:mergeReleaseConsumerProguardFiles
+> Task :app:processReleaseMainManifest
+> Task :feature:camera:prepareLintJarForPublish
+> Task :feature:gallery:prepareLintJarForPublish
+> Task :feature:settings:extractReleaseAnnotations FROM-CACHE
+> Task :feature:camera:mergeReleaseJavaResource
+> Task :feature:gallery:mergeReleaseJavaResource
+> Task :feature:settings:mergeReleaseConsumerProguardFiles
+> Task :feature:settings:prepareLintJarForPublish
+> Task :feature:settings:mergeReleaseJavaResource
+> Task :feature:settings:syncReleaseLibJars FROM-CACHE
+> Task :feature:settings:bundleReleaseAar
+> Task :feature:gallery:mergeReleaseResources FROM-CACHE
+> Task :feature:gallery:syncReleaseLibJars FROM-CACHE
+> Task :app:processReleaseManifest
+> Task :feature:camera:mergeReleaseResources FROM-CACHE
+> Task :feature:gallery:bundleReleaseAar
+> Task :feature:camera:syncReleaseLibJars FROM-CACHE
+> Task :feature:camera:bundleReleaseAar
+> Task :app:processReleaseManifestForPackage
+> Task :feature:settings:mergeReleaseResources FROM-CACHE
+> Task :feature:camera:verifyReleaseResources FROM-CACHE
+> Task :feature:camera:assembleRelease
+> Task :app:extractProguardFiles
+> Task :feature:gallery:verifyReleaseResources FROM-CACHE
+> Task :feature:gallery:assembleRelease
+> Task :feature:settings:verifyReleaseResources FROM-CACHE
+> Task :feature:settings:assembleRelease
+> Task :app:processReleaseJavaRes
+> Task :app:mergeReleaseStartupProfile
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:collectReleaseDependencies
+> Task :app:processReleaseResources
+> Task :app:sdkReleaseDependencyData
+> Task :app:transformReleaseClassesWithAsm FROM-CACHE
+> Task :app:expandReleaseArtProfileWildcards FROM-CACHE
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:produceReleaseComposeMapping FROM-CACHE
+> Task :app:reportReleaseComposeMappingErrors
+> Task :app:mergeReleaseJavaResource
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:minifyReleaseWithR8
+> Task :app:mergeReleaseComposeMapping FROM-CACHE
+> Task :app:compileReleaseArtProfile FROM-CACHE
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791670454015.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 46s
+380 actionable tasks: 190 executed, 190 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html

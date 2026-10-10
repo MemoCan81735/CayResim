@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.boundary.FakeCameraBoundaryContractTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:18.194Z" hostname="runnervmmprz5" time="1.263">
+  <properties/>
+  <testcase name="Fake erfuellt den ganzen Vertrag" classname="app.cayresim.core.boundary.FakeCameraBoundaryContractTest" time="1.241"/>
+  <testcase name="Fake faellt bei fehlender Extension zurueck" classname="app.cayresim.core.boundary.FakeCameraBoundaryContractTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

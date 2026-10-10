@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.architecture.MutationProbesTest" tests="47" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:21:59.522Z" hostname="runnervmmprz5" time="0.464">
+  <properties/>
+  <testcase name="R16 Dispatchers im ViewModel" classname="app.cayresim.architecture.MutationProbesTest" time="0.389"/>
+  <testcase name="R2 Uhr in Control" classname="app.cayresim.architecture.MutationProbesTest" time="0.004"/>
+  <testcase name="object ohne Zustand ist erlaubt" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R28 Sternimport im Daten-Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R28 voll qualifizierte Tonaufnahme in der UI" classname="app.cayresim.architecture.MutationProbesTest" time="0.004"/>
+  <testcase name="R1 Feature kennt fremdes Feature" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R28 AudioRecord im Feature" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="A1 Sucher darf CameraXViewfinder nutzen" classname="app.cayresim.architecture.MutationProbesTest" time="0.004"/>
+  <testcase name="Privater MutableStateFlow ist erlaubt" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="DI-Modul darf Dispatchers nutzen" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="Namen Entity-Klasse" classname="app.cayresim.architecture.MutationProbesTest" time="0.002"/>
+  <testcase name="R1 Entity importiert Boundary" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R29 Sternimport eines Unterpakets bleibt erlaubt" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R6 Reflexion" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R29 Sternimport im Feature" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R3 Service Locator" classname="app.cayresim.architecture.MutationProbesTest" time="0.003"/>
+  <testcase name="R1 Control kennt Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.002"/>
+  <testcase name="R11 CameraX in Feature-Control" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R4 Zufall in Entity" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R28 Mikrofonliste im Kamera-Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R2 Android in Entity" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R29 SensorManager im Feature" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="Testquellen werden nicht geprueft" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R28 andere android media Klassen bleiben erlaubt" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R2 Thread in Boundary" classname="app.cayresim.architecture.MutationProbesTest" time="0.007"/>
+  <testcase name="R29 Sensor-Adapter darf SensorManager nutzen" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R3 GlobalScope" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R3 object mit var" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R7 MediaStore in UI" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R11 Koordinaten-Umrechner ausserhalb des Suchers" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R1 Control importiert Entity" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="Namen Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R28 Mikrofon-Adapter darf AudioRecord nutzen" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R28 MediaRecorder im Daten-Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R29 SensorPrivacyManager ist kein Lagesensor" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="A1 Sucher darf den Koordinaten-Umrechner nutzen (S-005)" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R29 voll qualifizierter Sensor in der UI" classname="app.cayresim.architecture.MutationProbesTest" time="0.002"/>
+  <testcase name="Namen ViewModel im ui-Paket" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R1 Boundary importiert Entity" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R9 oeffentlicher MutableStateFlow" classname="app.cayresim.architecture.MutationProbesTest" time="0.006"/>
+  <testcase name="R7 contentResolver in UI" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="Namen Boundary-Schnittstelle" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="Kommentare loesen nichts aus" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R11 Camera2 in Daten-Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.001"/>
+  <testcase name="R11 CameraX in Galerie-UI" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R29 Sensor im Mikrofon-Adapter" classname="app.cayresim.architecture.MutationProbesTest" time="0.0"/>
+  <testcase name="R1 UI importiert Boundary" classname="app.cayresim.architecture.MutationProbesTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

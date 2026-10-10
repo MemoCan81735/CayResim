@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.NightUseCaseTest" tests="28" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:25.878Z" hostname="runnervmmprz5" time="0.235">
+  <properties/>
+  <testcase name="S-011 langsamer Speicher bremst die Serie nicht" classname="app.cayresim.core.control.NightUseCaseTest" time="0.094"/>
+  <testcase name="Bericht sagt, wenn das Wackeln nicht messbar ist" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Guter Fall dunkel nutzt den eigenen Kern mit 1 durch 10 s und hoher ISO" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Fehlerfall RAW scheitert, der 8-Bit-Weg springt ein" classname="app.cayresim.core.control.NightUseCaseTest" time="0.006"/>
+  <testcase name="Fehlerfall Waerme laesst nur die Messbilder zu" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Dauer wird gemessen vom Ausloesen bis gespeichert" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Danach ist die Automatik wieder da" classname="app.cayresim.core.control.NightUseCaseTest" time="0.005"/>
+  <testcase name="Guter Fall gespeichert RAW nutzt den RAW-Strom mit geplanter Belichtung" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Randfall ohne Messung der Automatik bleibt der Bericht ohne Automatik" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="Fehlerfall Abbruch mitten in der Serie stellt die Automatik trotzdem wieder her" classname="app.cayresim.core.control.NightUseCaseTest" time="0.01"/>
+  <testcase name="Bericht nennt das Wackeln" classname="app.cayresim.core.control.NightUseCaseTest" time="0.005"/>
+  <testcase name="Dauer wird auch im RAW-Weg gemessen" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="Randfall ohne Messung nutzt den eigenen Kern" classname="app.cayresim.core.control.NightUseCaseTest" time="0.003"/>
+  <testcase name="Bericht nennt die Messung der Automatik" classname="app.cayresim.core.control.NightUseCaseTest" time="0.003"/>
+  <testcase name="M6 laesst sich die Belichtung nicht setzen, meldet das Ergebnis die Automatik" classname="app.cayresim.core.control.NightUseCaseTest" time="0.003"/>
+  <testcase name="Randfall hell gemessen nutzt Samsungs Modus" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="Vorherige manuelle Werte bleiben erhalten" classname="app.cayresim.core.control.NightUseCaseTest" time="0.003"/>
+  <testcase name="Fehlerfall Kamera laeuft nicht, kein Bild, Automatik bleibt" classname="app.cayresim.core.control.NightUseCaseTest" time="0.001"/>
+  <testcase name="S-007 Diagnose kommt im Bericht an" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Randfall gespeichert 8 Bit oder nichts gespeichert nutzt nie RAW" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="Nachttest S24+ tiefe Dunkelheit nimmt 72 Bilder, maessige 36" classname="app.cayresim.core.control.NightUseCaseTest" time="0.004"/>
+  <testcase name="Dauer nach gescheitertem RAW enthaelt den RAW-Versuch" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="Fehlerfall Verarbeitung scheitert, Automatik kommt trotzdem zurueck" classname="app.cayresim.core.control.NightUseCaseTest" time="0.002"/>
+  <testcase name="S-011 Abbruch und Speicherfehler" classname="app.cayresim.core.control.NightUseCaseTest" time="0.026"/>
+  <testcase name="S-011 Serie aus und an" classname="app.cayresim.core.control.NightUseCaseTest" time="0.018"/>
+  <testcase name="Fehlerfall Kamera ohne manuelle Belichtung" classname="app.cayresim.core.control.NightUseCaseTest" time="0.001"/>
+  <testcase name="M6 Waerme kuerzt die Serie, das Ergebnis meldet es ehrlich" classname="app.cayresim.core.control.NightUseCaseTest" time="0.001"/>
+  <testcase name="S-011 Schalter schaltet sich nach der gespeicherten Serie aus" classname="app.cayresim.core.control.NightUseCaseTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

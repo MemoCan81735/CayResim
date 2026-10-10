@@ -1,0 +1,104 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:generateExternalPluginSpecBuilders FROM-CACHE
+> Task :build-logic:convention:extractPrecompiledScriptPluginPlugins FROM-CACHE
+> Task :build-logic:convention:compilePluginsBlocks FROM-CACHE
+> Task :build-logic:convention:generatePrecompiledScriptPluginAccessors FROM-CACHE
+> Task :build-logic:convention:generateScriptPluginAdapters FROM-CACHE
+> Task :build-logic:convention:compileKotlin FROM-CACHE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors
+> Task :build-logic:convention:processResources
+> Task :build-logic:convention:classes
+> Task :build-logic:convention:jar
+> Task :core:control:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:pure:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:entity:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:boundary:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:control:processResources NO-SOURCE
+> Task :core:entity:processResources NO-SOURCE
+> Task :core:boundary:processResources NO-SOURCE
+> Task :core:boundary:processTestFixturesResources NO-SOURCE
+> Task :core:control:koverFindJar
+> Task :core:entity:koverFindJar
+> Task :core:boundary:koverFindJar
+> Task :core:boundary:processTestResources NO-SOURCE
+> Task :core:entity:processTestResources NO-SOURCE
+> Task :core:control:processTestResources NO-SOURCE
+> Task :architecture:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :architecture:compileKotlin FROM-CACHE
+> Task :architecture:compileJava NO-SOURCE
+> Task :architecture:processResources NO-SOURCE
+> Task :architecture:classes UP-TO-DATE
+> Task :architecture:jar
+> Task :core:pure:compileKotlin FROM-CACHE
+> Task :core:pure:compileJava NO-SOURCE
+> Task :core:pure:processResources NO-SOURCE
+> Task :core:pure:classes UP-TO-DATE
+> Task :core:pure:jar
+> Task :architecture:compileTestKotlin FROM-CACHE
+> Task :architecture:compileTestJava NO-SOURCE
+> Task :architecture:koverFindJar
+> Task :architecture:processTestResources NO-SOURCE
+> Task :architecture:testClasses UP-TO-DATE
+> Task :core:pure:compileTestKotlin FROM-CACHE
+> Task :core:pure:compileTestJava NO-SOURCE
+> Task :core:pure:koverFindJar
+> Task :core:entity:compileKotlin FROM-CACHE
+> Task :core:pure:processTestResources NO-SOURCE
+> Task :core:pure:testClasses UP-TO-DATE
+> Task :core:entity:compileJava NO-SOURCE
+> Task :core:entity:classes UP-TO-DATE
+> Task :core:boundary:compileKotlin FROM-CACHE
+> Task :core:boundary:compileJava NO-SOURCE
+> Task :core:boundary:classes UP-TO-DATE
+> Task :core:entity:jar
+> Task :core:boundary:jar
+> Task :core:pure:test FROM-CACHE
+> Task :architecture:test FROM-CACHE
+> Task :core:pure:koverGenerateArtifactJvm
+> Task :core:entity:compileTestKotlin FROM-CACHE
+> Task :core:entity:compileTestJava NO-SOURCE
+> Task :core:entity:testClasses UP-TO-DATE
+> Task :core:pure:koverGenerateArtifact
+> Task :core:pure:koverCachedVerify FROM-CACHE
+> Task :core:entity:test FROM-CACHE
+> Task :core:entity:koverGenerateArtifactJvm
+> Task :core:entity:koverGenerateArtifact
+> Task :core:entity:koverCachedVerify FROM-CACHE
+> Task :core:boundary:compileTestFixturesKotlin FROM-CACHE
+> Task :core:control:compileKotlin FROM-CACHE
+> Task :core:entity:koverVerify
+> Task :core:pure:koverVerify
+> Task :core:boundary:compileTestFixturesJava NO-SOURCE
+> Task :core:control:compileJava NO-SOURCE
+> Task :core:boundary:testFixturesClasses UP-TO-DATE
+> Task :core:control:classes UP-TO-DATE
+> Task :core:boundary:testFixturesJar
+> Task :core:control:jar
+> Task :core:boundary:compileTestKotlin FROM-CACHE
+> Task :core:boundary:compileTestJava NO-SOURCE
+> Task :core:boundary:testClasses UP-TO-DATE
+> Task :core:boundary:test FROM-CACHE
+> Task :core:control:compileTestKotlin FROM-CACHE
+> Task :core:control:compileTestJava NO-SOURCE
+> Task :core:control:testClasses UP-TO-DATE
+> Task :core:control:test FROM-CACHE
+> Task :core:control:koverGenerateArtifactJvm
+> Task :core:control:koverGenerateArtifact
+> Task :core:control:koverCachedVerify FROM-CACHE
+> Task :core:control:koverVerify
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791670445537.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/CayResim/CayResim/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 36s
+48 actionable tasks: 23 executed, 25 from cache
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html

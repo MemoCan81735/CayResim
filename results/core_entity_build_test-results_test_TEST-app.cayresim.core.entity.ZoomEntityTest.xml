@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.entity.ZoomEntityTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:14.734Z" hostname="runnervmmprz5" time="0.04">
+  <properties/>
+  <testcase name="Aktive Stufe" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.008"/>
+  <testcase name="Eigenschaft jeder Pinch bleibt in den Grenzen" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.029"/>
+  <testcase name="Randfall nur Hauptkamera ohne Zoom ergibt keine Schnellwahl" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <testcase name="Randfall Digitalzoom bis 4x ergibt 1x und 3x" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.001"/>
+  <testcase name="Fehlerfall ungueltige Werte" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <testcase name="Randfall Digitalzoom bis 2x ergibt 1x und 2x" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.001"/>
+  <testcase name="Guter Fall S24+ bietet 0,6x, 1x und 3x" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <testcase name="Guter Fall Zwei-Finger-Zoom multipliziert" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <testcase name="Fehlerfall kaputte Grenzen von der Kamera" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <testcase name="Randfall Grenzen werden eingehalten" classname="app.cayresim.core.entity.ZoomEntityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

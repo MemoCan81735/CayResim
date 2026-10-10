@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.StackPhotoUseCaseTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:26.290Z" hostname="runnervmmprz5" time="0.01">
+  <properties/>
+  <testcase name="Kamera aus, Sammeln scheitert" classname="app.cayresim.core.control.StackPhotoUseCaseTest" time="0.002"/>
+  <testcase name="Zeitueberschreitung beim Sammeln" classname="app.cayresim.core.control.StackPhotoUseCaseTest" time="0.003"/>
+  <testcase name="Waermebudget kuerzt und wird gemeldet" classname="app.cayresim.core.control.StackPhotoUseCaseTest" time="0.003"/>
+  <testcase name="Guter Fall Median" classname="app.cayresim.core.control.StackPhotoUseCaseTest" time="0.001"/>
+  <testcase name="Rechnung scheitert" classname="app.cayresim.core.control.StackPhotoUseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

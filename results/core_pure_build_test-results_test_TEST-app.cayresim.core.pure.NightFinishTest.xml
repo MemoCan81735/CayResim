@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightFinishTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:22.302Z" hostname="runnervmmprz5" time="0.028">
+  <properties/>
+  <testcase name="Quantil trifft, leer ergibt 0" classname="app.cayresim.core.pure.NightFinishTest" time="0.001"/>
+  <testcase name="Randfall Kastenfilter mit Radius 0 aendert nichts, falsche Groesse wird abgelehnt" classname="app.cayresim.core.pure.NightFinishTest" time="0.003"/>
+  <testcase name="Nacht-Look macht Schwarz schwarz und Grau bleibt grau" classname="app.cayresim.core.pure.NightFinishTest" time="0.008"/>
+  <testcase name="Randfall gefuehrter Filter ohne Rauschen gibt das Bild unveraendert zurueck" classname="app.cayresim.core.pure.NightFinishTest" time="0.004"/>
+  <testcase name="Kastenfilter erhaelt Flaechen und die Summe eines Punktes" classname="app.cayresim.core.pure.NightFinishTest" time="0.002"/>
+  <testcase name="Fehlerfall Nacht-Look mit falscher Groesse, Randfall ganz schwarz" classname="app.cayresim.core.pure.NightFinishTest" time="0.005"/>
+  <testcase name="Gefuehrter Filter glaettet Rauschen und laesst die Kante stehen" classname="app.cayresim.core.pure.NightFinishTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

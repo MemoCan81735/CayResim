@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightToneTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:24.387Z" hostname="runnervmmprz5" time="0.083">
+  <properties/>
+  <testcase name="Guter Fall heller Streifen bleibt heller als der Hintergrund" classname="app.cayresim.core.pure.NightToneTest" time="0.031"/>
+  <testcase name="Eigenschaft Schulter ist monoton und nie ueber 1" classname="app.cayresim.core.pure.NightToneTest" time="0.0"/>
+  <testcase name="Randfall komplett schwarz ergibt keine Fehler und bleibt schwarz" classname="app.cayresim.core.pure.NightToneTest" time="0.006"/>
+  <testcase name="Randfall helle Szene bleibt bitgenau unveraendert" classname="app.cayresim.core.pure.NightToneTest" time="0.003"/>
+  <testcase name="Fehlerfall falsche Groessen" classname="app.cayresim.core.pure.NightToneTest" time="0.001"/>
+  <testcase name="Guter Fall sehr dunkle Serie wird deutlich heller, Verstaerkung am Anschlag" classname="app.cayresim.core.pure.NightToneTest" time="0.012"/>
+  <testcase name="Guter Fall Mitteln in Gleitkomma senkt das Rauschen etwa mit Wurzel N" classname="app.cayresim.core.pure.NightToneTest" time="0.012"/>
+  <testcase name="Guter Fall maessig dunkle Szene landet beim Ziel sRGB 40 im Median" classname="app.cayresim.core.pure.NightToneTest" time="0.006"/>
+  <testcase name="Randfall Lichter brennen nicht hart aus, zwei Lampen bleiben unterscheidbar" classname="app.cayresim.core.pure.NightToneTest" time="0.001"/>
+  <testcase name="Randfall jeder 8-Bit-Wert uebersteht Hin- und Rueckweg" classname="app.cayresim.core.pure.NightToneTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

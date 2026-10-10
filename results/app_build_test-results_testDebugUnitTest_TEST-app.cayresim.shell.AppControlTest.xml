@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.shell.AppControlTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:24:07.559Z" hostname="runnervmmprz5" time="0.051">
+  <properties/>
+  <testcase name="Viele Schritte bleiben konsistent" classname="app.cayresim.shell.AppControlTest" time="0.05"/>
+  <testcase name="Doppeltes Oeffnen stapelt nicht" classname="app.cayresim.shell.AppControlTest" time="0.001"/>
+  <testcase name="Erneutes Oeffnen holt den Screen nach oben statt ihn zu verdoppeln" classname="app.cayresim.shell.AppControlTest" time="0.0"/>
+  <testcase name="Oeffnen und zurueck" classname="app.cayresim.shell.AppControlTest" time="0.0"/>
+  <testcase name="Zurueck auf der Kamera verlaesst die App" classname="app.cayresim.shell.AppControlTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

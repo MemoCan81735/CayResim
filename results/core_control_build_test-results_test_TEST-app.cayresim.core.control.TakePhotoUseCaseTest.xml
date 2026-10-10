@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.TakePhotoUseCaseTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:28.045Z" hostname="runnervmmprz5" time="0.008">
+  <properties/>
+  <testcase name="Nach einem Fehler klappt die naechste Aufnahme" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.002"/>
+  <testcase name="Ohne laufende Kamera NOT_READY" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.001"/>
+  <testcase name="Nach Stopp NOT_READY" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.001"/>
+  <testcase name="Viele Aufnahmen hintereinander" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.002"/>
+  <testcase name="Guter Fall speichert" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.001"/>
+  <testcase name="Speicherfehler wird als Wert weitergegeben" classname="app.cayresim.core.control.TakePhotoUseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

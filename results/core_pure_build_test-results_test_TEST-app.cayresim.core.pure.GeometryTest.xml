@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.GeometryTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:21.946Z" hostname="runnervmmprz5" time="0.031">
+  <properties/>
+  <testcase name="Viermal 90 Grad ergibt den Ausgangspunkt (Eigenschaft)" classname="app.cayresim.core.pure.GeometryTest" time="0.024"/>
+  <testcase name="Mitte der Flaeche ist 0,5" classname="app.cayresim.core.pure.GeometryTest" time="0.0"/>
+  <testcase name="Negative Winkel werden richtig umgerechnet" classname="app.cayresim.core.pure.GeometryTest" time="0.001"/>
+  <testcase name="Flaeche mit Breite 0 wird abgelehnt" classname="app.cayresim.core.pure.GeometryTest" time="0.0"/>
+  <testcase name="Punkt ausserhalb von 0 bis 1 laesst sich nicht bauen" classname="app.cayresim.core.pure.GeometryTest" time="0.002"/>
+  <testcase name="Punkte ausserhalb werden an den Rand gesetzt" classname="app.cayresim.core.pure.GeometryTest" time="0.003"/>
+  <testcase name="Hin und zurueck ergibt denselben Pixel" classname="app.cayresim.core.pure.GeometryTest" time="0.0"/>
+  <testcase name="Schiefer Winkel wird abgelehnt" classname="app.cayresim.core.pure.GeometryTest" time="0.001"/>
+  <testcase name="Zweimal spiegeln ergibt den Ausgangspunkt" classname="app.cayresim.core.pure.GeometryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

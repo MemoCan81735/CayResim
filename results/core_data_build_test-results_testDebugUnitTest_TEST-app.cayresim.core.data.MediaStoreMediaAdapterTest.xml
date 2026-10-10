@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.data.MediaStoreMediaAdapterTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:24:09.354Z" hostname="runnervmmprz5" time="0.138">
+  <properties/>
+  <testcase name="Leere Galerie liefert leere Liste statt Fehler" classname="app.cayresim.core.data.MediaStoreMediaAdapterTest" time="0.109"/>
+  <testcase name="Limit 0 oder negativ liefert leere Liste" classname="app.cayresim.core.data.MediaStoreMediaAdapterTest" time="0.019"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

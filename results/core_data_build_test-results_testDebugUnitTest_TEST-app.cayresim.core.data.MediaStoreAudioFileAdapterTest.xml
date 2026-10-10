@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.data.MediaStoreAudioFileAdapterTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:23:42.280Z" hostname="runnervmmprz5" time="27.063">
+  <properties/>
+  <testcase name="S-008 ungueltige Namen werden abgelehnt" classname="app.cayresim.core.data.MediaStoreAudioFileAdapterTest" time="9.86"/>
+  <testcase name="S-008 Speichern ohne echte Medienablage stuerzt nicht ab" classname="app.cayresim.core.data.MediaStoreAudioFileAdapterTest" time="6.463"/>
+  <testcase name="S-008 Ordner liegt unter Recordings und traegt Datum und Uhrzeit" classname="app.cayresim.core.data.MediaStoreAudioFileAdapterTest" time="0.03"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

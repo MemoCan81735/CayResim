@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.ProUseCasesTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:26.117Z" hostname="runnervmmprz5" time="0.034">
+  <properties/>
+  <testcase name="Astro stellt auch nach Fehler die vorherigen Werte wieder her" classname="app.cayresim.core.control.ProUseCasesTest" time="0.006"/>
+  <testcase name="Fokus-Stacking bei Fixfokus wird abgelehnt" classname="app.cayresim.core.control.ProUseCasesTest" time="0.003"/>
+  <testcase name="Astro Abbruch stellt die Automatik trotzdem wieder her" classname="app.cayresim.core.control.ProUseCasesTest" time="0.008"/>
+  <testcase name="Fokus-Stacking guter Fall" classname="app.cayresim.core.control.ProUseCasesTest" time="0.005"/>
+  <testcase name="Astro setzt lange Belichtung und stellt danach die Automatik wieder her" classname="app.cayresim.core.control.ProUseCasesTest" time="0.002"/>
+  <testcase name="Astro ohne manuelle Belichtung wird abgelehnt" classname="app.cayresim.core.control.ProUseCasesTest" time="0.001"/>
+  <testcase name="Astro bei Rechenfehler" classname="app.cayresim.core.control.ProUseCasesTest" time="0.002"/>
+  <testcase name="Astro begrenzt auf die Moeglichkeiten der Kamera" classname="app.cayresim.core.control.ProUseCasesTest" time="0.002"/>
+  <testcase name="Fokus-Stacking ohne Kamera" classname="app.cayresim.core.control.ProUseCasesTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

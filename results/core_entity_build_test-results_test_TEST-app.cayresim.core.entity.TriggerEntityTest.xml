@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.entity.TriggerEntityTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:14.641Z" hostname="runnervmmprz5" time="0.084">
+  <properties/>
+  <testcase name="Nach dem Ausloesen gilt die Pause" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.009"/>
+  <testcase name="Waermebudget haelt Grenzen ein" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.001"/>
+  <testcase name="Fehlerfall ein einzelner Helligkeitssprung loest nicht aus" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.001"/>
+  <testcase name="Guter Fall echte Bewegung im Dunkeln loest trotzdem aus" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Bewegung loest aus, Ruhe nicht" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Waermebudget kuerzt Serien" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Fehlerfall starkes Rauschen im Dunkeln loest nicht dauernd aus" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.013"/>
+  <testcase name="Zwischen zwei Ausloesungen liegt immer mindestens die Pause (Eigenschaft)" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.018"/>
+  <testcase name="Unsinnige Werte gelten als keine Bewegung" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Ungueltige Einstellungen werden abgelehnt" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.036"/>
+  <testcase name="Ruhe loest erst nach genug ruhigen Bildern aus" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.001"/>
+  <testcase name="Ungueltige Bestaetigung" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Nachttest S24+ Bildstrom wird nicht auf 30 begrenzt" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Waerme kuerzt einen Bildstrom hoechstens auf drei Viertel" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <testcase name="Eine Bewegung setzt die Ruhezaehlung zurueck" classname="app.cayresim.core.entity.TriggerEntityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

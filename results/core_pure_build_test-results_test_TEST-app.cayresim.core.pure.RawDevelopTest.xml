@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.RawDevelopTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:29.239Z" hostname="runnervmmprz5" time="0.001">
+  <properties/>
+  <testcase name="Randfall unter Schwarz wird nicht abgeschnitten" classname="app.cayresim.core.pure.RawDevelopTest" time="0.0"/>
+  <testcase name="Guter Fall Schwarz ergibt 0, Weiss ergibt 1" classname="app.cayresim.core.pure.RawDevelopTest" time="0.0"/>
+  <testcase name="Fehlerfall ungueltige Eingaben" classname="app.cayresim.core.pure.RawDevelopTest" time="0.0"/>
+  <testcase name="Guter Fall Farbmuster legt Rot, Gruen und Blau richtig ab" classname="app.cayresim.core.pure.RawDevelopTest" time="0.0"/>
+  <testcase name="Randfall Zeilenabstand groesser als die Breite" classname="app.cayresim.core.pure.RawDevelopTest" time="0.001"/>
+  <testcase name="Guter Fall Weissabgleich und Farbmatrix werden angewendet" classname="app.cayresim.core.pure.RawDevelopTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

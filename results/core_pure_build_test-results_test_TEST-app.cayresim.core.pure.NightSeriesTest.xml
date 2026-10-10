@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightSeriesTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:23.936Z" hostname="runnervmmprz5" time="0.441">
+  <properties/>
+  <testcase name="S-011 Eintraege bei Bezugswechsel" classname="app.cayresim.core.pure.NightSeriesTest" time="0.073"/>
+  <testcase name="S-011 Archiv Rundreise und Formatversion" classname="app.cayresim.core.pure.NightSeriesTest" time="0.04"/>
+  <testcase name="S-011 Eintraege je Bild" classname="app.cayresim.core.pure.NightSeriesTest" time="0.054"/>
+  <testcase name="S-011 Zeit und Groesse je Bild" classname="app.cayresim.core.pure.NightSeriesTest" time="0.21"/>
+  <testcase name="S-011 Ergebnis unveraendert und Versatz bis 28 px" classname="app.cayresim.core.pure.NightSeriesTest" time="0.062"/>
+  <system-out><![CDATA[Nachtserie je Bild: 21 ms, 724 kB
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.entity.SeriesEntityTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:14.392Z" hostname="runnervmmprz5" time="0.229">
+  <properties/>
+  <testcase name="Leere Serie hat kein Overlay" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.052"/>
+  <testcase name="Doppeltes Foto wird abgelehnt" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.001"/>
+  <testcase name="Volle Serie lehnt weitere Fotos ab" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.147"/>
+  <testcase name="Juengstes Foto ist immer das mit der groessten Zeit (Eigenschaft)" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.025"/>
+  <testcase name="Fotos werden chronologisch gefuehrt, juengstes ist das Overlay" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.001"/>
+  <testcase name="Ungueltige Namen werden abgelehnt" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.0"/>
+  <testcase name="Entfernen" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.001"/>
+  <testcase name="Kaputte gespeicherte Daten werden bereinigt" classname="app.cayresim.core.entity.SeriesEntityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

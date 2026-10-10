@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.SelfTestUseCaseTest" tests="27" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:26.156Z" hostname="runnervmmprz5" time="0.13">
+  <properties/>
+  <testcase name="Fehlerfall Neustart bei der Probenacht wird einmal uebersprungen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.018"/>
+  <testcase name="Fehlerfall Neustart bei der RAW-Serie wird einmal uebersprungen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.004"/>
+  <testcase name="Fehlerfall gespeichert aber langsamer als 5 s ist rot" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="S-007 Stabilisator nicht gemeldet" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.013"/>
+  <testcase name="Vorheriger Modus wird wiederhergestellt" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Randfall genau 5 s ist noch gruen, 5001 ms rot" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Randfall der abgebrochene Schritt wird genau einmal uebersprungen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.014"/>
+  <testcase name="Fehlerfall Bildstrom zu langsam, keine Probenacht" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.006"/>
+  <testcase name="Guter Fall RAW-Serie wird gemessen und typisiert gemeldet" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.018"/>
+  <testcase name="Fehlgeschlagene Aufnahme wird rot gemeldet" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Fehlerfall Probenacht scheitert, 8 Bit mit Grund" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.001"/>
+  <testcase name="Randfall ohne Geraetewerte keine leere Zeile" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.004"/>
+  <testcase name="Fehlerfall RAW zu langsam oder gescheitert ist rot" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.004"/>
+  <testcase name="Randfall Neustart beim Kamerastart wird nicht uebersprungen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.001"/>
+  <testcase name="Ohne Extensions wird nur NORMAL geprueft" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Fehlerfall Neustart wird beim naechsten Lauf rot gemeldet und Testfotos geloescht" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="Guter Fall Werte vom S24+ sind gruen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="Randfall ohne RAW-Faehigkeit 8 Bit ohne Probenacht" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Geraetewerte erscheinen als eigene Zeile" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.004"/>
+  <testcase name="Guter Fall prueft jeden Modus und raeumt auf" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Guter Fall Messung und Probenacht gut, RAW wird gewaehlt und gespeichert" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.002"/>
+  <testcase name="Randfall ohne RAW entfaellt der Schritt" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="Geraetewerte nennen den Stabilisator" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.006"/>
+  <testcase name="Guter Fall protokolliert jeden Schritt und schliesst ab" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.001"/>
+  <testcase name="Fehlerfall Probenacht zu langsam ergibt 8 Bit" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="Kamera startet nicht, Bericht endet rot und frueh" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <testcase name="Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen" classname="app.cayresim.core.control.SelfTestUseCaseTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

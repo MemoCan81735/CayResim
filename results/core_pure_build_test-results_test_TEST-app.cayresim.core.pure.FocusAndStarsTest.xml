@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.FocusAndStarsTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:21.458Z" hostname="runnervmmprz5" time="0.278">
+  <properties/>
+  <testcase name="Fokus-Stacking waehlt in jedem Streifen das scharfe Bild" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.053"/>
+  <testcase name="Bekannte Verschiebung wird gefunden" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.113"/>
+  <testcase name="Fokus-Stacking lehnt ungueltige Eingaben ab" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.049"/>
+  <testcase name="Gleichfoermige Bilder nehmen das erste" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.007"/>
+  <testcase name="Zu grosser Suchbereich wird abgelehnt" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.002"/>
+  <testcase name="Ein Bild ergibt sich selbst" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.011"/>
+  <testcase name="Verschieben um 0 ist die Identitaet" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.002"/>
+  <testcase name="Ausgerichtetes Mittel ist schaerfer als ungerichtetes" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.032"/>
+  <testcase name="Kein vollstaendiger Block am Rand stoert nicht" classname="app.cayresim.core.pure.FocusAndStarsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

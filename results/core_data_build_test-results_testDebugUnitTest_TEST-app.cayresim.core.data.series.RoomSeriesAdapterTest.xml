@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.data.series.RoomSeriesAdapterTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:24:09.497Z" hostname="runnervmmprz5" time="22.8">
+  <properties/>
+  <testcase name="Volle Serie wird gemeldet" classname="app.cayresim.core.data.series.RoomSeriesAdapterTest" time="22.377"/>
+  <testcase name="Loeschen einer Serie loescht ihre Fotos mit" classname="app.cayresim.core.data.series.RoomSeriesAdapterTest" time="0.083"/>
+  <testcase name="Room erfuellt den Serien-Vertrag" classname="app.cayresim.core.data.series.RoomSeriesAdapterTest" time="0.334"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

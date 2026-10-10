@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.entity.ManualSettingsEntityTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:13.686Z" hostname="runnervmmprz5" time="0.579">
+  <properties/>
+  <testcase name="Ohne manuelle Belichtung bleibt alles automatisch" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.245"/>
+  <testcase name="Fixfokus-Kamera erlaubt kein Fokussieren und kein Fokus-Stacking" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.005"/>
+  <testcase name="Ungueltiger Fokuswert wird ignoriert" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.0"/>
+  <testcase name="Werte werden in die Grenzen gelegt" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.017"/>
+  <testcase name="Automatik setzt alles zurueck" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.001"/>
+  <testcase name="Fokusreihe geht von nah nach fern und haelt Grenzen ein" classname="app.cayresim.core.entity.ManualSettingsEntityTest" time="0.286"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.shell.AppControlRootTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:24:07.323Z" hostname="runnervmmprz5" time="0.224">
+  <properties/>
+  <testcase name="Zahnrad, Anleitung und zweimal zurueck fuehren zur Kamera" classname="app.cayresim.shell.AppControlRootTest" time="0.208"/>
+  <testcase name="Kamera oeffnen kehrt zur Wurzel zurueck" classname="app.cayresim.shell.AppControlRootTest" time="0.005"/>
+  <testcase name="Von der Anleitung direkt zum Selbsttest" classname="app.cayresim.shell.AppControlRootTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

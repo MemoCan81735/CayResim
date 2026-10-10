@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.MicTestUseCaseTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:24.932Z" hostname="runnervmmprz5" time="0.927">
+  <properties/>
+  <testcase name="S-008 ohne Berechtigung" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.029"/>
+  <testcase name="S-009 Bericht mit und ohne Eichung" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.415"/>
+  <testcase name="S-008 Durchlauf mit fehlender und fehlerhafter Quelle" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.068"/>
+  <testcase name="S-008 Dauer wird gemessen" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.06"/>
+  <testcase name="S-008 Abstand ohne Positionen ist angenommen" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.001"/>
+  <testcase name="S-008 Speicher voll laesst den Lauf weiterlaufen" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.058"/>
+  <testcase name="S-008 Abbruch gibt das Mikrofon frei" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.011"/>
+  <testcase name="S-009 Pause vor jeder Klatsch-Phase" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.105"/>
+  <testcase name="S-008 Quelle fuer die Klatsch-Probe" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.09"/>
+  <testcase name="S-008 Klatsch-Probe liefert die Richtung" classname="app.cayresim.core.control.MicTestUseCaseTest" time="0.083"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

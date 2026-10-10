@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.CaptureUseCaseTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-10T21:22:23.920Z" hostname="runnervmmprz5" time="1.003">
+  <properties/>
+  <testcase name="Aufnahme scheitert, nichts weiter passiert" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.916"/>
+  <testcase name="Mit Serie landet das Foto in der Serie" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.05"/>
+  <testcase name="Kamera nicht bereit" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.006"/>
+  <testcase name="Mit Look ersetzt das bearbeitete Foto das Original" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.008"/>
+  <testcase name="Ohne Look und Serie wird nur fotografiert" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.004"/>
+  <testcase name="Speicher der Serie defekt wird gemeldet" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.004"/>
+  <testcase name="Serie scheitert, Foto bleibt erhalten" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.004"/>
+  <testcase name="Look scheitert, Original bleibt erhalten" classname="app.cayresim.core.control.CaptureUseCaseTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
