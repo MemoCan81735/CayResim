@@ -43,6 +43,10 @@ class MutationProbesTest {
     @Test fun `R11 Camera2 in Daten-Adapter`() = probe("R11", adapter, "import android.hardware.camera2.CaptureRequest")
     @Test fun `R11 Koordinaten-Umrechner ausserhalb des Suchers`() =
         probe("R11", ctl, "import androidx.camera.viewfinder.compose.MutableCoordinateTransformer")
+    @Test fun `R28 AudioRecord im Feature`() = probe("R28", ctl, "import android.media.AudioRecord")
+    @Test fun `R28 MediaRecorder im Daten-Adapter`() = probe("R28", adapter, "import android.media.MediaRecorder")
+    @Test fun `R28 voll qualifizierte Tonaufnahme in der UI`() = probe("R28", ui, "fun f() = android.media.AudioRecord.getMinBufferSize(1, 2, 3)")
+    @Test fun `R28 Mikrofonliste im Kamera-Adapter`() = probe("R28", "core/camera/src/main/kotlin/app/cayresim/core/camera/X.kt", "import android.media.MicrophoneInfo")
     @Test fun `R16 Dispatchers im ViewModel`() = probe("R16", ctl, "fun f() = withContext(Dispatchers.IO) { }")
     @Test fun `Namen Entity-Klasse`() = probe("Namen", entity, "class Rules { }")
     @Test fun `Namen Boundary-Schnittstelle`() = probe("Namen", boundary, "interface Camera { }")
@@ -62,6 +66,10 @@ class MutationProbesTest {
         assertEquals(emptyList(), rulesFor(adapter, "internal object Processing"))
     @Test fun `Testquellen werden nicht geprueft`() =
         assertEquals(emptyList(), rulesFor("core/entity/src/test/kotlin/X.kt", "import android.util.Log\nGlobalScope"))
+    @Test fun `R28 Mikrofon-Adapter darf AudioRecord nutzen`() =
+        assertEquals(emptyList(), rulesFor("core/audio/src/main/kotlin/app/cayresim/core/audio/X.kt", "import android.media.AudioRecord\nimport android.media.MicrophoneInfo"))
+    @Test fun `R28 andere android media Klassen bleiben erlaubt`() =
+        assertEquals(emptyList(), rulesFor(adapter, "import android.media.ExifInterface\nimport android.media.ImageReader"))
     @Test fun `DI-Modul darf Dispatchers nutzen`() =
         assertEquals(emptyList(), rulesFor("app/src/main/kotlin/app/cayresim/shell/di/AppModule.kt", "fun f() = Dispatchers.IO"))
 }

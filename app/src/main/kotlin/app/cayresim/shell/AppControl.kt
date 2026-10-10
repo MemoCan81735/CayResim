@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object SettingsKey : NavKey
 @Serializable data object GuideKey : NavKey
 @Serializable data object SelfTestKey : NavKey
+@Serializable data object MicTestKey : NavKey
 
 /**
  * Navigation als eigener Zustand (Navigation 3): die AppControl besitzt den Back-Stack,
