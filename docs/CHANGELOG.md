@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Nachtserie speichern (10. Oktober 2026, S-011)
+## 0.1.122 Nachtserie speichern (10. Oktober 2026, S-011)
 - Neu unter Einstellungen: Schalter "Nachtserie speichern" (nur zum Messen, gilt bis zum Neustart). Eingeschaltet legt
   jede Nachtaufnahme zusätzlich eine ZIP-Datei in Download/CayResim ab: Helligkeit aller Einzelbilder, drei Farbbilder,
   je Bild Zeitstempel, Versatz, Schärfe, Helligkeit und Anteil Nullen, dazu die Lage während der Serie. Etwa 50 MB.

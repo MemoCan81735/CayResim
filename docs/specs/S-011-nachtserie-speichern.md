@@ -138,5 +138,11 @@ Samsung-Foto derselben Szene.
 Nicht beanstandet: Schichten und Importe, `api(...)`, Abbruch löscht die halbe Datei, Fehlerweg mit Hinweis,
 gültiges JSON, Vorzeichen und Rand im Werkzeug, Zeitstempel im Kamera-Adapter (ein Thread, `@Volatile` reicht).
 
+### Release
+v0.1.122 (Lauf 38073283167, 10.10., 20:02 Uhr): alle Jobs grün, Emulator mit `s011Zeitstempel` (Zeitbasis seit dem
+Einschalten: ja, steigend: ja, also dieselbe Zeitbasis wie der Lagesensor) und `s011SchreibenUndAbbrechen`.
+Kurze Läufe bis dahin: 5, davon rot durch fehlende Screenshot-Grundlagen (erwartet), zwei Kompilierfehler in
+`:core:data` (lokal nicht prüfbar), die Zeitgrenze K3 auf dem CI-Runner und zwei detekt-Funde.
+
 ## Ergebnis
 Gerätetest offen.
