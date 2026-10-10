@@ -2,6 +2,9 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Werkzeug (10. Oktober 2026)
+- `tools/run-pure-tests.sh`: Tests von `:core:pure` lokal in etwa einer Minute, ohne Netz. Keine Änderung an der App.
+
 ## 0.1.90 (10. Oktober 2026, S-004)
 - Langzeit, Menschen wegrechnen und Fokus-Stacking richten die Bilder vorher aus (wie der Nachtmodus): freihand scharf.
 - Pro-Modus warnt bei Belichtungszeiten über 1/24 s vor Verwackeln.
