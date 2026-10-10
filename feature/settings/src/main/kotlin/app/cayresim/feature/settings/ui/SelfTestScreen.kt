@@ -28,6 +28,7 @@ import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.CheckKind
 import app.cayresim.feature.settings.control.CheckRow
 import app.cayresim.feature.settings.control.DeviceInfoUi
+import app.cayresim.feature.settings.control.OisUi
 import app.cayresim.feature.settings.control.RawProbeUi
 import app.cayresim.feature.settings.control.SelfTestUiState
 import app.cayresim.feature.settings.control.SelfTestViewModel
@@ -114,8 +115,16 @@ private fun DeviceLines(d: DeviceInfoUi) {
         if (d.sensorWidth != null && d.sensorHeight != null)
             add(stringResource(R.string.device_sensor, d.sensorWidth, d.sensorHeight, "%.1f".format(d.sensorWidth.toLong() * d.sensorHeight / 1e6)))
         d.zsl?.let { add(stringResource(R.string.device_zsl, yn(it))) }
-        // S-003: angeboten laut Geraet, aktiv laut letzter Aufnahme
-        d.ois?.let { add(stringResource(R.string.device_ois, yn(it), d.oisActive?.let { a -> yn(a) } ?: stringResource(R.string.device_unknown))) }
+        // S-003: angeboten laut Geraet, aktiv laut letzter Aufnahme; S-007: "nicht gemeldet" und "kein Ergebnis" getrennt
+        d.ois?.let {
+            val active = when (d.oisActive) {
+                OisUi.ON -> yes
+                OisUi.OFF -> no
+                OisUi.NOT_REPORTED -> stringResource(R.string.device_ois_not_reported)
+                null -> stringResource(R.string.device_ois_none)
+            }
+            add(stringResource(R.string.device_ois, yn(it), active))
+        }
         if (d.zoomMin != null && d.zoomMax != null) add(stringResource(R.string.device_zoom, "%.1f".format(d.zoomMin), "%.1f".format(d.zoomMax)))
         d.physicalCameras?.let { add(stringResource(R.string.device_cameras, it)) }
         if (d.chip.isNotBlank()) add(stringResource(R.string.device_chip, d.chip))

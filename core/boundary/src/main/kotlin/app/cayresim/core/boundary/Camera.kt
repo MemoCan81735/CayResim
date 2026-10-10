@@ -36,9 +36,9 @@ data class DeviceReport(
     val physicalCameras: Int? = null,
     val chip: String = "",
     val system: String = "",
-    /** S-003: optischer Stabilisator angeboten (laut Geraet) und aktiv (laut letzter Aufnahme, null = unbekannt). */
+    /** S-003: optischer Stabilisator angeboten (laut Geraet) und aktiv (laut letzter Aufnahme, null = kein Ergebnis). */
     val ois: Boolean? = null,
-    val oisActive: Boolean? = null,
+    val oisActive: OisState? = null,
 )
 
 /**
@@ -65,9 +65,15 @@ data class CameraStateSnapshot(
     val zoom: ZoomSnapshot = ZoomSnapshot(),
     /** Letzte Messung der Automatik im normalen Modus; null, solange keine vorliegt. */
     val light: LightSnapshot? = null,
-    /** S-003: optischer Stabilisator laut letzter Aufnahme der eigenen Pipeline; null = unbekannt (z. B. Samsung-Modi). */
-    val stabilization: Boolean? = null,
+    /** S-003: optischer Stabilisator laut letzter Aufnahme der eigenen Pipeline; null = noch kein Ergebnis (z. B. Samsung-Modi). */
+    val stabilization: OisState? = null,
 )
+
+/**
+ * S-007: Stabilisator laut Aufnahmeergebnis. [NOT_REPORTED]: ein Ergebnis kam, aber ohne diesen Wert (Selbsttest S24+
+ * am 10. Oktober: "unbekannt" auch nach 1,5 s, die Ursache war nicht unterscheidbar).
+ */
+enum class OisState { ON, OFF, NOT_REPORTED }
 
 enum class CameraError { NO_CAMERA, IN_USE, BIND_FAILED, UNKNOWN }
 

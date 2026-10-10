@@ -72,6 +72,7 @@ import app.cayresim.core.boundary.ZoomSnapshot
 import app.cayresim.core.boundary.DeviceReport
 import app.cayresim.core.boundary.HardwareLevel
 import app.cayresim.core.boundary.LightSnapshot
+import app.cayresim.core.boundary.OisState
 import app.cayresim.core.boundary.Frame
 import app.cayresim.core.entity.ZoomEntity
 import app.cayresim.core.boundary.CameraStatus
@@ -437,9 +438,13 @@ class CameraXCameraAdapter @Inject constructor(
             val ae = result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE)
             aeState = ae
             // S-003: ob der Stabilisator laeuft, sagt nur das Aufnahmeergebnis
-            val ois = result.get(android.hardware.camera2.CaptureResult.LENS_OPTICAL_STABILIZATION_MODE)
-                ?.let { it == CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON }
-            if (ois != null && _state.value.stabilization != ois) _state.update { it.copy(stabilization = ois) }
+            // S-007: fehlt der Wert im Ergebnis, ist das ein eigener Befund (Selbsttest S24+ 10.10.: "unbekannt")
+            val ois = when (result.get(android.hardware.camera2.CaptureResult.LENS_OPTICAL_STABILIZATION_MODE)) {
+                null -> OisState.NOT_REPORTED
+                CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON -> OisState.ON
+                else -> OisState.OFF
+            }
+            if (_state.value.stabilization != ois) _state.update { it.copy(stabilization = ois) }
             // Befund H4: nur echte Messungen der Automatik zaehlen, keine manuellen oder festgehaltenen Werte
             if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_MODE) == CaptureRequest.CONTROL_AE_MODE_OFF) return
             if (result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_LOCK) == true) return

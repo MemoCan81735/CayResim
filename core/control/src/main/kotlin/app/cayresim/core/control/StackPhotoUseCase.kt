@@ -18,6 +18,8 @@ data class NightReport(
     val durationMs: Long? = null, val meterExposureNs: Long? = null, val meterIso: Int? = null, val shakePx: Int? = null,
     /** S-006: false = Wackeln im Rauschen nicht messbar. */
     val shakeMeasurable: Boolean = true,
+    /** S-007: Werte der Boden-Entscheidung (nur 8 Bit). */
+    val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
 )
 
 sealed interface StackOutcome {

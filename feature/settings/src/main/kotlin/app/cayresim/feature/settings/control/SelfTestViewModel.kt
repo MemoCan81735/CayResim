@@ -81,10 +81,13 @@ data class DeviceInfoUi(
     val physicalCameras: Int?,
     val chip: String,
     val system: String,
-    /** S-003: angeboten und aktiv (null = unbekannt). */
+    /** S-003: angeboten und aktiv (S-007: null = kein Aufnahmeergebnis). */
     val ois: Boolean? = null,
-    val oisActive: Boolean? = null,
+    val oisActive: OisUi? = null,
 )
+
+/** S-007: Stabilisator laut Aufnahmeergebnis fuer die Anzeige (die UI kennt keine Boundary-Typen, R1). */
+enum class OisUi { ON, OFF, NOT_REPORTED }
 
 internal fun DeviceReport.toUi() = DeviceInfoUi(
     hardwareLevel = hardwareLevel.name,
@@ -96,7 +99,12 @@ internal fun DeviceReport.toUi() = DeviceInfoUi(
     sensorWidth = sensorWidth, sensorHeight = sensorHeight,
     zsl = zsl, zoomMin = zoomMin, zoomMax = zoomMax,
     physicalCameras = physicalCameras, chip = chip, system = system,
-    ois = ois, oisActive = oisActive,
+    ois = ois, oisActive = when (oisActive) {
+        app.cayresim.core.boundary.OisState.ON -> OisUi.ON
+        app.cayresim.core.boundary.OisState.OFF -> OisUi.OFF
+        app.cayresim.core.boundary.OisState.NOT_REPORTED -> OisUi.NOT_REPORTED
+        null -> null
+    },
 )
 
 @Immutable

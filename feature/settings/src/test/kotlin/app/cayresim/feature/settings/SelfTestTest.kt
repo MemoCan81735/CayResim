@@ -99,9 +99,18 @@ class SelfTestTest {
         compose.onNodeWithText("Belichtung: 1/11765 s bis 1/10 s", substring = true).assertExists()
         compose.onNodeWithText("ISO: 25 bis 3200", substring = true).assertExists()
         compose.onNodeWithText("RAW: ja, Serienbilder: ja", substring = true).assertExists()
-        // S-003 K4: Fake meldet keine Aufnahme, also "unbekannt"
-        compose.onNodeWithText("Optischer Stabilisator: ja, aktiv: unbekannt", substring = true).assertExists()
+        // S-003 K4, S-007: Fake meldet keine Aufnahme
+        compose.onNodeWithText("Optischer Stabilisator: ja, aktiv: kein Aufnahmeergebnis", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/selftest_device.png")
+    }
+
+    @Test fun `S-007 Stabilisator nicht gemeldet`() {
+        val cam = FakeCameraBoundary().apply { deviceReport = s24; stabilize(app.cayresim.core.boundary.OisState.NOT_REPORTED) }
+        val vm = SelfTestViewModel(SelfTestUseCase(cam, clock, FakeSelfTestJournalBoundary()))
+        vm.onStart(); main.scheduler.advanceUntilIdle()
+        val state = vm.uiState.value.copy(rows = vm.uiState.value.rows.filter { it.kind == CheckKind.DEVICE })
+        compose.setContent { CayResimTheme(dark = true) { SelfTestContent(state, {}, {}) } }
+        compose.onNodeWithText("Optischer Stabilisator: ja, aktiv: vom Gerät nicht gemeldet (angefordert: ein)", substring = true).assertExists()
     }
 
     @Test fun bild_raw_serie() {

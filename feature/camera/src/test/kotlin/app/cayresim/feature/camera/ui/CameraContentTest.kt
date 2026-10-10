@@ -287,6 +287,25 @@ class CameraContentTest {
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Aufhellung x64,0, Wackeln nicht messbar", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test fun nacht_hinweis_zeigt_die_diagnose() {
+        // S-007 K6: lineare Werte mal 255, Anteile in Prozent
+        val d = app.cayresim.core.pure.NightDiagnosis(true, false, 3.1f / 255, 2f / 255, 1.2f / 255, 0.4f / 255, 0.6f, 0.55f, 0.7f, 0.41f, 12f, 11f, 15f)
+        show(running.copy(message = UserMessage(10, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 72, 0, 60.4f, diagnosis = d))))
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Boden-Modus nein: Signal 1,200, Schwelle 0,400, Rauschen 3,100, Mittel 2,000, geschätzt an R 60 / G 55 / B 70 %; " +
+                "Bezugsbild 41 % Nullen, Mittel 12,0 / 11,0 / 15,0", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test fun nacht_hinweis_diagnose_nicht_geprueft() {
+        // S-007 K7
+        val d = app.cayresim.core.pure.NightDiagnosis(false, false, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0.5f, 1f, 1f, 1f)
+        show(running.copy(message = UserMessage(11, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 5, 0, 16f, diagnosis = d))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Boden-Modus nicht geprüft; Bezugsbild 50 % Nullen", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     @Test fun selbstausloeser_zeigt_countdown_und_schalter() {
         show(running.copy(timer = true, countdown = 2))
         compose.onNodeWithTag("countdown").assertIsDisplayed()

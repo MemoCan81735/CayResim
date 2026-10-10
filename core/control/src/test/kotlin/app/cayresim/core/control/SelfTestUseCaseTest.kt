@@ -3,6 +3,7 @@ package app.cayresim.core.control
 import app.cayresim.core.boundary.CameraError
 import app.cayresim.core.boundary.CaptureFailure
 import app.cayresim.core.boundary.CaptureResult
+import app.cayresim.core.boundary.OisState
 import app.cayresim.core.boundary.PhotoMode
 import app.cayresim.core.boundary.fake.FakeCameraBoundary
 import app.cayresim.core.boundary.fake.FakeManualCameraBoundary
@@ -240,16 +241,22 @@ class SelfTestUseCaseTest {
 
     @Test fun `Geraetewerte nennen den Stabilisator`() = runTest {
         // S-003 K4: angeboten laut Geraet, aktiv laut letzter Aufnahme
-        val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(true) }
+        val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(OisState.ON) }
         val d = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!
-        assertEquals(true, d.ois); assertEquals(true, d.oisActive)
+        assertEquals(true, d.ois); assertEquals(OisState.ON, d.oisActive)
         // S-006: der Wert kommt erst mit dem ersten Aufnahmeergebnis; der Selbsttest wartet darauf
         val late = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }
-        val job = launch { kotlinx.coroutines.delay(500); late.stabilize(true) }
-        assertEquals(true, SelfTestUseCase(late, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+        val job = launch { kotlinx.coroutines.delay(500); late.stabilize(OisState.ON) }
+        assertEquals(OisState.ON, SelfTestUseCase(late, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
         job.join()
         val unknown = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }
         assertEquals(null, SelfTestUseCase(unknown, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+    }
+
+    @Test fun `S-007 Stabilisator nicht gemeldet`() = runTest {
+        // Geraet 10.10.: Aufnahmeergebnis ohne Stabilisator-Wert; das ist ein Ergebnis, kein Warten bis zum Ende
+        val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(OisState.NOT_REPORTED) }
+        assertEquals(OisState.NOT_REPORTED, SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
     }
 
     @Test fun `Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen`() = runTest {

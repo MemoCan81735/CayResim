@@ -14,6 +14,8 @@ fun assertContentEquals(expected: ByteArray?, actual: ByteArray?, message: Strin
 fun assertContentEquals(expected: IntArray?, actual: IntArray?, message: String? = null) { if (!expected.contentEquals(actual)) throw AssertionFailed(message ?: "content differs") }
 fun assertContentEquals(expected: FloatArray?, actual: FloatArray?, message: String? = null) { if (!expected.contentEquals(actual)) throw AssertionFailed(message ?: "content differs") }
 fun <T> assertContentEquals(expected: List<T>?, actual: List<T>?, message: String? = null) { if (expected != actual) throw AssertionFailed(message ?: "content differs") }
+fun <T : Any> assertNotNull(actual: T?, message: String? = null): T = actual ?: throw AssertionFailed(message ?: "expected not null")
+fun assertNull(actual: Any?, message: String? = null) { if (actual != null) throw AssertionFailed("${message ?: ""} expected null actual <$actual>") }
 inline fun <reified T : Throwable> assertFailsWith(message: String? = null, block: () -> Unit): T {
     try { block() } catch (e: Throwable) { if (e is T) return e; throw AssertionFailed("wrong exception $e") }
     throw AssertionFailed(message ?: "no exception")

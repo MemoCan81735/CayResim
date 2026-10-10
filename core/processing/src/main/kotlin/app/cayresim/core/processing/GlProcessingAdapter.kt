@@ -140,7 +140,7 @@ class GlProcessingAdapter @Inject constructor(
         // Befund M6: zu wenige brauchbare Bilder ergeben kein Nachtbild, sondern einen ehrlichen Fehler
         if (m.used < MIN_NIGHT_FRAMES) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         val bitmap = withContext(compute) { rgbToBitmap(result.rgb, w, h, rot) }
-        val stats = app.cayresim.core.boundary.NightStats(m.used, m.dropped, result.gain, m.maxShake, m.shakeMeasurable)
+        val stats = app.cayresim.core.boundary.NightStats(m.used, m.dropped, result.gain, m.maxShake, m.shakeMeasurable, m.diagnosis)
         return withContext(io) {
             when (val saved = save(bitmap, "nacht")) {
                 is ProcessResult.Saved -> saved.copy(night = stats)

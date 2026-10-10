@@ -428,6 +428,15 @@ class CameraViewModelTest {
         assertNotNull(vm.uiState.value.lastPhotoUri)
     }
 
+    @Test fun `S-007 Nacht-Hinweis traegt die Diagnose`() = runTest {
+        val d = app.cayresim.core.pure.NightDiagnosis(true, false, 0.01f, 0.004f, 0.002f, 0.001f, 0.6f, 0.55f, 0.7f, 0.41f, 12f, 11f, 15f)
+        proc.nightDiagnosis = d
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
+        cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        vm.onShutter()
+        assertEquals(d, vm.uiState.value.message!!.night!!.diagnosis)
+    }
+
     @Test fun `Nacht mit gekuerzter Serie sagt es im Hinweis`() = runTest {
         visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
         cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))

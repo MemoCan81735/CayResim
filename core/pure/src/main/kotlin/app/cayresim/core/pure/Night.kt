@@ -91,6 +91,22 @@ object NightPlan {
  * Kacheln von 8 Pixeln: mit Ueberblenden allein zieht eine grosse "bewegte" Kachel ihr niedriges Gewicht in die
  * Nachbarn und das Doppelbild wird staerker; im Python-Modell waren 8 Pixel ohne Rauschnachteil (Geist 1,4, Kanten 0,3).
  */
+/**
+ * S-007: Warum der Boden-Modus gewaehlt wurde oder nicht (Nachttest S24+ am 10. Oktober: Nebel trotz S-006, die Werte
+ * fehlten). Nur Zahlen (R23). Linear heisst 1 = Weiss; der Hinweis zeigt sie mal 255.
+ * [checked]: Entscheidung ueberhaupt gerechnet (8 Bit, mindestens [NightMerge.MIN_DECLIP_FRAMES] Bilder).
+ * [noise]: geschaetztes Rauschen der Helligkeit eines Einzelbilds, 0 = nicht schaetzbar (kein Abschneiden).
+ * [median]: Helligkeit des mittleren Pixels vor dem Abzug; [signal]: daraus zurueckgerechnet; [threshold]: Grenze.
+ * [estimatedR] bis [estimatedB]: Anteil der Pixel, an denen das Rauschen je Kanal schaetzbar war.
+ * [zeroShare], [firstR] bis [firstB]: Kanalwerte auf 0 und Mittel (Stufen) im Bezugsbild, wie es von der Kamera kam.
+ */
+data class NightDiagnosis(
+    val checked: Boolean, val floor: Boolean,
+    val noise: Float, val median: Float, val signal: Float, val threshold: Float,
+    val estimatedR: Float, val estimatedG: Float, val estimatedB: Float,
+    val zeroShare: Float, val firstR: Float, val firstG: Float, val firstB: Float,
+)
+
 class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     init { require(width >= 32 && height >= 32 && tile >= 8) { "Bild zu klein" } }
 
@@ -210,6 +226,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             refSmall = small; refLuma = luma(frame); refSharpness = sharpness(small); refRobust = robustSharpness(small)
             // Bei RAW ist der Schwarzwert bekannt: kein Raten des Rauschbodens
             floorShare = if (linear != null) 0f else refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
+            if (linear == null) measureFirst(frame)
             for (i in sum.indices) sum[i] = linear?.get(i) ?: LIN[frame[i].toInt() and 0xFF]
             if (linear == null) { val q = sumSq ?: FloatArray(pixels * 3).also { sumSq = it }; for (i in q.indices) q[i] = sum[i] * sum[i] }
             weight.fill(1f); used = 1
@@ -285,7 +302,11 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         // Rauschen der Serie, ist die Szene lichtlos: Boden-Modus, auch wenn das Rauschen der Einzelbilder ueber Stufe 1 reicht
         val q = sumSq
         noiseFloor = false
+        // S-007: Werte der Entscheidung fuer den Hinweis (nur 8 Bit)
+        var checked = false; var noise = 0f; var median = 0f; var signal = 0f; var threshold = 0f
+        val estimated = FloatArray(3)
         if (!linearInput && q != null && used >= MIN_DECLIP_FRAMES) {
+            checked = true
             // Rauschen je Kanal fuer das ganze Bild: Median der Schaetzungen je Pixel, wo das Abschneiden wirkt
             // Stichprobe (jedes k-te Pixel, hoechstens etwa 65.536), ohne Listen von Objekten (Zweitpruefung S-006: 0,9 s und 30 MB)
             val step = maxOf(1, pixels / 65_536)
@@ -294,17 +315,23 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
                 var n = 0
                 var p = 0
                 while (p < pixels) { val i = p * 3 + c; Declip.noise(mean[i], q[i] / weight[p])?.let { est[n++] = it }; p += step }
+                estimated[c] = n.toFloat() / est.size
                 if (n < est.size / 20) 0f else NightTone.quantile(est.copyOf(n), 0.5f)
             }
             if (sigma.any { it > 0f }) {
                 val sigmaL = kotlin.math.sqrt((0 until 3).sumOf { c -> ((LUMA[c] * sigma[c]) * (LUMA[c] * sigma[c])).toDouble() }).toFloat()
                 // Signal des mittleren Pixels je Kanal zurueckgerechnet (die Helligkeit aus drei abgeschnittenen Kanaelen ist
                 // selbst nicht abgeschnitten-normal), gegen das Rauschen des Mittels aus allen Bildern
+                var medianMean = 0.0
                 val medianSignal = (0 until 3).sumOf { c ->
                     val ch = FloatArray(pixels) { p -> mean[p * 3 + c] }
-                    (LUMA[c] * Declip.signalFromMean(NightTone.quantile(ch, 0.5f), sigma[c])).toDouble()
+                    val med = NightTone.quantile(ch, 0.5f)
+                    medianMean += LUMA[c] * med
+                    (LUMA[c] * Declip.signalFromMean(med, sigma[c])).toDouble()
                 }.toFloat()
-                noiseFloor = medianSignal <= FLOOR_SNR * sigmaL / kotlin.math.sqrt(NightTone.quantile(weight, 0.5f).coerceAtLeast(1f))
+                val limit = FLOOR_SNR * sigmaL / kotlin.math.sqrt(NightTone.quantile(weight, 0.5f).coerceAtLeast(1f))
+                noiseFloor = medianSignal <= limit
+                noise = sigmaL; median = medianMean.toFloat(); signal = medianSignal; threshold = limit
                 if (noiseFloor) {
                     // Boden-Modus: der abgeschnittene Rauschanteil ohne Licht (0,4-mal das Rauschen) ist Schwarz. Nur
                     // abziehen, nicht je Pixel zurueckrechnen: das verstaerkte das Rauschen bis 6-fach (Labor 10.10.)
@@ -312,6 +339,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
                 }
             }
         }
+        diagnosis = if (linearInput) null else NightDiagnosis(checked, noiseFloor, noise, median, signal, threshold,
+            estimated[0], estimated[1], estimated[2], firstZero, firstMean[0], firstMean[1], firstMean[2])
         // RAW: Rauschen ist nicht abgeschnitten, einzelne Bilder sagen nichts; der Boden wird am Mittel gemessen
         val share = if (noiseFloor) maxOf(floorShare, NightTone.FLOOR_SHARE) else if (linearInput) {
             var n = 0
@@ -325,6 +354,21 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     /** S-006: true = das Signal des mittleren Pixels liegt nicht ueber dem Rauschen der Serie (Boden-Modus). */
     var noiseFloor = false; private set
+
+    /** S-007: Werte der Boden-Entscheidung und des Bezugsbilds nach [finish]; null vorher und beim RAW-Weg. */
+    var diagnosis: NightDiagnosis? = null; private set
+
+    /** S-007: Anteil der Kanalwerte auf 0 und Mittel je Kanal (Stufen 0 bis 255) im Bezugsbild. */
+    private var firstZero = 0f
+    private val firstMean = FloatArray(3)
+
+    private fun measureFirst(frame: ByteArray) {
+        var zeros = 0
+        val s = LongArray(3)
+        for (i in frame.indices) { val v = frame[i].toInt() and 0xFF; if (v == 0) zeros++; s[i % 3] += v.toLong() }
+        firstZero = zeros.toFloat() / frame.size
+        for (c in 0 until 3) firstMean[c] = s[c].toFloat() / pixels
+    }
 
     /** Mittlere Zahl der Bilder, die je Pixel wirklich beigetragen haben. */
     fun effectiveFrames(): Float = weight.average().toFloat()

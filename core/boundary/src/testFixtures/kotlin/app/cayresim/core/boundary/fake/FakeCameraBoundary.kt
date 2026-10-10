@@ -77,7 +77,7 @@ class FakeCameraBoundary(
     /** Simuliert eine Messung der Belichtungsautomatik. */
     fun measure(light: app.cayresim.core.boundary.LightSnapshot?) = _state.update { it.copy(light = light) }
     /** Stabilisator laut letzter Aufnahme (S-003). */
-    fun stabilize(on: Boolean?) = _state.update { it.copy(stabilization = on) }
+    fun stabilize(on: app.cayresim.core.boundary.OisState?) = _state.update { it.copy(stabilization = on) }
 
     override suspend fun setZoom(ratio: Float): Boolean {
         if (_state.value.status != CameraStatus.RUNNING || !ratio.isFinite()) return false
