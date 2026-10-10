@@ -45,7 +45,7 @@ Bit für Bit gleich.
 | K5 | Abbruch während der Serie: halbe Datei wird gelöscht, Belichtung wiederhergestellt, Sensor abgemeldet (R17); Speicherfehler: Nachtbild trotzdem gespeichert, Hinweis "Serie nicht gespeichert" | `NightUseCaseTest > S-011 Abbruch und Speicherfehler` |
 | K6 | Kamera-Adapter: jedes Bild trägt den Zeitstempel der Aufnahme (Zeitbasis seit dem Einschalten wie die Sensoren); auf dem Emulator steigend und zwischen Start und Ende des Stroms | `CameraXAdapterContractTest > s011Zeitstempel` (Emulator) |
 | K7 | Daten-Adapter: ZIP wird in `Download/CayResim/` geschrieben, ist danach unter seinem Namen lesbar; abgebrochene Datei ist weg | `MediaStoreSeriesAdapterTest > s011SchreibenUndAbbrechen` (Emulator) |
-| K8 | Oberfläche: Schalter in den Einstellungen mit Hinweis "bis zum Neustart, keine Personen fotografieren"; Hinweis nach der Nachtaufnahme mit Dateiname und Größe; je ein Screenshot | `SettingsAndGuideTest > einstellungen_nachtserie`, `CameraScreenTest > nacht_hinweis_serie` |
+| K8 | Oberfläche: Schalter in den Einstellungen mit Hinweis "bis zum Neustart, keine Personen fotografieren"; Hinweis nach der Nachtaufnahme mit Dateiname und Größe; je ein Screenshot | `SettingsAndGuideTest > einstellungen_nachtserie`, `CameraContentTest > nacht_hinweis_serie` |
 | K9 | Gerätetest S24+: Serie wird gespeichert, Zahl der Y-Bilder = verwendet + verworfen; Bilder je Sekunde mit Speichern höchstens 10 % unter ohne Speichern (zwei Aufnahmen derselben Szene); Datei offline lesbar mit `tools/nacht-serie/auswerten.py` | Gerätetest |
 
 Tests zuerst rot: K1 bis K5 lokal (`tools/run-pure-tests.sh`, `tools/run-core-tests.sh`), weil Einträge, Archiv

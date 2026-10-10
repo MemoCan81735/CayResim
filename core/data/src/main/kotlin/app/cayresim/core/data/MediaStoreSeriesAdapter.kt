@@ -52,7 +52,7 @@ class MediaStoreSeriesAdapter @Inject constructor(
     }
 
     /** Zaehlt die geschriebenen Bytes fuer den Hinweis (Groesse der Datei). */
-    private class Counting(out: OutputStream) : FilterOutputStream(out) {
+    internal class Counting(out: OutputStream) : FilterOutputStream(out) {
         var count = 0L; private set
         override fun write(b: Int) { out.write(b); count++ }
         override fun write(b: ByteArray, off: Int, len: Int) { out.write(b, off, len); count += len }

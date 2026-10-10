@@ -2,6 +2,15 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Nachtserie speichern (10. Oktober 2026, S-011)
+- Neu unter Einstellungen: Schalter "Nachtserie speichern" (nur zum Messen, gilt bis zum Neustart). Eingeschaltet legt
+  jede Nachtaufnahme zusätzlich eine ZIP-Datei in Download/CayResim ab: Helligkeit aller Einzelbilder, drei Farbbilder,
+  je Bild Zeitstempel, Versatz, Schärfe, Helligkeit und Anteil Nullen, dazu die Lage während der Serie. Etwa 50 MB.
+- Der Hinweis nach der Nachtaufnahme nennt Dateiname und Größe oder "Nachtserie nicht gespeichert".
+- Das Nachtbild selbst bleibt gleich. Auswertung am Rechner mit `tools/nacht-serie/auswerten.py`.
+- Gerät: zwei Nachtaufnahmen derselben Szene (Schalter an und aus), Hinweise als Screenshot, ZIP über Google Drive,
+  dazu ein Samsung-Foto derselben Szene.
+
 ## 0.1.115 Schwenk-Messung (10. Oktober 2026, S-010)
 - Neu im Mikrofon-Test: Knopf "Schwenk-Messung (25 s)". Nimmt Ton und Lage (Drehvektor, Beschleunigung, je 200 Hz)
   gleichzeitig auf, während das Handy um eine feste Geräuschquelle geschwenkt wird, und schätzt daraus die Richtung
