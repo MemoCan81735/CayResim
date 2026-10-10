@@ -365,7 +365,11 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
     private fun measureFirst(frame: ByteArray) {
         var zeros = 0
         val s = LongArray(3)
-        for (i in frame.indices) { val v = frame[i].toInt() and 0xFF; if (v == 0) zeros++; s[i % 3] += v.toLong() }
+        for (i in frame.indices) {
+            val v = frame[i].toInt() and 0xFF
+            if (v == 0) zeros++
+            s[i % 3] += v.toLong()
+        }
         firstZero = zeros.toFloat() / frame.size
         for (c in 0 until 3) firstMean[c] = s[c].toFloat() / pixels
     }
