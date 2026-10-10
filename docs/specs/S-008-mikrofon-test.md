@@ -1,6 +1,6 @@
 # S-008: Mikrofon-Test
 
-**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 10:13 Uhr: neue Berechtigung Mikrofon, neues Speichern der WAV-Dateien, neue Regel R28), umgesetzt, Gerätetest offen
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 10:13 Uhr: neue Berechtigung Mikrofon, neues Speichern der WAV-Dateien, neue Regel R28), umgesetzt, Gerätetest am 10.10. ausgewertet
 **Anlass:** Wunsch Arslan (10.10.): Geräusche mit den Mikrofonen des S24+ orten. Vorprobe mit einem Video der
 Samsung-Kamera (10.10., 10:02 Uhr, quer gehalten, je drei Klatscher links, rechts, vorne, hinten, schräg in etwa 2 m):
 Der Ton hat zwei verschiedene Kanäle (Korrelation 0,17 über die ganze Aufnahme), ist aber stark bearbeitet. Links und
@@ -128,4 +128,20 @@ Screenshot-Grundlagen. Dabei aufgefallen: das künstliche Rauschen im Test nahm 
 der bei Enums von Lauf zu Lauf wechselt; das Ergebnis-Bild war dadurch nicht reproduzierbar (jetzt fester Startwert).
 Außerdem "-0,00" und "-0" in der Anzeige bereinigt. 526 Tests.
 
-Gerätetest offen: Mikrofon-Test in einem ruhigen Raum, Screenshots und WAV-Ordner.
+Gerätetest S24+ v0.1.109 (10.10., 12:22 Uhr, ruhiger Raum, Handy quer, Bildschirm zum Nutzer):
+- Unbearbeiteter Ton (`UNPROCESSED`) wird nicht angeboten. `VOICE_RECOGNITION` liefert doppeltes Mono (100 % gleiche
+  Werte). `MIC` und `CAMCORDER` liefern zwei verschiedene Kanäle (Korrelation 0,41 und 0,33), aktiv sind laut Android
+  die Mikrofone 16 (bottom) und 17 (back).
+- Samsung meldet für beide Mikrofone dieselbe Position (5,1 / 0,0 / 0,4 cm); der Abstand wurde deshalb mit 15 cm
+  angenommen.
+- Klatsch-Probe mit `MIC`, nachgerechnet aus den WAV-Dateien (GCC-PHAT, 1,5 bis 12 kHz): Laufzeit links etwa +1,2
+  Abtastwerte, vorne etwa −1,2, rechts gemischt zwischen −1,2 und +1,3, also höchstens 0,03 ms. Physikalisch erwartet
+  wären bei 15 cm bis zu 21 Abtastwerte (0,44 ms) mit entgegengesetztem Vorzeichen für links und rechts. Die
+  Phasenübereinstimmung liegt bei nur 0,01 bis 0,04, die Pegelunterschiede (vorne Kanal 2 um 8 bis 12 dB lauter,
+  rechts 1,5 bis 10 dB schwankend) sind bei 2 m Abstand physikalisch nicht erklärbar. Die Kanäle sind bearbeitet
+  (vermutlich Richtungs- oder Rauschfilter je Kanal), keine Rohsignale.
+- Ergebnis: Ortung über die Laufzeit ist auf dem S24+ mit den Audioquellen, die Android einer App anbietet, nicht
+  möglich. Dasselbe Bild zeigte die Vorprobe mit dem Video der Samsung-Kamera.
+- Nebenbefunde in der App: Griffgeräusche am Handy zählen als Klatscher (rechts bei 1,6 bis 2,2 s); eine Quelle mit
+  nur einem aktiven Mikrofon (Gerät 17) galt bei Korrelation 0,94 als "verschieden". Beides ist für das Ergebnis ohne
+  Folgen und wird nur bei Bedarf behoben.
