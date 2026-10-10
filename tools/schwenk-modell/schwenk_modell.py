@@ -13,6 +13,11 @@ Verfahren:
   M4  Richtungskarte ueber alle Fenster (SRP-PHAT), dann je Fenster die passende GCC-Spitze, dann M3
   M5  wie M4, aber Mikrofonachse im Geraet mitgeschaetzt (Rang-1-Zerlegung)
   M6  wie M4 mit der Achse aus einem Eichschwenk (M5 in Szenario S2, einmal je Geraet)
+  M7  S-013: kohaerenzgewichtete GCC (Hannan-Thomson) ueber Bloecke von 250 ms, 80 bis 4000 Hz, dann kleinste Quadrate
+  M7r wie M7 mit robusten Gewichten (ohne Versatzsuche, wie die App)
+
+Szenarien S7 und S8 (S-013): zusaetzlich ein Hallfeld (viele ebene Wellen aus zufaelligen Richtungen, Kohaerenz wie
+im echten Raum: sinc(k d)), 6 bzw. 12 dB ueber dem direkten Schall. Anlass: zweiter echter Schwenk 10.10., 22:14 Uhr.
 """
 import argparse
 import time
@@ -97,6 +102,8 @@ SZENARIEN = {
     "S4 zwei Quellen": dict(beta=0.7, tilt=True, offset=0.03, shift=0.08, source="zwei", sweep="weit", noise_deg=0.5),
     "S5 schmaler Schwenk": dict(beta=0.7, tilt=True, offset=0.03, shift=0.08, source="rauschen", sweep="schmal", noise_deg=0.5),
     "S6 leise Quelle": dict(beta=0.7, tilt=True, offset=0.03, shift=0.08, source="rauschen", sweep="weit", noise_deg=0.5, snr_db=-3),
+    "S7 Hallfeld 6 dB": dict(beta=0.7, tilt=True, offset=0.03, shift=0.08, source="rauschen", sweep="weit", noise_deg=0.5, diffus_db=6),
+    "S8 Hallfeld 12 dB": dict(beta=0.7, tilt=True, offset=0.03, shift=0.08, source="rauschen", sweep="weit", noise_deg=0.5, diffus_db=12),
     # Fehlerbudget: je eine Stoerung allein (sonst wie S1)
     "B1 nur Achse geneigt": dict(beta=0.0, tilt=True, offset=0.0, shift=0.0, source="rauschen", sweep="weit", noise_deg=0.0),
     "B2 nur Verschiebung": dict(beta=0.0, tilt=False, offset=0.0, shift=0.08, source="rauschen", sweep="weit", noise_deg=0.0),
@@ -158,6 +165,17 @@ def simulate(name, seed, seconds=22.0, frame=0.05):
         sig0 = np.fft.irfft(x[0], nfft)[seg // 2: seg // 2 + flen]
         sig1 = np.fft.irfft(x[1], nfft)[seg // 2: seg // 2 + flen]
         lvl = np.std(sig0) + 1e-12
+        if "diffus_db" in p:
+            # Hallfeld: 32 ebene Wellen aus zufaelligen Richtungen, je eigenes Rauschen (Kohaerenz sinc(k d))
+            d0 = np.zeros(nfft // 2 + 1, complex); d1 = np.zeros(nfft // 2 + 1, complex)
+            for _ in range(32):
+                v = rnd.standard_normal(3); v /= np.linalg.norm(v)
+                S = np.fft.rfft(rnd.standard_normal(seg), nfft)
+                d0 += S * np.exp(2j * np.pi * freqs * (v @ m0) / C)
+                d1 += S * np.exp(2j * np.pi * freqs * (v @ m1) / C)
+            h0 = np.fft.irfft(d0, nfft)[seg // 2: seg // 2 + flen]; h1 = np.fft.irfft(d1, nfft)[seg // 2: seg // 2 + flen]
+            g = 10 ** (p["diffus_db"] / 20) * lvl / (np.std(h0) + 1e-12)
+            sig0 = sig0 + g * h0; sig1 = sig1 + g * h1
         # Eigenrauschen und Raumgeraeusch, je Kanal unabhaengig; snr_db: Quelle gegen Raum
         nl = 10 ** (-p.get("snr_db", 50) / 20)
         sig0 = sig0 + nl * lvl * rnd.standard_normal(flen)
@@ -190,6 +208,36 @@ def gcc(a, b, interp=4, max_lag=0.0012):
     cc = np.concatenate((cc[-m:], cc[:m + 1]))
     lags = np.arange(-m, m + 1) / (FS * interp)
     return lags, cc
+
+
+def coherent_block(x0, x1, n=2048, hop=512, lo=80.0, hi=4000.0, up=16, max_lag=0.0012):
+    """S-013: Laufzeit eines Blocks mit kohaerenzgewichteter GCC (Hannan-Thomson). Liefert (tau, Guete, Kohaerenz).
+    tau positiv = Kanal 0 hoert spaeter (wie gcc). Guete: Hoehe der Spitze relativ zur Summe der Gewichte (0 bis 1).
+    Kohaerenz: mittleres gamma^2 im Band."""
+    w = np.hanning(n); f = np.fft.rfftfreq(n, 1 / FS); band = (f >= lo) & (f <= hi)
+    Sxy = 0; Sxx = 0; Syy = 0
+    for t in range(0, len(x0) - n + 1, hop):
+        a = np.fft.rfft(x0[t:t + n] * w); b = np.fft.rfft(x1[t:t + n] * w)
+        Sxy = Sxy + a * np.conj(b); Sxx = Sxx + np.abs(a) ** 2; Syy = Syy + np.abs(b) ** 2
+    g2 = np.clip(np.abs(Sxy) ** 2 / (Sxx * Syy + 1e-30), 0, 0.99)
+    W = np.where(band, g2 / ((1 - g2) * (np.abs(Sxy) + 1e-30)), 0.0)
+    N = n * up; m = int(max_lag * FS * up)
+    G = np.zeros(N // 2 + 1, complex); G[:len(W)] = Sxy * W
+    cc = np.fft.irfft(G, N); cc = np.concatenate([cc[-m:], cc[:m + 1]])
+    i = int(np.argmax(cc))
+    q = cc[i] * N / (np.sum(W * np.abs(Sxy)) * 2 + 1e-30)
+    return (i - m) / (FS * up), float(np.clip(q, 0, 1)), float(np.mean(g2[band]))
+
+
+def coherent_delays(frames, frame, per_block=5, step=2):
+    """Bloecke aus [per_block] aufeinanderfolgenden Fenstern, Schritt [step] Fenster."""
+    taus, qs, gs, centers = [], [], [], []
+    for k in range(0, len(frames) - per_block + 1, step):
+        x0 = np.concatenate([frames[j][0] for j in range(k, k + per_block)])
+        x1 = np.concatenate([frames[j][1] for j in range(k, k + per_block)])
+        t, q, g = coherent_block(x0, x1)
+        taus.append(t); qs.append(q); gs.append(g); centers.append((k + per_block / 2) * frame)
+    return np.array(taus), np.array(qs), np.array(gs), np.array(centers)
 
 
 def peaks(lags, cc, top=3):
@@ -335,6 +383,13 @@ def evaluate(name, seed, frame=0.05, calib_axis=None):
         u6, _ = m4(ca, d6)
         out["M6"] = err(u6)
         out["versatz6_ms"] = d6 * 1000
+    # M7 und M7r (S-013): kohaerenzgewichtete GCC ueber Bloecke von 5 Fenstern (250 ms), Schritt 2 Fenster
+    ct, cq, cg, cc_centers = coherent_delays(frames, frame)
+    ax7 = axes_for(st, sR, cc_centers, 0.0, y)
+    p, _ = ls(ax7, ct); out["M7"] = err(direction(p)[0])
+    p, _ = robust_ls(ax7, ct); out["M7r"] = err(direction(p)[0])
+    out["kohaerenz"] = float(np.median(cg)); out["guete7"] = float(np.median(cq))
+    out["phat_median"] = float(np.median(best_pk))
     out["versatz_ms"] = d3 * 1000
     out["fenster"] = int(keep.sum())
     return out
@@ -354,16 +409,16 @@ def main():
     t0 = time.time()
     calib = np.mean([evaluate("S2 realistisch", 100 + s, args.fenster)["b5"] for s in range(3)], axis=0)
     print(f"Geeichte Achse (m): {np.round(calib, 4)}, wahr: {MIC_BACK_TILT - MIC_BOTTOM}")
-    methods = ["M1", "M2", "M3", "M4", "M5", "M6"]
+    methods = ["M1", "M3", "M6", "M7", "M7r"]
     print("Fehler der Richtung in Grad, Median / schlechtester von", args.seeds, "Laeufen")
-    print(f"{'Szenario':22s}" + "".join(f"{m:>14s}" for m in methods) + "   Versatz M3/M6 ms   Fenster")
+    print(f"{'Szenario':22s}" + "".join(f"{m:>14s}" for m in methods) + "   PHAT-Median  Kohaerenz  Guete M7")
     for n in names:
         rs = [evaluate(n, s, args.fenster, calib) for s in range(args.seeds)]
         row = f"{n:22s}"
         for m in methods:
             v = np.array([r[m] for r in rs])
             row += f"{np.median(v):8.1f} /{v.max():5.1f}"
-        row += f"   {np.median([r['versatz_ms'] for r in rs]):6.1f} /{np.median([r.get('versatz6_ms', np.nan) for r in rs]):6.1f}   {int(np.median([r['fenster'] for r in rs])):6d}"
+        row += f"   {np.median([r['phat_median'] for r in rs]):9.3f}  {np.median([r['kohaerenz'] for r in rs]):9.3f}  {np.median([r['guete7'] for r in rs]):8.3f}"
         print(row, flush=True)
     print(f"Dauer {time.time() - t0:.0f} s")
 
