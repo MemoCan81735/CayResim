@@ -1,6 +1,6 @@
 # S-009: Mikrofon-Test mit Pause, Eichung und besserem Stereo-Kriterium
 
-**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 12:48 Uhr: Spec wie Entwurf, ein Release), umgesetzt, Zweitprüfung abgearbeitet
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 12:48 Uhr: Spec wie Entwurf, ein Release), umgesetzt in v0.1.112, Zweitprüfung abgearbeitet, Gerätetest offen
 **Anlass:** Gerätetest S-008 auf dem S24+ (v0.1.109, 10.10., 12:22 und 12:33 Uhr), nachgerechnet aus den WAV-Dateien
 (Ergebnis in S-008):
 - Quer gehalten funktioniert die Ortung: links −0,48 bis −0,50 ms, rechts +0,39 bis +0,44 ms, vorne −0,05 bis 0,00 ms.
@@ -130,4 +130,5 @@ Unabhängige Prüfung (zweiter Agent, 10.10.), kein blockierender Befund; behobe
 Bewusst nicht behoben: Grund "zu wenige Klatscher" bei gescheiterter Aufnahme (Risiken).
 
 ## Ergebnis
-Noch offen.
+CI auf main (38047611072, mit Emulator und Release): alle Jobs grün, 534 Tests, 0 rot; Release v0.1.112.
+Gerätetest noch offen (K7).

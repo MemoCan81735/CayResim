@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Mikrofon-Test mit Eichung (10. Oktober 2026, S-009)
+## 0.1.112 Mikrofon-Test mit Eichung (10. Oktober 2026, S-009)
 - Vor jeder Klatsch-Phase 2 s Pause mit Ansage ("Gleich links klatschen"), erst dann wird aufgenommen. Klatscher der
   vorigen Seite landen so nicht mehr in der nächsten Phase.
 - Die App eicht sich bei jedem Lauf aus den Klatschern links und rechts: wirksamer Mikrofonabstand und Mitte, danach
