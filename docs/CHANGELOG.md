@@ -2,6 +2,9 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Funktionsliste: Raumscan (10. Oktober 2026)
+- `docs/ideen.md`: F8 Raumscan und F9 Raumscan mit ARCore aufgenommen, beide nach der Nacht. Keine Änderung an der App.
+
 ## Funktionsliste (10. Oktober 2026)
 - `docs/ideen.md`: sieben neue Funktionen auf der Liste (F1 bis F7), mit Reihenfolge. Keine Änderung an der App.
 

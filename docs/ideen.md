@@ -12,5 +12,7 @@ Neue Funktionen, aufgenommen mit Arslan am 10. Oktober 2026. Jede bekommt vor de
 | F5 | Seidenwasser mit scharfem Motiv | Bewegtes wird weich wie bei Langzeit, das Motiv bleibt scharf; Maske aus dem Unterschied zwischen Mittel und Median | Langzeit, Wegrechnen | mittel | offen |
 | F6 | Super-Auflösung freihand | Bruchteile von Pixeln aus dem Zittern der Hand nutzen, z. B. schärferer 6-fach-Zoom aus der 3-fach-Kamera | Ausrichtung (dann mit Bruchteilen) | groß | offen |
 | F7 | Fokus-Hervorhebung und Zebra | im Pro-Modus scharfe Kanten farbig, überbelichtete Stellen gestreift | Pro-Modus, Sucher | klein | offen |
+| F8 | Raumscan | Beim langsamen Gehen durch einen Raum löst die App selbst aus (nach Bildwechsel), prüft jedes Foto auf Schärfe, Licht und Struktur, sperrt Belichtung, Weißabgleich und Fokus und exportiert ein ZIP für die 3D-Berechnung außerhalb der App (Polycam, KIRI, COLMAP). Detailplan: Claude Doc "CayResim Scan-Modus: Detailplan", Phasen S0 bis S5 | Bildstrom, Auslöser, StarAlignment, ImageQuality | groß (neues Speichern von Daten, neue Kamera-Sitzung) | offen, nach der Nacht; zuerst Spec für S0 (Auslöseverzögerung messen) |
+| F9 | Raumscan mit ARCore | Jedes Scan-Foto bekommt Position und Blickrichtung in Metern; Modell mit echtem Maßstab. Phase S6 des Detailplans | F8 | groß (neue Regel für ARCore, neue Abhängigkeit) | offen, erst nach F8 und Prüfung der ARCore-Unterstützung am S24+ |
 
-Vorgeschlagene Reihenfolge: F1 und F2 (machen die Nacht fertig), dann F3, danach nach Wunsch.
+Vorgeschlagene Reihenfolge: F1 und F2 (machen die Nacht fertig), dann F3, danach nach Wunsch. F8 und F9 erst nach der Nacht (V9), F9 nur nach F8.
