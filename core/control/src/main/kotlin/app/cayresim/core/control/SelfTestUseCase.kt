@@ -63,6 +63,7 @@ class SelfTestUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): SelfTestReport {
         val items = mutableListOf<SelfTestItem>()
+        var deviceAt = -1 // S-007: Stelle der Geraetewerte, der Stabilisator wird nach der Aufnahme NORMAL nachgetragen
         val created = mutableListOf<String>()
         val aborted = journal.unfinished()
         if (aborted != null) {
@@ -88,17 +89,8 @@ class SelfTestUseCase @Inject constructor(
             items += SelfTestItem(SelfTestCheck.LOW_LIGHT_BOOST, true, 0, detail = if (caps.lowLightBoost) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.ULTRA_HDR, true, 0, detail = if (caps.ultraHdr) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.RAW, true, 0, detail = if (caps.raw) "ja" else "nein")
-            // S-003: Stabilisator aktiv laut letzter Aufnahme
-            caps.device?.let { d ->
-                // S-006: der Wert kommt erst mit dem ersten Aufnahmeergebnis (Geraet 10.10.: direkt nach dem Start "unbekannt")
-                // S-007: bis zu [OIS_WAIT_MS] auf einen gemeldeten Wert (ON oder OFF) warten; erste Ergebnisse koennen vor der
-                // Anforderung liegen. Danach zaehlt der aktuelle Stand: nicht gemeldet oder gar kein Ergebnis (null)
-                val ois = if (d.ois == true) {
-                    withTimeoutOrNull(OIS_WAIT_MS) { camera.state.first { it.stabilization == OisState.ON || it.stabilization == OisState.OFF } }
-                        ?.stabilization ?: camera.state.value.stabilization
-                } else null
-                items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = d.copy(oisActive = ois))
-            }
+            // S-003: Stabilisator aktiv laut Aufnahmeergebnis; der Wert wird nach der Aufnahme NORMAL nachgetragen (siehe unten)
+            caps.device?.let { d -> deviceAt = items.size; items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = d) }
         }
 
         val previous = camera.state.value.requestedMode
@@ -114,6 +106,11 @@ class SelfTestUseCase @Inject constructor(
             t = clock.nowMillis()
             val r = camera.capture()
             val ms = clock.nowMillis() - t
+            // S-007: Selbsttest S24+ 10.10.: ohne sichtbaren Sucher laufen Bilder erst mit der ersten Aufnahme, vorher kam nie ein
+            // Ergebnis ("kein Aufnahmeergebnis"). Deshalb hier lesen, nach NORMAL und bevor ein Samsung-Modus den Wert loescht
+            if (mode == PhotoMode.NORMAL && deviceAt >= 0) items[deviceAt].device?.let { d ->
+                if (d.ois == true) items[deviceAt] = items[deviceAt].copy(device = d.copy(oisActive = readStabilization()))
+            }
             when {
                 active != mode -> items += SelfTestItem(SelfTestCheck.MODE_CAPTURE, false, ms, mode, "Rueckfall auf ${active.name}")
                 r is CaptureResult.Saved -> {
@@ -136,6 +133,14 @@ class SelfTestUseCase @Inject constructor(
         journal.finish()
         return SelfTestReport(items)
     }
+
+    /**
+     * S-007: bis zu [OIS_WAIT_MS] auf einen gemeldeten Wert (ON oder OFF) warten; erste Ergebnisse koennen vor der
+     * Anforderung liegen. Danach zaehlt der aktuelle Stand: nicht gemeldet oder gar kein Ergebnis (null).
+     */
+    private suspend fun readStabilization(): OisState? =
+        withTimeoutOrNull(OIS_WAIT_MS) { camera.state.first { it.stabilization == OisState.ON || it.stabilization == OisState.OFF } }
+            ?.stabilization ?: camera.state.value.stabilization
 
     /** RAW-Serie nur in den Speicher, im normalen Modus; misst Tempo und Kalibrierung fuer den RAW-Weg. */
     private suspend fun rawSeries(skip: String?): SelfTestItem? {

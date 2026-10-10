@@ -29,6 +29,7 @@ Aufnahmeergebnis". Das Bild selbst ändert sich nicht.
 | K8 | ViewModel reicht die Diagnose an den Hinweis weiter | `CameraViewModelTest > S-007 Nacht-Hinweis traegt die Diagnose` |
 | K9 | Selbsttest wartet bis 1,5 s auf einen gemeldeten Wert (ON oder OFF). Danach: Gerät meldet den Wert nicht, dann "vom Gerät nicht gemeldet (angefordert: ein)"; kein Ergebnis, dann "kein Aufnahmeergebnis"; erst ohne, später mit Wert, dann der gemeldete Wert | `SelfTestUseCaseTest > S-007 Stabilisator nicht gemeldet`, `SelfTestTest > S-007 Stabilisator nicht gemeldet` |
 | K10 | Adapter: Ergebnis ohne Wert ergibt "nicht gemeldet", überschreibt aber nie ein gemeldetes ON oder OFF | `ModeMappingTest > S-007 Stabilisator ohne Wert im Ergebnis heisst nicht gemeldet, ueberschreibt aber keinen Wert` |
+| K12 | Nachtrag (Arslan, 10.10., 8:50 Uhr): Selbsttest liest den Stabilisator nach der Aufnahme NORMAL, weil ohne sichtbaren Sucher vorher keine Ergebnisse kommen; Anzeige-Reihenfolge bleibt | `SelfTestUseCaseTest > S-007 Selbsttest S24+ ohne Sucher liest den Stabilisator nach der ersten Aufnahme` |
 | K11 | Gerät ohne Stabilisator: "Optischer Stabilisator: nein", ohne "aktiv" | `SelfTestTest > S-007 ohne Stabilisator kein Wert fuer aktiv` |
 
 ## Nicht Teil dieser Änderung
