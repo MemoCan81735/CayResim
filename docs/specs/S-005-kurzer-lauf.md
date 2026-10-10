@@ -50,7 +50,8 @@ die gemessenen Zeiten gegen die heutigen Mediane.
 ## Betroffene Schichten und Regeln
 Keine App-Schicht. Dateien: `.github/workflows/ci.yml`, `.github/scripts/` (neu: `fallen.sh`, Skript für die
 Zusammenfassung), `build-logic` (detekt und Lint als Convention), `config/detekt/detekt.yml`, Baselines je Modul, Probe-Dateien
-unter `config/probes/`. Konsist und die Regeln R1 bis R27 bleiben unverändert.
+unter `config/probes/`. Konsist und die Regeln R1 bis R27 bleiben unverändert. Nachtrag 10. Oktober: Ausnahme A1 um
+`MutableCoordinateTransformer` erweitert (Freigabe Arslan, siehe Ergebnis).
 
 Nach der Umsetzung anzupassen: `CLAUDE.md` Abschnitt 4 ("schneller Job grün" wird "alle Jobs des kurzen Laufs grün")
 und Testkonzept Abschnitt 5, im Projektdokument und im Tab "Testkonzept".
@@ -63,7 +64,7 @@ und Testkonzept Abschnitt 5, im Projektdokument und im Tab "Testkonzept".
 | Fehler und Ausweichweg | ein Werkzeug, das ausfällt, macht nur seinen Job rot (K4) |
 | Abbruch und Freigaben | trifft nicht zu |
 | Bildpuffer, Main-Thread, Speichern | trifft nicht zu |
-| neue Ausnahme | keine |
+| neue Ausnahme | keine neue; A1 erweitert (Freigabe Arslan am 10. Oktober, siehe Ergebnis) |
 
 ## Risiken und Rückweg
 - detekt unterstützt Kotlin 2.4 eventuell noch nicht, weil es neuen Kotlin-Versionen oft hinterherläuft. Scheitert die
@@ -86,7 +87,7 @@ Umgesetzt am 10. Oktober 2026 auf dem Zweig `probe/s-005` (5 Probeläufe), danac
 | K2 | erfüllt: alles im Median nach 5,0 min (5,0 / 5,3 / 4,6 in denselben drei Läufen). Solange APK Debug und Release ein Job waren, 4,9 / 6,7 / 6,5 min (R8 plus doppeltes Kompilieren, 5 min 51 s Gradle-Zeit) |
 | K3 | fünf statt vier parallele Jobs: APK Debug und APK Release getrennt (Abweichung von der Spec, wegen K2) |
 | K4 | Probelauf rot (Zweig `probe/s-005-rot`, Lauf 38017341210): roter Test in `:core:pure`, Kompilierfehler in `:feature:gallery`, Falle in `strings.xml`; alle fünf Jobs liefen zu Ende, jeder meldete seinen Befund |
-| K5 | detekt 1.23.8 als eigenes Programm (unabhängig von Kotlin 2.4), nur Regeln mit Fehlerbezug, 23 alte Funde in `config/detekt/baseline.xml`; Android Lint für alle Android-Module, 94 alte Funde in 8 Baselines. JVM-Module prüft nur detekt (Lint findet dort kaum etwas). Alle drei Proben in jedem Lauf erkannt |
+| K5 | detekt 1.23.8 als eigenes Programm (unabhängig von Kotlin 2.4), nur Regeln mit Fehlerbezug, 23 alte Funde (zuerst als Baseline, siehe unten); Android Lint für alle Android-Module, 94 alte Funde in 8 Baselines. detekt nach der unabhängigen Prüfung ohne Baseline, mit einer Zählung je Regel und Datei (`config/detekt/funde.txt`, 23 Funde in 6 Zeilen). JVM-Module prüft nur detekt (Lint findet dort kaum etwas). Alle drei Proben in jedem Lauf erkannt |
 | K6 | `fallen.sh` erkennt Leerzeichen am Textende; Probe erkannt, im Probelauf rot den echten Fund gemeldet |
 | K7 | Zusammenfassung auf der Lauf-Seite und in `ci-logs-fast/summary.md` (Probezweige: `ci-logs-probe`); gleiche Kompilierfehler mehrerer Jobs stehen einmal da. Laborvergleich lokal mit absichtlich verschlechtertem Bericht geprüft (Rauschen +19 % ergibt eine Warnung). Im zweiten Lauf auf main (S-006 der anderen Sitzung) nannte die Lauf-Seite sofort die zwei roten Tests in `SelfTestTest` und die geänderten Laborzeilen; der Zeilenvergleich verrutschte dabei bei einer neuen Zeile und gleicht seitdem Zeile für Zeile ab |
 | K8 | `ci-logs-fast` schreibt nur der Bericht-Job; `fast.log` bleibt als Zusammenfassung aller Protokolle |
@@ -101,6 +102,21 @@ Umgesetzt am 10. Oktober 2026 auf dem Zweig `probe/s-005` (5 Probeläufe), danac
   vor dem Umbau). Behoben in `core/pure/build.gradle.kts`.
 - Lint fand unter anderem `UnsafeOptInUsageError` (Camera2-Interop ohne `@OptIn`) und `RestrictedApi`
   (`SurfaceRequest.isServiced`) im Kamera-Adapter. Sie stehen in der Baseline und sollten bei Gelegenheit behoben werden.
+
+**Unabhängige Prüfung** (zweiter Agent, nur gegen Spec und Regeln), sechs Befunde, alle behoben:
+1. Mittel: Die detekt-Baseline fasst gleiche Funde ohne Zeilennummer zusammen; ein weiteres `catch (e: Exception)` im
+   Kamera-Adapter blieb grün (lokal nachgestellt). Jetzt zählt `detekt_zaehlung.py` je Regel und Datei gegen
+   `funde.txt`; derselbe Fall meldet "8-mal, erlaubt 7". Die Zählung prüft sich an der Probe selbst.
+2. Niedrig: Lint galt als grün, wenn Gradle ohne Taskangabe scheiterte. Jetzt muss jedes Modul mit Baseline ein
+   Ergebnis haben, und ein Gradle-Fehler ohne Taskangabe ist rot.
+3. Niedrig: Der Bericht lief auch in abgebrochenen Läufen und ersetzte `ci-logs-fast` durch Teilprotokolle. Jetzt nur
+   in nicht abgebrochenen Läufen; fehlt ein neuer Laborbericht, bleibt der letzte als Vergleich erhalten.
+4. Niedrig: Warnungen gab es nur für Tabellenwerte. "Geist" zählt jetzt als Betrag; geänderte Textzeilen nennen die
+   größte Änderung ihrer Zahlen ab 10 % als Hinweis (dort hängt die gute Richtung von der Szene ab, deshalb keine Warnung).
+5. Niedrig: Lint-Prüfungen, die vom Datum oder von Online-Daten abhängen (`ExpiredTargetSdkVersion`, Google SDK Index),
+   sind abgeschaltet; die App ist nicht im Play Store.
+6. Niedrig: Die A1-Erweiterung fehlte im Kopf der Spec; nachgetragen.
+Dazu: Konsist ignoriert `config/` jetzt ausdrücklich, auch falls dort später Kotlin-Dateien liegen.
 
 **Offen:** Die Probezweige `probe/s-005` und `probe/s-005-rot` lassen sich aus dieser Umgebung nicht löschen (der
 Proxy sperrt das Löschen von Zweigen); sie stören nicht.

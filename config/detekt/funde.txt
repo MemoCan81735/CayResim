@@ -1,0 +1,8 @@
+# S-005: erlaubte detekt-Funde je Regel und Datei (Stand 10. Oktober 2026). Jeder Fund mehr macht den Analyse-Job rot.
+# Sinkt eine Anzahl, darf die Zahl hier mitsinken; steigen darf sie nur mit Begruendung im Spec.
+1 EmptyElseBlock core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt
+1 EmptyElseBlock core/pure/src/main/kotlin/app/cayresim/core/pure/ImageQuality.kt
+7 SwallowedException core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt
+4 SwallowedException core/processing/src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt
+7 TooGenericExceptionCaught core/camera/src/main/kotlin/app/cayresim/core/camera/CameraXCameraAdapter.kt
+3 TooGenericExceptionCaught core/processing/src/main/kotlin/app/cayresim/core/processing/GlProcessingAdapter.kt

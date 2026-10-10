@@ -13,7 +13,7 @@ class ProjectArchitectureTest {
 
     private fun projectFiles(): List<SourceFile> = Konsist.scopeFromProject().files
         .map { SourceFile(File(it.path).relativeTo(root).invariantSeparatorsPath, it.text) }
-        .filter { "/src/main/" in it.path && !it.path.startsWith("build-logic/") }
+        .filter { "/src/main/" in it.path && !it.path.startsWith("build-logic/") && !it.path.startsWith("config/") }
 
     @Test fun `Projekt hat keine Architekturverstoesse`() {
         val files = projectFiles()

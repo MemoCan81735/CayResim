@@ -160,12 +160,25 @@ def compare(prev_text, cur_text):
             continue
         name, col = key
         measure = col if col in LOWER_IS_BETTER | HIGHER_IS_BETTER else name
+        if measure == "Geist":  # kann negativ sein, zaehlt als Betrag wie im Test
+            a, b = abs(a), abs(b)
         share = (b - a) / max(abs(a), 1e-9)
         worse = (measure in LOWER_IS_BETTER and share > WARN_SHARE) or (measure in HIGHER_IS_BETTER and share < -WARN_SHARE)
         warnings += worse
         label = name if name == col else f"{name}, {col}"
         rows.append(f"| {label} | {a:g} | {b:g} | {share * 100:+.0f} % | {'Warnung: schlechter' if worse else ''} |")
     return rows, warnings, text_changes(other_lines(prev_text), other_lines(cur_text))[:10]
+
+
+def largest_change(old_line, new_line):
+    """Groesste relative Aenderung der Zahlen an gleicher Stelle. Die gute Richtung haengt hier von der Szene ab
+    (ein lichtloser Raum soll dunkel, ein Vorhang hell bleiben), deshalb nur ein Hinweis, keine Warnung."""
+    nums = re.compile(r"-?\d+(?:\.\d+)?")
+    a, b = [float(x) for x in nums.findall(old_line)], [float(x) for x in nums.findall(new_line)]
+    if len(a) != len(b) or not a:
+        return ""
+    share = max((abs(y - x) / max(abs(x), 1e-9) for x, y in zip(a, b)), default=0)
+    return f"\n  (groesste Aenderung {share * 100:.0f} %, bitte pruefen)" if share > WARN_SHARE else ""
 
 
 def text_changes(old, new):
@@ -175,7 +188,7 @@ def text_changes(old, new):
         if tag == "equal":
             continue
         if tag == "replace" and i2 - i1 == j2 - j1:
-            out += [f"- vorher: {o}\n  jetzt: {n}" for o, n in zip(old[i1:i2], new[j1:j2])]
+            out += [f"- vorher: {o}\n  jetzt: {n}{largest_change(o, n)}" for o, n in zip(old[i1:i2], new[j1:j2])]
         else:
             out += [f"- entfallen: {o}" for o in old[i1:i2]] + [f"- neu: {n}" for n in new[j1:j2]]
     return out

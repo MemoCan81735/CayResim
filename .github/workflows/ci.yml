@@ -167,7 +167,8 @@ jobs:
   bericht:
     name: Bericht
     needs: [kern, oberflaeche, analyse, apk-debug, apk-release]
-    if: always()
+    # Nicht in abgebrochenen Laeufen: sonst ersetzen Teilprotokolle den letzten vollstaendigen Stand in ci-logs-fast
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -196,6 +197,10 @@ jobs:
           for j in kern oberflaeche apk-debug apk-release; do [ -d "in/out-$j" ] && cp -r "in/out-$j/." pub/; done
           [ -d in/out-analyse ] && cp -r in/out-analyse pub/analyse
           cat pub/kern.log pub/oberflaeche.log pub/apk-debug.log pub/apk-release.log > pub/fast.log 2>/dev/null || true
+          # Ohne neuen Laborbericht (Kern nicht bis zum Testlabor gekommen) bleibt der letzte als Vergleich erhalten
+          if [ ! -f pub/quality-report.md ] && [ -f prev.md ]; then
+            cp prev.md pub/quality-report.md; echo "uebernommen aus $PREV_LABEL" > pub/quality-report-quelle.txt
+          fi
           BR=ci-logs-fast; [ "$GITHUB_REF" != refs/heads/main ] && BR=ci-logs-probe
           cd pub && git init -q && git checkout -q -b "$BR"
           git config user.name ci && git config user.email ci@local

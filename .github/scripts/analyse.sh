@@ -32,14 +32,20 @@ if curl -sSfL -o detekt.jar "https://github.com/detekt/detekt/releases/download/
   else
     say "detekt-Probe: NICHT erkannt"; fail=1
   fi
+  # Selbstpruefung der Zaehlung: der Probe-Fund ist in funde.txt nicht erlaubt und muss gemeldet werden
+  if python3 -I .github/scripts/detekt_zaehlung.py out/detekt-probe.txt config/detekt/funde.txt > /dev/null 2>&1; then
+    say "detekt-Zaehlung: Probe NICHT gemeldet"; fail=1
+  fi
   "${D[@]}" --input app,core,feature --excludes "**/build/**,**/test/**,**/androidTest/**,**/testFixtures/**" \
-    --baseline config/detekt/baseline.xml --report txt:out/detekt.txt > out/detekt.log 2>&1
+    --report txt:out/detekt-alle.txt > out/detekt.log 2>&1
   rc=$?
-  case $rc in
-    0) say "detekt: keine neuen Funde" ;;
-    2) say "detekt: $(grep -c . out/detekt.txt) neue Funde"; fail=1 ;;
-    *) say "detekt: Programmfehler (Exit $rc, siehe detekt.log)"; fail=1 ;;
-  esac
+  if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
+    say "detekt: Programmfehler (Exit $rc, siehe detekt.log)"; fail=1
+  elif python3 -I .github/scripts/detekt_zaehlung.py out/detekt-alle.txt config/detekt/funde.txt > out/detekt.txt 2> out/detekt-hinweise.txt; then
+    say "detekt: keine neuen Funde"
+  else
+    say "detekt: $(grep -c . out/detekt.txt) Regeln mit mehr Funden als erlaubt (funde.txt)"; fail=1
+  fi
 else
   say "detekt: Herunterladen oder Pruefsumme gescheitert"; fail=1
 fi
@@ -47,6 +53,7 @@ fi
 # 3. Android Lint, mit dem Probe-Modul in einem Aufruf
 touch .lint-start
 gradle --continue lintDebug -Pprobes > out/lint.log 2>&1
+lint_rc=$?
 failed_modules=$(grep -oE "Execution failed for task '[^']+'" out/lint.log | sed -E "s/.*task '(.*):[^:]+'/\1/" | sort -u)
 while read -r f; do
   m=${f#./}; m=${m%%/build/*}; cp "$f" "out/lint/$(echo "$m" | tr '/' '_').xml"
@@ -59,8 +66,17 @@ fi
 new_baselines=$(find app core feature -name lint-baseline.xml -newer .lint-start 2> /dev/null)
 for b in $new_baselines; do mkdir -p "out/baselines/$(dirname "$b")"; cp "$b" "out/baselines/$b"; done
 real_failed=$(echo "$failed_modules" | grep -vx ":probe-lint" | grep . || true)
+# Jedes Modul mit Baseline muss ein Ergebnis haben; sonst hat Lint dort nicht geprueft (unabhaengige Pruefung S-005)
+missing=""
+while read -r b; do
+  m=$(dirname "$b"); [ -f "out/lint/$(echo "$m" | tr '/' '_').xml" ] || missing="$missing $m"
+done < <(find app core feature -name lint-baseline.xml)
 if [ -n "$new_baselines" ]; then
   say "Lint: Baseline neu erzeugt in $(echo "$new_baselines" | wc -l) Modulen, muss uebernommen werden (out/baselines)"; fail=1
+elif [ -n "$missing" ]; then
+  say "Lint: kein Ergebnis fuer$missing (Gradle Exit $lint_rc, siehe lint.log)"; fail=1
+elif [ -z "$failed_modules" ] && [ "$lint_rc" -ne 0 ]; then
+  say "Lint: Gradle scheiterte ohne Taskangabe (Exit $lint_rc, siehe lint.log)"; fail=1
 elif [ -n "$real_failed" ]; then
   say "Lint: neue Funde oder Fehler in $(echo "$real_failed" | tr '\n' ' ')"; fail=1
 else
