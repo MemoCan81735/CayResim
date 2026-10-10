@@ -267,6 +267,18 @@ class SelfTestUseCaseTest {
         assertEquals(null, ois(FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }))
     }
 
+    @Test fun `S-007 Selbsttest S24+ ohne Sucher liest den Stabilisator nach der ersten Aufnahme`() = runTest {
+        // Geraet 10.10., 8:48 Uhr: vor der ersten Aufnahme kein Ergebnis, danach meldet der normale Modus den Wert,
+        // der Samsung-Modus NIGHT loescht ihn wieder; vorher stand "kein Aufnahmeergebnis"
+        val cam = FakeCameraBoundary().apply {
+            deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilizationOnCapture = OisState.ON
+        }
+        val report = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())()
+        assertEquals(OisState.ON, report.items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+        // die Reihenfolge der Anzeige bleibt: Geraetewerte vor den Aufnahmen
+        assertTrue(report.items.indexOfFirst { it.check == SelfTestCheck.DEVICE } < report.items.indexOfFirst { it.check == SelfTestCheck.MODE_CAPTURE })
+    }
+
     @Test fun `Fehlerfall Schwarzwert 0 ergibt 8 Bit ohne Probenacht, auch ohne Nullen`() = runTest {
         // S-002 K4: S24+ meldet "Schwarz: 0/0/0/0"; im hellen Raum 0,0 % Nullen
         val rig = Rig()
