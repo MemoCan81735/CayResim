@@ -199,6 +199,7 @@ class MicTestTest {
         assertEquals("-inf", db(Double.NEGATIVE_INFINITY))
         assertEquals("-60,0", db(-60.0))
         assertEquals("+0,29", signed2(0.2917))
+        assertEquals("0,00", app.cayresim.feature.settings.ui.dec2(app.cayresim.feature.settings.ui.noNegativeZero(-0.001)))
     }
 
     /** Hausregel: keine Gedankenstriche in den neuen Texten. */

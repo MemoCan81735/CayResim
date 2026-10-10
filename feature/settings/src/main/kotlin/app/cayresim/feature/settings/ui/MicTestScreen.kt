@@ -174,7 +174,7 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
             yesNoText(s.distinct),
             s.levelDb.joinToString(" / ") { db(it) },
             dec1(s.identicalShare * 100),
-            dec2(s.correlation),
+            dec2(noNegativeZero(s.correlation)),
         )
         Text(detail, style = MaterialTheme.typography.bodySmall)
         if (s.failure == null) Text(
@@ -253,6 +253,8 @@ internal fun dec2(v: Double): String = String.format(Locale.GERMANY, "%.2f", v)
 internal fun signed0(v: Double): String = String.format(Locale.GERMANY, "%+.0f", v)
 internal fun signed1(v: Double): String = String.format(Locale.GERMANY, "%+.1f", v)
 internal fun signed2(v: Double): String = String.format(Locale.GERMANY, "%+.2f", v)
+/** -0,00 bei Werten knapp unter null vermeiden. */
+internal fun noNegativeZero(v: Double): Double = if (kotlin.math.abs(v) < 0.005) 0.0 else v
 internal fun cm(meters: Double): String = String.format(Locale.GERMANY, "%.1f", meters * 100)
 
 /** Pegel in dBFS; Stille als "stumm" ist Sache der Anzeige, hier "-inf". */
