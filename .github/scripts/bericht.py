@@ -19,7 +19,8 @@ JOBS = [  # (needs-Schluessel, Name im Workflow, Ordner)
     ("kern", "Kern (JVM)", "out-kern"),
     ("oberflaeche", "Oberflaeche (Robolectric)", "out-oberflaeche"),
     ("analyse", "Analyse", "out-analyse"),
-    ("apk", "APK", "out-apk"),
+    ("apk-debug", "APK Debug", "out-apk-debug"),
+    ("apk-release", "APK Release (R8)", "out-apk-release"),
 ]
 RESULT = {"success": "gruen", "failure": "rot", "cancelled": "abgebrochen", "skipped": "uebersprungen"}
 WORKDIR = re.compile(r"(file://)?/home/runner/work/[^/]+/[^/]+/")
