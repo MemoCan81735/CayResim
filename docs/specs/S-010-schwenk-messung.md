@@ -1,6 +1,6 @@
 # S-010: Schwenk-Messung (Ton und Lage gleichzeitig aufnehmen)
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe durch Arslan
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 15:00 Uhr: neue Regel R29, neues Speichern von Lage-CSV und Meta-JSON, ein Release)
 **Anlass:** Wunsch Arslan (10.10., 14:57 Uhr): "Schwenk-Ortung", Funktion F12. Zwei Handy-Mikrofone liefern je Messung
 nur den Winkel zur Mikrofonachse (S-008, S-009: links −0,48 ms, rechts +0,40 ms, quer gehalten). Die Quelle liegt
 damit auf einem Kegel um die Achse; vorne und hinten, oben und unten sind nicht zu unterscheiden. Dreht man das Handy,
@@ -82,7 +82,7 @@ Am Fotografieren ändert sich nichts.
 | Nur Zahlen, Schlüssel, Enums | `MotionSample` und Ergebnis nur Zahlen und Enums (R23) |
 | Fehler und Ausweichweg | fehlender Sensor, kein Zeitbezug, zu wenige Messungen, zu einseitig: je eigener Ergebnisgrund, kein Absturz (R14, R24) |
 | Abbruch und Freigabe | Sensor-Abmeldung in `awaitClose`, Mikrofon wie bisher; Test K6 und K7 (R17) |
-| Puffer | 25 s Stereo 16 Bit = 4,8 MB, ein Puffer, ein Besitzer; Lagewerte etwa 2.500 × 8 Zahlen (R19) |
+| Puffer | 25 s Stereo 16 Bit = 4,8 MB, ein Besitzer; die Auswertung liest Fenster direkt aus dem PCM (zwei Fensterpuffer, dazu 0,6 MB für die Klopfphase); die WAV mit Zusatzblöcken etwa 5,7 MB. Spitze etwa 11 MB, gerechnet, nicht gemessen; Lagewerte etwa 10.000 × 6 Zahlen (R19) |
 | Main-Thread | Aufnahme und Speichern auf IoDispatcher, Rechnen auf ComputeDispatcher (R16, R18) |
 | Gespeicherte Daten | CSV mit Kopfzeile `format=v1`, JSON mit `"format": 1`; die App liest sie nicht zurück (R26) |
 | Zeit und Speicher | Auswertung höchstens 2 s (K5), Lauf 25 s plus Speichern (R27) |
@@ -101,6 +101,51 @@ Am Fotografieren ändert sich nichts.
 Etwa 2 bis 3 kurze Läufe (neue Screenshots, neues Modul), 1 Release mit Emulator (etwa 30 Minuten). Unabhängige
 Prüfung durch einen zweiten Agenten (deutlich über 150 Zeilen, geschätzt 700 bis 900). Gerätetest durch Arslan: zwei
 Schwenk-Messungen (Quelle vorne, Quelle rechts), Screenshots und den Ordner schicken (etwa 5 MB je Lauf).
+
+## Umsetzung
+Abweichungen vom Entwurf, mit Grund:
+- **Eine Datei statt drei:** Die Medienablage erlaubt unter `Recordings/` nur Tondateien. Lage (CSV, `format=v1`) und
+  Kenndaten (JSON, `"format": 1`) stehen deshalb als Zusatzblöcke `lage` und `meta` in der WAV-Datei
+  `schwenk-v1.wav`. Abspielprogramme überspringen sie; `Wav.chunks` liest sie (Test `S-010 WAV mit Zusatzbloecken`).
+  Inhalt wie freigegeben, nur ein Behälter.
+- **Fensterauswahl nur über die GCC-PHAT-Spitze (≥ 0,1):** Die Quelle tönt die ganze Zeit; ein Pegel über dem
+  Grundrauschen der Aufnahme hätte fast alle Fenster verworfen. Stille ergibt Spitze 0 und fällt weg (K4).
+- **Mindest-Abdeckung 0,02 statt 0,05:** Ein Schwenk von ±50° seitlich und ±35° in der Höhe ergab 0,042, die
+  Richtung war trotzdem auf wenige Grad genau. Flach oder ohne Drehung bleibt 0 (K2).
+- **Klopfer im Ton mit niedrigeren Schwellen** (12 dB über Grundrauschen, 10 dB Anstieg statt 18 und 15), weil die
+  Geräuschquelle beim Klopfen schon läuft.
+- Der Sensor wird angemeldet, bevor die Aufnahme beginnt (`CoroutineStart.UNDISPATCHED`); sonst fehlten die ersten
+  Lagewerte (im UseCase-Test aufgefallen).
+- Der Mikrofon-Test bekommt einen zweiten Knopf; dadurch ändern sich alle Screenshot-Grundlagen des Mikrofon-Tests
+  (`mictest_*`), neu sind `sweep_guide`, `sweep_prompt`, `sweep_result`.
+
+Tests zuerst rot: `SweepMathTest`, `SweepUseCaseTest`, `WavTest > S-010 ...` und die R29-Proben scheiterten ohne den
+Code (Kompilierfehler, 147 Fehlermeldungen bei `SweepMathTest`). Danach lokal grün: 158 Tests in `:core:pure`
+(Auswertung von 25 s: 356 ms, K5), 5 in `SweepUseCaseTest`, Architektur 45 Proben, 0 Verstöße in 75 Dateien.
+
+Unabhängige Prüfung (zweiter Agent, 10.10.), kein blockierender Befund; behoben:
+- W1: R28 und R29 ließen sich mit einem Sternimport (`import android.hardware.*`) umgehen; die Codeprüfung meldete
+  `SensorPrivacyManager` fälschlich. Jetzt Sternimport erkannt, Code mit Wortgrenze; vier neue Proben.
+- W2: ein Grund für drei Ursachen ("zu wenige Messungen" auch bei Mono und bei falschem Zeitbezug). Jetzt eigene
+  Gründe `NO_STEREO`, `NO_POSE`, dazu "Messfenster mit Signal" und "davon mit Lage" getrennt im Ergebnis und in `meta`.
+- W3: Startlage genau am Ende der Klopfphase war bei Schwenkbeginn schon gedreht (bis 12°). Jetzt Mittel der Lagen
+  von 0,5 s bis 2,5 s, Test mit Drehung ab 2,8 s.
+- W4: Spitzenspeicher etwa 28 MB durch Kopien der ganzen Aufnahme. Jetzt Fenster direkt aus dem PCM, etwa 11 MB.
+- W6: Änderungsprotokoll, Funktionsliste, R29 in den Architekturvorgaben (Projektdokument und Tab im Claude Doc).
+- G2: Lage und Beschleunigung mit 200 Hz (Grenze ohne Berechtigung); Klopfer werden mit dem nächsten Partner
+  innerhalb ±150 ms gepaart, ein falscher Treffer im Ton bleibt ohne Partner (Test mit Knacken bei 0,4 s).
+- G3: Drehvektor ohne Kompass (`TYPE_GAME_ROTATION_VECTOR`) bevorzugt, Rückfall mit Kompass, Quelle in `meta`;
+  `uses-feature` für das Gyroskop.
+- G4: nach Abbruch während der Auswertung wird nichts gespeichert (`yield`, `ensureActive`), Test vorher rot.
+- G5: kein `NaN` im JSON. G6: toter Zweig und Liste je Drehung entfernt. G7: Emulatortests verlangen den
+  Beschleunigungssensor und schreiben aus, ob der Zeitbezug genau war. G8: `SweepResult` statt `Result`, Hinweis bei
+  fehlender Startlage, Text "Dauer dieses Schritts" statt einer Zeit, die nicht herunterzählt.
+- G1 (Sensor bei echtem Adapter wenige ms nach Aufnahmebeginn angemeldet) als Kommentar festgehalten; unschädlich,
+  weil Lagen erst ab dem Ende der Klopfphase gebraucht werden.
+- G9: Eine Datei mit Zusatzblöcken statt drei Dateien wird Arslan zur Bestätigung genannt.
+
+CI auf `probe/s010` (38055170819, 38056315999): Kern, Analyse (Lint, detekt, Fallen) und beide APKs grün; rot nur
+die erwarteten 9 Screenshots (3 neu, 6 Mikrofon-Test wegen des neuen Knopfs). Alle angesehen und übernommen.
 
 ## Ergebnis
 Noch offen.

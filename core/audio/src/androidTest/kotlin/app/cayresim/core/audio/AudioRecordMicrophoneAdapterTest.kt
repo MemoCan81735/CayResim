@@ -56,6 +56,19 @@ class AudioRecordMicrophoneAdapterTest {
         Unit
     }
 
+    /** S-010 K7: Zeitbezug des ersten Frames in der Zeitbasis seit dem Einschalten, genau oder grob. */
+    @Test fun s010Zeitbezug() = runBlocking {
+        val before = android.os.SystemClock.elapsedRealtimeNanos()
+        val r = adapter.record(MicRequest(AudioSourceKey.MIC, millis = 1_000))
+        val after = android.os.SystemClock.elapsedRealtimeNanos()
+        val c = assertIs<MicRecordResult.Ok>(r, "Ergebnis $r").capture
+        val start = assertNotNull(c.startBootNanos, "Zeitbezug fehlt")
+        // im Testprotokoll sichtbar, ob der genaue Weg (Zeitstempel) oder der grobe lief (Zweitpruefung G7)
+        println("S-010 Zeitbezug: genau=${c.timeExact}, Start ${(start - before) / 1_000_000} ms nach Aufruf")
+        assertTrue(start in before..after, "Start $start nicht zwischen $before und $after (genau: ${c.timeExact})")
+        assertTrue(after - start >= 900_000_000L, "erster Frame mindestens 0,9 s vor dem Ende")
+    }
+
     @Test fun s008InventarStuerztNichtAb() = runBlocking {
         val inv = adapter.inventory()
         // Der Emulator meldet mindestens ein Eingabegeraet; Mikrofonliste darf leer sein

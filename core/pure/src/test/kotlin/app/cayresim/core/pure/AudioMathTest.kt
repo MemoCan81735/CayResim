@@ -278,6 +278,23 @@ class WavTest {
         assertEquals(pcm.toList(), back.samples.toList())
     }
 
+    @Test fun `S-010 WAV mit Zusatzbloecken`() {
+        val pcm = ShortArray(6) { (it * 1000 - 2500).toShort() }
+        val lage = "format=v1\nROTATION,1,1.0,0.0,0.0,0.0\n".toByteArray()
+        val meta = "{\"format\": 1}".toByteArray() // ungerade Laenge: Fuellbyte
+        val bytes = Wav.encode(pcm, 48_000, 2, linkedMapOf("lage" to lage, "meta" to meta))
+        val d = assertNotNull(Wav.decode(bytes))
+        assertEquals(pcm.toList(), d.samples.toList(), "Tondaten unveraendert")
+        val c = Wav.chunks(bytes)
+        assertEquals(listOf("lage", "meta"), c.keys.toList())
+        assertEquals(String(lage), String(c.getValue("lage"))); assertEquals(String(meta), String(c.getValue("meta")))
+        fun le32(o: Int) = (0 until 4).sumOf { (bytes[o + it].toInt() and 0xFF) shl (8 * it) }
+        assertEquals(bytes.size - 8, le32(4), "RIFF-Groesse mit Zusatzbloecken")
+        assertEquals(0, bytes.size % 2)
+        assertEquals(emptyMap(), Wav.chunks(Wav.encode(pcm, 48_000, 2)))
+        assertEquals(emptyMap(), Wav.chunks(ByteArray(10)))
+    }
+
     @Test fun `S-008 WAV Randfaelle`() {
         assertEquals(44, Wav.encode(ShortArray(0), 44_100, 1).size)
         assertNull(Wav.decode(ByteArray(10)))

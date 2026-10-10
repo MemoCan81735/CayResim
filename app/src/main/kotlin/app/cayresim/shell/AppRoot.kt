@@ -11,6 +11,7 @@ import androidx.navigation3.ui.NavDisplay
 import app.cayresim.feature.camera.ui.CameraRoute
 import app.cayresim.feature.gallery.ui.GalleryRoute
 import app.cayresim.feature.settings.ui.MicTestRoute
+import app.cayresim.feature.settings.ui.SweepRoute
 import app.cayresim.feature.settings.ui.SelfTestRoute
 import app.cayresim.feature.settings.ui.SettingsContent
 import app.cayresim.feature.settings.ui.GuideContent
@@ -46,7 +47,8 @@ fun AppRoot() {
             }
             entry<GuideKey> { GuideContent(onBack = { control.back() }) }
             entry<SelfTestKey> { SelfTestRoute(onBack = { control.back() }) }
-            entry<MicTestKey> { MicTestRoute(onBack = { control.back() }) }
+            entry<MicTestKey> { MicTestRoute(onBack = { control.back() }, onSweep = { control.open(SweepKey) }) }
+            entry<SweepKey> { SweepRoute(onBack = { control.back() }) }
         },
     )
 }
