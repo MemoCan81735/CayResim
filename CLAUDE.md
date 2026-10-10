@@ -6,17 +6,21 @@ Testkonzept (`claude/foto-app-testkonzept.md`). Festgelegt mit Arslan am 9. Okto
 
 ## 1. Ablauf jeder Änderung
 
-1. **Anlass festhalten:** Befund vom Gerät, Prüfbefund oder Wunsch, mit Messwerten, wenn es welche gibt.
+1. **Anlass festhalten:** Befund vom Gerät, Prüfbefund oder Wunsch, mit Messwerten, wenn es welche gibt. Jede neue
+   Funktion kommt sofort in die Funktionsliste `docs/ideen.md`, auch wenn sie erst geplant ist, mit Verweis auf ihren
+   Detailplan; sonst übersieht der Gesamtplan sie.
 2. **Spec schreiben** (`docs/specs/S-NNN-name.md`, Vorlage `docs/specs/VORLAGE.md`): Ziel, Akzeptanzkriterien als
    Zahlen, was ausdrücklich nicht geändert wird, betroffene Schichten und Regeln, Risiken, Kosten in GitHub-Minuten.
    Kleine Korrekturen unter etwa 20 Zeilen ohne neues Verhalten brauchen keine eigene Spec, aber einen Eintrag im
    Änderungsprotokoll.
 3. **Freigabe einholen**, bevor Code entsteht, wenn eines davon zutrifft: neue Ausnahme oder Regeländerung, neues
    Speichern von Daten, neue Kamera-Sitzung oder neue Berechtigung, mehr als ein Release-Lauf, Änderung am
-   Bildergebnis, die man auf dem Foto sieht.
+   Bildergebnis, die man auf dem Foto sieht. Die Freigabe wird sofort mit Datum und Uhrzeit in den Status der Spec
+   eingetragen, weil die Zweitprüfung sonst eine fehlende Freigabe meldet.
 4. **Test zuerst (rot):** Aus jedem Akzeptanzkriterium wird ein Test, bevor der Code entsteht. Er muss mit dem alten
    Code scheitern. Für `:core:pure` läuft das lokal: `tools/run-pure-tests.sh` (alle reinen Rechentests in etwa
-   einer Minute, vor jedem Push). Für Android, Compose und Screenshots gibt es lokal keinen Gradle-Lauf; als Nachweis
+   einer Minute, vor jedem Push); für Boundary und Control `tools/run-core-tests.sh <Testklassen>`, für die
+   Architekturregeln `tools/run-architecture-check.sh`. Für Android, Compose und Screenshots gibt es lokal keinen Gradle-Lauf; als Nachweis
    für "rot" gilt dort einer von diesen: ein CI-Lauf, das Python-Modell mit derselben Rechnung oder eine schriftliche
    Begründung im Spec, warum der alte Code scheitern muss. Ein Test, der nie rot sein konnte, zählt nicht.
 5. **Code (grün):** die kleinste Änderung, die die Tests erfüllt.
@@ -126,7 +130,7 @@ Jede Maßnahme wird mit eigener Spec umgesetzt, sofern sie Code betrifft. Der St
 
 | Nr. | Maßnahme | Wirkung | Status |
 |---|---|---|---|
-| V1 | Lokaler Gradle-Lauf für Claude: Netzwerkfreigabe der Cloud-Umgebung für `repo.maven.apache.org`, `dl.google.com`, `plugins.gradle.org`, `services.gradle.org` | Kompilieren und JVM-Tests vor dem Push statt über CI | teilweise seit 10.10.: `tools/run-pure-tests.sh` kompiliert und prüft `:core:pure` ohne Netz mit dem Kotlin-Compiler der Gradle-Installation; für Android-Module weiter offen, Einstellung durch Arslan |
+| V1 | Lokaler Gradle-Lauf für Claude: Netzwerkfreigabe der Cloud-Umgebung für `repo.maven.apache.org`, `dl.google.com`, `plugins.gradle.org`, `services.gradle.org` | Kompilieren und JVM-Tests vor dem Push statt über CI | teilweise seit 10.10.: `tools/run-pure-tests.sh` kompiliert und prüft `:core:pure` ohne Netz mit dem Kotlin-Compiler der Gradle-Installation; seit S-008 zusätzlich Boundary, Control und Architekturregeln (`tools/run-core-tests.sh`, `tools/run-architecture-check.sh`); für Android-Module weiter offen, Einstellung durch Arslan |
 | V2 | Öffentlich oder privat entscheiden. Öffentlich: Actions-Minuten auf Standard-Runnern frei, Emulator bei jedem Push, Abschnitt 6 entfällt weitgehend. Privat: Abschnitt 6 bleibt | Keine Sparlogik ohne Grund | entschieden 9.10.: öffentlich; CI bleibt kurz (Abschnitt 6) |
 | V3 | Szenenbibliothek: Debug-Funktion "Szene aufzeichnen" speichert die Serie (RAW oder 8 Bit) mit Metadaten und dazu ein Samsung-Foto derselben Szene. 10 bis 20 Szenen ohne Personen, privat abgelegt, nie im öffentlichen Repository. Ein JVM-Lauf rechnet alle Szenen und schreibt einen Bericht je Szene | Jede Parameteränderung wird an allen Szenen gemessen, nicht an einer | offen, Spec (neues Speichern von Daten) |
 | V4 | Varianten je Aufnahme: Im Debug-Modus wird eine Aufnahme mit 2 bis 3 Parametersätzen gerechnet und nebeneinander gespeichert | Ein Gerätetest liefert mehrere Datenpunkte ohne neue Version | offen, Spec |
