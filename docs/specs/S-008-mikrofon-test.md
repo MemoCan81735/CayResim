@@ -1,6 +1,6 @@
 # S-008: Mikrofon-Test
 
-**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 10:13 Uhr: neue Berechtigung Mikrofon, neues Speichern der WAV-Dateien, neue Regel R28), umgesetzt, CI offen
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 10:13 Uhr: neue Berechtigung Mikrofon, neues Speichern der WAV-Dateien, neue Regel R28), umgesetzt, Gerätetest offen
 **Anlass:** Wunsch Arslan (10.10.): Geräusche mit den Mikrofonen des S24+ orten. Vorprobe mit einem Video der
 Samsung-Kamera (10.10., 10:02 Uhr, quer gehalten, je drei Klatscher links, rechts, vorne, hinten, schräg in etwa 2 m):
 Der Ton hat zwei verschiedene Kanäle (Korrelation 0,17 über die ganze Aufnahme), ist aber stark bearbeitet. Links und
@@ -120,7 +120,12 @@ Unabhängige Prüfung (zweiter Agent, 10.10.): behoben wurden
 - zu lockere Grenzen in K1 und ein K13, der nie rot werden konnte,
 - doppeltes Mono mit leichtem Zittern galt als Stereo (jetzt zusätzlich Korrelation unter 0,99, K2).
 
-Offen: Der Emulator läuft mit `-noaudio`; ob `AudioRecord` dort startet, zeigt erst der CI-Lauf.
-
 ## Ergebnis
-Offen.
+CI (10.10.): Kern, Analyse (Lint, detekt, Fallen), APK Debug und Release grün im ersten Lauf (38039088436), ebenso der
+Emulator: trotz `-noaudio` startet `AudioRecord` dort, die Aufnahme von 2 s dauerte 2,2 s, Abbruch nach 0,8 s gibt das
+Mikrofon frei, die WAV-Datei wird gespeichert und unter ihrem Namen wiedergefunden. Danach drei kurze Läufe nur für
+Screenshot-Grundlagen. Dabei aufgefallen: das künstliche Rauschen im Test nahm `hashCode()` der Anfrage als Startwert,
+der bei Enums von Lauf zu Lauf wechselt; das Ergebnis-Bild war dadurch nicht reproduzierbar (jetzt fester Startwert).
+Außerdem "-0,00" und "-0" in der Anzeige bereinigt. 526 Tests.
+
+Gerätetest offen: Mikrofon-Test in einem ruhigen Raum, Screenshots und WAV-Ordner.
