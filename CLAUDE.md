@@ -1,7 +1,7 @@
 # CayResim: Arbeitsweise
 
 Diese Regeln gelten für jede Änderung am Code, an den Tests und an der Build-Konfiguration. Sie ergänzen die
-Architekturvorgaben (`claude/foto-app-architekturvorgaben.md`, Regeln R1 bis R27, Ausnahmen A1 bis A3) und das
+Architekturvorgaben (`claude/foto-app-architekturvorgaben.md`, Regeln R1 bis R28, Ausnahmen A1 bis A3) und das
 Testkonzept (`claude/foto-app-testkonzept.md`). Festgelegt mit Arslan am 9. Oktober 2026.
 
 ## 1. Ablauf jeder Änderung

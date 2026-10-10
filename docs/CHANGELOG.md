@@ -2,6 +2,14 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Mikrofon-Test (10. Oktober 2026, S-008)
+- Neu unter Einstellungen: "Mikrofon-Test". Liest die Mikrofone des Geräts, nimmt mit jeder Audioquelle 2 s auf und
+  prüft, ob zwei getrennte Kanäle ankommen. Danach eine angesagte Klatsch-Probe (links, rechts, vorne) mit Laufzeit und
+  Winkel je Klatscher. Alle Aufnahmen als WAV unter Recordings/CayResim/Mikrotest-Datum.
+- Neue Berechtigung Mikrofon, nur im Mikrofon-Test abgefragt. Neue Regel R28: nur das neue Modul `:core:audio` kennt die
+  Tonaufnahme. Am Fotografieren ändert sich nichts.
+- Gerät: Mikrofon-Test in einem ruhigen Raum, Screenshots des Ergebnisses und den WAV-Ordner schicken.
+
 ## Funktionsliste: Raumscan (10. Oktober 2026)
 - `docs/ideen.md`: F8 Raumscan und F9 Raumscan mit ARCore aufgenommen, beide nach der Nacht. Keine Änderung an der App.
 

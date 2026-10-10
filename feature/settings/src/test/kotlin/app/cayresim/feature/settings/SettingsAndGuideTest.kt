@@ -31,7 +31,7 @@ class SettingsAndGuideTest {
     private val events = mutableListOf<String>()
 
     private fun settings() = compose.setContent {
-        CayResimTheme { SettingsContent(onGuide = { events += "guide" }, onSelfTest = { events += "selftest" }, onBack = { events += "back" }) }
+        CayResimTheme { SettingsContent(onGuide = { events += "guide" }, onSelfTest = { events += "selftest" }, onBack = { events += "back" }, onMicTest = { events += "mictest" }) }
     }
 
     @Test fun bild_einstellungen() { settings(); compose.onRoot().captureRoboImage("src/test/screenshots/settings.png") }
@@ -40,8 +40,9 @@ class SettingsAndGuideTest {
         settings()
         compose.onNodeWithTag("settings_guide").performClick()
         compose.onNodeWithTag("settings_selftest").performClick()
+        compose.onNodeWithTag("settings_mictest").performClick()
         compose.onNodeWithTag("back").performClick()
-        assertEquals(listOf("guide", "selftest", "back"), events)
+        assertEquals(listOf("guide", "selftest", "mictest", "back"), events)
     }
 
     @Test fun bild_anleitung_anfang_dunkel() {

@@ -22,7 +22,7 @@ object ArchitectureRules {
         path.startsWith("core/entity/") -> Layer.ENTITY
         path.startsWith("core/boundary/") -> Layer.BOUNDARY
         path.startsWith("core/control/") -> Layer.CONTROL_CORE
-        path.startsWith("core/camera/") || path.startsWith("core/data/") || path.startsWith("core/processing/") -> Layer.ADAPTER
+        path.startsWith("core/camera/") || path.startsWith("core/data/") || path.startsWith("core/processing/") || path.startsWith("core/audio/") -> Layer.ADAPTER
         path.startsWith("core/designsystem/") -> Layer.DESIGNSYSTEM
         path.startsWith("feature/") && "/control/" in path -> Layer.FEATURE_CONTROL
         path.startsWith("feature/") && "/ui/" in path -> Layer.FEATURE_UI
@@ -42,7 +42,7 @@ object ArchitectureRules {
         Layer.ENTITY to listOf("${P}core.pure", "${P}core.entity"),
         Layer.BOUNDARY to listOf("${P}core.pure", "${P}core.boundary"),
         Layer.CONTROL_CORE to listOf("${P}core.pure", "${P}core.boundary", "${P}core.control"),
-        Layer.ADAPTER to listOf("${P}core.pure", "${P}core.boundary", "${P}core.entity", "${P}core.camera", "${P}core.data", "${P}core.processing"),
+        Layer.ADAPTER to listOf("${P}core.pure", "${P}core.boundary", "${P}core.entity", "${P}core.camera", "${P}core.data", "${P}core.processing", "${P}core.audio"),
         Layer.DESIGNSYSTEM to listOf("${P}core.pure", "${P}core.designsystem"),
         Layer.FEATURE_CONTROL to listOf("${P}core.pure", "${P}core.boundary", "${P}core.control", "${P}feature"),
         // UI: nur eigene Control, Designsystem, pure und eigene Ressourcen (R1). Feature-Grenzen pruefen wir unten.
@@ -111,6 +111,13 @@ object ArchitectureRules {
                 .filterNot { isA1(f.path, it) }
                 .forEach { out += Violation("R11", f.path, "CameraX ausserhalb von :core:camera: $it") }
         }
+        // R28 Tonaufnahme nur im Mikrofon-Adapter (S-008)
+        if (!f.path.startsWith("core/audio/")) {
+            imps.filter { i -> AUDIO_CAPTURE.any { i == it || i.startsWith("$it.") } }
+                .forEach { out += Violation("R28", f.path, "Tonaufnahme ausserhalb von :core:audio: $it") }
+            AUDIO_CAPTURE.filter { it in code }
+                .forEach { out += Violation("R28", f.path, "Tonaufnahme ausserhalb von :core:audio: $it") }
+        }
         // R16 Dispatchers nur im DI-Modul
         if (Regex("""\bDispatchers\.(Main|IO|Default|Unconfined)""").containsMatchIn(code) && !f.path.startsWith("app/src/main/kotlin/app/cayresim/shell/di/"))
             out += Violation("R16", f.path, "Dispatchers.* ausserhalb des DI-Moduls")
@@ -118,6 +125,15 @@ object ArchitectureRules {
         out += naming(f, layer, code)
         return out
     }
+
+    /** R28: Klassen der Tonaufnahme, die nur `:core:audio` kennen darf. */
+    private val AUDIO_CAPTURE = listOf(
+        "android.media.AudioRecord",
+        "android.media.MediaRecorder",
+        "android.media.MicrophoneInfo",
+        "android.media.MicrophoneDirection",
+        "android.media.AudioDeviceInfo",
+    )
 
     /**
      * Ausnahme A1 (bestaetigt 07.10.2026, erweitert 10.10.2026 in S-005): Sucher-Screen darf CameraXViewfinder,

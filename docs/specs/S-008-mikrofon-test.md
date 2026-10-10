@@ -1,6 +1,6 @@
 # S-008: Mikrofon-Test
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 10:13 Uhr: neue Berechtigung Mikrofon, neues Speichern der WAV-Dateien, neue Regel R28), umgesetzt, CI offen
 **Anlass:** Wunsch Arslan (10.10.): Geräusche mit den Mikrofonen des S24+ orten. Vorprobe mit einem Video der
 Samsung-Kamera (10.10., 10:02 Uhr, quer gehalten, je drei Klatscher links, rechts, vorne, hinten, schräg in etwa 2 m):
 Der Ton hat zwei verschiedene Kanäle (Korrelation 0,17 über die ganze Aufnahme), ist aber stark bearbeitet. Links und
@@ -33,20 +33,22 @@ ablesen lässt. Alle Aufnahmen werden als WAV gespeichert, damit Arslan sie zur 
 ## Akzeptanzkriterien
 | Nr. | Kriterium (messbar) | Test |
 |---|---|---|
-| K1 | Synthetischer Klatscher (Rauschimpuls 10 ms, Abstand 15 cm, Rauschen −50 dB), Bruchteil-Verzögerung für −60, −30, 0, +30, +60 Grad: Laufzeit innerhalb 0,02 ms, Winkel innerhalb 3 Grad der Wahrheit | `AudioMathTest > S-008 GCC-PHAT findet die Richtung synthetischer Klatscher` |
-| K2 | Zwei identische Kanäle: "gleich" erkannt (Anteil gleicher Abtastwerte ≥ 99,9 %); ein Kanal mit 1 Abtastwert Versatz: nicht gleich | `AudioMathTest > S-008 erkennt doppeltes Mono` |
+| K1 | Synthetischer Klatscher (Rauschimpuls 10 ms, Abstand 15 cm, Rauschen −50 dB), Bruchteil-Verzögerung für −60, −30, 0, +30, +60 Grad: Laufzeit innerhalb 0,005 ms (ein Viertel Abtastwert), Winkel innerhalb 1,5 Grad der Wahrheit | `AudioMathTest > S-008 GCC-PHAT findet die Richtung synthetischer Klatscher` |
+| K2 | Zwei identische Kanäle: "gleich" erkannt (Anteil gleicher Abtastwerte ≥ 99,9 %); ein Kanal mit 1 Abtastwert Versatz: nicht gleich; aufgeteiltes Mono mit Zittern ±1 (Korrelation über 0,99): kein echtes Stereo | `AudioMathTest > S-008 erkennt doppeltes Mono` |
 | K3 | Grundrauschen in dBFS je Kanal innerhalb 0,5 dB der Wahrheit (Gauss-Rauschen −60 dBFS); stummer Kanal ergibt −inf als eigener Wert, kein NaN | `AudioMathTest > S-008 Grundrauschen und stummer Kanal` |
 | K4 | Klatsch-Erkennung: 9 synthetische Klatscher in 12 s Aufnahme mit Sprache-ähnlichem Rauschen −30 dB dazwischen: genau 9 Treffer, Zeit innerhalb 5 ms | `AudioMathTest > S-008 findet Klatscher, nicht das Rauschen` |
 | K5 | Randfälle: Laufzeit größer als physikalisch möglich wird als "unplausibel" markiert statt in einen Winkel umgerechnet; leere oder zu kurze Aufnahme ergibt Fehlerwert, keine Exception | `AudioMathTest > S-008 Randfaelle` |
 | K6 | GCC-PHAT für 40 ms Fenster bei 48 kHz höchstens 5 ms (bester von 5, JVM) | `AudioMathTest > S-008 GCC-PHAT ist schnell genug` |
 | K7 | WAV-Schreiber: Kopf nach RIFF/WAVE-Format (44 Byte, PCM 16 Bit, Kanalzahl, Rate); Rücklesen ergibt dieselben Abtastwerte | `WavTest > S-008 WAV-Kopf und Rundreise` |
 | K8 | UseCase mit Fake-Boundary: alle angebotenen Quellen in fester Reihenfolge, nicht angebotene übersprungen und als "nicht angeboten" gemeldet; Quelle mit Fehler bricht den Lauf nicht ab | `MicTestUseCaseTest > S-008 Durchlauf mit fehlender und fehlerhafter Quelle` |
-| K9 | Abbruch (Coroutine, Bildschirm verlassen) mitten in einer Aufnahme: Aufnahmegerät wird in genau einem `NonCancellable`-Block freigegeben, Fake zählt 0 offene Aufnahmen | `MicTestUseCaseTest > S-008 Abbruch gibt das Mikrofon frei` |
+| K9 | Abbruch (Coroutine, Bildschirm verlassen) mitten in einer Aufnahme: Aufnahmegerät wird in genau einem `NonCancellable`-Block freigegeben. Echter Nachweis am Adapter auf dem Emulator; im UseCase und ViewModel nur, dass der Abbruch durchgereicht wird und keine weitere Aufnahme startet | `AudioRecordMicrophoneAdapterTest > s008AbbruchGibtFrei`, `MicTestUseCaseTest > S-008 Abbruch gibt das Mikrofon frei`, `MicTestTest > S-008 Verlassen bricht ab und gibt frei` |
 | K10 | Ohne Berechtigung: Ergebnis "keine Berechtigung", keine Aufnahme gestartet | `MicTestUseCaseTest > S-008 ohne Berechtigung` |
 | K11 | Klatsch-Probe wählt die erste Quelle mit zwei verschiedenen Kanälen; gibt es keine, steht "Ortung nicht möglich: kein echtes Stereo" und es wird nicht geklatscht | `MicTestUseCaseTest > S-008 Quelle fuer die Klatsch-Probe` |
-| K12 | Bildschirm: Liste, Quellen-Ergebnisse und Klatsch-Ergebnis als Screenshot (hell, dunkel); Texte nur aus Ressourcen | `MicTestScreenTest > mikrotest_ergebnis`, `mikrotest_ohne_stereo` |
-| K13 | Adapter auf dem Emulator: Aufnahme von 2 s liefert 96.000 ± 2.400 Frames, WAV-Datei existiert und lässt sich lesen; danach ist kein `AudioRecord` mehr offen | `AudioRecordMicrophoneAdapterTest > S-008 Aufnahme und Freigabe` |
-| K14 | Gesamtdauer des Laufs ohne Klatsch-Probe höchstens 30 s, gemessen und angezeigt | `MicTestUseCaseTest > S-008 Dauer wird gemessen`, Gerätetest |
+| K12 | Bildschirm: Ergebnis (dunkel), Klatsch-Ergebnis (dunkel), ohne Stereo (hell), Ansage beim Klatschen als Screenshot; Texte aus Ressourcen, technische Schlüssel der Geräteliste (z. B. MAINBODY, OMNI, BUILTIN_MIC) bewusst unübersetzt wie die Hardware-Stufe im Selbsttest | `MicTestTest > mikrotest_ergebnis`, `mikrotest_ohne_stereo`, `mikrotest_klatschen_ansage` |
+| K13 | Adapter auf dem Emulator: Aufnahme von 2 s dauert 1,8 bis 3,1 s und liefert 96.000 Frames; danach ist kein `AudioRecord` mehr offen. WAV-Datei wird in der Medienablage gespeichert, unter ihrem Namen wiedergefunden und Byte für Byte gelesen | `AudioRecordMicrophoneAdapterTest > s008AufnahmeUndFreigabe`, `MediaStoreAudioFileAdapterDeviceTest > s008WavSpeichernUndLesen` |
+| K14 | Gesamtdauer des Laufs ohne Klatsch-Probe höchstens 30 s, gemessen und angezeigt; jede einzelne Aufnahme hat eine Frist (Dauer plus 1 s) | `MicTestUseCaseTest > S-008 Dauer wird gemessen`, Gerätetest |
+| K15 | Unerwarteter Fehler im Lauf: Anzeige "mit einem Fehler abgebrochen", kein Absturz (R24) | `MicTestTest > S-008 unerwarteter Fehler beendet nur den Lauf` |
+| K16 | Speicher voll oder kein Ordner: der Lauf geht weiter, Hinweis im Ergebnis | `MicTestUseCaseTest > S-008 Speicher voll laesst den Lauf weiterlaufen` |
 
 ## Nicht Teil dieser Änderung
 - Keine Ortung im Kamera-Modus, kein Audio-Zoom, kein Ton zu Videos oder Zeitraffern.
@@ -58,12 +60,14 @@ ablesen lässt. Alle Aufnahmen werden als WAV gespeichert, damit Arslan sie zur 
 ## Betroffene Schichten und Regeln
 - `:core:pure`: `AudioMath` (GCC-PHAT, Klatsch-Erkennung, Grundrauschen, Kanalvergleich, Winkel), `Wav` (Kopf, Kodierung).
   Reine Funktionen mit Tests (R21 sinngemäß für Ton).
-- `:core:boundary`: `MicrophoneBoundary` mit `inventory(): MicInventory`, `record(request): MicRecordResult`;
-  Snapshots `MicInfo`, `InputDeviceInfo`, `MicRecording` (nur Zahlen, Schlüssel, Enums, URI), Enum `AudioSourceKey`,
-  versiegeltes `MicRecordResult` mit `MicFailure` (NO_PERMISSION, NOT_OFFERED, INIT_FAILED, STORAGE, CANCELLED). Fake
-  in den Testquellen.
-- **Neues Adapter-Modul `:core:audio`** mit `AudioRecordMicrophoneAdapter`: einziges Modul, das `android.media.AudioRecord`
-  und `AudioManager` für Aufnahmen kennt. Neue Regel **R28** (analog R11) mit Konsist-Prüfung und Mutationsprobe.
+- `:core:boundary`: `MicrophoneBoundary` mit `hasPermission()`, `inventory(): MicInventorySnapshot`,
+  `record(request): MicRecordResult`; `AudioFileBoundary` mit `newFolder` und `saveWav`. Snapshots `MicInfoSnapshot`,
+  `InputDeviceSnapshot`, `MicCapture` (nur Zahlen, Schlüssel, Enums), versiegeltes `MicRecordResult` mit `MicFailure`
+  (NO_PERMISSION, NOT_OFFERED, INIT_FAILED, READ_FAILED; Speicherfehler als `storageFailed` im Bericht). Fakes in den
+  Testquellen.
+- **Neues Adapter-Modul `:core:audio`** mit `AudioRecordMicrophoneAdapter`: einziges Modul, das `AudioRecord`,
+  `MediaRecorder`, `MicrophoneInfo`, `MicrophoneDirection` und `AudioDeviceInfo` kennt. `AudioManager` bleibt frei, weil
+  er auch Lautstärke und Töne regelt. Neue Regel **R28** (analog R11) mit Konsist-Prüfung und Mutationsproben.
 - `:core:data`: Speichern der WAV-Dateien über MediaStore unter `Recordings/CayResim/Mikrotest-<Datum-Uhrzeit>/` auf dem
   IoDispatcher.
 - `:core:control`: `MicTestUseCase` (Ablauf, Auswahl der Quelle, Dauer, Freigabe).
@@ -79,7 +83,7 @@ ablesen lässt. Alle Aufnahmen werden als WAV gespeichert, damit Arslan sie zur 
 | Fehler und Ausweichweg | jede Quelle einzeln mit Ergebnistyp; fehlende Quelle "nicht angeboten", Lauf geht weiter (R14, R24) |
 | Abbruch und Freigabe | `AudioRecord.stop/release` in genau einem `NonCancellable`-Block mit Merker (R17, Befund H1), K9 |
 | Bildpuffer | Tonpuffer fester Größe je Aufnahme (2 s: 384 KB), höchstens eine Aufnahme gleichzeitig (R19 sinngemäß) |
-| Main-Thread | Aufnahme auf eigenem Lese-Thread des Adapters, Speichern auf IoDispatcher (R16, R18) |
+| Main-Thread | Aufnahme und Speichern auf dem IoDispatcher, nicht blockierend gelesen; Rechnen und Kodieren im UseCase auf dem ComputeDispatcher (R16, R18) |
 | Gespeicherte Daten | WAV ist ein festes Format; Dateiname enthält Quelle und Testversion "v1" (R26) |
 | Zeit und Speicher | Lauf höchstens 30 s plus 12 s Klatsch-Probe, etwa 6 MB WAV je Lauf; GCC-PHAT gemessen (K6, K14, R27) |
 | neue Ausnahme | keine; neue Regel R28 |
@@ -97,6 +101,26 @@ ablesen lässt. Alle Aufnahmen werden als WAV gespeichert, damit Arslan sie zur 
 ## Kosten
 Etwa 2 kurze Läufe (Screenshot-Grundlagen für den neuen Bildschirm), 1 Release (etwa 30 Minuten, Emulator wegen neuem
 Modul). Gerätetest durch Arslan: Mikrofon-Test in ruhigem Raum, Ergebnis-Screenshot, WAV-Ordner schicken (etwa 6 MB).
+
+## Umsetzung und Zweitprüfung
+Tests für `:core:pure` lokal zuerst rot (Kompilierfehler: `AudioMath` und `Wav` fehlten), dann grün (10 Tests,
+GCC-PHAT 0,5 ms je 40-ms-Fenster). UseCase-Tests lokal mit einem Ersatz für `runTest` grün (8 Tests); rot vorher, weil
+`MicTestUseCase` und die Boundary nicht existierten. Architektur: 41 Proben grün, 0 Verstöße in 69 Hauptdateien,
+detekt und Fallen-Skript ohne neue Funde.
+
+Unabhängige Prüfung (zweiter Agent, 10.10.): behoben wurden
+- 3 Lint-Funde `StateFlowValueCalledInComposition` in den Tests,
+- Abbruch beim Drehen des Handys (Drehung ist jetzt kein Abbruch, Querhalten steht schon in der Einleitung),
+- fehlende Anführungszeichen im Ergebnistext,
+- Bildschirm konnte während des Laufs ausgehen (jetzt wachgehalten),
+- Leseschleife ohne Frist (jetzt Dauer plus 1 s, nicht blockierend),
+- kein Ausweichweg bei unerwarteten Fehlern im ViewModel (K15),
+- Rechnen im Dispatcher des Sammlers, also auf Main (jetzt ComputeDispatcher),
+- MIME-Typ `audio/x-wav` statt `audio/wav`,
+- zu lockere Grenzen in K1 und ein K13, der nie rot werden konnte,
+- doppeltes Mono mit leichtem Zittern galt als Stereo (jetzt zusätzlich Korrelation unter 0,99, K2).
+
+Offen: Der Emulator läuft mit `-noaudio`; ob `AudioRecord` dort startet, zeigt erst der CI-Lauf.
 
 ## Ergebnis
 Offen.

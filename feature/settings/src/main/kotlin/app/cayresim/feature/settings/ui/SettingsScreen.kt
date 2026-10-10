@@ -23,9 +23,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.cayresim.feature.settings.R
 
-/** Einstieg hinter dem Zahnrad: Anleitung und Selbsttest. Reine Anzeige, kein Zustand. */
+/** Einstieg hinter dem Zahnrad: Anleitung, Selbsttest und Mikrofon-Test (S-008). Reine Anzeige, kein Zustand. */
 @Composable
-fun SettingsContent(onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> Unit) {
+fun SettingsContent(onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> Unit, onMicTest: () -> Unit = {}) {
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             TextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text(stringResource(R.string.back)) }
@@ -33,6 +33,8 @@ fun SettingsContent(onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> U
             Entry(R.string.settings_guide, R.string.settings_guide_hint, onGuide, "settings_guide")
             HorizontalDivider()
             Entry(R.string.selftest_title, R.string.settings_selftest_hint, onSelfTest, "settings_selftest")
+            HorizontalDivider()
+            Entry(R.string.mictest_title, R.string.settings_mictest_hint, onMicTest, "settings_mictest")
         }
     }
 }
@@ -57,6 +59,7 @@ internal val guideSections: List<Pair<Int, Int>> = listOf(
     R.string.guide_series_title to R.string.guide_series_body,
     R.string.guide_gallery_title to R.string.guide_gallery_body,
     R.string.guide_selftest_title to R.string.guide_selftest_body,
+    R.string.guide_mictest_title to R.string.guide_mictest_body,
 )
 
 /** Anleitung fuer Einsteiger. Reine Anzeige aus Textressourcen. */

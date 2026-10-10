@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":core:pure"))
     implementation(project(":core:camera"))
     implementation(project(":core:data"))
+    implementation(project(":core:audio"))
     implementation(project(":core:processing"))
 
     implementation(platform(libs.compose.bom))
