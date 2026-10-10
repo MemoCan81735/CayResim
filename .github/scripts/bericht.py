@@ -192,7 +192,7 @@ def main():
                    f"(Ziel hoechstens 5,7)."]
 
     total = skipped = 0
-    failures, compile_errors, wrong = [], [], []
+    failures, compile_errors, wrong = [], {}, []
     for key, name, folder in JOBS:
         d = src / folder
         t, s, f = junit(d / "results") if (d / "results").exists() else (0, 0, [])
@@ -200,14 +200,15 @@ def main():
         failures += f
         for log in d.glob("*.log"):
             c, w = gradle_problems(log.read_text(encoding="utf-8", errors="replace"))
-            compile_errors += [f"{e} ({name})" for e in c]
+            for e in c:
+                compile_errors.setdefault(e, []).append(name)
             if results[key] != "success":
                 wrong += [f"{name}: {w_}" for w_ in w]
     md += ["", f"Tests: {total}, rot: {len(failures)}, uebersprungen: {skipped}"]
     if failures:
         md += ["", "## Rote Tests", ""] + [f"- {f}" for f in failures[:20]]
     if compile_errors:
-        md += ["", "## Kompilierfehler", ""] + [f"- {e}" for e in list(dict.fromkeys(compile_errors))[:10]]
+        md += ["", "## Kompilierfehler", ""] + [f"- {e} ({', '.join(dict.fromkeys(j))})" for e, j in list(compile_errors.items())[:10]]
     if wrong and not failures and not compile_errors:
         md += ["", "## Gradle meldet", ""] + [f"- {w}" for w in list(dict.fromkeys(wrong))[:10]]
 
