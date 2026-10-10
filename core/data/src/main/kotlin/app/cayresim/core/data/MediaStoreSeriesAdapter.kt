@@ -58,7 +58,6 @@ class MediaStoreSeriesAdapter @Inject constructor(
             if (c.moveToFirst()) c.getString(0) else null
         }
     }.getOrNull()
-    }
 
     /** Zaehlt die geschriebenen Bytes fuer den Hinweis (Groesse der Datei). */
     internal class Counting(out: OutputStream) : FilterOutputStream(out) {
