@@ -250,9 +250,9 @@ private fun clapPrompt(p: ClapPhaseUi?) = when (p) {
 /** Zahlen deutsch formatiert (Komma), unabhaengig von der Systemsprache der Tests. */
 internal fun dec1(v: Double): String = String.format(Locale.GERMANY, "%.1f", v)
 internal fun dec2(v: Double): String = String.format(Locale.GERMANY, "%.2f", v)
-internal fun signed0(v: Double): String = String.format(Locale.GERMANY, "%+.0f", v)
-internal fun signed1(v: Double): String = String.format(Locale.GERMANY, "%+.1f", v)
-internal fun signed2(v: Double): String = String.format(Locale.GERMANY, "%+.2f", v)
+internal fun signed0(v: Double): String = String.format(Locale.GERMANY, "%+.0f", if (kotlin.math.abs(v) < 0.5) 0.0 else v)
+internal fun signed1(v: Double): String = String.format(Locale.GERMANY, "%+.1f", if (kotlin.math.abs(v) < 0.05) 0.0 else v)
+internal fun signed2(v: Double): String = String.format(Locale.GERMANY, "%+.2f", if (kotlin.math.abs(v) < 0.005) 0.0 else v)
 /** -0,00 bei Werten knapp unter null vermeiden. */
 internal fun noNegativeZero(v: Double): Double = if (kotlin.math.abs(v) < 0.005) 0.0 else v
 internal fun cm(meters: Double): String = String.format(Locale.GERMANY, "%.1f", meters * 100)
