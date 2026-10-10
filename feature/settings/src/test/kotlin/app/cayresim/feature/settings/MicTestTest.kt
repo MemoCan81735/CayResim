@@ -148,6 +148,12 @@ class MicTestTest {
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithText("Echtes Stereo mit Quelle", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/mictest_result.png")
+    }
+
+    @Test fun mikrotest_klatsch_ergebnis() {
+        val v = vm(stereoMic()); v.onStart()
+        val s = v.uiState.value
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("clap_0"))
         compose.onNodeWithText("Laufzeit (ms) +0,29", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/mictest_claps.png")
