@@ -1,6 +1,6 @@
 # S-006: Nacht fast ohne Licht: schwarz statt Nebel, bis 72 Bilder, Stabilisator und Wackeln richtig gemeldet
 
-**Stand:** 10. Oktober 2026 · **Status:** freigegeben (Arslan, 4:29)
+**Stand:** 10. Oktober 2026 · **Status:** umgesetzt in v0.1.98, Gerätetest offen
 **Anlass:** Nachttest S24+ am 10. Oktober, 4:21 Uhr (v0.1.90), fast lichtloser Raum mit schwach beleuchtetem Vorhang.
 Hinweis: "1/10 s, ISO 3200 (Automatik 1/25 s, ISO 3200), 36 Bilder, 0 verworfen, Aufhellung x59,5, Wackeln bis 0 px,
 Dauer 6,1 s". Gemessen an denselben Bildstellen:
@@ -76,4 +76,8 @@ Mehr Korn im Boden-Modus durch die höhere Aufhellung; Dauer nahe 10 s. Rückweg
 Ein Release (Repository öffentlich, keine Minuten).
 
 ## Ergebnis
-(nach dem Lauf eintragen)
+Lauf 38019625545 grün (471 Tests, Analyse ohne neue Funde, Emulator, Release v0.1.98). Davor zwei Läufe rot:
+Selbsttest-Tests ohne weitergestellte Uhr (von der Zweitprüfung vorhergesagt) und die Testattrappe zählte das letzte Bild
+nicht mehr, seit der Strom genau danach endet. Labor: Vorhang 21,9, Wand 7,4, Boden 6,3, Blau minus Rot 3,0, Vorhang
+warm (Rot minus Blau 13,2). Gerätetest offen: dieselbe Vorhang-Szene mit Hinweis (72 Bilder, Dauer unter 10 s?) und
+Samsung-Vergleich, Selbsttest (Stabilisator aktiv).
