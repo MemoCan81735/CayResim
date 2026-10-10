@@ -1,6 +1,6 @@
 # S-007: Nacht-Diagnose im Hinweis und Stabilisator-Anzeige
 
-**Stand:** 10.10.2026 · **Status:** freigegeben (Arslan, 10.10., 5:53 Uhr)
+**Stand:** 10.10.2026 · **Status:** umgesetzt in v0.1.102 (freigegeben von Arslan, 10.10., 5:53 Uhr)
 **Anlass:** Gerätetest S24+ v0.1.98 (10.10., 5:44 Uhr), Vorhang-Szene im fast lichtlosen Raum. CayResim: Mittel RGB
 39,0 / 39,2 / 48,5, Median 42, q0,99 58, Aufhellung x60,4 (Boden-Modus hat nicht gegriffen). Samsung dieselbe Szene:
 Mittel 3,4 / 3,1 / 3,2, Median 2,7, q0,99 16, Vorhang 13 / 11 / 5, Boden 2. Die Laborszene aus S-006 ist grün. Warum
@@ -81,3 +81,7 @@ Rauschschätzung liegt bei reinem 8-Bit-Rauschen in 12 Läufen 8,5 bis 10 % unte
 auf 8 Bit); K1 hält die Grenze von 15 % ein. K2b schützt ein Verhalten, das schon vorher stimmte; er konnte mit dem
 alten Code nicht rot werden. Nach der Freigabe geändert: K3 an den Test angepasst, K6 mit 3
 Nachkommastellen und "Bezugsbild" statt "Bild 1", K7b bis K11 und die längere Anzeige des Hinweises ergänzt; bestätigt von Arslan am 10.10., 6:32 Uhr.
+
+Lauf 38024191642 grün (Kern, Oberfläche, Analyse, APK Debug und Release, Emulator), Release v0.1.102. Davor zwei rote
+Probeläufe: die erwartete Screenshot-Grundlage des Selbsttests und ein detekt-Fund, danach ein Kompilierfehler in einer
+eigenen Testhilfe (`suspend` fehlte). Gerätetest offen: Vorhang-Szene mit Hinweis-Screenshot, Selbsttest.

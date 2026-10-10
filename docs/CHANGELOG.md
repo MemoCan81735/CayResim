@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## S-007 (10. Oktober 2026, Version folgt beim Release)
+## 0.1.102 (10. Oktober 2026, S-007)
 - Nacht-Hinweis mit zweiter Zeile: ob der Boden-Modus gegriffen hat und nach welchen Werten (Signal, Schwelle, Rauschen,
   Median, Anteil geschätzter Pixel), dazu Nullen und Helligkeit des Bezugsbilds. Der Hinweis bleibt 10 s stehen.
 - Selbsttest: Stabilisator "vom Gerät nicht gemeldet (angefordert: ein)" oder "kein Aufnahmeergebnis" statt "unbekannt".
