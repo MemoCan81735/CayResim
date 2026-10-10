@@ -1,6 +1,6 @@
 # S-010: Schwenk-Messung (Ton und Lage gleichzeitig aufnehmen)
 
-**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 15:00 Uhr: neue Regel R29, neues Speichern von Lage-CSV und Meta-JSON, ein Release)
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 15:00 Uhr: neue Regel R29, neues Speichern von Lage-CSV und Meta-JSON, ein Release), umgesetzt in v0.1.115, Gerätetest offen
 **Anlass:** Wunsch Arslan (10.10., 14:57 Uhr): "Schwenk-Ortung", Funktion F12. Zwei Handy-Mikrofone liefern je Messung
 nur den Winkel zur Mikrofonachse (S-008, S-009: links −0,48 ms, rechts +0,40 ms, quer gehalten). Die Quelle liegt
 damit auf einem Kegel um die Achse; vorne und hinten, oben und unten sind nicht zu unterscheiden. Dreht man das Handy,
