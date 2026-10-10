@@ -33,6 +33,8 @@ object NightSeries {
         val durationMs: Long?, val used: Int, val dropped: Int, val gain: Float, val maxShake: Int,
         /** Zeitstempel je Eingangsbild (ns seit dem Einschalten), null wo unbekannt. */
         val timestampsNs: List<Long?>,
+        /** Je Eingangsbild: Helligkeit liegt in der Datei (false = ausgelassen, weil der Speicher nicht nachkam). */
+        val archived: List<Boolean>,
         val diagnosis: NightDiagnosis? = null,
     )
 
@@ -58,6 +60,7 @@ object NightSeries {
         for (i in 0 until count) {
             val r = records.firstOrNull { it.index == i }
             append("    {\"index\": ").append(i).append(", \"timestampNs\": ").append(n(info.timestampsNs.getOrNull(i)))
+                .append(", \"archived\": ").append(info.archived.getOrNull(i) ?: false)
             if (r != null) {
                 append(", \"dx\": ").append(r.dx).append(", \"dy\": ").append(r.dy).append(", \"shiftRejected\": ").append(r.shiftRejected)
                     .append(", \"dropped\": ").append(r.dropped).append(", \"reference\": ").append(r.reference)

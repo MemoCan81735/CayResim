@@ -3,6 +3,8 @@ package app.cayresim.feature.settings.ui
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,7 +51,8 @@ fun SettingsContent(
     nightSeries: Boolean = false, onNightSeries: (Boolean) -> Unit = {},
 ) {
     Surface(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // scrollbar: mit grosser Schrift passt der Hinweis zur Nachtserie sonst nicht (Zweitpruefung S-011)
+        Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             TextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text(stringResource(R.string.back)) }
             Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium)
             Entry(R.string.settings_guide, R.string.settings_guide_hint, onGuide, "settings_guide")

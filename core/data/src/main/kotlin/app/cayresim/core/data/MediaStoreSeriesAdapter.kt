@@ -33,7 +33,8 @@ class MediaStoreSeriesAdapter @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : SeriesArchiveBoundary {
 
-    override suspend fun open(prefix: String): SeriesArchiveSessionBoundary? = withContext(io) {
+    // NonCancellable: eine angelegte Datei kommt immer beim Aufrufer an, der sie beim Abbruch loescht (Zweitpruefung S-011, B4)
+    override suspend fun open(prefix: String): SeriesArchiveSessionBoundary? = withContext(NonCancellable + io) {
         if (prefix.isBlank() || prefix.any { it == '/' || it == '\\' }) return@withContext null
         val resolver = context.contentResolver
         val name = "$prefix-${LocalDateTime.now().format(STAMP)}.zip"
@@ -48,7 +49,15 @@ class MediaStoreSeriesAdapter @Inject constructor(
         val out = runCatching { resolver.openOutputStream(uri) }.getOrNull()
         if (out == null) { runCatching { resolver.delete(uri, null, null) }; return@withContext null }
         val counting = Counting(BufferedOutputStream(out, BUFFER))
-        SessionAdapter(uri, name, counting, NightSeries.ZipWriter(counting))
+        // Gibt es den Namen schon (zwei Serien in einer Sekunde), benennt MediaStore um: der Hinweis zeigt den echten
+        SessionAdapter(uri, displayName(uri) ?: name, counting, NightSeries.ZipWriter(counting))
+    }
+
+    private fun displayName(uri: Uri): String? = runCatching {
+        context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+    }.getOrNull()
     }
 
     /** Zaehlt die geschriebenen Bytes fuer den Hinweis (Groesse der Datei). */
@@ -79,8 +88,10 @@ class MediaStoreSeriesAdapter @Inject constructor(
             lock.withLock {
                 if (closed) return@withLock null
                 closed = true
-                val ok = !failed && runCatching {
-                    writer.close()
+                // Schliessen immer, auch nach einem Schreibfehler; der innere Strom zusaetzlich, falls das Packen dabei wirft
+                val closedOk = runCatching { writer.close() }.isSuccess
+                runCatching { counting.close() }
+                val ok = !failed && closedOk && runCatching {
                     context.contentResolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
                 }.isSuccess
                 if (ok) SeriesArchiveSnapshot(name, counting.count) else { runCatching { context.contentResolver.delete(uri, null, null) }; null }
@@ -92,6 +103,7 @@ class MediaStoreSeriesAdapter @Inject constructor(
                 if (closed) return@withLock
                 closed = true
                 runCatching { writer.close() }
+                runCatching { counting.close() }
                 runCatching { context.contentResolver.delete(uri, null, null) }
                 Unit
             }

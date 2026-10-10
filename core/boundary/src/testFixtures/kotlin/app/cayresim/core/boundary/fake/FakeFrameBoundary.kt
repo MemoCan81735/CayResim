@@ -13,6 +13,8 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
     var fail: BurstFailure? = null
     val fires = MutableSharedFlow<Unit>(extraBufferCapacity = 16)
     var lastTriggerMode: TriggerMode? = null
+    /** S-011: Abstand der Bilder im Strom in ms (virtuelle Zeit); 0 = ohne Pause wie bisher. */
+    var intervalMs = 0L
 
     override suspend fun collect(count: Int): BurstResult {
         if (camera.state.value.status != app.cayresim.core.boundary.CameraStatus.RUNNING) return BurstResult.Failed(BurstFailure.NOT_READY)
@@ -31,6 +33,7 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
         // gezaehlt beim Liefern: beendet der Empfaenger den Strom nach dem letzten Bild, zaehlt es trotzdem (S-006)
         // S-011: Pixelwert = laufende Nummer, Zeitstempel alle 100 ms; so ist die Reihenfolge im Archiv pruefbar
         repeat(n) {
+            if (intervalMs > 0) kotlinx.coroutines.delay(intervalMs)
             val i = streamed++
             emit(app.cayresim.core.boundary.Frame(4, 3, ByteArray(4 * 3 * 3) { i.toByte() }, 0, 1_000_000_000L + i * 100_000_000L))
         }

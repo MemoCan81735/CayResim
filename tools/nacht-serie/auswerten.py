@@ -149,10 +149,13 @@ def main():
           f"1/{round(1e9 / meta['exposureNs']) if meta.get('exposureNs') else '?'} s, ISO {meta.get('iso')}, "
           f"Aufhellung x{fmt(meta['gain'])}, Dauer {fmt((meta.get('durationMs') or 0) / 1000)} s")
 
-    # 1. Vollstaendigkeit (K9)
-    ok = len(luma) == used + dropped
-    print(f"[1] Helligkeitsbilder {len(luma)}, verwendet {used} + verworfen {dropped} = {used + dropped}: "
-          + ("stimmt" if ok else "STIMMT NICHT"))
+    # 1. Vollstaendigkeit (K9): Eintraege je Bild = verwendet + verworfen, Dateien = abgelegte Bilder
+    archived = [f["index"] for f in frames if f.get("archived")]
+    ok = len(frames) == used + dropped and sorted(luma) == archived
+    print(f"[1] Eintraege {len(frames)}, verwendet {used} + verworfen {dropped} = {used + dropped}; Helligkeitsbilder "
+          f"{len(luma)}, ausgelassen (Speicher kam nicht nach) {len(frames) - len(archived)}: " + ("stimmt" if ok else "STIMMT NICHT"))
+    if not any("dx" in f for f in frames):
+        print("    WARNUNG: keine Messwerte je Bild in meta.json (dx, Schaerfe fehlen); Vergleich mit der App nicht moeglich")
 
     # 2. Takt
     ts = np.array([f["timestampNs"] for f in frames if f.get("timestampNs") is not None], dtype=np.int64)
@@ -166,6 +169,9 @@ def main():
 
     # 3. und 4. Ausrichtung und Schaerfe gegen das Bezugsbild der App
     ref_i = next((f["index"] for f in frames if f.get("reference")), min(luma))
+    if ref_i not in luma:
+        print(f"    Bezugsbild {ref_i} der App wurde nicht abgelegt; Vergleich gegen Bild {min(luma)}, eigene Versaetze relativ dazu")
+        ref_i = min(luma)
     ref = luma[ref_i]
     s_ref = sharpness(ref)
     print(f"[3] Bezugsbild {ref_i}; je Bild: App-Versatz, eigener Versatz, Spitze, Schaerfe zum Bezug, Kippen")

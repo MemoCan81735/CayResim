@@ -222,7 +222,8 @@ class NightUseCaseTest {
         // aus: kein Archiv, kein Sensor
         val off = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(false), sensors)(10))
         assertTrue(archive.sessions.isEmpty()); assertEquals(0, sensors.registrations); assertNull(off.night!!.seriesName)
-        // an
+        // an; die Kamera liefert etwa 10 Bilder je Sekunde, der Speicher kommt mit
+        frames.intervalMs = 100
         val debug = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true)
         val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, debug, sensors)(10))
         val s = archive.sessions.single()
@@ -237,6 +238,7 @@ class NightUseCaseTest {
         val meta = String(s.entries.getValue(app.cayresim.core.pure.NightSeries.META))
         assertTrue("\"format\": 1" in meta && "\"used\": 10" in meta && "\"dx\": 9" in meta && "\"timestampNs\": ${1_000_000_000L + (first + 9) * 100_000_000L}" in meta, meta)
         assertTrue("\"exposureNs\": 100000000" in meta && "\"meterExposureNs\": 66666666" in meta, meta)
+        assertEquals(10, Regex("\"archived\": true").findAll(meta).count(), meta)
         val lage = String(s.entries.getValue(app.cayresim.core.pure.NightSeries.LAGE))
         assertTrue(lage.startsWith("format=v1") && lage.lines().count { it.startsWith("ROTATION,") } == 5, lage)
         assertEquals(0, sensors.active, "Sensor abgemeldet")
@@ -261,6 +263,7 @@ class NightUseCaseTest {
         assertTrue(s.aborted && !s.finished, "halbe Datei geloescht")
         assertEquals(0, sensors.active); assertNull(manual.manualState.value.exposureNanos)
         // Schreibfehler: Nachtbild trotzdem gespeichert, Hinweis "nicht gespeichert"
+        frames.intervalMs = 100
         val failing = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary().apply { failPutAfter = 3 }
         val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, failing, debug, motion())(10))
         assertTrue(r.night!!.seriesFailed); assertNull(r.night!!.seriesName)
@@ -275,5 +278,28 @@ class NightUseCaseTest {
         assertIs<StackOutcome.Failed>(NightUseCase(cam, manual, frames, proc, null, null, archive3, debug, motion())(10))
         assertTrue(archive3.sessions.single().aborted)
         proc.gpuFails = false
+    }
+
+    @Test fun `S-011 langsamer Speicher bremst die Serie nicht`() = runTest {
+        // Zweitpruefung S-011, B2: das Ablegen wartet nie; was der Speicher nicht schafft, wird ausgelassen und vermerkt
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        frames.intervalMs = 100
+        val archive = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary().apply { putDelayMs = 350 }
+        val t0 = testScheduler.currentTime
+        val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive,
+            app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true), motion())(20))
+        val streamEnd = (NightUseCase.METER + NightUseCase.SETTLE + 20) * 100L
+        assertEquals(20, r.frames, "alle Bilder im Nachtbild")
+        val s = archive.sessions.single()
+        assertTrue(s.finished && !r.night!!.seriesFailed)
+        val meta = String(s.entries.getValue(app.cayresim.core.pure.NightSeries.META))
+        val kept = Regex("\"archived\": true").findAll(meta).count()
+        val skipped = Regex("\"archived\": false").findAll(meta).count()
+        val yCount = s.entries.keys.count { it.startsWith("y-") }
+        assertEquals(20, kept + skipped, meta)
+        assertTrue(skipped > 0 && kept >= 5, "abgelegt $kept, ausgelassen $skipped")
+        assertEquals(kept, yCount, "je abgelegtem Bild eine Datei")
+        // Nachlauf nur fuer die Warteschlange (hoechstens 2 Bilder) und die Abschlussdateien, nicht fuer die ganze Serie
+        assertTrue(testScheduler.currentTime - t0 <= streamEnd + 6 * 350, "Dauer ${testScheduler.currentTime - t0} ms, Strom $streamEnd ms")
     }
 }

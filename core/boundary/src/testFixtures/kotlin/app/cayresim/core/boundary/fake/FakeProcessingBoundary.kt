@@ -73,7 +73,7 @@ class FakeProcessingBoundary : ProcessingBoundary {
         if (rawFails || count < 3) return ProcessResult.Failed(ProcessFailure.INVALID_INPUT)
         rawNightRuns += count
         val out = "content://fake/nightraw/${++n}"; known += out; onRawSaved?.invoke(out)
-        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 3f))
+        return ProcessResult.Saved(out, app.cayresim.core.boundary.NightStats(count, 0, 3f, records = emptyList()))
     }
 
     override suspend fun timelapse(photoUris: List<String>, photosPerSecond: Int): ProcessResult {

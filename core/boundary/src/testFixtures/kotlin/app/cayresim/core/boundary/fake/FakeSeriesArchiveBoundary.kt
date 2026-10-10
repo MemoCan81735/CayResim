@@ -14,6 +14,8 @@ class FakeSeriesArchiveBoundary : SeriesArchiveBoundary {
     /** Ab diesem Eintrag (0-basiert) scheitert put; null = nie. */
     var failPutAfter: Int? = null
     var failFinish = false
+    /** Dauer je Eintrag in ms (virtuelle Zeit): langsamer Speicher. */
+    var putDelayMs = 0L
     val sessions = mutableListOf<Session>()
 
     inner class Session(val name: String) : SeriesArchiveSessionBoundary {
@@ -23,6 +25,7 @@ class FakeSeriesArchiveBoundary : SeriesArchiveBoundary {
 
         override suspend fun put(name: String, bytes: ByteArray): Boolean {
             check(!finished && !aborted) { "Archiv ist zu" }
+            if (putDelayMs > 0) kotlinx.coroutines.delay(putDelayMs)
             if (failPutAfter?.let { entries.size >= it } == true) return false
             entries[name] = bytes.copyOf(); return true
         }

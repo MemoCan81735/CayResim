@@ -81,6 +81,36 @@ class NightSeriesTest {
         assertEquals(m.maxShake, r.filter { !it.dropped }.maxOf { maxOf(kotlin.math.abs(it.dx), kotlin.math.abs(it.dy)) })
     }
 
+    @Test fun `S-011 Ergebnis unveraendert und Versatz bis 28 px`() {
+        // K1, Zweitpruefung S-011 B3: dunkle Serie mit Versatz bis 28 px. Der Goldwert stammt aus dem Code von main vor
+        // S-011 (gleiche Serie, getrennt kompiliert, 10.10.2026); das Sammeln der Eintraege aendert das Bild nicht.
+        val rnd = Random(21)
+        val bw = w + 80; val bh = h + 80; val g = 6
+        val gw = bw / g + 2; val gh = bh / g + 2
+        val grid = IntArray(gw * gh) { 8 + rnd.nextInt(60) }
+        val tex = IntArray(bw * bh) { i ->
+            val x = i % bw; val y = i / bw
+            val gx = x / g; val gy = y / g; val fx = (x % g) / g.toDouble(); val fy = (y % g) / g.toDouble()
+            val a = grid[gy * gw + gx] * (1 - fx) + grid[gy * gw + gx + 1] * fx
+            val b = grid[(gy + 1) * gw + gx] * (1 - fx) + grid[(gy + 1) * gw + gx + 1] * fx
+            (a * (1 - fy) + b * fy).roundToInt()
+        }
+        val shifts = listOf(0 to 0, 3 to -2, -7 to 5, 12 to 9, 28 to -26, -15 to -11, 4 to 0, 20 to -3, -28 to 27, 1 to 1)
+        val m = NightMerge(w, h)
+        for ((sx, sy) in shifts) {
+            val out = ByteArray(w * h * 3)
+            for (y in 0 until h) for (x in 0 until w) {
+                val v = (tex[(y + 40 - sy) * bw + x + 40 - sx] + rnd.nextInt(-6, 7)).coerceIn(0, 255)
+                out[(y * w + x) * 3] = v.toByte(); out[(y * w + x) * 3 + 1] = (v * 0.9).roundToInt().toByte(); out[(y * w + x) * 3 + 2] = (v * 0.8).roundToInt().toByte()
+            }
+            m.add(out)
+        }
+        val sha = java.security.MessageDigest.getInstance("SHA-256").digest(m.finish().rgb).joinToString("") { "%02x".format(it) }
+        assertEquals("87e2e4a7fc258b336e04ac6acf694c29d84b9fc39adbb0c25eec179e52ed8549", sha, "Nachtbild wie vor S-011")
+        assertEquals(shifts.drop(1), m.records.drop(1).map { it.dx to it.dy }, "Versatz je Bild")
+        assertEquals(28, m.maxShake)
+    }
+
     @Test fun `S-011 Eintraege bei Bezugswechsel`() {
         // erstes Bild weich, zweites scharf: Bezug wechselt, beide Eintraege bleiben mit ihrem Index erhalten
         val rnd = Random(12)
@@ -102,7 +132,7 @@ class NightSeriesTest {
         assertEquals(FrameAligner.lumaAt(rgb, 5 * 3), luma[5].toInt() and 0xFF)
         val meta = NightSeries.metaJson(
             NightSeries.Info(width = 6, height = 4, rotation = 90, exposureNs = 100_000_000, iso = 3200, meterExposureNs = 40_000_000,
-                meterIso = 3200, durationMs = 9_700, used = 2, dropped = 0, gain = 15.7f, maxShake = 35, timestampsNs = listOf(10L, 20L)),
+                meterIso = 3200, durationMs = 9_700, used = 2, dropped = 0, gain = 15.7f, maxShake = 35, timestampsNs = listOf(10L, 20L), archived = listOf(true, false)),
             listOf(NightMerge.FrameRecord(0, 0, 0, false, false, true, 12.5, 30f, 0.29f), NightMerge.FrameRecord(1, 3, -2, false, false, false, 11.0, 31f, 0.28f)),
         )
         val bytes = ByteArrayOutputStream().also { out ->
@@ -114,7 +144,7 @@ class NightSeriesTest {
         assertContentEquals(luma, a.entries.getValue("y-000.bin"))
         assertContentEquals(rgb, a.entries.getValue("rgb-first.bin"))
         assertEquals(1, a.format)
-        assertTrue("\"maxShake\": 35" in a.meta && "\"dx\": 3" in a.meta && "\"timestampNs\": 20" in a.meta, a.meta)
+        assertTrue("\"maxShake\": 35" in a.meta && "\"dx\": 3" in a.meta && "\"timestampNs\": 20, \"archived\": false" in a.meta, a.meta)
         // unbekannte Formatversion oder fehlende Kenndaten: null (R26)
         val wrong = ByteArrayOutputStream().also { out -> NightSeries.ZipWriter(out).use { it.put(NightSeries.META, "{\"format\": 2}".toByteArray()) } }.toByteArray()
         assertNull(NightSeries.read(ByteArrayInputStream(wrong)))
