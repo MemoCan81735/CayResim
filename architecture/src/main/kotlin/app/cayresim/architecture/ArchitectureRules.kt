@@ -112,24 +112,27 @@ object ArchitectureRules {
                 .forEach { out += Violation("R11", f.path, "CameraX ausserhalb von :core:camera: $it") }
         }
         // R28 Tonaufnahme nur im Mikrofon-Adapter (S-008)
-        if (!f.path.startsWith("core/audio/")) {
-            imps.filter { i -> AUDIO_CAPTURE.any { i == it || i.startsWith("$it.") } }
-                .forEach { out += Violation("R28", f.path, "Tonaufnahme ausserhalb von :core:audio: $it") }
-            AUDIO_CAPTURE.filter { it in code }
-                .forEach { out += Violation("R28", f.path, "Tonaufnahme ausserhalb von :core:audio: $it") }
-        }
+        if (!f.path.startsWith("core/audio/")) out += forbidden("R28", f.path, imps, code, AUDIO_CAPTURE, "Tonaufnahme ausserhalb von :core:audio")
         // R29 Lagesensoren nur im Sensor-Adapter (S-010)
-        if (!f.path.startsWith("core/sensors/")) {
-            imps.filter { i -> MOTION_SENSORS.any { i == it || i.startsWith("$it.") } }
-                .forEach { out += Violation("R29", f.path, "Lagesensor ausserhalb von :core:sensors: $it") }
-            MOTION_SENSORS.filter { it in code }
-                .forEach { out += Violation("R29", f.path, "Lagesensor ausserhalb von :core:sensors: $it") }
-        }
+        if (!f.path.startsWith("core/sensors/")) out += forbidden("R29", f.path, imps, code, MOTION_SENSORS, "Lagesensor ausserhalb von :core:sensors")
         // R16 Dispatchers nur im DI-Modul
         if (Regex("""\bDispatchers\.(Main|IO|Default|Unconfined)""").containsMatchIn(code) && !f.path.startsWith("app/src/main/kotlin/app/cayresim/shell/di/"))
             out += Violation("R16", f.path, "Dispatchers.* ausserhalb des DI-Moduls")
         // Namensregeln
         out += naming(f, layer, code)
+        return out
+    }
+
+    /**
+     * Gesperrte Klassen: als Import (auch Sternimport des Pakets, Zweitpruefung S-010, W1) oder voll qualifiziert im Code,
+     * dort mit Wortgrenze, damit z. B. android.hardware.SensorPrivacyManager nicht als Sensor zaehlt.
+     */
+    private fun forbidden(rule: String, path: String, imps: List<String>, code: String, classes: List<String>, what: String): List<Violation> {
+        val out = mutableListOf<Violation>()
+        imps.filter { i -> classes.any { i == it || i.startsWith("$it.") || (i.endsWith(".") && it.startsWith(i) && '.' !in it.removePrefix(i)) } }
+            .forEach { out += Violation(rule, path, "$what: $it") }
+        classes.filter { Regex("""\b${Regex.escape(it)}\b""").containsMatchIn(code) }
+            .forEach { out += Violation(rule, path, "$what: $it") }
         return out
     }
 

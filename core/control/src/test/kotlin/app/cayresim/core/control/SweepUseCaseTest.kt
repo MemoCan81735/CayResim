@@ -17,6 +17,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
@@ -123,6 +124,7 @@ class SweepUseCaseTest {
         assertEquals(sensors.samples.size, lage.count { it.startsWith("ROTATION,") || it.startsWith("ACCELERATION,") })
         val meta = String(chunks.getValue("meta"))
         assertTrue("\"format\": 1" in meta && "\"startBootNanos\": $start" in meta && "\"sampleRate\": $sr" in meta, meta)
+        assertTrue("\"rotationSource\": \"GAME\"" in meta && "NaN" !in meta && "Infinity" !in meta, meta)
         assertFalse(r.storageFailed)
     }
 
@@ -145,6 +147,14 @@ class SweepUseCaseTest {
         job.cancel(); job.join()
         assertEquals(0, mic.open, "Mikrofon frei"); assertEquals(0, sensors.active, "Sensor abgemeldet")
         assertTrue(files.files.isEmpty(), "nach Abbruch nichts gespeichert")
+    }
+
+    @Test fun `S-010 Abbruch waehrend der Auswertung speichert nichts`() = runTest {
+        val (mic, sensors, files) = setup()
+        val job = launch { SweepUseCase(mic, sensors, files, here()).run().collect { if (it is SweepEvent.Analyzing) cancel() } }
+        job.join()
+        assertTrue(files.files.isEmpty(), "nach Abbruch nichts gespeichert")
+        assertEquals(0, sensors.active); assertEquals(0, mic.open)
     }
 
     @Test fun `S-010 Speicher voll laesst die Auswertung stehen`() = runTest {

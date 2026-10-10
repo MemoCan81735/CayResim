@@ -88,8 +88,8 @@ class SweepMathTest {
         val audio = FloatArray(3 * sr)
         val rnd = Random(3)
         for (i in audio.indices) audio[i] = (gauss(rnd) * 0.001).toFloat()
-        // im Ton 12 ms spaeter
-        for (at in listOf((1.012 * sr).toInt(), (1.612 * sr).toInt())) for (i in 0 until 240) audio[at + i] += (0.5 * kotlin.math.exp(-i / 40.0) * if (i % 2 == 0) 1 else -1).toFloat()
+        // im Ton 12 ms spaeter; dazu ein Knacken bei 0,4 s ohne Klopfer im Sensor, das nicht gepaart werden darf
+        for (at in listOf((0.4 * sr).toInt(), (1.012 * sr).toInt(), (1.612 * sr).toInt())) for (i in 0 until 240) audio[at + i] += (0.5 * kotlin.math.exp(-i / 40.0) * if (i % 2 == 0) 1 else -1).toFloat()
         val off = assertNotNull(SweepMath.tapOffsetSeconds(accel, audio, sr, start, 3.0))
         assertEquals(0.012, off, 0.002)
         // ohne Klopfer: kein Wert, kein Absturz
@@ -205,6 +205,41 @@ class SweepMathTest {
         assertEquals(100.0, r.sensorRateHz, 1.0)
         assertTrue(r.framesUsed > 400, "Fenster ${r.framesUsed}")
         assertNull(r.syncSeconds, "kein Klopfer im kuenstlichen Ton")
+    }
+
+    @Test fun `S-010 Gruende ohne Richtung sind getrennt`() {
+        val rnd = Random(6)
+        val u = dir(10.0, 0.0)
+        val (pcm, poses, start) = syntheticSweep(u, rnd)
+        // nur ein Kanal
+        val mono = ShortArray(pcm.size / 2) { pcm[2 * it] }
+        assertEquals(SweepMath.SweepFailure.NO_STEREO, (SweepMath.analyze(mono, 1, sr, start, poses, emptyList()).estimate as SweepMath.Estimate.Failed).reason)
+        // Lage mit falscher Zeitbasis (10 s daneben): Fenster mit Signal da, aber keine Lage dazu
+        val shifted = poses.map { it.copy(nanos = it.nanos + 10_000_000_000L * 3) }
+        val r = SweepMath.analyze(pcm, 2, sr, start, shifted, emptyList())
+        assertEquals(SweepMath.SweepFailure.NO_POSE, (r.estimate as SweepMath.Estimate.Failed).reason)
+        assertTrue(r.framesWithPeak > 400, "Fenster mit Signal ${r.framesWithPeak}"); assertEquals(0, r.framesUsed)
+        // Stille: zu wenige Fenster mit Signal
+        val silent = SweepMath.analyze(ShortArray(pcm.size), 2, sr, start, poses, emptyList())
+        assertEquals(SweepMath.SweepFailure.TOO_FEW_MEASUREMENTS, (silent.estimate as SweepMath.Estimate.Failed).reason)
+        assertEquals(0, silent.framesWithPeak)
+    }
+
+    @Test fun `S-010 Startlage aus der Ruhe vor dem Schwenk`() {
+        // ruhig 0 bis 2,8 s (mit Ruckeln beim Klopfen um 1,0 s), danach Drehung nach rechts mit 60 Grad/s
+        val start = 0L
+        val poses = List(400) { i ->
+            val t = i / 100.0
+            val yaw = when { t > 2.8 -> (t - 2.8) * 60; abs(t - 1.0) < 0.03 -> 8.0; else -> 0.0 }
+            val q = quaternionOf(yaw, 0.0, 0.0)
+            SweepMath.Pose(start + i * 10_000_000L, q[0], q[1], q[2], q[3])
+        }
+        val p = assertNotNull(SweepMath.startPose(poses, start, 3.0))
+        val (az, el) = SweepMath.relativeToView(p, dir(0.0, 0.0))
+        assertEquals(0.0, az, 1.0, "Startlage aus der Ruhe, nicht vom Schwenkbeginn"); assertEquals(0.0, el, 1.0)
+        // die Lage genau bei 3,0 s waere schon 12 Grad gedreht
+        val late = assertNotNull(SweepMath.poseAt(poses, start + 3_000_000_000L))
+        assertTrue(abs(SweepMath.relativeToView(late, dir(0.0, 0.0)).first) > 10.0)
     }
 
     @Test fun `S-010 Richtung relativ zur Startlage`() {

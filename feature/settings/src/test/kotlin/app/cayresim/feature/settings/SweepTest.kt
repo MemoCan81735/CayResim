@@ -66,7 +66,7 @@ class SweepTest {
             analysis = SweepMath.SweepReport(
                 syncSeconds = 0.006, sensorRateHz = 99.6, framesTotal = 440, framesUsed = 412,
                 estimate = SweepMath.Estimate.Ok(Vec3(0.2, 0.97, -0.07), 0.151, -0.00004, 0.000031, 0.083, 412),
-                relAzimuthDeg = 12.2, relElevationDeg = -4.3,
+                relAzimuthDeg = 12.2, relElevationDeg = -4.3, framesWithPeak = 430,
             ),
             failure = null, timeExact = true, fileUri = "content://x", folder = "Recordings/CayResim/Schwenk-20261010-153000",
         ),
@@ -78,6 +78,7 @@ class SweepTest {
         assertEquals(12.2, assertNotNull(r.azimuthDeg), 1e-9); assertEquals(-4.3, assertNotNull(r.elevationDeg), 1e-9)
         assertEquals(15.1, assertNotNull(r.spacingCm), 1e-9); assertEquals(0.031, assertNotNull(r.residualMs), 1e-9)
         assertEquals(6.0, assertNotNull(r.syncMs), 1e-9); assertEquals(412, r.framesUsed); assertEquals(0.083, r.coverage, 1e-9)
+        assertEquals(430, r.framesWithPeak); assertFalse(r.noStartPose)
     }
 
     @Test fun `S-010 ViewModel ohne Signal meldet zu wenige Messungen`() {
@@ -123,7 +124,7 @@ class SweepTest {
         val state = SweepUiState(running = true, step = SweepStepUi.SWEEP, seconds = 22)
         compose.setContent { CayResimTheme(dark = true) { SweepContent(state, {}, {}) } }
         compose.onNodeWithText("Langsam schwenken").assertExists()
-        compose.onNodeWithText("Zeit in Sekunden: 22", substring = true).assertExists()
+        compose.onNodeWithText("Dauer dieses Schritts in Sekunden: 22", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/sweep_prompt.png")
     }
 
@@ -134,6 +135,13 @@ class SweepTest {
         compose.onNodeWithText("plus heißt rechts) +12", substring = true).assertExists()
         compose.onNodeWithText("Wirksamer Mikrofonabstand (cm): 15,1", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/sweep_result.png")
+    }
+
+    @Test fun `S-010 fehlende Lage wird erklaert`() {
+        val state = SweepUiState(step = SweepStepUi.DONE, result = SweepResultUi(failure = null, estimateFailure = SweepEstimateFailureUi.NO_POSE, framesWithPeak = 430))
+        compose.setContent { CayResimTheme { SweepContent(state, {}, {}) } }
+        compose.onNodeWithTag("sweep").performScrollToNode(hasTestTag("sweep_result"))
+        compose.onNodeWithText("keine Lage passt zeitlich dazu", substring = true).assertExists()
     }
 
     @Test fun `S-010 einseitiger Schwenk wird erklaert`() {

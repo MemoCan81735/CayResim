@@ -9,6 +9,7 @@ import app.cayresim.core.boundary.MotionAvailability
 import app.cayresim.core.boundary.MotionKind
 import app.cayresim.core.boundary.MotionSample
 import app.cayresim.core.boundary.MotionSensorBoundary
+import app.cayresim.core.boundary.RotationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -32,9 +33,17 @@ class MotionSensorAdapter @Inject constructor(@ApplicationContext private val co
     /** Angemeldete Sammler; fuer den Emulatortest (muss nach jedem Sammeln 0 sein). */
     val activeListeners: Int get() = listeners.get()
 
+    /** Drehvektor ohne Kompass bevorzugt, sonst mit Kompass (Zweitpruefung S-010, G3). */
+    private fun rotationSensor(m: SensorManager?): Pair<Sensor?, RotationSource> {
+        m?.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)?.let { return it to RotationSource.GAME }
+        m?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.let { return it to RotationSource.ROTATION_VECTOR }
+        return null to RotationSource.NONE
+    }
+
     override fun availability(): MotionAvailability {
         val m = manager
-        return MotionAvailability(m?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null, m?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null)
+        val (rot, source) = rotationSensor(m)
+        return MotionAvailability(rot != null, m?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null, source)
     }
 
     override fun samples(periodMicros: Int): Flow<MotionSample> = callbackFlow {
@@ -43,7 +52,7 @@ class MotionSensorAdapter @Inject constructor(@ApplicationContext private val co
         val listener = object : SensorEventListener {
             override fun onSensorChanged(e: SensorEvent) {
                 when (e.sensor.type) {
-                    Sensor.TYPE_ROTATION_VECTOR -> {
+                    Sensor.TYPE_GAME_ROTATION_VECTOR, Sensor.TYPE_ROTATION_VECTOR -> {
                         SensorManager.getQuaternionFromVector(q, e.values)
                         trySend(MotionSample(MotionKind.ROTATION, e.timestamp, q[0], q[1], q[2], q[3]))
                     }
@@ -54,8 +63,7 @@ class MotionSensorAdapter @Inject constructor(@ApplicationContext private val co
         }
         var registered = false
         if (m != null) {
-            for (type in listOf(Sensor.TYPE_ROTATION_VECTOR, Sensor.TYPE_ACCELEROMETER)) {
-                val s = m.getDefaultSensor(type) ?: continue
+            for (s in listOfNotNull(rotationSensor(m).first, m.getDefaultSensor(Sensor.TYPE_ACCELEROMETER))) {
                 registered = m.registerListener(listener, s, periodMicros) || registered
             }
         }

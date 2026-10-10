@@ -10,13 +10,17 @@ import app.cayresim.core.boundary.MicrophoneBoundary
 import app.cayresim.core.boundary.MotionKind
 import app.cayresim.core.boundary.MotionSample
 import app.cayresim.core.boundary.MotionSensorBoundary
+import app.cayresim.core.boundary.RotationSource
 import app.cayresim.core.pure.SweepMath
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
@@ -62,12 +66,16 @@ class SweepUseCase @Inject constructor(
 ) {
     fun run(): Flow<SweepEvent> = channelFlow {
         if (!mic.hasPermission()) { send(SweepEvent.Done(SweepRunReport(null, SweepRunFailure.NO_PERMISSION))); return@channelFlow }
-        if (!sensors.availability().rotation) { send(SweepEvent.Done(SweepRunReport(null, SweepRunFailure.NO_SENSOR))); return@channelFlow }
+        val availability = sensors.availability()
+        if (!availability.rotation) { send(SweepEvent.Done(SweepRunReport(null, SweepRunFailure.NO_SENSOR))); return@channelFlow }
+        val rotationSource = availability.rotationSource
         val folder = files.newFolder(FOLDER_PREFIX)
         send(SweepEvent.Tap(TAP_SECONDS))
         val samples = ArrayList<MotionSample>(4 * TOTAL_SECONDS * 100)
         val result = coroutineScope {
-            // sofort anmelden, damit die Lage vor dem ersten Ton laeuft (sonst startete die Aufnahme zuerst)
+            // Sammeln sofort beginnen. Beim Fake ist der Sensor damit vor der Aufnahme angemeldet; der echte Adapter
+            // (callbackFlow) meldet in einem eigenen Produzenten an, also womoeglich wenige ms nach Aufnahmebeginn.
+            // Unschaedlich: die Rechnung braucht Lagen erst ab dem Ende der Klopfphase (Zweitpruefung S-010, G1).
             val sensorJob = launch(start = CoroutineStart.UNDISPATCHED) { sensors.samples(PERIOD_MICROS).collect { samples += it } }
             val prompt = launch { delay(TAP_SECONDS * 1000L); send(SweepEvent.Sweep(TOTAL_SECONDS - TAP_SECONDS)) }
             val r = mic.record(MicRequest(AudioSourceKey.MIC, millis = TOTAL_SECONDS * 1000))
@@ -81,15 +89,17 @@ class SweepUseCase @Inject constructor(
             is MicRecordResult.Ok -> result.capture
         }
         send(SweepEvent.Analyzing)
+        yield() // Abbruch durch den Sammler hier wirksam werden lassen (Zweitpruefung S-010, G4)
         val poses = poses(samples)
         val accel = samples.filter { it.kind == MotionKind.ACCELERATION }
             .map { SweepMath.AccelSample(it.nanos, sqrt((it.a * it.a + it.b * it.b + it.c * it.c).toDouble())) }
         val exact = capture.startBootNanos != null && capture.timeExact
         val startNanos = capture.startBootNanos ?: poses.firstOrNull()?.nanos ?: 0L
         val analysis = SweepMath.analyze(capture.pcm, capture.channels, capture.sampleRate, startNanos, poses, accel, TAP_SECONDS.toDouble())
+        currentCoroutineContext().ensureActive() // nach Abbruch waehrend der Auswertung nichts speichern
         val wav = Wav.encode(capture.pcm, capture.sampleRate, capture.channels, linkedMapOf(
             "lage" to csv(samples).toByteArray(Charsets.UTF_8),
-            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis).toByteArray(Charsets.UTF_8),
+            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis, rotationSource).toByteArray(Charsets.UTF_8),
         ))
         val uri = folder?.let { files.saveWav(it, FILE_NAME, wav) }
         send(SweepEvent.Done(SweepRunReport(analysis, null, null, exact, uri, folder, storageFailed = uri == null)))
@@ -100,8 +110,8 @@ class SweepUseCase @Inject constructor(
         const val FILE_NAME = "schwenk-v1.wav"
         const val TAP_SECONDS = 3
         const val TOTAL_SECONDS = 25
-        /** 100 Hz; bis 200 Hz ohne Berechtigung. */
-        const val PERIOD_MICROS = 10_000
+        /** 200 Hz, die Grenze ohne Berechtigung; feiner fuer die Klopfer (Zweitpruefung S-010, G2). */
+        const val PERIOD_MICROS = 5_000
 
         fun poses(samples: List<MotionSample>): List<SweepMath.Pose> = samples.filter { it.kind == MotionKind.ROTATION }
             .sortedBy { it.nanos }
@@ -116,8 +126,9 @@ class SweepUseCase @Inject constructor(
         }
 
         /** Kenndaten und Ergebnis als JSON, Formatversion 1 (R26). */
-        fun meta(sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport): String {
-            fun n(v: Double?) = v?.let { String.format(Locale.ROOT, "%.9g", it) } ?: "null"
+        fun meta(sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport, rotationSource: RotationSource): String {
+            // NaN und Unendlich sind kein gueltiges JSON (Zweitpruefung S-010, G5)
+            fun n(v: Double?) = v?.takeIf { it.isFinite() }?.let { String.format(Locale.ROOT, "%.9g", it) } ?: "null"
             val e = a.estimate
             val ok = e as? SweepMath.Estimate.Ok
             return buildString {
@@ -128,11 +139,13 @@ class SweepUseCase @Inject constructor(
                 append("  \"startBootNanos\": ").append(startNanos).append(",\n")
                 append("  \"timeExact\": ").append(exact).append(",\n")
                 append("  \"tapSeconds\": ").append(TAP_SECONDS).append(",\n")
+                append("  \"rotationSource\": \"").append(rotationSource.name).append("\",\n")
                 append("  \"micAxisDevice\": [").append(SweepMath.MIC_AXIS_DEVICE.let { "${it.x}, ${it.y}, ${it.z}" }).append("],\n")
                 append("  \"syncSeconds\": ").append(n(a.syncSeconds)).append(",\n")
                 append("  \"sensorRateHz\": ").append(n(a.sensorRateHz)).append(",\n")
                 append("  \"framesTotal\": ").append(a.framesTotal).append(",\n")
                 append("  \"framesUsed\": ").append(a.framesUsed).append(",\n")
+                append("  \"framesWithPeak\": ").append(a.framesWithPeak).append(",\n")
                 append("  \"coverage\": ").append(n(e.coverage)).append(",\n")
                 append("  \"failure\": ").append((e as? SweepMath.Estimate.Failed)?.let { "\"${it.reason.name}\"" } ?: "null").append(",\n")
                 append("  \"direction\": ").append(ok?.direction?.let { "[${n(it.x)}, ${n(it.y)}, ${n(it.z)}]" } ?: "null").append(",\n")

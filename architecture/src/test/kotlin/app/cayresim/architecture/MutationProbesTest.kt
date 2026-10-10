@@ -50,6 +50,8 @@ class MutationProbesTest {
     @Test fun `R29 SensorManager im Feature`() = probe("R29", ctl, "import android.hardware.SensorManager")
     @Test fun `R29 Sensor im Mikrofon-Adapter`() = probe("R29", "core/audio/src/main/kotlin/app/cayresim/core/audio/X.kt", "import android.hardware.SensorEventListener")
     @Test fun `R29 voll qualifizierter Sensor in der UI`() = probe("R29", ui, "fun f(c: Context) = c.getSystemService(android.hardware.SensorManager::class.java)")
+    @Test fun `R29 Sternimport im Feature`() = probe("R29", ctl, "import android.hardware.*")
+    @Test fun `R28 Sternimport im Daten-Adapter`() = probe("R28", adapter, "import android.media.*")
     @Test fun `R16 Dispatchers im ViewModel`() = probe("R16", ctl, "fun f() = withContext(Dispatchers.IO) { }")
     @Test fun `Namen Entity-Klasse`() = probe("Namen", entity, "class Rules { }")
     @Test fun `Namen Boundary-Schnittstelle`() = probe("Namen", boundary, "interface Camera { }")
@@ -75,6 +77,10 @@ class MutationProbesTest {
         assertEquals(emptyList(), rulesFor(adapter, "import android.media.ExifInterface\nimport android.media.ImageReader"))
     @Test fun `R29 Sensor-Adapter darf SensorManager nutzen`() =
         assertEquals(emptyList(), rulesFor("core/sensors/src/main/kotlin/app/cayresim/core/sensors/X.kt", "import android.hardware.SensorManager\nimport android.hardware.SensorEvent"))
+    @Test fun `R29 SensorPrivacyManager ist kein Lagesensor`() =
+        assertEquals(emptyList(), rulesFor(ctl, "fun f(c: Context) = c.getSystemService(android.hardware.SensorPrivacyManager::class.java)"))
+    @Test fun `R29 Sternimport eines Unterpakets bleibt erlaubt`() =
+        assertEquals(emptyList(), rulesFor(adapter, "import android.hardware.display.*"))
     @Test fun `DI-Modul darf Dispatchers nutzen`() =
         assertEquals(emptyList(), rulesFor("app/src/main/kotlin/app/cayresim/shell/di/AppModule.kt", "fun f() = Dispatchers.IO"))
 }

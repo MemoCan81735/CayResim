@@ -44,6 +44,8 @@ object SweepMath {
     const val TAP_ACCEL = 3.0
     const val TAP_ABOVE_FLOOR_DB = 12.0
     const val TAP_RISE_DB = 10.0
+    /** Groesster erlaubter Abstand zwischen Klopfer im Sensor und im Ton. */
+    const val TAP_PAIR_SECONDS = 0.15
     /** Wie weit eine Lage vom gesuchten Zeitpunkt entfernt sein darf. */
     const val MAX_POSE_GAP_NANOS = 100_000_000L
 
@@ -63,7 +65,12 @@ object SweepMath {
 
     data class Measurement(val axis: Vec3, val delaySeconds: Double)
 
-    enum class SweepFailure { TOO_FEW_MEASUREMENTS, ONE_SIDED, IMPLAUSIBLE }
+    /**
+     * Gruende ohne Richtung (Zweitpruefung S-010, W2: jede Ursache eigen, damit der Hinweis stimmt):
+     * NO_STEREO nur ein Kanal; TOO_FEW_MEASUREMENTS zu wenige Fenster mit klarem Signal; NO_POSE Fenster da, aber keine
+     * Lage zur Tonzeit (Zeitbezug falsch oder Sensor-Luecke); ONE_SIDED zu einseitig gedreht; IMPLAUSIBLE Abstand unsinnig.
+     */
+    enum class SweepFailure { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE }
 
     sealed interface Estimate {
         val coverage: Double
@@ -85,17 +92,20 @@ object SweepMath {
         val syncSeconds: Double?,
         val sensorRateHz: Double,
         val framesTotal: Int,
+        /** Fenster mit Lage, also in die Rechnung eingegangen. */
         val framesUsed: Int,
         val estimate: Estimate,
         /** Grad nach rechts (positiv) oder links gegenueber dem Kamerablick am Start. */
         val relAzimuthDeg: Double?,
         /** Grad nach oben (positiv) oder unten gegenueber dem Kamerablick am Start. */
         val relElevationDeg: Double?,
+        /** Fenster mit klarer GCC-PHAT-Spitze, mit oder ohne Lage. */
+        val framesWithPeak: Int = framesUsed,
     )
 
     fun rotate(q: Pose, v: Vec3): Vec3 {
         // v' = q v q*, ausgeschrieben
-        val (w, x, y, z) = listOf(q.w, q.x, q.y, q.z)
+        val w = q.w; val x = q.x; val y = q.y; val z = q.z
         val tx = 2 * (y * v.z - z * v.y); val ty = 2 * (z * v.x - x * v.z); val tz = 2 * (x * v.y - y * v.x)
         return Vec3(v.x + w * tx + (y * tz - z * ty), v.y + w * ty + (z * tx - x * tz), v.z + w * tz + (x * ty - y * tx))
     }
@@ -123,10 +133,28 @@ object SweepMath {
     fun frameDelays(a: FloatArray, b: FloatArray, sampleRate: Int, maxLagSeconds: Double = MAX_LAG_SECONDS): List<FrameDelay> {
         val len = (FRAME_SECONDS * sampleRate).toInt()
         val n = minOf(a.size, b.size) / maxOf(1, len)
+        return framesOf(n, len, sampleRate, maxLagSeconds) { from, wa, wb -> a.copyInto(wa, 0, from, from + len); b.copyInto(wb, 0, from, from + len) }
+    }
+
+    /**
+     * Wie [frameDelays], aber direkt aus verschraenktem PCM ab Frame [startFrame]: nur zwei Fensterpuffer statt Kopien
+     * der ganzen Aufnahme (Zweitpruefung S-010, W4: 25 s Stereo sind 4,8 MB, getrennt und als Float das Doppelte).
+     */
+    fun frameDelaysInterleaved(pcm: ShortArray, channels: Int, sampleRate: Int, startFrame: Int, maxLagSeconds: Double = MAX_LAG_SECONDS): List<FrameDelay> {
+        val len = (FRAME_SECONDS * sampleRate).toInt()
+        val frames = pcm.size / channels - startFrame
+        val n = maxOf(0, frames) / maxOf(1, len)
+        return framesOf(n, len, sampleRate, maxLagSeconds) { from, wa, wb ->
+            for (i in 0 until len) { val f = (startFrame + from + i) * channels; wa[i] = pcm[f] / 32768f; wb[i] = pcm[f + 1] / 32768f }
+        }
+    }
+
+    private inline fun framesOf(n: Int, len: Int, sampleRate: Int, maxLagSeconds: Double, fill: (Int, FloatArray, FloatArray) -> Unit): List<FrameDelay> {
         val out = ArrayList<FrameDelay>(n)
+        val wa = FloatArray(len); val wb = FloatArray(len)
         for (k in 0 until n) {
-            val from = k * len
-            val d = AudioMath.gccPhat(a.copyOfRange(from, from + len), b.copyOfRange(from, from + len), sampleRate, maxLagSeconds) ?: continue
+            fill(k * len, wa, wb)
+            val d = AudioMath.gccPhat(wa, wb, sampleRate, maxLagSeconds) ?: continue
             if (d.peak >= MIN_PEAK) out += FrameDelay((k + 0.5) * FRAME_SECONDS, d.seconds, d.peak)
         }
         return out
@@ -155,7 +183,6 @@ object SweepMath {
         val q = (a + b + c) / 3
         val p2 = (a - q) * (a - q) + (b - q) * (b - q) + (c - q) * (c - q) + 2 * p1
         val p = sqrt(p2 / 6)
-        if (p < 1e-30) return q
         val ba = (a - q) / p; val bb = (b - q) / p; val bc = (c - q) / p; val bd = d / p; val be = e / p; val bf = f / p
         val det = ba * (bb * bc - bf * bf) - bd * (bd * bc - bf * be) + be * (bd * bf - bb * be)
         val phi = acos((det / 2).coerceIn(-1.0, 1.0)) / 3
@@ -220,9 +247,29 @@ object SweepMath {
         val n = minOf(audio.size, (windowSeconds * sampleRate).toInt())
         // Klopfer auf das Gehaeuse sind laut, die Geraeuschquelle laeuft aber schon: niedrigere Schwellen als beim Klatschen
         val audioTaps = AudioMath.findClaps(audio.copyOfRange(0, n), sampleRate, aboveFloorDb = TAP_ABOVE_FLOOR_DB, riseDb = TAP_RISE_DB).map { audioStartNanos + it * 1_000_000_000L / sampleRate }
-        val pairs = minOf(accelTaps.size, audioTaps.size)
-        if (pairs == 0) return null
-        return (0 until pairs).map { (audioTaps[it] - accelTaps[it]) / 1e9 }.average()
+        // je Klopfer im Sensor der naechste im Ton innerhalb +-150 ms; ein falscher Treffer im Ton bleibt so ohne Partner
+        val offsets = accelTaps.mapNotNull { t -> audioTaps.minByOrNull { abs(it - t) }?.let { (it - t) / 1e9 }?.takeIf { abs(it) <= TAP_PAIR_SECONDS } }
+        return if (offsets.isEmpty()) null else offsets.average()
+    }
+
+    /**
+     * Startlage fuer "relativ zum Kamerablick": normiertes Mittel der Lagen von 0,5 s bis 0,5 s vor Ende der Klopfphase.
+     * Genau am Ende der Klopfphase dreht der Nutzer oft schon (Ansage kommt vor dem Tonbeginn), und das Klopfen ruckelt
+     * (Zweitpruefung S-010, W3). Ohne Lagen in dem Bereich: Lage am Ende der Klopfphase.
+     */
+    fun startPose(poses: List<Pose>, audioStartNanos: Long, tapSeconds: Double): Pose? {
+        val from = audioStartNanos + 500_000_000L
+        val to = audioStartNanos + ((tapSeconds - 0.5) * 1e9).toLong()
+        val inRange = poses.filter { it.nanos in from..to }
+        if (inRange.isEmpty()) return poseAt(poses, audioStartNanos + (tapSeconds * 1e9).toLong())
+        val ref = inRange.first()
+        var w = 0.0; var x = 0.0; var y = 0.0; var z = 0.0
+        for (p in inRange) {
+            val s = if (p.w * ref.w + p.x * ref.x + p.y * ref.y + p.z * ref.z < 0) -1.0 else 1.0
+            w += s * p.w; x += s * p.x; y += s * p.y; z += s * p.z
+        }
+        val n = sqrt(w * w + x * x + y * y + z * z)
+        return if (n > 0) Pose(to, w / n, x / n, y / n, z / n) else ref
     }
 
     /** Richtung [u] in Grad gegenueber der Blickrichtung der Kamera (Geraete -z) in der Lage [start]. */
@@ -249,22 +296,24 @@ object SweepMath {
         tapSeconds: Double = 3.0,
         axisDevice: Vec3 = MIC_AXIS_DEVICE,
     ): SweepReport {
-        val rate = if (poses.size >= 2) (poses.size - 1) / ((poses.last().nanos - poses.first().nanos) / 1e9) else 0.0
-        if (channels < 2) return SweepReport(null, rate, 0, 0, Estimate.Failed(SweepFailure.TOO_FEW_MEASUREMENTS, 0.0, 0), null, null)
-        val ch = AudioMath.deinterleave(pcm, channels)
-        val mono = FloatArray(ch[0].size) { maxOf(abs(ch[0][it]), abs(ch[1][it])) }
+        val span = if (poses.size >= 2) (poses.last().nanos - poses.first().nanos) / 1e9 else 0.0
+        val rate = if (span > 0) (poses.size - 1) / span else 0.0
+        if (channels < 2) return SweepReport(null, rate, 0, 0, Estimate.Failed(SweepFailure.NO_STEREO, 0.0, 0), null, null, 0)
+        val totalFrames = pcm.size / channels
+        // Klopfer nur aus der Klopfphase: kleiner Mono-Puffer statt der ganzen Aufnahme (W4)
+        val tapFrames = (tapSeconds * sampleRate).toInt().coerceIn(0, totalFrames)
+        val mono = FloatArray(tapFrames) { i -> maxOf(abs(pcm[i * channels].toInt()), abs(pcm[i * channels + 1].toInt())) / 32768f }
         val sync = tapOffsetSeconds(accel, mono, sampleRate, audioStartNanos, tapSeconds)
-        val skip = (tapSeconds * sampleRate).toInt().coerceIn(0, ch[0].size)
-        val a = ch[0].copyOfRange(skip, ch[0].size); val b = ch[1].copyOfRange(skip, ch[1].size)
-        val frames = frameDelays(a, b, sampleRate)
-        val total = a.size / (FRAME_SECONDS * sampleRate).toInt().coerceAtLeast(1)
+        val frames = frameDelaysInterleaved(pcm, channels, sampleRate, tapFrames)
+        val total = (totalFrames - tapFrames) / (FRAME_SECONDS * sampleRate).toInt().coerceAtLeast(1)
         val m = frames.mapNotNull { f ->
             val t = audioStartNanos + ((tapSeconds + f.centerSeconds) * 1e9).toLong()
             poseAt(poses, t)?.let { Measurement(rotate(it, axisDevice), f.delaySeconds) }
         }
-        val est = solve(m)
-        val start = poseAt(poses, audioStartNanos + (tapSeconds * 1e9).toLong())
+        val est = if (frames.size >= MIN_FRAMES && m.size < MIN_FRAMES) Estimate.Failed(SweepFailure.NO_POSE, coverage(m.map { it.axis }), m.size)
+        else solve(m)
+        val start = startPose(poses, audioStartNanos, tapSeconds)
         val rel = if (est is Estimate.Ok && start != null) relativeToView(start, est.direction) else null
-        return SweepReport(sync, rate, total, m.size, est, rel?.first, rel?.second)
+        return SweepReport(sync, rate, total, m.size, est, rel?.first, rel?.second, frames.size)
     }
 }

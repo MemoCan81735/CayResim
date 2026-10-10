@@ -63,6 +63,8 @@ class AudioRecordMicrophoneAdapterTest {
         val after = android.os.SystemClock.elapsedRealtimeNanos()
         val c = assertIs<MicRecordResult.Ok>(r, "Ergebnis $r").capture
         val start = assertNotNull(c.startBootNanos, "Zeitbezug fehlt")
+        // im Testprotokoll sichtbar, ob der genaue Weg (Zeitstempel) oder der grobe lief (Zweitpruefung G7)
+        println("S-010 Zeitbezug: genau=${c.timeExact}, Start ${(start - before) / 1_000_000} ms nach Aufruf")
         assertTrue(start in before..after, "Start $start nicht zwischen $before und $after (genau: ${c.timeExact})")
         assertTrue(after - start >= 900_000_000L, "erster Frame mindestens 0,9 s vor dem Ende")
     }

@@ -19,15 +19,16 @@ class MotionSensorAdapterTest {
 
     @Test fun s010AnUndAbmelden() = runBlocking {
         val avail = adapter.availability()
+        // der Emulator hat immer einen Beschleunigungssensor; ohne ihn koennte dieser Test nie rot werden (Zweitpruefung G7)
+        assertTrue(avail.acceleration, "Beschleunigungssensor fehlt: $avail")
+        println("S-010 Sensoren: $avail")
         var got = 0; var lastNanos = 0L
         val job = launch(Dispatchers.Default) { adapter.samples().collect { got++; lastNanos = it.nanos } }
         delay(1_000)
-        if (avail.rotation || avail.acceleration) assertEquals(1, adapter.activeListeners, "angemeldet")
-        if (avail.acceleration) {
-            assertTrue(got > 0, "Werte in 1 s: $got")
-            val now = android.os.SystemClock.elapsedRealtimeNanos()
-            assertTrue(now - lastNanos in 0..2_000_000_000L, "Zeitbasis: jetzt $now, letzter Wert $lastNanos")
-        }
+        assertEquals(1, adapter.activeListeners, "angemeldet")
+        assertTrue(got > 0, "Werte in 1 s: $got")
+        val now = android.os.SystemClock.elapsedRealtimeNanos()
+        assertTrue(now - lastNanos in 0..2_000_000_000L, "Zeitbasis: jetzt $now, letzter Wert $lastNanos")
         job.cancelAndJoin()
         delay(100)
         assertEquals(0, adapter.activeListeners, "nach Abbruch abgemeldet")

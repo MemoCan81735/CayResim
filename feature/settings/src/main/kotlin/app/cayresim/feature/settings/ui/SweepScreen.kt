@@ -86,7 +86,7 @@ fun SweepContent(state: SweepUiState, onStart: () -> Unit, onBack: () -> Unit) {
             if (state.failed) item {
                 Text(stringResource(R.string.sweep_error), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("sweep_error"))
             }
-            state.result?.let { r -> item { Result(r) } }
+            state.result?.let { r -> item { SweepResult(r) } }
             item { Text("", Modifier.padding(bottom = 24.dp)) }
         }
     }
@@ -106,7 +106,7 @@ private fun Prompt(state: SweepUiState) {
 }
 
 @Composable
-private fun Result(r: SweepResultUi) {
+private fun SweepResult(r: SweepResultUi) {
     Column(Modifier.fillMaxWidth().testTag("sweep_result"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.sweep_result_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
         val failure = r.failure
@@ -121,10 +121,11 @@ private fun Measured(r: SweepResultUi) {
     when {
         estimateFailure != null -> Text(stringResource(estimateFailureText(estimateFailure)), color = MaterialTheme.colorScheme.error)
         az != null && el != null -> Text(stringResource(R.string.sweep_direction, signed0(az), signed0(el)), fontWeight = FontWeight.Medium)
+        r.noStartPose -> Text(stringResource(R.string.sweep_no_start), color = MaterialTheme.colorScheme.error)
     }
     val spacing = r.spacingCm; val residual = r.residualMs
     if (spacing != null && residual != null) Text(stringResource(R.string.sweep_spacing, dec1(spacing), dec2(residual)), style = MaterialTheme.typography.bodySmall)
-    Text(stringResource(R.string.sweep_coverage, dec2(r.coverage), r.framesUsed, r.framesTotal), style = MaterialTheme.typography.bodySmall)
+    Text(stringResource(R.string.sweep_coverage, dec2(r.coverage), r.framesWithPeak, r.framesUsed, r.framesTotal), style = MaterialTheme.typography.bodySmall)
     val sync = r.syncMs
     Text(sync?.let { stringResource(R.string.sweep_sync, signed1(it)) } ?: stringResource(R.string.sweep_sync_none), style = MaterialTheme.typography.bodySmall)
     if (!r.timeExact) Text(stringResource(R.string.sweep_time_rough), style = MaterialTheme.typography.bodySmall)
@@ -141,7 +142,9 @@ private fun failureText(f: SweepFailureUi) = when (f) {
 }
 
 private fun estimateFailureText(f: SweepEstimateFailureUi) = when (f) {
+    SweepEstimateFailureUi.NO_STEREO -> R.string.sweep_fail_no_stereo
     SweepEstimateFailureUi.TOO_FEW_MEASUREMENTS -> R.string.sweep_fail_too_few
+    SweepEstimateFailureUi.NO_POSE -> R.string.sweep_fail_no_pose
     SweepEstimateFailureUi.ONE_SIDED -> R.string.sweep_fail_one_sided
     SweepEstimateFailureUi.IMPLAUSIBLE -> R.string.sweep_fail_implausible
 }

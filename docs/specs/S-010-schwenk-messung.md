@@ -82,7 +82,7 @@ Am Fotografieren ändert sich nichts.
 | Nur Zahlen, Schlüssel, Enums | `MotionSample` und Ergebnis nur Zahlen und Enums (R23) |
 | Fehler und Ausweichweg | fehlender Sensor, kein Zeitbezug, zu wenige Messungen, zu einseitig: je eigener Ergebnisgrund, kein Absturz (R14, R24) |
 | Abbruch und Freigabe | Sensor-Abmeldung in `awaitClose`, Mikrofon wie bisher; Test K6 und K7 (R17) |
-| Puffer | 25 s Stereo 16 Bit = 4,8 MB, ein Puffer, ein Besitzer; Lagewerte etwa 2.500 × 8 Zahlen (R19) |
+| Puffer | 25 s Stereo 16 Bit = 4,8 MB, ein Besitzer; die Auswertung liest Fenster direkt aus dem PCM (zwei Fensterpuffer, dazu 0,6 MB für die Klopfphase); die WAV mit Zusatzblöcken etwa 5,7 MB. Spitze etwa 11 MB, gerechnet, nicht gemessen; Lagewerte etwa 10.000 × 6 Zahlen (R19) |
 | Main-Thread | Aufnahme und Speichern auf IoDispatcher, Rechnen auf ComputeDispatcher (R16, R18) |
 | Gespeicherte Daten | CSV mit Kopfzeile `format=v1`, JSON mit `"format": 1`; die App liest sie nicht zurück (R26) |
 | Zeit und Speicher | Auswertung höchstens 2 s (K5), Lauf 25 s plus Speichern (R27) |
@@ -122,6 +122,27 @@ Abweichungen vom Entwurf, mit Grund:
 Tests zuerst rot: `SweepMathTest`, `SweepUseCaseTest`, `WavTest > S-010 ...` und die R29-Proben scheiterten ohne den
 Code (Kompilierfehler, 147 Fehlermeldungen bei `SweepMathTest`). Danach lokal grün: 158 Tests in `:core:pure`
 (Auswertung von 25 s: 356 ms, K5), 5 in `SweepUseCaseTest`, Architektur 45 Proben, 0 Verstöße in 75 Dateien.
+
+Unabhängige Prüfung (zweiter Agent, 10.10.), kein blockierender Befund; behoben:
+- W1: R28 und R29 ließen sich mit einem Sternimport (`import android.hardware.*`) umgehen; die Codeprüfung meldete
+  `SensorPrivacyManager` fälschlich. Jetzt Sternimport erkannt, Code mit Wortgrenze; vier neue Proben.
+- W2: ein Grund für drei Ursachen ("zu wenige Messungen" auch bei Mono und bei falschem Zeitbezug). Jetzt eigene
+  Gründe `NO_STEREO`, `NO_POSE`, dazu "Messfenster mit Signal" und "davon mit Lage" getrennt im Ergebnis und in `meta`.
+- W3: Startlage genau am Ende der Klopfphase war bei Schwenkbeginn schon gedreht (bis 12°). Jetzt Mittel der Lagen
+  von 0,5 s bis 2,5 s, Test mit Drehung ab 2,8 s.
+- W4: Spitzenspeicher etwa 28 MB durch Kopien der ganzen Aufnahme. Jetzt Fenster direkt aus dem PCM, etwa 11 MB.
+- W6: Änderungsprotokoll, Funktionsliste, R29 in den Architekturvorgaben (Projektdokument und Tab im Claude Doc).
+- G2: Lage und Beschleunigung mit 200 Hz (Grenze ohne Berechtigung); Klopfer werden mit dem nächsten Partner
+  innerhalb ±150 ms gepaart, ein falscher Treffer im Ton bleibt ohne Partner (Test mit Knacken bei 0,4 s).
+- G3: Drehvektor ohne Kompass (`TYPE_GAME_ROTATION_VECTOR`) bevorzugt, Rückfall mit Kompass, Quelle in `meta`;
+  `uses-feature` für das Gyroskop.
+- G4: nach Abbruch während der Auswertung wird nichts gespeichert (`yield`, `ensureActive`), Test vorher rot.
+- G5: kein `NaN` im JSON. G6: toter Zweig und Liste je Drehung entfernt. G7: Emulatortests verlangen den
+  Beschleunigungssensor und schreiben aus, ob der Zeitbezug genau war. G8: `SweepResult` statt `Result`, Hinweis bei
+  fehlender Startlage, Text "Dauer dieses Schritts" statt einer Zeit, die nicht herunterzählt.
+- G1 (Sensor bei echtem Adapter wenige ms nach Aufnahmebeginn angemeldet) als Kommentar festgehalten; unschädlich,
+  weil Lagen erst ab dem Ende der Klopfphase gebraucht werden.
+- G9: Eine Datei mit Zusatzblöcken statt drei Dateien wird Arslan zur Bestätigung genannt.
 
 ## Ergebnis
 Noch offen.
