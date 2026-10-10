@@ -11,6 +11,7 @@ import app.cayresim.core.boundary.MotionKind
 import app.cayresim.core.boundary.MotionSample
 import app.cayresim.core.boundary.MotionSensorBoundary
 import app.cayresim.core.boundary.RotationSource
+import app.cayresim.core.pure.SweepGuide
 import app.cayresim.core.pure.SweepMath
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlin.math.sqrt
 
@@ -44,10 +46,11 @@ data class SweepRunReport(
 )
 
 sealed interface SweepEvent {
-    /** Zweimal auf die Rueckseite tippen; die Aufnahme laeuft schon. */
-    data class Tap(val seconds: Int) : SweepEvent
-    /** Langsam schwenken. */
-    data class Sweep(val seconds: Int) : SweepEvent
+    /**
+     * S-014: Fortschritt im festen Ablauf, mindestens alle 250 ms: aktuelle Bewegung, volle Sekunden bis zum Wechsel,
+     * naechste Bewegung, Abdeckung der Drehungen seit Ende der Klopfphase (0 bis 1). Ersetzt die Ansagen aus S-010.
+     */
+    data class Progress(val move: SweepGuide.Move, val secondsLeft: Int, val next: SweepGuide.Move?, val coverage: Double) : SweepEvent
     data object Analyzing : SweepEvent
     data class Done(val report: SweepRunReport) : SweepEvent
 }
@@ -70,16 +73,33 @@ class SweepUseCase @Inject constructor(
         if (!availability.rotation) { send(SweepEvent.Done(SweepRunReport(null, SweepRunFailure.NO_SENSOR))); return@channelFlow }
         val rotationSource = availability.rotationSource
         val folder = files.newFolder(FOLDER_PREFIX)
-        send(SweepEvent.Tap(TAP_SECONDS))
+        send(progress(0, 0.0))
         val samples = ArrayList<MotionSample>(4 * TOTAL_SECONDS * 100)
+        // S-014: Abdeckung laufend; nur der Sammler schreibt, der Takt liest den letzten Wert
+        val coverage = SweepMath.AxisCoverage()
+        val liveCoverage = AtomicReference(0.0)
         val result = coroutineScope {
             // Sammeln sofort beginnen. Beim Fake ist der Sensor damit vor der Aufnahme angemeldet; der echte Adapter
             // (callbackFlow) meldet in einem eigenen Produzenten an, also womoeglich wenige ms nach Aufnahmebeginn.
             // Unschaedlich: die Rechnung braucht Lagen erst ab dem Ende der Klopfphase (Zweitpruefung S-010, G1).
-            val sensorJob = launch(start = CoroutineStart.UNDISPATCHED) { sensors.samples(PERIOD_MICROS).collect { samples += it } }
-            val prompt = launch { delay(TAP_SECONDS * 1000L); send(SweepEvent.Sweep(TOTAL_SECONDS - TAP_SECONDS)) }
+            val sensorJob = launch(start = CoroutineStart.UNDISPATCHED) {
+                var tapEnd = Long.MIN_VALUE
+                sensors.samples(PERIOD_MICROS).collect { s ->
+                    samples += s
+                    if (tapEnd == Long.MIN_VALUE) tapEnd = s.nanos + TAP_SECONDS * 1_000_000_000L
+                    if (s.kind == MotionKind.ROTATION && s.nanos >= tapEnd) {
+                        val pose = SweepMath.Pose(s.nanos, s.a.toDouble(), s.b.toDouble(), s.c.toDouble(), s.d.toDouble())
+                        coverage.add(SweepMath.rotate(pose, SweepMath.MIC_AXIS_DEVICE)); liveCoverage.set(coverage.value())
+                    }
+                }
+            }
+            // Takt fuer die Anzeige; endet mit der Aufnahme (R17)
+            val ticker = launch {
+                var tick = 0
+                while (true) { delay(TICK_MILLIS); tick++; send(progress(tick * TICK_MILLIS, liveCoverage.get())) }
+            }
             val r = mic.record(MicRequest(AudioSourceKey.MIC, millis = TOTAL_SECONDS * 1000))
-            prompt.cancel(); sensorJob.cancelAndJoin()
+            ticker.cancelAndJoin(); sensorJob.cancelAndJoin()
             r
         }
         val capture = when (result) {
@@ -99,7 +119,7 @@ class SweepUseCase @Inject constructor(
         currentCoroutineContext().ensureActive() // nach Abbruch waehrend der Auswertung nichts speichern
         val wav = Wav.encode(capture.pcm, capture.sampleRate, capture.channels, linkedMapOf(
             "lage" to csv(samples).toByteArray(Charsets.UTF_8),
-            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis, rotationSource).toByteArray(Charsets.UTF_8),
+            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis, rotationSource, liveCoverage.get()).toByteArray(Charsets.UTF_8),
         ))
         val uri = folder?.let { files.saveWav(it, FILE_NAME, wav) }
         send(SweepEvent.Done(SweepRunReport(analysis, null, null, exact, uri, folder, storageFailed = uri == null)))
@@ -108,10 +128,18 @@ class SweepUseCase @Inject constructor(
     companion object {
         const val FOLDER_PREFIX = "Schwenk"
         const val FILE_NAME = "schwenk-v1.wav"
-        const val TAP_SECONDS = 3
-        const val TOTAL_SECONDS = 25
+        const val TAP_SECONDS = SweepGuide.TAP_SECONDS
+        const val TOTAL_SECONDS = SweepGuide.TOTAL_SECONDS
         /** 200 Hz, die Grenze ohne Berechtigung; feiner fuer die Klopfer (Zweitpruefung S-010, G2). */
         const val PERIOD_MICROS = 5_000
+        /** S-014: Abstand der Fortschrittsmeldungen. */
+        const val TICK_MILLIS = 250L
+
+        /** Fortschritt nach [elapsedMillis]; nach dem Ende des Ablaufs bleibt die letzte Bewegung mit 1 s stehen. */
+        fun progress(elapsedMillis: Long, coverage: Double): SweepEvent.Progress {
+            val step = SweepGuide.at(elapsedMillis / 1000.0) ?: SweepGuide.Step(SweepGuide.PHASES.last().move, 1, null)
+            return SweepEvent.Progress(step.move, step.secondsLeft, step.next, coverage)
+        }
 
         fun poses(samples: List<MotionSample>): List<SweepMath.Pose> = samples.filter { it.kind == MotionKind.ROTATION }
             .sortedBy { it.nanos }
@@ -126,7 +154,11 @@ class SweepUseCase @Inject constructor(
         }
 
         /** Kenndaten und Ergebnis als JSON, Formatversion 1 (R26). */
-        fun meta(sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport, rotationSource: RotationSource): String {
+        fun meta(
+            sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport, rotationSource: RotationSource,
+            /** S-014: letzter Wert des Balkens (alle Drehlagen); `coverage` zaehlt nur Fenster mit klarer Spitze. */
+            coverageLive: Double,
+        ): String {
             // NaN und Unendlich sind kein gueltiges JSON (Zweitpruefung S-010, G5)
             fun n(v: Double?) = v?.takeIf { it.isFinite() }?.let { String.format(Locale.ROOT, "%.9g", it) } ?: "null"
             val e = a.estimate
@@ -139,6 +171,9 @@ class SweepUseCase @Inject constructor(
                 append("  \"startBootNanos\": ").append(startNanos).append(",\n")
                 append("  \"timeExact\": ").append(exact).append(",\n")
                 append("  \"tapSeconds\": ").append(TAP_SECONDS).append(",\n")
+                // S-014: fester Ablauf mit Bildern (SweepGuide), damit Laeufe vergleichbar sind
+                append("  \"guide\": \"v1\",\n")
+                append("  \"coverageLive\": ").append(n(coverageLive)).append(",\n")
                 append("  \"rotationSource\": \"").append(rotationSource.name).append("\",\n")
                 append("  \"micAxisDevice\": [").append(SweepMath.MIC_AXIS_DEVICE.let { "${it.x}, ${it.y}, ${it.z}" }).append("],\n")
                 append("  \"syncSeconds\": ").append(n(a.syncSeconds)).append(",\n")

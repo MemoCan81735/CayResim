@@ -2,6 +2,13 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Bebilderte Schwenk-Anleitung (10. Oktober 2026, S-014, noch nicht veröffentlicht)
+- Die Schwenk-Messung zeigt den Ablauf vor dem Start als sechs Bilder mit Zeitangabe.
+- Während der Messung steht groß die aktuelle Bewegung als Bild mit Restzeit und nächster Bewegung, dazu ein Balken
+  für die Abdeckung der Drehungen ("noch zu wenig", "fast genug", "genug").
+- Jeder Lauf folgt demselben Ablauf (tippen, drehen, kippen, nicken, kreisen); `meta.json` vermerkt `"guide": "v1"`.
+- Gerät: vier Läufe nach Anleitung (Musik vorne und 90° rechts, je etwa 40 cm und 1,5 m), Screenshots und WAV.
+
 ## 0.1.127 Signal zu schwach, Schalter Nachtserie (10. Oktober 2026, S-012 und Nachtrag S-011)
 - Schwenk-Messung: Ist die Quelle zu leise, steht jetzt "Signal zu schwach" mit Anleitung (Musik oder Sprache, lauter,
   etwa 1 m) statt "unplausibel". Neue Zeile "Signalstärke" im Ergebnis, ab 0,10 brauchbar.

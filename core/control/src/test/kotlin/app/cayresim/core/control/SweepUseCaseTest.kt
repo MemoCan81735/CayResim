@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -139,14 +140,42 @@ class SweepUseCaseTest {
         assertTrue("\"format\": 1" in meta, meta)
     }
 
-    @Test fun `S-010 Ansagen in fester Reihenfolge`() = runTest {
+    @Test fun `S-014 Ablauf mit Abdeckung`() = runTest {
+        // ersetzt "S-010 Ansagen in fester Reihenfolge": statt zwei Ansagen ein Fortschritt im festen Ablauf
         val (mic, sensors, files) = setup()
+        sensors.paced = true
         mic.recordDelayMillis = SweepUseCase.TOTAL_SECONDS * 1000L
-        val events = SweepUseCase(mic, sensors, files, here()).run().toList()
-        assertEquals(SweepEvent.Tap(SweepUseCase.TAP_SECONDS), events[0])
-        assertEquals(SweepEvent.Sweep(SweepUseCase.TOTAL_SECONDS - SweepUseCase.TAP_SECONDS), events[1])
-        assertTrue(events[2] is SweepEvent.Analyzing)
+        val times = ArrayList<Long>()
+        val events = SweepUseCase(mic, sensors, files, here()).run().onEach { if (it is SweepEvent.Progress) times += testScheduler.currentTime }.toList()
+        val progress = events.filterIsInstance<SweepEvent.Progress>()
+        assertTrue(progress.size >= SweepUseCase.TOTAL_SECONDS * 4 - 2, "Fortschritt mindestens alle 250 ms: ${progress.size}")
+        // Abstand je Meldung (Zweitpruefung S-014, H5); lokal mit echter Zeit etwas Spiel
+        val gaps = times.zipWithNext { a, b -> b - a }
+        assertTrue(gaps.max() <= SweepUseCase.TICK_MILLIS + 60, "groesster Abstand ${gaps.max()} ms")
+        // Bewegung und Restzeit je Meldung genau wie der Ablauf nach k * 250 ms
+        progress.forEachIndexed { k, p ->
+            val want = SweepUseCase.progress(k * SweepUseCase.TICK_MILLIS, p.coverage)
+            assertEquals(want, p, "Meldung $k")
+        }
+        // Bewegungen in fester Reihenfolge, jede kommt vor
+        val moves = progress.map { it.move }.fold(mutableListOf<app.cayresim.core.pure.SweepGuide.Move>()) { l, m -> if (l.lastOrNull() != m) l += m; l }
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.entries.toList(), moves.toList())
+        val first = progress.first()
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.TAP, first.move); assertEquals(3, first.secondsLeft)
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.YAW, first.next)
+        // Abdeckung erst nach der Klopfphase, steigt; der kuenstliche Schwenk (ohne Rollen) erreicht etwa 0,048
+        assertTrue(progress.filter { it.move == app.cayresim.core.pure.SweepGuide.Move.TAP }.all { it.coverage == 0.0 })
+        val early = progress.first { it.move == app.cayresim.core.pure.SweepGuide.Move.ROLL }.coverage
+        val last = progress.last().coverage
+        assertTrue(last > 0.03 && last > early, "Abdeckung ${progress.map { "%.3f".format(it.coverage) }}")
+        val i = events.indexOfFirst { it is SweepEvent.Analyzing }
+        assertTrue(i > 0 && events.subList(i, events.size).none { it is SweepEvent.Progress }, "nach der Auswertung kein Fortschritt mehr")
         assertTrue(events.last() is SweepEvent.Done)
+        val meta = String(Wav.chunks(files.files.values.single()).getValue("meta"))
+        assertTrue("\"guide\": \"v1\"" in meta, meta)
+        // letzter Wert des Balkens zum Vergleich mit der Auswertung im Geraetetest (Zweitpruefung S-014, W2)
+        val live = assertNotNull(Regex("\"coverageLive\": ([0-9.eE+-]+)").find(meta), meta).groupValues[1].toDouble()
+        assertEquals(last, live, 0.01)
     }
 
     @Test fun `S-010 Abbruch gibt Mikrofon und Sensor frei`() = runTest {

@@ -97,8 +97,8 @@ Gegenprobe mit kohärenzgewichteter GCC (Hannan-Thomson, Kreuzspektrum über 250
 
 Mit GCC-PHAT (App heute): Abstand 0 bis 2,7 cm, keine Richtung. Die Quelle stand laut Anleitung vor der Kamera;
 das Ergebnis passt dazu nur mit **umgekehrtem Vorzeichen der Mikrofonachse** (sonst +147 bis +164°, also hinten).
-Damit ist das Vorzeichen aus S-010 K9 vorläufig bestimmt (Bestätigung durch Arslan und einen Lauf mit Quelle 90°
-rechts offen). Der verbleibende, über alle Blocklängen gleiche Versatz von etwa −15° seitlich und +20° Höhe passt zur
+Damit ist das Vorzeichen aus S-010 K9 vorläufig bestimmt. Arslan bestätigt: Die Quelle stand vor der Kamera
+(10.10., 22:44 Uhr). Offen bleibt ein Lauf mit Quelle 90° rechts, erst danach wird die Achse in der App umgedreht. Der verbleibende, über alle Blocklängen gleiche Versatz von etwa −15° seitlich und +20° Höhe passt zur
 geneigten Mikrofonachse (Modell: Achse 10° geneigt ergibt 11°) und wäre Sache der Eichung je Gerät (Schritt 2).
 Der erste Lauf (Rauschen) bleibt auch so unbrauchbar (Abstand 6 bis 8 cm, Richtung beliebig): Samsungs
 Rauschunterdrückung.

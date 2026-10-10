@@ -16,6 +16,8 @@ import kotlinx.coroutines.withContext
 class FakeMotionSensorBoundary(
     var availability: MotionAvailability = MotionAvailability(rotation = true, acceleration = true),
     var samples: List<MotionSample> = emptyList(),
+    /** S-014: Werte im Takt ihrer Zeitstempel senden (virtuelle Zeit), statt alle sofort. */
+    var paced: Boolean = false,
 ) : MotionSensorBoundary {
     var active = 0
         private set
@@ -30,7 +32,15 @@ class FakeMotionSensorBoundary(
         var registered = false
         try {
             active++; registered = true; registrations++; maxActive = maxOf(maxActive, active)
-            for (s in samples) emit(s)
+            // im Takt: Zielzeit ab dem ersten Wert, damit sich Rundungen nicht aufsummieren (Zweitpruefung S-014, H14)
+            var waitedMs = 0L
+            for (s in samples) {
+                if (paced) {
+                    val target = (s.nanos - samples.first().nanos) / 1_000_000L
+                    if (target > waitedMs) { kotlinx.coroutines.delay(target - waitedMs); waitedMs = target }
+                }
+                emit(s)
+            }
             awaitCancellation()
         } finally {
             withContext(NonCancellable) { if (registered) active-- }
