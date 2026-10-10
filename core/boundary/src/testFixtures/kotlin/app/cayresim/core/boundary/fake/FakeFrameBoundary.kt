@@ -28,7 +28,8 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
         streamed = 0
         if (camera.state.value.status != app.cayresim.core.boundary.CameraStatus.RUNNING || fail != null) return@flow
         val n = minOf(maxCount, allowed ?: maxCount).coerceAtLeast(0)
-        repeat(n) { emit(app.cayresim.core.boundary.Frame(4, 3, ByteArray(4 * 3 * 3))); streamed++ }
+        // gezaehlt beim Liefern: beendet der Empfaenger den Strom nach dem letzten Bild, zaehlt es trotzdem (S-006)
+        repeat(n) { streamed++; emit(app.cayresim.core.boundary.Frame(4, 3, ByteArray(4 * 3 * 3))) }
     }
 
     /** RAW-Strom: null = wie [allowed]; 0 = RAW nicht moeglich (leerer Strom). */
@@ -41,9 +42,9 @@ class FakeFrameBoundary(private val camera: FakeCameraBoundary) : FrameBoundary 
         if (camera.state.value.status != app.cayresim.core.boundary.CameraStatus.RUNNING || fail != null) return@flow
         val n = minOf(maxCount, rawAllowed ?: allowed ?: maxCount).coerceAtLeast(0)
         repeat(n) {
+            rawStreamed++
             emit(app.cayresim.core.boundary.RawFrame(4, 2, 4, ShortArray(8) { 64 }, app.cayresim.core.boundary.CfaLayout.RGGB,
                 floatArrayOf(64f, 64f, 64f, 64f), 1023f, floatArrayOf(1f, 1f, 1f), floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)))
-            rawStreamed++
         }
     }
 
