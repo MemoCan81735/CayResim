@@ -193,6 +193,29 @@ object SweepMath {
         return (3 * smallestEigen(xx * s, yy * s, zz * s, xy * s, xz * s, yz * s)).coerceIn(0.0, 1.0)
     }
 
+    /**
+     * S-014: Abdeckung laufend, fuer die Anzeige waehrend der Messung. Haelt nur Summen (fester Speicher, O(1) je Achse);
+     * [value] rechnet wie [coverage] ueber alle bisherigen Achsen. Nicht fuer mehrere Coroutinen zugleich gedacht.
+     */
+    class AxisCoverage {
+        var count = 0; private set
+        private var sx = 0.0; private var sy = 0.0; private var sz = 0.0
+        private var xx = 0.0; private var yy = 0.0; private var zz = 0.0; private var xy = 0.0; private var xz = 0.0; private var yz = 0.0
+
+        fun add(v: Vec3) {
+            count++
+            sx += v.x; sy += v.y; sz += v.z
+            xx += v.x * v.x; yy += v.y * v.y; zz += v.z * v.z; xy += v.x * v.y; xz += v.x * v.z; yz += v.y * v.z
+        }
+
+        fun value(): Double {
+            if (count < 2) return 0.0
+            val s = 1.0 / count
+            val mx = sx * s; val my = sy * s; val mz = sz * s
+            return (3 * smallestEigen(xx * s - mx * mx, yy * s - my * my, zz * s - mz * mz, xy * s - mx * my, xz * s - mx * mz, yz * s - my * mz)).coerceIn(0.0, 1.0)
+        }
+    }
+
     /** Kleinster Eigenwert einer symmetrischen 3x3-Matrix (geschlossene Formel). */
     private fun smallestEigen(a: Double, b: Double, c: Double, d: Double, e: Double, f: Double): Double {
         val p1 = d * d + e * e + f * f

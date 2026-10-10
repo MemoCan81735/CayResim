@@ -20,6 +20,8 @@ import javax.inject.Inject
 
 /** Spiegel der Control-Typen fuer die UI (R1); nur Zahlen und Schluessel, den Text baut die UI (R23). */
 enum class SweepStepUi { IDLE, TAP, SWEEP, ANALYZING, DONE }
+/** S-014: Bewegung im festen Ablauf (Spiegel von SweepGuide.Move). */
+enum class SweepMoveUi { TAP, YAW, ROLL, PITCH, CIRCLE }
 enum class SweepFailureUi { NO_PERMISSION, NO_SENSOR, RECORD_FAILED }
 enum class SweepEstimateFailureUi { NO_STEREO, TOO_FEW_MEASUREMENTS, NO_POSE, ONE_SIDED, IMPLAUSIBLE, WEAK_SIGNAL }
 
@@ -51,6 +53,10 @@ data class SweepUiState(
     val running: Boolean = false,
     val step: SweepStepUi = SweepStepUi.IDLE,
     val seconds: Int = 0,
+    /** S-014: aktuelle und naechste Bewegung, Abdeckung der Drehungen bisher (0 bis 1). */
+    val move: SweepMoveUi? = null,
+    val next: SweepMoveUi? = null,
+    val coverage: Double = 0.0,
     val result: SweepResultUi? = null,
     val permissionDenied: Boolean = false,
     /** Unerwarteter Fehler im Lauf (R24). */
@@ -71,14 +77,13 @@ class SweepViewModel @Inject constructor(private val useCase: SweepUseCase) : Vi
 
     fun onStart() {
         if (_state.value.running) return
-        _state.value = SweepUiState(running = true, step = SweepStepUi.TAP, seconds = SweepUseCase.TAP_SECONDS)
+        _state.value = SweepUiState(running = true, step = SweepStepUi.TAP, seconds = SweepUseCase.TAP_SECONDS, move = SweepMoveUi.TAP, next = SweepMoveUi.YAW)
         job = viewModelScope.launch {
             useCase.run().catch {
                 _state.update { s -> s.copy(running = false, step = SweepStepUi.DONE, failed = true) }
             }.collect { e ->
                 when (e) {
-                    is SweepEvent.Tap -> _state.update { it.copy(step = SweepStepUi.TAP, seconds = e.seconds) }
-                    is SweepEvent.Sweep -> _state.update { it.copy(step = SweepStepUi.SWEEP, seconds = e.seconds) }
+                    is SweepEvent.Progress -> _state.update { progress(it, e) }
                     SweepEvent.Analyzing -> _state.update { it.copy(step = SweepStepUi.ANALYZING) }
                     is SweepEvent.Done -> _state.update {
                         it.copy(
@@ -100,6 +105,12 @@ class SweepViewModel @Inject constructor(private val useCase: SweepUseCase) : Vi
     }
 
     internal companion object {
+        fun progress(s: SweepUiState, e: SweepEvent.Progress): SweepUiState {
+            val move = SweepMoveUi.valueOf(e.move.name)
+            return s.copy(step = if (move == SweepMoveUi.TAP) SweepStepUi.TAP else SweepStepUi.SWEEP, seconds = e.secondsLeft,
+                move = move, next = e.next?.let { SweepMoveUi.valueOf(it.name) }, coverage = e.coverage)
+        }
+
         fun toUi(r: SweepRunReport): SweepResultUi {
             val a = r.analysis
             val e = a?.estimate

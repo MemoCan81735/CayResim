@@ -139,14 +139,30 @@ class SweepUseCaseTest {
         assertTrue("\"format\": 1" in meta, meta)
     }
 
-    @Test fun `S-010 Ansagen in fester Reihenfolge`() = runTest {
+    @Test fun `S-014 Ablauf mit Abdeckung`() = runTest {
+        // ersetzt "S-010 Ansagen in fester Reihenfolge": statt zwei Ansagen ein Fortschritt im festen Ablauf
         val (mic, sensors, files) = setup()
+        sensors.paced = true
         mic.recordDelayMillis = SweepUseCase.TOTAL_SECONDS * 1000L
         val events = SweepUseCase(mic, sensors, files, here()).run().toList()
-        assertEquals(SweepEvent.Tap(SweepUseCase.TAP_SECONDS), events[0])
-        assertEquals(SweepEvent.Sweep(SweepUseCase.TOTAL_SECONDS - SweepUseCase.TAP_SECONDS), events[1])
-        assertTrue(events[2] is SweepEvent.Analyzing)
+        val progress = events.filterIsInstance<SweepEvent.Progress>()
+        assertTrue(progress.size >= SweepUseCase.TOTAL_SECONDS * 4 - 2, "Fortschritt mindestens alle 250 ms: ${progress.size}")
+        // Bewegungen in fester Reihenfolge, jede kommt vor
+        val moves = progress.map { it.move }.fold(mutableListOf<app.cayresim.core.pure.SweepGuide.Move>()) { l, m -> if (l.lastOrNull() != m) l += m; l }
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.entries, moves)
+        val first = progress.first()
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.TAP, first.move); assertEquals(3, first.secondsLeft)
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.YAW, first.next)
+        // Abdeckung erst nach der Klopfphase, steigt; der kuenstliche Schwenk (ohne Rollen) erreicht etwa 0,048
+        assertTrue(progress.filter { it.move == app.cayresim.core.pure.SweepGuide.Move.TAP }.all { it.coverage == 0.0 })
+        val early = progress.first { it.move == app.cayresim.core.pure.SweepGuide.Move.ROLL }.coverage
+        val last = progress.last().coverage
+        assertTrue(last > 0.03 && last > early, "Abdeckung ${progress.map { "%.3f".format(it.coverage) }}")
+        val i = events.indexOfFirst { it is SweepEvent.Analyzing }
+        assertTrue(i > 0 && events.subList(i, events.size).none { it is SweepEvent.Progress }, "nach der Auswertung kein Fortschritt mehr")
         assertTrue(events.last() is SweepEvent.Done)
+        val meta = String(Wav.chunks(files.files.values.single()).getValue("meta"))
+        assertTrue("\"guide\": \"v1\"" in meta, meta)
     }
 
     @Test fun `S-010 Abbruch gibt Mikrofon und Sensor frei`() = runTest {

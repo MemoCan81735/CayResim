@@ -22,6 +22,9 @@ import app.cayresim.feature.settings.control.MicTestUiState
 import app.cayresim.feature.settings.control.SweepEstimateFailureUi
 import app.cayresim.feature.settings.control.SweepResultUi
 import app.cayresim.feature.settings.control.SweepStepUi
+import app.cayresim.feature.settings.control.SweepMoveUi
+import app.cayresim.core.control.SweepEvent
+import app.cayresim.core.pure.SweepGuide
 import app.cayresim.feature.settings.control.SweepUiState
 import app.cayresim.feature.settings.control.SweepViewModel
 import app.cayresim.feature.settings.ui.MicTestContent
@@ -117,16 +120,34 @@ class SweepTest {
 
     @Test fun schwenk_anleitung() {
         compose.setContent { CayResimTheme(dark = true) { SweepContent(SweepUiState(), {}, {}) } }
-        compose.onNodeWithText("Zweimal auf die Rückseite tippen", substring = true).assertExists()
+        // S-014: sechs Schritte als Bilder mit Zeit aus dem festen Ablauf
+        compose.onNodeWithTag("sweep_guide").assertExists()
+        compose.onNodeWithText("Zweimal tippen", substring = true).assertExists()
+        compose.onNodeWithText("9 bis 15 s", substring = true).assertExists()
+        compose.onNodeWithText("Langsam kreisen", substring = true).assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/sweep_guide.png")
     }
 
     @Test fun schwenk_ansage() {
-        val state = SweepUiState(running = true, step = SweepStepUi.SWEEP, seconds = 22)
+        // S-014: aktuelle Bewegung als Bild mit Restzeit, naechster Bewegung und Abdeckung (Beispiel bei 6 s)
+        val state = SweepUiState(running = true, step = SweepStepUi.SWEEP, seconds = 3, move = SweepMoveUi.YAW, next = SweepMoveUi.ROLL, coverage = 0.07)
         compose.setContent { CayResimTheme(dark = true) { SweepContent(state, {}, {}) } }
-        compose.onNodeWithText("Langsam schwenken").assertExists()
-        compose.onNodeWithText("Dauer dieses Schritts in Sekunden: 22", substring = true).assertExists()
+        compose.onNodeWithText("Links und rechts drehen", substring = true).assertExists()
+        compose.onNodeWithText("Restzeit in Sekunden: 3, danach: Auf hochkant kippen", substring = true).assertExists()
+        compose.onNodeWithText("Abdeckung der Drehungen: fast genug", substring = true).assertExists()
+        compose.onNodeWithTag("sweep_coverage_bar").assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/sweep_prompt.png")
+    }
+
+    @Test fun `S-014 Fortschritt wird abgebildet`() {
+        val s0 = SweepUiState(running = true)
+        val s1 = SweepViewModel.progress(s0, SweepEvent.Progress(SweepGuide.Move.TAP, 3, SweepGuide.Move.YAW, 0.0))
+        assertEquals(SweepStepUi.TAP, s1.step); assertEquals(SweepMoveUi.TAP, s1.move); assertEquals(SweepMoveUi.YAW, s1.next); assertEquals(3, s1.seconds)
+        val s2 = SweepViewModel.progress(s1, SweepEvent.Progress(SweepGuide.Move.CIRCLE, 2, null, 0.21))
+        assertEquals(SweepStepUi.SWEEP, s2.step); assertEquals(SweepMoveUi.CIRCLE, s2.move); assertNull(s2.next)
+        assertEquals(0.21, s2.coverage, 1e-12); assertTrue(s2.running)
+        // gleiche Bewegungen in beiden Schichten
+        assertEquals(SweepGuide.Move.entries.map { it.name }, SweepMoveUi.entries.map { it.name })
     }
 
     @Test fun schwenk_ergebnis() {

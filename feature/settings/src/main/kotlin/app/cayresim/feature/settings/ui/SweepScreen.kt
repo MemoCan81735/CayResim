@@ -6,13 +6,16 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -36,7 +40,9 @@ import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.SweepEstimateFailureUi
 import app.cayresim.feature.settings.control.SweepFailureUi
 import app.cayresim.feature.settings.control.SweepResultUi
+import app.cayresim.feature.settings.control.SweepMoveUi
 import app.cayresim.feature.settings.control.SweepStepUi
+import app.cayresim.core.pure.SweepGuide
 import app.cayresim.feature.settings.control.SweepUiState
 import app.cayresim.feature.settings.control.SweepViewModel
 
@@ -73,7 +79,8 @@ fun SweepContent(state: SweepUiState, onStart: () -> Unit, onBack: () -> Unit) {
             item { TextButton(onClick = onBack, modifier = Modifier.padding(top = 16.dp).testTag("back")) { Text(stringResource(R.string.back)) } }
             item { Text(stringResource(R.string.sweep_title), style = MaterialTheme.typography.headlineMedium) }
             item { Text(stringResource(R.string.sweep_intro), style = MaterialTheme.typography.bodyMedium) }
-            item { Text(stringResource(R.string.sweep_steps), style = MaterialTheme.typography.bodyMedium) }
+            // S-014: Ablauf als Bilder mit Zeitangabe (nur vor dem Start, waehrend der Messung zeigt Prompt den Schritt)
+            if (!state.running) item { GuideList() }
             item {
                 Button(onClick = onStart, enabled = !state.running, modifier = Modifier.testTag("sweep_start")) {
                     Text(stringResource(if (state.running) R.string.sweep_running else R.string.sweep_start))
@@ -92,16 +99,74 @@ fun SweepContent(state: SweepUiState, onStart: () -> Unit, onBack: () -> Unit) {
     }
 }
 
+/** Ein Schritt der Anleitung: Bild, Zeit, Titel, Erklaerung. */
+private data class GuideItem(val picture: SweepPicture, @StringRes val title: Int, @StringRes val how: Int)
+
+private val guideItems = listOf(
+    GuideItem(SweepPicture.START, R.string.sweep_move_start, R.string.sweep_move_start_how),
+    GuideItem(SweepPicture.TAP, R.string.sweep_move_tap, R.string.sweep_move_tap_how),
+    GuideItem(SweepPicture.YAW, R.string.sweep_move_yaw, R.string.sweep_move_yaw_how),
+    GuideItem(SweepPicture.ROLL, R.string.sweep_move_roll, R.string.sweep_move_roll_how),
+    GuideItem(SweepPicture.PITCH, R.string.sweep_move_pitch, R.string.sweep_move_pitch_how),
+    GuideItem(SweepPicture.CIRCLE, R.string.sweep_move_circle, R.string.sweep_move_circle_how),
+)
+
+private fun picture(m: SweepMoveUi) = when (m) {
+    SweepMoveUi.TAP -> SweepPicture.TAP
+    SweepMoveUi.YAW -> SweepPicture.YAW
+    SweepMoveUi.ROLL -> SweepPicture.ROLL
+    SweepMoveUi.PITCH -> SweepPicture.PITCH
+    SweepMoveUi.CIRCLE -> SweepPicture.CIRCLE
+}
+
+private fun guideItem(m: SweepMoveUi) = guideItems[m.ordinal + 1]
+
+@Composable
+private fun GuideList() {
+    Column(Modifier.fillMaxWidth().testTag("sweep_guide"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        guideItems.forEachIndexed { i, g ->
+            Row(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically) {
+                SweepPictogram(g.picture, 96.dp)
+                Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                    // Zeiten aus SweepGuide, damit Anleitung und Ablauf nie auseinanderlaufen
+                    val time = if (i == 0) stringResource(R.string.sweep_time_before)
+                        else SweepGuide.PHASES[i - 1].let { p -> stringResource(R.string.sweep_time_range, p.fromSeconds.toInt(), p.toSeconds.toInt()) }
+                    Text(time, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(g.title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(stringResource(g.how), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun Prompt(state: SweepUiState) {
-    Column(Modifier.fillMaxWidth().testTag("sweep_prompt").semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        val (title, how) = when (state.step) {
-            SweepStepUi.TAP -> R.string.sweep_tap to R.string.sweep_tap_how
-            SweepStepUi.SWEEP -> R.string.sweep_sweep to R.string.sweep_sweep_how
-            else -> R.string.sweep_analyzing to null
+    Column(Modifier.fillMaxWidth().testTag("sweep_prompt").semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val move = state.move
+        if (state.step == SweepStepUi.ANALYZING || move == null) {
+            Text(stringResource(R.string.sweep_analyzing), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            return@Column
         }
-        Text(stringResource(title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        how?.let { Text(stringResource(it, state.seconds), style = MaterialTheme.typography.bodyMedium) }
+        SweepPictogram(picture(move), 180.dp, Modifier.align(Alignment.CenterHorizontally))
+        Text(stringResource(guideItem(move).title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(guideItem(move).how), style = MaterialTheme.typography.bodyMedium)
+        val next = state.next
+        Text(
+            if (next != null) stringResource(R.string.sweep_left_next, state.seconds, stringResource(guideItem(next).title))
+            else stringResource(R.string.sweep_left_last, state.seconds),
+            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
+        )
+        if (move != SweepMoveUi.TAP) {
+            // Balken voll ab COVERAGE_GOOD; echte Laeufe am 10.10. erreichten 0,22 und 0,23 (S-014)
+            LinearProgressIndicator(progress = { (state.coverage / COVERAGE_GOOD).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().testTag("sweep_coverage_bar"))
+            val level = when {
+                state.coverage >= COVERAGE_GOOD -> R.string.sweep_cov_ok
+                state.coverage >= COVERAGE_GOOD / 3 -> R.string.sweep_cov_mid
+                else -> R.string.sweep_cov_low
+            }
+            Text(stringResource(R.string.sweep_coverage_live, stringResource(level)), style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -151,3 +216,6 @@ private fun estimateFailureText(f: SweepEstimateFailureUi) = when (f) {
     SweepEstimateFailureUi.IMPLAUSIBLE -> R.string.sweep_fail_implausible
     SweepEstimateFailureUi.WEAK_SIGNAL -> R.string.sweep_fail_weak
 }
+
+/** S-014: Abdeckung, ab der der Balken voll ist ("genug"); drei Viertel der echten Laeufe vom 10.10. */
+private const val COVERAGE_GOOD = 0.15
