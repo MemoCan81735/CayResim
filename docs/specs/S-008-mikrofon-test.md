@@ -156,9 +156,29 @@ Bildschirm zum Nutzer, Mikrofonachse also links nach rechts):
   Achse muss beim Messen quer liegen.
 - Der angenommene Abstand ist zu klein: gemessen wurden bis zu 0,48 ms, das entspricht mindestens 16,5 cm wirksamem
   Abstand (der Schall läuft zum Teil um das Gehäuse herum). Deshalb erscheinen links Winkel als "unmöglich".
+- Nachgerechnet aus den WAV-Dateien (12:42 Uhr, Kreuzkorrelation ohne Filter, Einsatzzeit je Kanal und GCC-PHAT wie
+  in der App, alle drei stimmen überein):
+
+  | Phase | Klatscher | Laufzeit |
+  |---|---|---|
+  | links | ab 2,5 s, 4 Stück | −0,48 bis −0,50 ms |
+  | rechts | ab 1,3 s, 8 Stück | +0,39 bis +0,44 ms |
+  | vorne | 6 Stück | −0,05 bis 0,00 ms |
+
+  - Links und rechts sind nicht spiegelgleich: Mitte bei etwa −0,04 ms, halbe Spanne etwa 0,44 ms. Vorne liegt mit
+    −0,02 ms nahe dieser Mitte. Ein fester Abstand allein bildet das nicht ab; eine Eichung mit Mitte und Spanne aus je
+    einem Klatscher links und rechts schon.
+  - Die "Ausreißer" am Anfang sind keine Rechenfehler: Am Anfang der Phase rechts (0,16 und 0,76 s) stehen noch
+    Klatscher mit den Werten von links (−0,48 und −0,41 ms). Die Aufnahme beginnt sofort mit der Ansage, bevor man die
+    Seite gewechselt hat. Am Anfang der Phase links stehen drei Ereignisse im Abstand von 0,25 s mit Laufzeit 0, typisch
+    für Griffgeräusche, die durch das Gehäuse laufen.
+- Fehler im eigenen Prüfmodell: Das Python-Modell (nur im Arbeitsordner der Sitzung, nicht versioniert) filterte vor
+  GCC-PHAT auf ein Frequenzband. PHAT hebt dann die weggefilterten Frequenzen wieder an, und es entsteht eine
+  Scheinspitze bei 0 ms. Mit diesem Modell kamen beim zweiten Lauf überall 0 ms heraus, die App rechnete richtig. Die
+  Aussagen zum ersten Lauf ("Phasenübereinstimmung 0,01 bis 0,04, Kanäle bearbeitet") stammten aus diesem Modell und
+  sind gestrichen; die Kreuzkorrelation ohne Filter bestätigt für den ersten Lauf (hochkant) aber Laufzeiten nahe 0.
 - Nebenbefunde in der App:
-  - Der erste Klatscher je Phase ist oft ein Ausreißer (Griff- oder Startgeräusch).
-  - Quellen mit nur einem aktiven Mikrofon (Gerät 16 allein: Korrelation 0,85, Gerät 17 allein: 0,92) gelten als
-    "verschieden", weil die Grenze 0,99 zu locker ist.
-  - Mögliche Korrekturen, je mit Freigabe: Abstand aus einer Links-rechts-Messung bestimmen, Grenze für "verschieden"
-    senken, Klatscher in der ersten halben Sekunde verwerfen.
+  - Quellen mit nur einem aktiven Mikrofon (Gerät 16 allein: Korrelation 0,85, Gerät 17 allein: 0,92; normales `MIC`
+    mit zwei Mikrofonen: 0,15) gelten als "verschieden", weil die Grenze 0,99 zu locker ist.
+  - Mögliche Korrekturen, je mit Freigabe: Pause mit Ansage vor jeder Klatsch-Phase, Eichung aus links und rechts
+    (Mitte und Spanne), Grenze für "verschieden" auf Korrelation 0,7.
