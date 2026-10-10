@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Bebilderte Schwenk-Anleitung (10. Oktober 2026, S-014, noch nicht veröffentlicht)
+## 0.1.133 Bebilderte Schwenk-Anleitung (11. Oktober 2026, S-014)
 - Die Schwenk-Messung zeigt den Ablauf vor dem Start als sechs Bilder mit Zeitangabe.
 - Während der Messung steht groß die aktuelle Bewegung als Bild mit Restzeit und nächster Bewegung, dazu ein Balken
   für die Abdeckung der Drehungen ("noch zu wenig", "fast genug", "genug").

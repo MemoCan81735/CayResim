@@ -97,4 +97,4 @@ Läufe, je Screenshot und WAV.
 | H4 Rest | Anzeige läuft 0,1 bis 0,3 s vor der Tonzeit (Takt beginnt vor AudioRecord) | Hinweis | bewusst gelassen, für die Anleitung unkritisch |
 
 ## Ergebnis
-Noch offen.
+Release v0.1.133 (Lauf 38090609651, 11.10., 00:27 Uhr): alle Jobs grün, Emulator grün. Gerätetest (K5) offen.
