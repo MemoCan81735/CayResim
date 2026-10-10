@@ -2,6 +2,9 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Funktionsliste (10. Oktober 2026)
+- `docs/ideen.md`: sieben neue Funktionen auf der Liste (F1 bis F7), mit Reihenfolge. Keine Änderung an der App.
+
 ## 0.1.102 (10. Oktober 2026, S-007)
 - Nacht-Hinweis mit zweiter Zeile: ob der Boden-Modus gegriffen hat und nach welchen Werten (Signal, Schwelle, Rauschen,
   Median, Anteil geschätzter Pixel), dazu Nullen und Helligkeit des Bezugsbilds. Der Hinweis bleibt 10 s stehen.
