@@ -34,3 +34,4 @@ Regel ihn heute verhindert.
 | 10.10. | Mikrofon-Test brach beim Drehen des Handys ab | Abbruch hing am Stopp der Activity, auch bei einer Drehung | Zweitprüfung (S-008) | kein Abbruch bei `isChangingConfigurations` |
 | 10.10. | Screenshot-Grundlage zwischen zwei Läufen verschieden | Startwert für künstlichen Ton aus `hashCode()` mit Enums, der sich je Lauf ändert | CI (S-008) | fester Startwert; claude/android-tests-ci.md |
 | 10.10. | zweites Bild eines Tests fehlte erst im Folgelauf | Roborazzi bricht beim ersten fehlenden Bild ab | CI (S-008) | ein Bild je Test; claude/android-tests-ci.md |
+| 10.10. | Mikrofon-Test: "Ortung nicht möglich" falsch geschlossen | Handy hochkant gehalten, beide Mikrofone auf der Längsachse; Haltung stand nicht in der Anleitung und wurde nicht erfragt | zweiter Gerätetest quer (S-008) | Gerätetest-Anleitung nennt die Haltung; vor einem Negativbefund Aufbau prüfen |

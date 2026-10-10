@@ -9,6 +9,8 @@ Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf d
 - Neue Berechtigung Mikrofon, nur im Mikrofon-Test abgefragt. Neue Regel R28: nur das neue Modul `:core:audio` kennt die
   Tonaufnahme. Am Fotografieren ändert sich nichts.
 - Gerät: Mikrofon-Test in einem ruhigen Raum, Screenshots des Ergebnisses und den WAV-Ordner schicken.
+- Gerätetest S24+: Ortung über die Laufzeit funktioniert mit der Quelle MIC, wenn das Handy quer gehalten wird (links
+  etwa −0,45 ms, rechts etwa +0,37 ms, vorne 0). Hochkant zeigt sie nichts, weil beide Mikrofone auf der Längsachse liegen.
 
 ## Funktionsliste: Raumscan (10. Oktober 2026)
 - `docs/ideen.md`: F8 Raumscan und F9 Raumscan mit ARCore aufgenommen, beide nach der Nacht. Keine Änderung an der App.
