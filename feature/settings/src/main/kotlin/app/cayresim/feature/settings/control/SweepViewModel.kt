@@ -7,6 +7,7 @@ import app.cayresim.core.control.SweepEvent
 import app.cayresim.core.control.SweepRunFailure
 import app.cayresim.core.control.SweepRunReport
 import app.cayresim.core.control.SweepUseCase
+import app.cayresim.core.pure.SweepGuide
 import app.cayresim.core.pure.SweepMath
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -77,7 +78,7 @@ class SweepViewModel @Inject constructor(private val useCase: SweepUseCase) : Vi
 
     fun onStart() {
         if (_state.value.running) return
-        _state.value = SweepUiState(running = true, step = SweepStepUi.TAP, seconds = SweepUseCase.TAP_SECONDS, move = SweepMoveUi.TAP, next = SweepMoveUi.YAW)
+        _state.value = progress(SweepUiState(running = true), SweepUseCase.progress(0, 0.0))
         job = viewModelScope.launch {
             useCase.run().catch {
                 _state.update { s -> s.copy(running = false, step = SweepStepUi.DONE, failed = true) }
@@ -106,9 +107,18 @@ class SweepViewModel @Inject constructor(private val useCase: SweepUseCase) : Vi
 
     internal companion object {
         fun progress(s: SweepUiState, e: SweepEvent.Progress): SweepUiState {
-            val move = SweepMoveUi.valueOf(e.move.name)
+            val move = moveUi(e.move)
             return s.copy(step = if (move == SweepMoveUi.TAP) SweepStepUi.TAP else SweepStepUi.SWEEP, seconds = e.secondsLeft,
-                move = move, next = e.next?.let { SweepMoveUi.valueOf(it.name) }, coverage = e.coverage)
+                move = move, next = e.next?.let { moveUi(it) }, coverage = e.coverage)
+        }
+
+        /** Erschoepfend statt valueOf: eine neue Bewegung faellt beim Kompilieren auf (Zweitpruefung S-014, H9). */
+        private fun moveUi(m: SweepGuide.Move) = when (m) {
+            SweepGuide.Move.TAP -> SweepMoveUi.TAP
+            SweepGuide.Move.YAW -> SweepMoveUi.YAW
+            SweepGuide.Move.ROLL -> SweepMoveUi.ROLL
+            SweepGuide.Move.PITCH -> SweepMoveUi.PITCH
+            SweepGuide.Move.CIRCLE -> SweepMoveUi.CIRCLE
         }
 
         fun toUi(r: SweepRunReport): SweepResultUi {

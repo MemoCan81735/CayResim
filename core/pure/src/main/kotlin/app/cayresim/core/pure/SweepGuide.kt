@@ -4,7 +4,8 @@ import kotlin.math.ceil
 
 /**
  * S-014: fester Ablauf der Schwenk-Messung, damit jeder Lauf gleich geschwenkt wird und die Anleitung zu jeder Sekunde
- * die passende Bewegung zeigt. Zeiten ab Beginn der Aufnahme; die Klopfphase entspricht `SweepUseCase.TAP_SECONDS`.
+ * die passende Bewegung zeigt. Zeiten ab Beginn der Aufnahme. Klopfphase und Dauer sind nur hier festgelegt; der
+ * UseCase uebernimmt sie (Zweitpruefung S-014, W1).
  */
 object SweepGuide {
     /** TAP zweimal auf die Rueckseite tippen; YAW links und rechts drehen; ROLL auf hochkant kippen und zurueck;
@@ -16,15 +17,15 @@ object SweepGuide {
     /** Aktuelle Bewegung, volle Sekunden bis zum Wechsel (aufgerundet) und die naechste Bewegung (null am Ende). */
     data class Step(val move: Move, val secondsLeft: Int, val next: Move?)
 
-    const val TAP_SECONDS = 3.0
-    const val TOTAL_SECONDS = 25.0
+    const val TAP_SECONDS = 3
+    const val TOTAL_SECONDS = 25
 
     val PHASES: List<Phase> = listOf(
-        Phase(Move.TAP, 0.0, TAP_SECONDS),
-        Phase(Move.YAW, TAP_SECONDS, 9.0),
+        Phase(Move.TAP, 0.0, TAP_SECONDS.toDouble()),
+        Phase(Move.YAW, TAP_SECONDS.toDouble(), 9.0),
         Phase(Move.ROLL, 9.0, 15.0),
         Phase(Move.PITCH, 15.0, 21.0),
-        Phase(Move.CIRCLE, 21.0, TOTAL_SECONDS),
+        Phase(Move.CIRCLE, 21.0, TOTAL_SECONDS.toDouble()),
     )
 
     fun at(elapsedSeconds: Double): Step? {

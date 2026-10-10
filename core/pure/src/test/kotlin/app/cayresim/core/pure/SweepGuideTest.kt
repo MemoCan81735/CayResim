@@ -19,8 +19,11 @@ class SweepGuideTest {
         assertEquals(SweepGuide.Step(SweepGuide.Move.CIRCLE, 4, null), at(21.0))
         assertEquals(SweepGuide.Step(SweepGuide.Move.CIRCLE, 1, null), at(24.9))
         assertNull(at(25.0)); assertNull(at(-0.1))
-        assertEquals(25.0, SweepGuide.TOTAL_SECONDS)
-        assertEquals(3.0, SweepGuide.TAP_SECONDS)
+        assertEquals(25, SweepGuide.TOTAL_SECONDS)
+        assertEquals(3, SweepGuide.TAP_SECONDS)
+        // ganze Sekunden, wie sie der Takt alle 4 Meldungen schickt (Zweitpruefung S-014, H6)
+        assertEquals(SweepGuide.Step(SweepGuide.Move.TAP, 2, SweepGuide.Move.YAW), at(1.0))
+        assertEquals(SweepGuide.Step(SweepGuide.Move.ROLL, 1, SweepGuide.Move.PITCH), at(14.0))
         assertEquals(SweepGuide.Move.entries.toList(), SweepGuide.PHASES.map { it.move })
     }
 
@@ -38,5 +41,12 @@ class SweepGuideTest {
         }
         assertTrue(acc.value() > 0.3, "rundum ${acc.value()}")
         assertEquals(400, acc.count)
+        // eng gebuendelte Achsen (Summen statt zentriert): numerisch wie coverage (Zweitpruefung S-014, H7)
+        val tight = SweepMath.AxisCoverage(); val tightAxes = ArrayList<Vec3>()
+        repeat(5000) {
+            val u = Vec3(rnd.nextDouble(-5e-4, 5e-4), 1.0, rnd.nextDouble(-5e-4, 5e-4)).normalized()
+            tight.add(u); tightAxes += u
+        }
+        assertEquals(SweepMath.coverage(tightAxes), tight.value(), 1e-9)
     }
 }

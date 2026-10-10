@@ -119,7 +119,7 @@ class SweepUseCase @Inject constructor(
         currentCoroutineContext().ensureActive() // nach Abbruch waehrend der Auswertung nichts speichern
         val wav = Wav.encode(capture.pcm, capture.sampleRate, capture.channels, linkedMapOf(
             "lage" to csv(samples).toByteArray(Charsets.UTF_8),
-            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis, rotationSource).toByteArray(Charsets.UTF_8),
+            "meta" to meta(capture.sampleRate, capture.channels, startNanos, exact, analysis, rotationSource, liveCoverage.get()).toByteArray(Charsets.UTF_8),
         ))
         val uri = folder?.let { files.saveWav(it, FILE_NAME, wav) }
         send(SweepEvent.Done(SweepRunReport(analysis, null, null, exact, uri, folder, storageFailed = uri == null)))
@@ -128,8 +128,8 @@ class SweepUseCase @Inject constructor(
     companion object {
         const val FOLDER_PREFIX = "Schwenk"
         const val FILE_NAME = "schwenk-v1.wav"
-        const val TAP_SECONDS = 3
-        const val TOTAL_SECONDS = 25
+        const val TAP_SECONDS = SweepGuide.TAP_SECONDS
+        const val TOTAL_SECONDS = SweepGuide.TOTAL_SECONDS
         /** 200 Hz, die Grenze ohne Berechtigung; feiner fuer die Klopfer (Zweitpruefung S-010, G2). */
         const val PERIOD_MICROS = 5_000
         /** S-014: Abstand der Fortschrittsmeldungen. */
@@ -154,7 +154,11 @@ class SweepUseCase @Inject constructor(
         }
 
         /** Kenndaten und Ergebnis als JSON, Formatversion 1 (R26). */
-        fun meta(sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport, rotationSource: RotationSource): String {
+        fun meta(
+            sampleRate: Int, channels: Int, startNanos: Long, exact: Boolean, a: SweepMath.SweepReport, rotationSource: RotationSource,
+            /** S-014: letzter Wert des Balkens (alle Drehlagen); `coverage` zaehlt nur Fenster mit klarer Spitze. */
+            coverageLive: Double,
+        ): String {
             // NaN und Unendlich sind kein gueltiges JSON (Zweitpruefung S-010, G5)
             fun n(v: Double?) = v?.takeIf { it.isFinite() }?.let { String.format(Locale.ROOT, "%.9g", it) } ?: "null"
             val e = a.estimate
@@ -169,6 +173,7 @@ class SweepUseCase @Inject constructor(
                 append("  \"tapSeconds\": ").append(TAP_SECONDS).append(",\n")
                 // S-014: fester Ablauf mit Bildern (SweepGuide), damit Laeufe vergleichbar sind
                 append("  \"guide\": \"v1\",\n")
+                append("  \"coverageLive\": ").append(n(coverageLive)).append(",\n")
                 append("  \"rotationSource\": \"").append(rotationSource.name).append("\",\n")
                 append("  \"micAxisDevice\": [").append(SweepMath.MIC_AXIS_DEVICE.let { "${it.x}, ${it.y}, ${it.z}" }).append("],\n")
                 append("  \"syncSeconds\": ").append(n(a.syncSeconds)).append(",\n")

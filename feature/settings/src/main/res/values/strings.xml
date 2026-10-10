@@ -144,7 +144,6 @@
     <string name="sweep_title">Schwenk-Messung</string>
     <string name="sweep_intro">Misst, ob sich eine Geräuschquelle durch Drehen des Handys orten lässt. Dafür ein zweites Handy oder Radio mit Musik oder Sprache, gut hörbar laut, etwa 1 Meter entfernt fest hinstellen.</string>
     <string name="sweep_start">Schwenk-Messung starten</string>
-    <string name="sweep_running">Läuft …</string>
     <string name="sweep_time_before">Vorher</string>
     <string name="sweep_time_range">%1$s bis %2$s s</string>
     <string name="sweep_move_start">Quelle vor die Kamera</string>

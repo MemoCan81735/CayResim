@@ -77,19 +77,19 @@ fun SweepContent(state: SweepUiState, onStart: () -> Unit, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item { TextButton(onClick = onBack, modifier = Modifier.padding(top = 16.dp).testTag("back")) { Text(stringResource(R.string.back)) } }
-            item { Text(stringResource(R.string.sweep_title), style = MaterialTheme.typography.headlineMedium) }
-            item { Text(stringResource(R.string.sweep_intro), style = MaterialTheme.typography.bodyMedium) }
-            // S-014: Ablauf als Bilder mit Zeitangabe (nur vor dem Start, waehrend der Messung zeigt Prompt den Schritt)
-            if (!state.running) item { GuideList() }
-            item {
-                Button(onClick = onStart, enabled = !state.running, modifier = Modifier.testTag("sweep_start")) {
-                    Text(stringResource(if (state.running) R.string.sweep_running else R.string.sweep_start))
+            // S-014: Waehrend der Messung nur die Anzeige des Schritts, damit sie auch quer ganz sichtbar ist
+            // (Zweitpruefung S-014, W3); vorher Einleitung, Ablauf als Bilder und Startknopf
+            if (state.running) item { Prompt(state) } else {
+                item { Text(stringResource(R.string.sweep_title), style = MaterialTheme.typography.headlineMedium) }
+                item { Text(stringResource(R.string.sweep_intro), style = MaterialTheme.typography.bodyMedium) }
+                item { GuideList() }
+                item {
+                    Button(onClick = onStart, modifier = Modifier.testTag("sweep_start")) { Text(stringResource(R.string.sweep_start)) }
                 }
             }
             if (state.permissionDenied) item {
                 Text(stringResource(R.string.sweep_no_permission), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("sweep_permission"))
             }
-            if (state.running) item { Prompt(state) }
             if (state.failed) item {
                 Text(stringResource(R.string.sweep_error), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("sweep_error"))
             }
@@ -119,7 +119,14 @@ private fun picture(m: SweepMoveUi) = when (m) {
     SweepMoveUi.CIRCLE -> SweepPicture.CIRCLE
 }
 
-private fun guideItem(m: SweepMoveUi) = guideItems[m.ordinal + 1]
+/** Erschoepfend statt ueber die Reihenfolge der Enums (Zweitpruefung S-014, H8). */
+private fun guideItem(m: SweepMoveUi) = when (m) {
+    SweepMoveUi.TAP -> guideItems[1]
+    SweepMoveUi.YAW -> guideItems[2]
+    SweepMoveUi.ROLL -> guideItems[3]
+    SweepMoveUi.PITCH -> guideItems[4]
+    SweepMoveUi.CIRCLE -> guideItems[5]
+}
 
 @Composable
 private fun GuideList() {
@@ -142,30 +149,35 @@ private fun GuideList() {
 
 @Composable
 private fun Prompt(state: SweepUiState) {
-    Column(Modifier.fillMaxWidth().testTag("sweep_prompt").semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        val move = state.move
-        if (state.step == SweepStepUi.ANALYZING || move == null) {
-            Text(stringResource(R.string.sweep_analyzing), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            return@Column
-        }
-        SweepPictogram(picture(move), 180.dp, Modifier.align(Alignment.CenterHorizontally))
-        Text(stringResource(guideItem(move).title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(stringResource(guideItem(move).how), style = MaterialTheme.typography.bodyMedium)
-        val next = state.next
-        Text(
-            if (next != null) stringResource(R.string.sweep_left_next, state.seconds, stringResource(guideItem(next).title))
-            else stringResource(R.string.sweep_left_last, state.seconds),
-            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
-        )
-        if (move != SweepMoveUi.TAP) {
-            // Balken voll ab COVERAGE_GOOD; echte Laeufe am 10.10. erreichten 0,22 und 0,23 (S-014)
-            LinearProgressIndicator(progress = { (state.coverage / COVERAGE_GOOD).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().testTag("sweep_coverage_bar"))
-            val level = when {
-                state.coverage >= COVERAGE_GOOD -> R.string.sweep_cov_ok
-                state.coverage >= COVERAGE_GOOD / 3 -> R.string.sweep_cov_mid
-                else -> R.string.sweep_cov_low
+    val move = state.move
+    if (state.step == SweepStepUi.ANALYZING || move == null) {
+        Text(stringResource(R.string.sweep_analyzing), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+            modifier = Modifier.testTag("sweep_prompt"))
+    } else {
+        // Bild links, Text rechts: passt hochkant und quer ohne Scrollen (Zweitpruefung S-014, W3)
+        Row(Modifier.fillMaxWidth().testTag("sweep_prompt").semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically) {
+            SweepPictogram(picture(move), 150.dp)
+            Column(Modifier.padding(start = 12.dp).weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(guideItem(move).title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(stringResource(guideItem(move).how), style = MaterialTheme.typography.bodyMedium)
+                val next = state.next
+                Text(
+                    if (next != null) stringResource(R.string.sweep_left_next, state.seconds, stringResource(guideItem(next).title))
+                    else stringResource(R.string.sweep_left_last, state.seconds),
+                    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
+                )
+                if (move != SweepMoveUi.TAP) {
+                    // Balken voll ab COVERAGE_GOOD. Er misst alle Drehlagen; die Auswertung zaehlt danach nur Fenster mit
+                    // klarer Spitze, deshalb steht beides in meta.json (coverageLive, coverage)
+                    LinearProgressIndicator(progress = { (state.coverage / COVERAGE_GOOD).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().testTag("sweep_coverage_bar"))
+                    val level = when {
+                        state.coverage >= COVERAGE_GOOD -> R.string.sweep_cov_ok
+                        state.coverage >= COVERAGE_GOOD / 3 -> R.string.sweep_cov_mid
+                        else -> R.string.sweep_cov_low
+                    }
+                    Text(stringResource(R.string.sweep_coverage_live, stringResource(level)), style = MaterialTheme.typography.bodySmall)
+                }
             }
-            Text(stringResource(R.string.sweep_coverage_live, stringResource(level)), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -217,5 +229,5 @@ private fun estimateFailureText(f: SweepEstimateFailureUi) = when (f) {
     SweepEstimateFailureUi.WEAK_SIGNAL -> R.string.sweep_fail_weak
 }
 
-/** S-014: Abdeckung, ab der der Balken voll ist ("genug"); drei Viertel der echten Laeufe vom 10.10. */
+/** S-014: Abdeckung, ab der der Balken voll ist ("genug"); etwa zwei Drittel der echten Laeufe vom 10.10. (0,22, 0,23) */
 private const val COVERAGE_GOOD = 0.15

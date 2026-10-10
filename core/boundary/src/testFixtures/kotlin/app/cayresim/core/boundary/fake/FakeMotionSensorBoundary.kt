@@ -32,8 +32,13 @@ class FakeMotionSensorBoundary(
         var registered = false
         try {
             active++; registered = true; registrations++; maxActive = maxOf(maxActive, active)
-            samples.forEachIndexed { i, s ->
-                if (paced && i > 0) kotlinx.coroutines.delay(((s.nanos - samples[i - 1].nanos) / 1_000_000L).coerceAtLeast(0))
+            // im Takt: Zielzeit ab dem ersten Wert, damit sich Rundungen nicht aufsummieren (Zweitpruefung S-014, H14)
+            var waitedMs = 0L
+            for (s in samples) {
+                if (paced) {
+                    val target = (s.nanos - samples.first().nanos) / 1_000_000L
+                    if (target > waitedMs) { kotlinx.coroutines.delay(target - waitedMs); waitedMs = target }
+                }
                 emit(s)
             }
             awaitCancellation()

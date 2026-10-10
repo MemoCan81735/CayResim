@@ -1,5 +1,6 @@
 package app.cayresim.feature.settings
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -148,6 +149,18 @@ class SweepTest {
         assertEquals(0.21, s2.coverage, 1e-12); assertTrue(s2.running)
         // gleiche Bewegungen in beiden Schichten
         assertEquals(SweepGuide.Move.entries.map { it.name }, SweepMoveUi.entries.map { it.name })
+    }
+
+    @Test @Config(sdk = [34], qualifiers = "w891dp-h411dp-land-xxhdpi")
+    fun schwenk_ansage_quer() {
+        // Zweitpruefung S-014, W3: quer gehalten muss die ganze Anzeige ohne Scrollen sichtbar sein
+        val state = SweepUiState(running = true, step = SweepStepUi.SWEEP, seconds = 4, move = SweepMoveUi.ROLL, next = SweepMoveUi.PITCH, coverage = 0.16)
+        compose.setContent { CayResimTheme(dark = true) { SweepContent(state, {}, {}) } }
+        compose.onNodeWithText("Auf hochkant kippen", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Restzeit in Sekunden: 4, danach: Nach oben und unten", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("sweep_coverage_bar").assertIsDisplayed()
+        compose.onNodeWithText("Abdeckung der Drehungen: genug", substring = true).assertIsDisplayed()
+        compose.onRoot().captureRoboImage("src/test/screenshots/sweep_prompt_land.png")
     }
 
     @Test fun schwenk_ergebnis() {
