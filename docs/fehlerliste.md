@@ -29,3 +29,4 @@ Regel ihn heute verhindert.
 | 10.10. | Stabilisator "aktiv: unbekannt" | Wert vor dem ersten Aufnahmeergebnis gelesen | Selbsttest S24+ | Selbsttest wartet bis 1,5 s (S-006) |
 | 10.10. | Nebel im fast lichtlosen Raum trotz S-006 (Aufhellung x60,4, Boden-Modus griff nicht) | ungeklärt; Laborszene trifft das Gerät nicht, die Entscheidung wird nicht gemeldet | Gerätetest S24+ v0.1.98 | offen: Messwerte der Entscheidung in den Hinweis (Vorschlag S-007) |
 | 10.10. | Stabilisator weiter "aktiv: unbekannt" | ungeklärt; Samsung meldet den Wert vielleicht nicht im Aufnahmeergebnis | Selbsttest S24+ v0.1.98 | offen |
+| 10.10. | Testhilfe ruft Selbsttest außerhalb einer Coroutine | lokale `fun` statt `suspend fun` um einen `suspend`-Aufruf | CI-Kompilierung (S-007) | eigene Prüfung vor dem Push |

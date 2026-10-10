@@ -41,6 +41,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -166,7 +167,8 @@ fun CameraContent(
     val text = message?.let { m -> stringResource(messageRes(m.kind)) + (nightText?.let { "\n$it" } ?: "") }
     LaunchedEffect(message?.id) {
         if (message != null && text != null) {
-            snackbar.showSnackbar(text)
+            // S-007: Nachthinweis mit Messwerten laenger zeigen, damit ein Screenshot gelingt
+            snackbar.showSnackbar(text, duration = if (message.night != null) SnackbarDuration.Long else SnackbarDuration.Short)
             onMessageShown(message.id)
         }
     }
@@ -487,5 +489,25 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
     val cut = if (n.shortened) shaken + stringResource(R.string.night_shortened) else shaken
     // S-001 K5: Dauer vom Ausloesen bis gespeichert, z. B. ", Dauer 4,2 s"
     val full = n.durationMs?.let { cut + stringResource(R.string.night_duration, String.format(java.util.Locale.GERMANY, "%.1f", it / 1000f)) } ?: cut
-    return if (n.raw) stringResource(R.string.night_raw_prefix) + full else full
+    val line = if (n.raw) stringResource(R.string.night_raw_prefix) + full else full
+    return n.diagnosis?.let { line + "\n" + nightDiagnosis(it) } ?: line
+}
+
+/**
+ * S-007: zweite Zeile mit den Werten der Boden-Entscheidung. Signal, Schwelle, Rauschen und Median sind lineares Licht
+ * mal 255 (1 = ein 255tel von Weiss); die Stufen des Bezugsbilds sind die 8-Bit-Werte der Kamera (sRGB), z. B.
+ * "Boden-Modus nein: Signal 1,200, ..., Median 2,000 (linear), ...; Bezugsbild 41 % Nullen, Stufen 12,0 / 11,0 / 15,0".
+ */
+@Composable
+internal fun nightDiagnosis(d: app.cayresim.core.pure.NightDiagnosis): String {
+    fun lin(v: Float) = String.format(java.util.Locale.GERMANY, "%.3f", v * 255f)
+    fun pct(v: Float) = (v * 100f + 0.5f).toInt()
+    fun lvl(v: Float) = String.format(java.util.Locale.GERMANY, "%.1f", v)
+    val decision = when {
+        !d.checked -> stringResource(R.string.night_diag_unchecked)
+        d.noise <= 0f -> stringResource(R.string.night_diag_no_clip, pct(d.estimatedR), pct(d.estimatedG), pct(d.estimatedB))
+        else -> stringResource(R.string.night_diag, stringResource(if (d.floor) R.string.night_diag_yes else R.string.night_diag_no),
+            lin(d.signal), lin(d.threshold), lin(d.noise), lin(d.median), pct(d.estimatedR), pct(d.estimatedG), pct(d.estimatedB))
+    }
+    return decision + stringResource(R.string.night_diag_frame, pct(d.zeroShare), lvl(d.firstR), lvl(d.firstG), lvl(d.firstB))
 }

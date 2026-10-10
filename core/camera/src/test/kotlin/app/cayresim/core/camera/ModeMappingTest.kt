@@ -21,6 +21,15 @@ class ModeMappingTest {
         others.forEach { kotlin.test.assertNotEquals(ExtensionMode.NONE, it) }
     }
 
+    @Test fun `S-007 Stabilisator ohne Wert im Ergebnis heisst nicht gemeldet, ueberschreibt aber keinen Wert`() {
+        assertEquals(app.cayresim.core.boundary.OisState.NOT_REPORTED, CameraXCameraAdapter.oisStateOf(null, null))
+        assertEquals(app.cayresim.core.boundary.OisState.ON, CameraXCameraAdapter.oisStateOf(true, null))
+        assertEquals(app.cayresim.core.boundary.OisState.OFF, CameraXCameraAdapter.oisStateOf(false, app.cayresim.core.boundary.OisState.ON))
+        // Geraet liefert den Wert nur manchmal: ON bleibt
+        assertEquals(app.cayresim.core.boundary.OisState.ON, CameraXCameraAdapter.oisStateOf(null, app.cayresim.core.boundary.OisState.ON))
+        assertEquals(app.cayresim.core.boundary.OisState.ON, CameraXCameraAdapter.oisStateOf(true, app.cayresim.core.boundary.OisState.NOT_REPORTED))
+    }
+
     @Test fun `CameraX-Fehler werden auf Ergebnistypen abgebildet`() {
         assertEquals(CaptureFailure.STORAGE, CameraXCameraAdapter.mapError(ImageCapture.ERROR_FILE_IO))
         assertEquals(CaptureFailure.CAMERA_CLOSED, CameraXCameraAdapter.mapError(ImageCapture.ERROR_CAMERA_CLOSED))

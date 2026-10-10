@@ -5,6 +5,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureResult
+import app.cayresim.core.boundary.OisState
 import app.cayresim.core.boundary.ManualCameraBoundary
 import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.NightPathBoundary
@@ -90,7 +91,12 @@ class SelfTestUseCase @Inject constructor(
             // S-003: Stabilisator aktiv laut letzter Aufnahme
             caps.device?.let { d ->
                 // S-006: der Wert kommt erst mit dem ersten Aufnahmeergebnis (Geraet 10.10.: direkt nach dem Start "unbekannt")
-                val ois = if (d.ois == true) withTimeoutOrNull(OIS_WAIT_MS) { camera.state.first { it.stabilization != null } }?.stabilization else null
+                // S-007: bis zu [OIS_WAIT_MS] auf einen gemeldeten Wert (ON oder OFF) warten; erste Ergebnisse koennen vor der
+                // Anforderung liegen. Danach zaehlt der aktuelle Stand: nicht gemeldet oder gar kein Ergebnis (null)
+                val ois = if (d.ois == true) {
+                    withTimeoutOrNull(OIS_WAIT_MS) { camera.state.first { it.stabilization == OisState.ON || it.stabilization == OisState.OFF } }
+                        ?.stabilization ?: camera.state.value.stabilization
+                } else null
                 items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = d.copy(oisActive = ois))
             }
         }

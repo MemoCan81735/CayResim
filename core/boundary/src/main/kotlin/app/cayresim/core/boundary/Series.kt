@@ -28,7 +28,11 @@ enum class Look { NONE, WARM, COOL, FILM, MONO }
 
 /** Kennzahlen einer Nachtaufnahme: genutzte und verworfene Bilder, Aufhellung. */
 /** [maxShake]: groesster Versatz zum Bezugsbild in Pixeln des Nachtbilds (S-003). */
-data class NightStats(val used: Int, val dropped: Int, val gain: Float, val maxShake: Int = 0, val shakeMeasurable: Boolean = true)
+/** [diagnosis]: S-007, Werte der Boden-Entscheidung (nur 8 Bit, sonst null). */
+data class NightStats(
+    val used: Int, val dropped: Int, val gain: Float, val maxShake: Int = 0, val shakeMeasurable: Boolean = true,
+    val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
+)
 
 sealed interface ProcessResult {
     /** [night]: Kennzahlen des Nacht-Kerns (nur Zahlen, Text baut die UI, R23). */

@@ -162,6 +162,12 @@ class NightUseCaseTest {
         assertFalse(assertIs<StackOutcome.Saved>(night(10)).night!!.shakeMeasurable)
     }
 
+    @Test fun `S-007 Diagnose kommt im Bericht an`() = runTest {
+        val d = app.cayresim.core.pure.NightDiagnosis(true, false, 0.01f, 0.004f, 0.002f, 0.001f, 0.6f, 0.55f, 0.7f, 0.41f, 12f, 11f, 15f)
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.nightDiagnosis = d
+        assertEquals(d, assertIs<StackOutcome.Saved>(night(10)).night!!.diagnosis)
+    }
+
     @Test fun `Bericht nennt das Wackeln`() = runTest {
         // S-003 K2
         cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.nightShake = 12

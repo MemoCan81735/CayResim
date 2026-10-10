@@ -6,6 +6,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class NightPlanTest {
@@ -195,6 +197,97 @@ class NightMergeTest {
         assertTrue(m.noiseFloor, "lichtlos nicht erkannt")
         // vorher Nebel auf Stufe 39 (Median-Ziel); jetzt bleibt reines Rauschen dunkles Korn (gemessen 12,9)
         assertTrue(r.rgb.map { it.toInt() and 0xFF }.average() <= 20.0, "Rauschen zu Nebel aufgehellt: ${r.rgb.map { it.toInt() and 0xFF }.average()}")
+    }
+
+    // ---------- S-007: Diagnose der Boden-Entscheidung ----------
+
+    private fun srgb8(lin: Double): Byte = (NightTone.linearToSrgb(lin.toFloat()) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte()
+    private val lumaNorm = sqrt(0.2126 * 0.2126 + 0.7152 * 0.7152 + 0.0722 * 0.0722)
+
+    /** Gleichmaessige Flaeche mit linearem Signal [signal] und Gauss-Rauschen [sigma] je Kanal, bei 0 abgeschnitten. */
+    private fun clipped(signal: Double, sigma: Double, rng: java.util.Random) =
+        ByteArray(w * h * 3) { srgb8(maxOf(0.0, signal + rng.nextGaussian() * sigma)) }
+
+    @Test fun `S-007 Diagnose lichtlos schaetzt das Rauschen nahe der Wahrheit`() {
+        val rng = java.util.Random(7); val sigma = 0.003
+        val m = NightMerge(w, h).apply { repeat(24) { add(clipped(0.0, sigma, rng)) } }
+        m.finish()
+        val d = assertNotNull(m.diagnosis)
+        assertTrue(d.checked, "nicht geprueft"); assertTrue(d.floor, "lichtlos nicht als Boden erkannt")
+        // feste Grenze gegen die Wahrheit: Rauschen der Helligkeit aus dem Rauschen je Kanal
+        val truth = sigma * lumaNorm
+        assertTrue(abs(d.noise - truth) / truth <= 0.15, "Rauschen ${d.noise}, Wahrheit $truth")
+        assertTrue(d.signal <= d.threshold, "Signal ${d.signal} ueber Schwelle ${d.threshold}")
+        assertTrue(minOf(d.estimatedR, d.estimatedG, d.estimatedB) >= 0.5f, "zu wenige Pixel geschaetzt: $d")
+        assertTrue(d.median > 0f, "Mittel ohne Abzug fehlt: ${d.median}")
+    }
+
+    @Test fun `S-007 Diagnose misst das erste Bild`() {
+        // genau jeder vierte Kanalwert ist 0, die anderen fest je Kanal
+        val first = ByteArray(w * h * 3) { i -> if (i % 4 == 0) 0 else (10 + 20 * (i % 3)).toByte() }
+        val expect = (0 until 3).map { c -> (c until first.size step 3).map { first[it].toInt() and 0xFF }.average() }
+        val m = NightMerge(w, h).apply { add(first) }
+        m.finish()
+        val d = assertNotNull(m.diagnosis)
+        assertEquals(0.25f, d.zeroShare, 0.001f)
+        assertEquals(expect[0].toFloat(), d.firstR, 0.01f); assertEquals(expect[1].toFloat(), d.firstG, 0.01f)
+        assertEquals(expect[2].toFloat(), d.firstB, 0.01f)
+    }
+
+    @Test fun `S-007 Diagnose misst nach einem Bezugswechsel das neue Bezugsbild`() {
+        // weiches erstes Bild ohne Nullen, danach scharfe mit Nullen: die Werte gehoeren zum neuen Bezug
+        val rng = SeededRng(5)
+        val m = NightMerge(w, h)
+        m.add(ByteArray(w * h * 3) { 9 })
+        val sharp = (0 until 5).map { scene(0, 0, rng, noise = 6) }
+        sharp.forEach { m.add(it) }
+        m.finish()
+        assertEquals(1, m.dropped, "Bezug hat nicht gewechselt")
+        val expect = sharp[0].count { it.toInt() == 0 }.toFloat() / sharp[0].size
+        val d = assertNotNull(m.diagnosis)
+        assertTrue(expect > 0.01f, "Testszene ohne Nullen: $expect")
+        assertEquals(expect, d.zeroShare, 0.0001f)
+        assertEquals((1 until sharp[0].size step 3).map { sharp[0][it].toInt() and 0xFF }.average().toFloat(), d.firstG, 0.01f)
+    }
+
+    @Test fun `S-007 Messung des Bezugsbilds dauert bei 1,6 MP hoechstens 10 ms`() {
+        // R27: Zeitbudget gemessen statt geschaetzt (Zweitpruefung: erste Fassung 12 bis 26 ms)
+        val big = 1440 * 1080
+        val frame = ByteArray(big * 3) { (it * 7 % 251).toByte() }
+        val m = NightMerge(1440, 1080)
+        m.measureFirst(frame) // Aufwaermen
+        val runs = (0 until 5).map { val t0 = System.nanoTime(); m.measureFirst(frame); (System.nanoTime() - t0) / 1e6 }
+        val best = runs.min()
+        println("S-007 Messung des Bezugsbilds: ${"%.1f".format(best)} ms (5 Laeufe: ${runs.joinToString { "%.1f".format(it) }})")
+        assertTrue(best <= 10.0, "Messung des Bezugsbilds $best ms")
+    }
+
+    @Test fun `S-007 Diagnose helle Szene ist kein Boden`() {
+        // schwach beleuchtet, aber deutlich ueber dem Rauschen: Signal 0,01 bei Rauschen 0,003, teils abgeschnitten
+        val rng = java.util.Random(8)
+        val dim = NightMerge(w, h).apply { repeat(24) { add(clipped(0.01, 0.003, rng)) } }
+        dim.finish()
+        val d = assertNotNull(dim.diagnosis)
+        assertTrue(d.checked); assertFalse(d.floor, "beleuchtete Flaeche als Boden: $d")
+        assertTrue(d.signal > d.threshold, "Signal ${d.signal}, Schwelle ${d.threshold}")
+        assertTrue(abs(d.signal - 0.01) <= 0.002, "Signal ${d.signal}, Wahrheit 0,01")
+        // hell (Stufe 87 bis 93): nirgends abgeschnitten, das Rauschen ist nicht schaetzbar, also kein Boden
+        val bright = NightMerge(w, h).apply { repeat(24) { add(ByteArray(w * h * 3) { (90 + rng.nextInt(7) - 3).toByte() }) } }
+        bright.finish()
+        val b = assertNotNull(bright.diagnosis)
+        assertTrue(b.checked); assertFalse(b.floor); assertEquals(0f, b.noise)
+        assertTrue(maxOf(b.estimatedR, b.estimatedG, b.estimatedB) < 0.05f, "Schaetzung ohne Abschneiden: $b")
+    }
+
+    @Test fun `S-007 Randfall wenige Bilder und RAW`() {
+        val rng = java.util.Random(9)
+        val few = NightMerge(w, h).apply { repeat(5) { add(clipped(0.0, 0.003, rng)) } }
+        few.finish()
+        val d = assertNotNull(few.diagnosis)
+        assertFalse(d.checked); assertFalse(d.floor)
+        val raw = NightMerge(w, h).apply { repeat(10) { addLinear(FloatArray(w * h * 3) { 0.01f }) } }
+        raw.finish()
+        assertNull(raw.diagnosis, "RAW hat keine Diagnose")
     }
 
     @Test fun `S-003 Fehlerfall vorbeilaufendes helles Objekt wird nicht zum Bezug`() {

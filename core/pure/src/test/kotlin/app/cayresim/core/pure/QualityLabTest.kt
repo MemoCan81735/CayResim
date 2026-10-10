@@ -245,7 +245,15 @@ class QualityLabTest {
         val cast = srgb(fRgb[2]) - srgb(fRgb[0]); val warm = srgb(cRgb[0]) - srgb(cRgb[2])
         report("32-vorhang-nacht", "\n## Vorhang im fast lichtlosen Raum (72 Bilder, Rauschen bis Stufe 5)\n\nVorhang ${"%.1f".format(cL)}, Wand ${"%.1f".format(wL)}, " +
             "Boden ${"%.1f".format(fL)}, Blau minus Rot am Boden ${"%.1f".format(cast)}, Vorhang Rot minus Blau ${"%.1f".format(warm)} " +
-            "(Samsung: Vorhang 56, Wand 9, Boden 1; CayResim 0.1.90: alles 39 bis 43); Boden-Modus ${merge.noiseFloor}, Anteil 0/1 ${"%.2f".format(merge.floorShare)}\n")
+            "(Samsung: Vorhang 56, Wand 9, Boden 1; CayResim 0.1.90: alles 39 bis 43); Boden-Modus ${merge.noiseFloor}, Anteil 0/1 ${"%.2f".format(merge.floorShare)}\n\n" +
+            // S-007: dieselben Werte, die der Hinweis auf dem Geraet zeigt (linear mal 255), zum Vergleich mit dem S24+
+            merge.diagnosis.let { d ->
+                fun lin(v: Float) = String.format(java.util.Locale.GERMANY, "%.3f", v * 255f)
+                if (d == null) "Diagnose fehlt\n" else "Diagnose wie im Hinweis: Signal ${lin(d.signal)}, Schwelle ${lin(d.threshold)}, " +
+                    "Rauschen ${lin(d.noise)}, Median ${lin(d.median)} (linear), geschaetzt an R ${(d.estimatedR * 100 + 0.5f).toInt()} / G ${(d.estimatedG * 100 + 0.5f).toInt()} / " +
+                    "B ${(d.estimatedB * 100 + 0.5f).toInt()} %; Bezugsbild ${(d.zeroShare * 100 + 0.5f).toInt()} % Nullen, Stufen " +
+                    String.format(java.util.Locale.GERMANY, "%.1f / %.1f / %.1f", d.firstR, d.firstG, d.firstB) + "\n"
+            })
         assertTrue(fL <= 10.0, "Boden aufgehellt (Rauschnebel): $fL")
         // Samsung hat etwa 2,2-mal mehr Licht (bis 8 s statt 7,2 s aus 72 Bildern mit nur 1/10 s): 15 statt 55 Stufen Abstand;
         // 0.1.90 kam auf 4 (Geraet) bzw. 8 (Labor)
