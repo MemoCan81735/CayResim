@@ -255,7 +255,7 @@ class SelfTestUseCaseTest {
 
     @Test fun `S-007 Stabilisator nicht gemeldet`() = runTest {
         // Geraet 10.10.: Aufnahmeergebnis ohne Stabilisator-Wert; das ist ein Ergebnis, kein Warten bis zum Ende
-        fun ois(cam: FakeCameraBoundary) = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive
+        suspend fun ois(cam: FakeCameraBoundary) = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive
         val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(OisState.NOT_REPORTED) }
         assertEquals(OisState.NOT_REPORTED, ois(cam))
         // erstes Ergebnis ohne Wert (vor der Anforderung), spaeter gemeldet: der gemeldete Wert gilt
