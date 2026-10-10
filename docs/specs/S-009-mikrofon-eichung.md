@@ -1,6 +1,6 @@
 # S-009: Mikrofon-Test mit Pause, Eichung und besserem Stereo-Kriterium
 
-**Stand:** 10.10.2026 · **Status:** Entwurf, wartet auf Freigabe durch Arslan
+**Stand:** 10.10.2026 · **Status:** freigegeben von Arslan (10.10., 12:48 Uhr: Spec wie Entwurf, ein Release)
 **Anlass:** Gerätetest S-008 auf dem S24+ (v0.1.109, 10.10., 12:22 und 12:33 Uhr), nachgerechnet aus den WAV-Dateien
 (Ergebnis in S-008):
 - Quer gehalten funktioniert die Ortung: links −0,48 bis −0,50 ms, rechts +0,39 bis +0,44 ms, vorne −0,05 bis 0,00 ms.

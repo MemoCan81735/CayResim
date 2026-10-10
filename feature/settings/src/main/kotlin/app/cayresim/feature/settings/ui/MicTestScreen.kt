@@ -35,6 +35,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cayresim.feature.settings.R
+import app.cayresim.feature.settings.control.CalibrationFailureUi
 import app.cayresim.feature.settings.control.ClapPhaseUi
 import app.cayresim.feature.settings.control.ClapRowUi
 import app.cayresim.feature.settings.control.DirectionUi
@@ -109,6 +110,10 @@ private fun Progress(state: MicTestUiState) {
                 Text(stringResource(R.string.mictest_step_sources, state.sourceIndex + 1, state.sourceTotal, state.currentSource?.let { sourceLabel(it) } ?: ""))
                 Text(stringResource(R.string.mictest_keep_quiet), style = MaterialTheme.typography.bodySmall)
             }
+            MicStepUi.PREPARE -> {
+                Text(stringResource(preparePrompt(state.clapPhase)), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.mictest_prepare_how, state.prepareSeconds), style = MaterialTheme.typography.bodyMedium)
+            }
             MicStepUi.CLAP -> {
                 Text(stringResource(clapPrompt(state.clapPhase)), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.mictest_clap_how, state.clapSeconds), style = MaterialTheme.typography.bodyMedium)
@@ -139,12 +144,16 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(r: MicTestRes
     itemsIndexed(r.sources) { i, s -> SourceLine(s, Modifier.testTag("source_$i").semantics(mergeDescendants = true) {}) }
     if (r.claps.isNotEmpty()) {
         item { Heading(R.string.mictest_claps_title) }
+        item { CalibrationLine(r) }
         itemsIndexed(r.claps) { i, c -> ClapLines(c, Modifier.testTag("clap_$i").semantics(mergeDescendants = true) {}) }
     }
     item {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(stringResource(if (r.spacingMeasured) R.string.mictest_spacing_measured else R.string.mictest_spacing_assumed, dec1(r.spacingCm)),
-                style = MaterialTheme.typography.bodySmall)
+            // mit Eichung steht der wirksame Abstand bei der Klatsch-Probe; ohne gilt der Abstand laut Geraet oder angenommen
+            if (r.calibration == null) Text(
+                stringResource(if (r.spacingMeasured) R.string.mictest_spacing_measured else R.string.mictest_spacing_assumed, dec1(r.spacingCm)),
+                style = MaterialTheme.typography.bodySmall,
+            )
             Text(stringResource(R.string.mictest_duration, dec1(r.durationSeconds)), style = MaterialTheme.typography.bodySmall)
             Text(r.folder?.let { stringResource(R.string.mictest_folder, it) } ?: stringResource(R.string.mictest_folder_none),
                 style = MaterialTheme.typography.bodySmall)
@@ -153,6 +162,26 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(r: MicTestRes
             Text(stringResource(R.string.mictest_send), style = MaterialTheme.typography.bodySmall)
         }
     }
+}
+
+@Composable
+private fun CalibrationLine(r: MicTestResultUi) {
+    val c = r.calibration
+    val text = when {
+        c != null -> stringResource(R.string.mictest_calibrated, dec1(c.spacingCm), signed2(c.centerMs))
+        r.calibrationFailure != null -> stringResource(calibrationFailureText(r.calibrationFailure))
+        else -> return
+    }
+    Text(
+        text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("mictest_calibration"),
+        color = if (c == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+private fun calibrationFailureText(f: CalibrationFailureUi) = when (f) {
+    CalibrationFailureUi.TOO_FEW_CLAPS -> R.string.mictest_calibration_too_few
+    CalibrationFailureUi.SIDES_NOT_DISTINCT -> R.string.mictest_calibration_upright
+    CalibrationFailureUi.IMPLAUSIBLE -> R.string.mictest_calibration_implausible
 }
 
 @Composable
@@ -175,6 +204,7 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
             s.levelDb.joinToString(" / ") { db(it) },
             dec1(s.identicalShare * 100),
             dec2(noNegativeZero(s.correlation)),
+            dec2(noNegativeZero(s.diffCorrelation)),
         )
         Text(detail, style = MaterialTheme.typography.bodySmall)
         if (s.failure == null) Text(
@@ -239,6 +269,12 @@ private fun phaseName(p: ClapPhaseUi) = when (p) {
     ClapPhaseUi.LEFT -> R.string.mictest_phase_left
     ClapPhaseUi.RIGHT -> R.string.mictest_phase_right
     ClapPhaseUi.FRONT -> R.string.mictest_phase_front
+}
+
+private fun preparePrompt(p: ClapPhaseUi?) = when (p) {
+    ClapPhaseUi.LEFT, null -> R.string.mictest_prepare_left
+    ClapPhaseUi.RIGHT -> R.string.mictest_prepare_right
+    ClapPhaseUi.FRONT -> R.string.mictest_prepare_front
 }
 
 private fun clapPrompt(p: ClapPhaseUi?) = when (p) {

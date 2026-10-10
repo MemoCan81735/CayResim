@@ -30,14 +30,36 @@ object AudioMath {
         val identicalShare: Double,
         /** Korrelation der Kanaele 0 und 1 ohne Versatz, -1 bis 1 (1 bei Mono). */
         val correlation: Double,
+        /**
+         * Korrelation der Aenderungen von Abtastwert zu Abtastwert (einfacher Hochpass), -1 bis 1 (1 bei Mono).
+         * Tiefe Raumgeraeusche erreichen zwei Mikrofone gleich und heben [correlation] bis 0,86; hier bleiben zwei
+         * Mikrofone bei 0 und ein einzelnes bei etwa 0,6 (S-009, Geraetetest S24+).
+         */
+        val diffCorrelation: Double = correlation,
     ) {
         /**
-         * Zwei wirklich verschiedene Kanaele: nicht doppeltes Mono (auch nicht leicht bearbeitet, Korrelation unter
-         * [CORRELATION_LIMIT]) und keiner stumm.
+         * Zwei wirklich verschiedene Mikrofone: nicht doppeltes Mono, nicht ein Mikrofon auf beiden Kanaelen
+         * (Korrelation der Aenderungen unter [DIFF_CORRELATION_LIMIT]) und keiner stumm.
          */
         val distinctChannels: Boolean
-            get() = channels >= 2 && frames > 0 && identicalShare < IDENTICAL_LIMIT && kotlin.math.abs(correlation) < CORRELATION_LIMIT &&
+            get() = channels >= 2 && frames > 0 && identicalShare < IDENTICAL_LIMIT && kotlin.math.abs(diffCorrelation) < DIFF_CORRELATION_LIMIT &&
                 levelDbfs.take(2).all { it > SILENT_DBFS }
+    }
+
+    /**
+     * Eichung der Klatsch-Probe aus links und rechts (S-009): Laufzeit = Mitte + halbe Spanne * sin(Winkel).
+     * [halfSpanSeconds] ist positiv, wenn rechts die groessere Laufzeit hat; das Vorzeichen des Geraets faellt so heraus.
+     */
+    data class Calibration(val centerSeconds: Double, val halfSpanSeconds: Double) {
+        /** Wirksamer Mikrofonabstand: Strecke, die der Schall in der halben Spanne zuruecklegt. */
+        val spacingMeters: Double get() = abs(halfSpanSeconds) * SPEED_OF_SOUND
+    }
+
+    enum class CalibrationFailure { TOO_FEW_CLAPS, SIDES_NOT_DISTINCT, IMPLAUSIBLE }
+
+    sealed interface CalibrationResult {
+        data class Ok(val calibration: Calibration) : CalibrationResult
+        data class Failed(val reason: CalibrationFailure) : CalibrationResult
     }
 
     /** Ergebnis je Klatscher. [angleDegrees]: null, wenn die Laufzeit physikalisch nicht moeglich ist. */
@@ -53,7 +75,12 @@ object AudioMath {
     )
 
     const val IDENTICAL_LIMIT = 0.999
-    const val CORRELATION_LIMIT = 0.99
+    const val DIFF_CORRELATION_LIMIT = 0.3
+    const val MIN_CALIBRATION_CLAPS = 3
+    /** Kleinster Unterschied der Mediane links und rechts; darunter liegt die Mikrofonachse nicht quer (hochkant). */
+    const val MIN_SIDE_DIFFERENCE_SECONDS = 0.0001
+    const val MIN_CALIBRATED_SPACING = 0.03
+    const val MAX_CALIBRATED_SPACING = 0.30
     const val SILENT_DBFS = -90.0
 
     fun dbfs(rms: Double): Double = if (rms <= 0.0) Double.NEGATIVE_INFINITY else 20 * log10(rms)
@@ -74,7 +101,36 @@ object AudioMath {
         val a = ch[0]; val b = ch[1]
         var same = 0
         for (i in 0 until frames) if (pcm[i * channels] == pcm[i * channels + 1]) same++
-        return RecordingStats(frames, channels, level, peak, same.toDouble() / frames, pearson(a, b, 0, 0, frames))
+        val da = FloatArray(maxOf(0, frames - 1)) { a[it + 1] - a[it] }
+        val db = FloatArray(da.size) { b[it + 1] - b[it] }
+        return RecordingStats(frames, channels, level, peak, same.toDouble() / frames, pearson(a, b, 0, 0, frames), pearson(da, db, 0, 0, da.size))
+    }
+
+    /**
+     * Eichung aus den Laufzeiten der Klatscher links und rechts (Sekunden): je Seite der Median, robust gegen einzelne
+     * Griffgeraeusche. NaN zaehlt nicht. Gruende ohne Eichung siehe [CalibrationFailure].
+     */
+    fun calibrate(left: List<Double>, right: List<Double>): CalibrationResult {
+        val l = left.filter { it.isFinite() }; val r = right.filter { it.isFinite() }
+        if (l.size < MIN_CALIBRATION_CLAPS || r.size < MIN_CALIBRATION_CLAPS) return CalibrationResult.Failed(CalibrationFailure.TOO_FEW_CLAPS)
+        val ml = median(l); val mr = median(r)
+        if (abs(mr - ml) < MIN_SIDE_DIFFERENCE_SECONDS) return CalibrationResult.Failed(CalibrationFailure.SIDES_NOT_DISTINCT)
+        val c = Calibration((ml + mr) / 2, (mr - ml) / 2)
+        if (c.spacingMeters !in MIN_CALIBRATED_SPACING..MAX_CALIBRATED_SPACING) return CalibrationResult.Failed(CalibrationFailure.IMPLAUSIBLE)
+        return CalibrationResult.Ok(c)
+    }
+
+    /** Winkel nach der Eichung: links -90, vorne 0, rechts +90; null wie bei [angleDegrees], wenn mehr als 10 % ausserhalb. */
+    fun calibratedAngle(delaySeconds: Double, c: Calibration): Double? {
+        if (!delaySeconds.isFinite() || c.halfSpanSeconds == 0.0) return null
+        val s = (delaySeconds - c.centerSeconds) / c.halfSpanSeconds
+        if (abs(s) > 1.1) return null
+        return Math.toDegrees(asin(s.coerceIn(-1.0, 1.0)))
+    }
+
+    private fun median(v: List<Double>): Double {
+        val s = v.sorted(); val m = s.size / 2
+        return if (s.size % 2 == 1) s[m] else (s[m - 1] + s[m]) / 2
     }
 
     /**

@@ -86,7 +86,8 @@ class AudioMathTest {
         val shifted = ShortArray(mono.size * 2) { i -> if (i % 2 == 0) mono[i / 2] else mono[maxOf(0, i / 2 - 1)] }
         val t = AudioMath.analyze(shifted, 2)
         assertTrue(t.identicalShare < 0.999, "Anteil gleicher Werte ${t.identicalShare}")
-        assertTrue(t.distinctChannels)
+        // S-009: ein um einen Abtastwert verschobenes Mono ist dasselbe Mikrofon; die Aenderungen korrelieren mit -0,5
+        assertFalse(t.distinctChannels, "Korrelation der Aenderungen ${t.diffCorrelation}")
         // Mono-Aufnahme: ein Kanal, nie verschieden
         assertFalse(AudioMath.analyze(mono, 1).distinctChannels)
         // aufgeteiltes Mono mit leichtem Zittern (+-1): nicht bitgleich, aber Korrelation nahe 1, also kein Stereo
@@ -181,6 +182,68 @@ class AudioMathTest {
         }
         println("GCC-PHAT 40 ms Fenster: ${best / 1000} us")
         assertTrue(best < 5_000_000, "GCC-PHAT dauerte ${best / 1_000_000.0} ms")
+    }
+
+    /** Laufzeiten in ms aus dem Quertest S24+ vom 10.10. (S-008, nachgerechnet aus den WAV-Dateien). */
+    private val querLinks = listOf(-0.00, -0.20, -0.02, -0.48, -0.48, -0.48, -0.48)
+    private val querRechts = listOf(0.33, 0.39, 0.39, 0.40, 0.40, 0.40, 0.40, 0.40)
+    private val querVorne = listOf(0.01, -0.05, -0.04, -0.06, -0.01, -0.01, -0.00)
+    private fun s(ms: List<Double>) = ms.map { it / 1000 }
+
+    @Test fun `S-009 Quertest S24+ ergibt geeichte Winkel`() {
+        val r = AudioMath.calibrate(s(querLinks), s(querRechts))
+        val c = assertNotNull((r as? AudioMath.CalibrationResult.Ok)?.calibration, "Eichung: $r")
+        assertEquals(-0.00004, c.centerSeconds, 0.00001)
+        assertEquals(0.151, c.spacingMeters, 0.003)
+        val links = querLinks.drop(3).map { assertNotNull(AudioMath.calibratedAngle(it / 1000, c)) }
+        assertTrue(links.all { it <= -75.0 }, "links $links")
+        val rechts = querRechts.map { assertNotNull(AudioMath.calibratedAngle(it / 1000, c)) }
+        assertEquals(7, rechts.count { it >= 75.0 }, "rechts $rechts")
+        assertEquals(57.0, rechts[0], 1.5, "+0,33 ms")
+        val vorne = querVorne.map { assertNotNull(AudioMath.calibratedAngle(it / 1000, c)) }
+        assertTrue(vorne.all { abs(it) <= 10.0 }, "vorne $vorne")
+        // zum Vergleich der alte Weg mit 15 cm: rechts nur etwa 63 Grad
+        assertEquals(63.0, assertNotNull(AudioMath.angleDegrees(0.00039, 0.15)), 1.0)
+        // unplausibel weit ausserhalb bleibt "unmoeglich"
+        assertNull(AudioMath.calibratedAngle(0.0009, c))
+    }
+
+    @Test fun `S-009 Eichung lehnt Hochkant, zu wenige und Unsinn ab`() {
+        // Hochkant, erster Lauf S24+ (Kreuzkorrelation, mit Ausreissern): Mediane links +0,04, rechts -0,02 ms
+        val hochLinks = listOf(0.0, 0.021, 0.062, 0.042, 0.062, 0.042, 0.042, 0.042, 0.042)
+        val hochRechts = listOf(0.042, -0.479, 0.292, 0.292, 0.208, -0.021, -0.021, -0.021, -0.042)
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.SIDES_NOT_DISTINCT), AudioMath.calibrate(s(hochLinks), s(hochRechts)))
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.TOO_FEW_CLAPS), AudioMath.calibrate(s(querLinks), s(listOf(0.4, 0.4))))
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.TOO_FEW_CLAPS), AudioMath.calibrate(emptyList(), s(querRechts)))
+        // NaN zaehlt nicht: drei Werte, davon einer NaN, sind zu wenige
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.TOO_FEW_CLAPS),
+            AudioMath.calibrate(listOf(-0.0005, -0.0005, Double.NaN), s(querRechts)))
+        // Spanne 2 ms entspricht 34 cm wirksamem Abstand: unplausibel
+        assertEquals(AudioMath.CalibrationResult.Failed(AudioMath.CalibrationFailure.IMPLAUSIBLE),
+            AudioMath.calibrate(s(listOf(-1.0, -1.0, -1.0)), s(listOf(1.0, 1.0, 1.0))))
+        // Vorzeichen des Geraets egal: vertauschte Seiten ergeben wieder links -90, rechts +90
+        val r = AudioMath.calibrate(s(querRechts), s(querLinks)) as AudioMath.CalibrationResult.Ok
+        assertEquals(-90.0, assertNotNull(AudioMath.calibratedAngle(0.0004, r.calibration)), 0.5)
+        assertEquals(90.0, assertNotNull(AudioMath.calibratedAngle(-0.00048, r.calibration)), 0.5)
+    }
+
+    @Test fun `S-009 Stereo nur bei zwei Mikrofonen`() {
+        val rnd = Random(9)
+        val n = 96_000
+        fun hum(i: Int) = sin(2 * PI * 50 * i / sr)
+        fun pcm(f: (Int, Int) -> Double) = ShortArray(n * 2) { k -> f(k / 2, k % 2).roundToInt().coerceIn(-32768, 32767).toShort() }
+        // (a) ein Mikrofon auf beiden Kanaelen: gemeinsames Signal und Brummen, je Kanal eigenes Rauschen
+        val common = DoubleArray(n) { gauss(rnd) * 1000 }
+        val own = Array(2) { DoubleArray(n) { gauss(rnd) * 800 } }
+        val a = AudioMath.analyze(pcm { i, c -> common[i] + 2800 * hum(i) + own[c][i] }, 2)
+        assertTrue(a.correlation in 0.85..0.99, "Korrelation ${a.correlation}")
+        assertEquals(0.6, a.diffCorrelation, 0.05)
+        assertFalse(a.distinctChannels, "ein Mikrofon ist kein Stereo")
+        // (b) zwei Mikrofone: unabhaengiges Rauschen, gemeinsames tiefes Brummen
+        val b = AudioMath.analyze(pcm { i, c -> own[c][i] / 800 * 300 + 1010 * hum(i) }, 2)
+        assertEquals(0.85, b.correlation, 0.03)
+        assertTrue(abs(b.diffCorrelation) < 0.05, "Aenderungen ${b.diffCorrelation}")
+        assertTrue(b.distinctChannels, "Brummen macht zwei Mikrofone nicht zu einem")
     }
 
     @Test fun `S-008 Pegel in dBFS`() {

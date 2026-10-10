@@ -2,6 +2,14 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Mikrofon-Test mit Eichung (10. Oktober 2026, S-009)
+- Vor jeder Klatsch-Phase 2 s Pause mit Ansage ("Gleich links klatschen"), erst dann wird aufgenommen. Klatscher der
+  vorigen Seite landen so nicht mehr in der nächsten Phase.
+- Die App eicht sich bei jedem Lauf aus den Klatschern links und rechts: wirksamer Mikrofonabstand und Mitte, danach
+  sind links −90°, vorne 0°, rechts +90°. Hochkant gehalten erscheint "Handy hochkant gehalten?" statt falscher Winkel.
+- "verschieden" heißt jetzt wirklich zwei Mikrofone (Korrelation der Änderungen unter 0,3, steht zusätzlich in der Liste).
+- Gerät: Mikrofon-Test einmal quer, einmal hochkant; Screenshots der Klatsch-Probe schicken.
+
 ## Mikrofon-Test (10. Oktober 2026, S-008)
 - Neu unter Einstellungen: "Mikrofon-Test". Liest die Mikrofone des Geräts, nimmt mit jeder Audioquelle 2 s auf und
   prüft, ob zwei getrennte Kanäle ankommen. Danach eine angesagte Klatsch-Probe (links, rechts, vorne) mit Laufzeit und

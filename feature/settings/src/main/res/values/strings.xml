@@ -93,7 +93,15 @@
     <string name="mictest_clap_left">Links neben dem Handy klatschen</string>
     <string name="mictest_clap_right">Rechts neben dem Handy klatschen</string>
     <string name="mictest_clap_front">Vor dem Bildschirm klatschen</string>
-    <string name="mictest_clap_how">Handy quer halten, Bildschirm zu dir. Aus etwa 2 Metern dreimal klatschen, mit kurzer Pause. Zeit in Sekunden: %1$d</string>
+    <string name="mictest_clap_how">Handy quer halten, Bildschirm zu dir, nicht berühren. Aus etwa 2 Metern mindestens dreimal klatschen, mit kurzer Pause. Zeit in Sekunden: %1$d</string>
+    <string name="mictest_prepare_left">Gleich links klatschen</string>
+    <string name="mictest_prepare_right">Gleich rechts klatschen</string>
+    <string name="mictest_prepare_front">Gleich vor dem Bildschirm klatschen</string>
+    <string name="mictest_prepare_how">Jetzt hinstellen, noch nicht klatschen. Das Handy nicht berühren. Die Aufnahme beginnt in %1$d Sekunden.</string>
+    <string name="mictest_calibrated">Geeicht aus links und rechts: wirksamer Mikrofonabstand (cm) %1$s, Mitte (ms) %2$s. Alle Winkel sind geeicht.</string>
+    <string name="mictest_calibration_too_few">Nicht geeicht: zu wenige Klatscher links oder rechts (mindestens 3 je Seite). Winkel aus dem Abstand unten.</string>
+    <string name="mictest_calibration_upright">Nicht geeicht: links und rechts klingen gleich. Handy hochkant gehalten? Bitte quer halten und noch einmal starten.</string>
+    <string name="mictest_calibration_implausible">Nicht geeicht: unplausible Laufzeiten (wirksamer Abstand nicht zwischen 3 und 30 cm). Winkel aus dem Abstand unten.</string>
     <string name="mictest_summary_stereo">Echtes Stereo mit Quelle \"%1$s\". Die Richtungen der Klatscher stehen unten.</string>
     <string name="mictest_summary_no_stereo">Keine Quelle liefert zwei verschiedene Kanäle: Ortung ist so nicht möglich.</string>
     <string name="mictest_mics_title">Mikrofone laut Gerät</string>
@@ -110,7 +118,7 @@
     <string name="mictest_source_device">%1$s, nur Gerät Nr. %2$d</string>
     <string name="mictest_source_towards">%1$s, Richtung zum Bildschirm</string>
     <string name="mictest_source_away">%1$s, Richtung zur Rückseite</string>
-    <string name="mictest_source_detail">Kanäle: %1$d, verschieden: %2$s, Pegel (dBFS): %3$s, gleiche Werte: %4$s %%, Korrelation: %5$s</string>
+    <string name="mictest_source_detail">Kanäle: %1$d, verschieden: %2$s, Pegel (dBFS): %3$s, gleiche Werte: %4$s %%, Korrelation: %5$s, Korrelation der Änderungen: %6$s</string>
     <string name="mictest_source_route">Genutztes Gerät: %1$s, aktive Mikrofone: %2$s, gespeichert: %3$s</string>
     <string name="mictest_fail_permission">Keine Mikrofon-Berechtigung</string>
     <string name="mictest_fail_not_offered">Vom Gerät nicht angeboten</string>
