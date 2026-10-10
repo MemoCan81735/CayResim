@@ -41,6 +41,8 @@ class MutationProbesTest {
     @Test fun `R11 CameraX in Feature-Control`() = probe("R11", ctl, "import androidx.camera.core.ImageCapture")
     @Test fun `R11 CameraX in Galerie-UI`() = probe("R11", "feature/gallery/src/main/kotlin/app/cayresim/feature/gallery/ui/X.kt", "import androidx.camera.core.SurfaceRequest")
     @Test fun `R11 Camera2 in Daten-Adapter`() = probe("R11", adapter, "import android.hardware.camera2.CaptureRequest")
+    @Test fun `R11 Koordinaten-Umrechner ausserhalb des Suchers`() =
+        probe("R11", ctl, "import androidx.camera.viewfinder.compose.MutableCoordinateTransformer")
     @Test fun `R16 Dispatchers im ViewModel`() = probe("R16", ctl, "fun f() = withContext(Dispatchers.IO) { }")
     @Test fun `Namen Entity-Klasse`() = probe("Namen", entity, "class Rules { }")
     @Test fun `Namen Boundary-Schnittstelle`() = probe("Namen", boundary, "interface Camera { }")
@@ -50,6 +52,8 @@ class MutationProbesTest {
     // Gegenbeispiele: saubere Faelle duerfen nicht gemeldet werden
     @Test fun `A1 Sucher darf CameraXViewfinder nutzen`() =
         assertEquals(emptyList(), rulesFor(ui, "import androidx.camera.compose.CameraXViewfinder\nimport androidx.camera.core.SurfaceRequest"))
+    @Test fun `A1 Sucher darf den Koordinaten-Umrechner nutzen (S-005)`() =
+        assertEquals(emptyList(), rulesFor(ui, "import androidx.camera.viewfinder.compose.MutableCoordinateTransformer"))
     @Test fun `Privater MutableStateFlow ist erlaubt`() =
         assertEquals(emptyList(), rulesFor(ctl, "class AViewModel : ViewModel() {\n    private val state = MutableStateFlow(0)\n}"))
     @Test fun `Kommentare loesen nichts aus`() =

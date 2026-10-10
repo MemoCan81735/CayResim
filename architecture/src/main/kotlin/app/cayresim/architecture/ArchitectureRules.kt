@@ -119,10 +119,17 @@ object ArchitectureRules {
         return out
     }
 
-    /** Ausnahme A1 (bestaetigt 07.10.2026): Sucher-Screen darf CameraXViewfinder und SurfaceRequest nutzen. */
+    /**
+     * Ausnahme A1 (bestaetigt 07.10.2026, erweitert 10.10.2026 in S-005): Sucher-Screen darf CameraXViewfinder,
+     * SurfaceRequest und MutableCoordinateTransformer (Umrechnung fuer Antippen zum Scharfstellen) nutzen.
+     */
     private fun isA1(path: String, import: String) =
         path.startsWith("feature/camera/src/main/kotlin/app/cayresim/feature/camera/ui/") &&
-            import in setOf("androidx.camera.compose.CameraXViewfinder", "androidx.camera.core.SurfaceRequest")
+            import in setOf(
+                "androidx.camera.compose.CameraXViewfinder",
+                "androidx.camera.core.SurfaceRequest",
+                "androidx.camera.viewfinder.compose.MutableCoordinateTransformer",
+            )
 
     private fun naming(f: SourceFile, layer: Layer, code: String): List<Violation> {
         val out = mutableListOf<Violation>()

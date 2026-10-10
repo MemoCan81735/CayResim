@@ -228,7 +228,7 @@ def main():
     cur_text = cur.read_text(encoding="utf-8") if cur.exists() else ""
     prev_text = pathlib.Path(prev_path).read_text(encoding="utf-8") if prev_path and pathlib.Path(prev_path).exists() else ""
     rows, warnings, changed_text = compare(prev_text, cur_text)
-    label = os.environ.get("PREV_LABEL", "letzter Lauf auf main")
+    label = os.environ.get("PREV_LABEL", "den letzten Lauf auf main")
     md += ["", f"## Testlabor gegen {label}", ""]
     if not cur_text:
         md.append("Kein Laborbericht in diesem Lauf.")

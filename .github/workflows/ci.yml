@@ -159,7 +159,7 @@ jobs:
       - name: Vergleichsbericht vom letzten Lauf auf main
         run: |
           if git fetch -q --depth 1 origin ci-logs-fast 2>/dev/null && git show FETCH_HEAD:quality-report.md > prev.md 2>/dev/null; then
-            echo "PREV_LABEL=letzten Lauf auf main ($(git log -1 --format=%s FETCH_HEAD | awk '{print substr($3,1,7)}'))" >> "$GITHUB_ENV"
+            echo "PREV_LABEL=den letzten Lauf auf main ($(git log -1 --format=%s FETCH_HEAD | awk '{print substr($3,1,7)}'))" >> "$GITHUB_ENV"
           else
             rm -f prev.md
           fi
