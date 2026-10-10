@@ -164,7 +164,8 @@ class SweepMathTest {
     }
 
     /** Kuenstlicher Schwenk von 25 s: Lage je 10 ms, Ton mit der Laufzeit, die zur Lage passt. */
-    private fun syntheticSweep(u: Vec3, rnd: Random): Triple<ShortArray, List<SweepMath.Pose>, Long> {
+    /** [noise]: eigenes Rauschen je Kanal relativ zur Quelle (0 = keins; 3 = Quelle etwa 10 dB unter dem Rauschen). */
+    private fun syntheticSweep(u: Vec3, rnd: Random, noise: Double = 0.0): Triple<ShortArray, List<SweepMath.Pose>, Long> {
         val seconds = 25; val n = seconds * sr; val start = 7_000_000_000L
         val spacing = 0.15
         val poses = List(seconds * 100 + 1) { i ->
@@ -180,7 +181,9 @@ class SweepMathTest {
             val pose = poses[i / 480]
             val axis = SweepMath.rotate(pose, SweepMath.MIC_AXIS_DEVICE)
             val lag = Math.round(spacing / c * axis.dot(u) * sr).toInt()
-            pcm[2 * i] = src[i + 100 - lag].toInt().toShort(); pcm[2 * i + 1] = src[i + 100].toInt().toShort()
+            val n0 = if (noise > 0) gauss(rnd) * 3000 * noise else 0.0; val n1 = if (noise > 0) gauss(rnd) * 3000 * noise else 0.0
+            pcm[2 * i] = (src[i + 100 - lag] + n0).coerceIn(-32768.0, 32767.0).toInt().toShort()
+            pcm[2 * i + 1] = (src[i + 100] + n1).coerceIn(-32768.0, 32767.0).toInt().toShort()
         }
         return Triple(pcm, poses, start)
     }
@@ -219,10 +222,30 @@ class SweepMathTest {
         val r = SweepMath.analyze(pcm, 2, sr, start, shifted, emptyList())
         assertEquals(SweepMath.SweepFailure.NO_POSE, (r.estimate as SweepMath.Estimate.Failed).reason)
         assertTrue(r.framesWithPeak > 400, "Fenster mit Signal ${r.framesWithPeak}"); assertEquals(0, r.framesUsed)
-        // Stille: zu wenige Fenster mit Signal
+        // Stille: kein Signal (S-012: vorher "zu wenige Messfenster", jetzt "Signal zu schwach")
         val silent = SweepMath.analyze(ShortArray(pcm.size), 2, sr, start, poses, emptyList())
-        assertEquals(SweepMath.SweepFailure.TOO_FEW_MEASUREMENTS, (silent.estimate as SweepMath.Estimate.Failed).reason)
+        assertEquals(SweepMath.SweepFailure.WEAK_SIGNAL, (silent.estimate as SweepMath.Estimate.Failed).reason)
         assertEquals(0, silent.framesWithPeak)
+        // klares Signal, aber nur 3 + 1 s lang: zu wenige Messfenster
+        val short = SweepMath.analyze(pcm.copyOf(2 * 4 * sr), 2, sr, start, poses, emptyList())
+        assertEquals(SweepMath.SweepFailure.TOO_FEW_MEASUREMENTS, (short.estimate as SweepMath.Estimate.Failed).reason)
+    }
+
+    @Test fun `S-012 schwaches Signal wird erkannt`() {
+        // Anlass: S24+ 10.10., 16:05 Uhr, Median der Spitze 0,074, App meldete "unplausibel" statt "zu schwach"
+        val u = dir(25.0, 10.0)
+        val (weakPcm, poses, start) = syntheticSweep(u, Random(7), noise = 3.0)
+        val weak = SweepMath.analyze(weakPcm, 2, sr, start, poses, emptyList())
+        println("S-012 schwach: Median ${weak.peakMedian}, Fenster mit Spitze ${weak.framesWithPeak}, ${weak.estimate}")
+        assertEquals(SweepMath.SweepFailure.WEAK_SIGNAL, (weak.estimate as? SweepMath.Estimate.Failed)?.reason, "Ergebnis ${weak.estimate}")
+        assertTrue(weak.peakMedian < SweepMath.MIN_MEDIAN_PEAK, "Median ${weak.peakMedian}")
+        // klare Quelle: Richtung wie bisher, Median weit ueber der Grenze
+        val (pcm, poses2, start2) = syntheticSweep(u, Random(7))
+        val clear = SweepMath.analyze(pcm, 2, sr, start2, poses2, emptyList())
+        val e = assertNotNull(clear.estimate as? SweepMath.Estimate.Ok, "Ergebnis ${clear.estimate}")
+        assertTrue(angleBetween(e.direction, u) <= 5.0, "Fehler ${angleBetween(e.direction, u)} Grad")
+        assertTrue(clear.peakMedian > 0.5, "Median ${clear.peakMedian}")
+        assertEquals(0.10, SweepMath.MIN_MEDIAN_PEAK, "Grenze aus Spec S-012 (echter Fehlschlag 0,074, Modell sicher ab 0,14)")
     }
 
     @Test fun `S-010 Startlage aus der Ruhe vor dem Schwenk`() {

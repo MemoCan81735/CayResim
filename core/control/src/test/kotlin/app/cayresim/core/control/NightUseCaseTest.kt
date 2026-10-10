@@ -302,4 +302,23 @@ class NightUseCaseTest {
         // Nachlauf nur fuer die Warteschlange (hoechstens 2 Bilder) und die Abschlussdateien, nicht fuer die ganze Serie
         assertTrue(testScheduler.currentTime - t0 <= streamEnd + 6 * 350, "Dauer ${testScheduler.currentTime - t0} ms, Strom $streamEnd ms")
     }
+
+    @Test fun `S-011 Schalter schaltet sich nach der gespeicherten Serie aus`() = runTest {
+        // Nachtrag 10.10., 20:16 Uhr (Arslan, Zweitpruefung B17): eine Serie je Einschalten
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200))
+        frames.intervalMs = 100
+        val debug = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true)
+        val archive = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary()
+        val r = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, debug, motion())(10))
+        assertTrue(archive.sessions.single().finished && r.night!!.seriesName != null)
+        assertFalse(debug.saveNightSeries.value, "nach der gespeicherten Serie aus")
+        // naechste Aufnahme legt nichts ab
+        assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, archive, debug, motion())(10))
+        assertEquals(1, archive.sessions.size)
+        // Speichern gescheitert: Schalter bleibt an, damit der naechste Versuch wieder speichert
+        val failing = app.cayresim.core.boundary.fake.FakeSeriesArchiveBoundary().apply { failFinish = true }
+        val on = app.cayresim.core.boundary.fake.FakeDebugOptionsBoundary(true)
+        val r2 = assertIs<StackOutcome.Saved>(NightUseCase(cam, manual, frames, proc, null, null, failing, on, motion())(10))
+        assertTrue(r2.night!!.seriesFailed); assertTrue(on.saveNightSeries.value, "bleibt an nach Fehler")
+    }
 }

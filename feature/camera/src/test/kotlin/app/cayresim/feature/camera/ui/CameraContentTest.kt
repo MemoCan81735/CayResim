@@ -344,7 +344,7 @@ class CameraContentTest {
         show(running.copy(message = UserMessage(13, MessageKind.NIGHT_SAVED,
             app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 67, 0, 15.7f, seriesName = "Nachtserie-20261010-183012.zip", seriesBytes = 48_300_000))))
         compose.waitUntil(5_000) {
-            compose.onAllNodesWithText("Aufhellung x15,7\nNachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB)", substring = true).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithText("Aufhellung x15,7\nNachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB), Schalter wieder aus", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_night_series.png")
     }

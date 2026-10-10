@@ -142,7 +142,8 @@ Unabhängige Prüfung (zweiter Agent, 10.10.), kein blockierender Befund; behobe
   fehlender Startlage, Text "Dauer dieses Schritts" statt einer Zeit, die nicht herunterzählt.
 - G1 (Sensor bei echtem Adapter wenige ms nach Aufnahmebeginn angemeldet) als Kommentar festgehalten; unschädlich,
   weil Lagen erst ab dem Ende der Klopfphase gebraucht werden.
-- G9: Eine Datei mit Zusatzblöcken statt drei Dateien wird Arslan zur Bestätigung genannt.
+- G9: Eine Datei mit Zusatzblöcken statt drei Dateien wird Arslan zur Bestätigung genannt. Bestätigt von Arslan
+  (10.10., 20:16 Uhr: "2 ja").
 
 CI auf `probe/s010` (38055170819, 38056315999): Kern, Analyse (Lint, detekt, Fallen) und beide APKs grün; rot nur
 die erwarteten 9 Screenshots (3 neu, 6 Mikrofon-Test wegen des neuen Knopfs). Alle angesehen und übernommen.

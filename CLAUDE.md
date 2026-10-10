@@ -20,7 +20,9 @@ Testkonzept (`claude/foto-app-testkonzept.md`); Testregeln für Android ausführ
 4. **Test zuerst (rot):** Aus jedem Akzeptanzkriterium wird ein Test, bevor der Code entsteht. Er muss mit dem alten
    Code scheitern. Für `:core:pure` läuft das lokal: `tools/run-pure-tests.sh` (alle reinen Rechentests in etwa
    einer Minute, vor jedem Push); für Boundary und Control `tools/run-core-tests.sh <Testklassen>`, für die
-   Architekturregeln `tools/run-architecture-check.sh`. Für Android, Compose und Screenshots gibt es lokal keinen Gradle-Lauf; als Nachweis
+   Architekturregeln `tools/run-architecture-check.sh`. Für geänderte Dateien in Android-Modulen vor jedem Push
+   `python3 -I tools/check-kotlin-structure.py` (Klammern; ersetzt das Kompilieren nicht, findet aber verrutschte Blöcke,
+   S-011). Für Android, Compose und Screenshots gibt es lokal keinen Gradle-Lauf; als Nachweis
    für "rot" gilt dort einer von diesen: ein CI-Lauf, das Python-Modell mit derselben Rechnung oder eine schriftliche
    Begründung im Spec, warum der alte Code scheitern muss. Ein Test, der nie rot sein konnte, zählt nicht.
 5. **Code (grün):** die kleinste Änderung, die die Tests erfüllt.
@@ -79,6 +81,9 @@ ein zweiter Agent den Diff ohne die Begründungen des ersten, nur gegen Spec und
   im nächsten Lauf entsteht.
 - Startwerte für Zufall in Testdaten nie aus `hashCode()` von Objekten mit Enums ableiten, weil sich der Enum-Hash von Lauf
   zu Lauf ändert und Screenshots dadurch nicht reproduzierbar sind.
+- Neue Felder in Boundary-Typen (Ergebnisse, Snapshots) ohne Standardwert anlegen, damit der Compiler jeden Adapter
+  zwingt, sie zu setzen; ein Fake, der sie selbst füllt, verdeckt sonst einen vergessenen Adapter (S-011: Messwerte je
+  Bild wären auf dem Gerät leer gewesen, alle Tests grün).
 - `StateFlow.value` nie innerhalb von `setContent` lesen, auch nicht in Tests, weil Lint Testquellen mitprüft
   (`StateFlowValueCalledInComposition`); den Wert vorher in eine Variable holen.
 
