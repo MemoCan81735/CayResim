@@ -17,7 +17,7 @@ Aufnahmeergebnis". Das Bild selbst ändert sich nicht.
 |---|---|---|
 | K1 | Lichtlose 8-Bit-Serie (lineares Gauss-Rauschen σ 0,003, bei 0 abgeschnitten, 24 Bilder): Diagnose geprüft, Boden-Modus ja, geschätztes Rauschen innerhalb 15 % der Wahrheit, Signal ≤ Schwelle, Schätzung an mindestens 50 % der Pixel | `NightMergeTest > S-007 Diagnose lichtlos schaetzt das Rauschen nahe der Wahrheit` |
 | K2 | Erstes Bild mit genau 25 % Kanalwerten auf 0 und festen Mitteln: Nullen-Anteil 0,25 ± 0,001, Mittel je Kanal ± 0,01 | `NightMergeTest > S-007 Diagnose misst das erste Bild` |
-| K3 | Helle Szene (Stufe 60 bis 120, 24 Bilder): geprüft, Boden-Modus nein, Signal > Schwelle | `NightMergeTest > S-007 Diagnose helle Szene ist kein Boden` |
+| K3 | Schwach beleuchtete Fläche (lineares Signal 0,01, Rauschen 0,003, 24 Bilder): geprüft, Boden-Modus nein, Signal > Schwelle, Signal innerhalb 0,002 der Wahrheit. Helle Fläche (Stufe 87 bis 93): Rauschen 0 (nicht schätzbar), unter 5 % der Pixel geschätzt, Boden-Modus nein | `NightMergeTest > S-007 Diagnose helle Szene ist kein Boden` |
 | K4 | Weniger als 8 Bilder: nicht geprüft, Boden-Modus nein; RAW-Weg: keine Diagnose | `NightMergeTest > S-007 Randfall wenige Bilder und RAW` |
 | K5 | Die Diagnose der Verarbeitung kommt unverändert im NightReport an (8 Bit) | `NightUseCaseTest > S-007 Diagnose kommt im Bericht an` |
 | K6 | Hinweis zeigt eine zweite Zeile, z. B. "Boden-Modus nein: Signal 1,20, Schwelle 0,40, Rauschen 3,10, Mittel 2,00, geschätzt an R 60 / G 55 / B 70 %; Bild 1: 41 % Nullen, Mittel 12,0 / 11,0 / 15,0" (lineare Stufen, 1 = 1/255 von Weiß) | `CameraContentTest > nacht_hinweis_zeigt_die_diagnose` |
