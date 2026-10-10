@@ -7,6 +7,7 @@ Umgebung: NEEDS_JSON (toJSON(needs)), GH_TOKEN, GITHUB_REPOSITORY, GITHUB_RUN_ID
 PREV_LABEL (Commit des Vergleichsberichts).
 """
 import datetime as dt
+import difflib
 import json
 import os
 import pathlib
@@ -164,8 +165,20 @@ def compare(prev_text, cur_text):
         warnings += worse
         label = name if name == col else f"{name}, {col}"
         rows.append(f"| {label} | {a:g} | {b:g} | {share * 100:+.0f} % | {'Warnung: schlechter' if worse else ''} |")
-    changed_text = [f"- vorher: {o}\n  jetzt: {n}" for o, n in zip(other_lines(prev_text), other_lines(cur_text)) if o != n]
-    return rows, warnings, changed_text[:10]
+    return rows, warnings, text_changes(other_lines(prev_text), other_lines(cur_text))[:10]
+
+
+def text_changes(old, new):
+    """Zeilen ausserhalb der Tabellen: echter Abgleich, damit eine neue Zeile nicht alle folgenden verschiebt."""
+    out = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(a=old, b=new, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        if tag == "replace" and i2 - i1 == j2 - j1:
+            out += [f"- vorher: {o}\n  jetzt: {n}" for o, n in zip(old[i1:i2], new[j1:j2])]
+        else:
+            out += [f"- entfallen: {o}" for o in old[i1:i2]] + [f"- neu: {n}" for n in new[j1:j2]]
+    return out
 
 
 def main():
@@ -244,6 +257,8 @@ def main():
             md.append("")
         if rows:
             md += ["| Wert (Nacht-Kern) | vorher | jetzt | Aenderung | |", "|---|---|---|---|---|"] + rows
+        else:
+            md.append("Alle Tabellenwerte des Nacht-Kerns unveraendert.")
         if changed_text:
             md += ["", "Weitere geaenderte Zeilen:", ""] + changed_text
     out_path.write_text("\n".join(md) + "\n", encoding="utf-8")

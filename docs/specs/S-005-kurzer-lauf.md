@@ -1,6 +1,6 @@
 # S-005: Kurzer Lauf mit mehr Aussage
 
-**Stand:** 9. Oktober 2026 · **Status:** freigegeben (Arslan, 22:41), in Umsetzung
+**Stand:** 10. Oktober 2026 · **Status:** umgesetzt (freigegeben von Arslan am 9. Oktober, 22:41)
 **Anlass:** Rückblick vom 9. Oktober (`CLAUDE.md` Abschnitt 9, V2 und V8) und Auswertung der letzten 60 CI-Läufe
 (7. bis 9. Oktober, GitHub API):
 - Der Schnell-Job war in 21 von 60 Läufen rot. Ein roter Schnell-Job meldet sich im Median erst nach 6,6 Minuten
@@ -82,13 +82,13 @@ Umgesetzt am 10. Oktober 2026 auf dem Zweig `probe/s-005` (5 Probeläufe), danac
 
 | Nr. | Ergebnis |
 |---|---|
-| K1 | Kern nach 2,7 / 2,7 / 2,8 / 2,6 min fertig (Probeläufe 2 bis 5); Messung auf main siehe unten |
-| K2 | alles nach 4,9 / 6,7 / 6,5 min, solange APK Debug und Release ein Job waren (R8 plus doppeltes Kompilieren, 5 min 51 s Gradle-Zeit); nach der Teilung in zwei Jobs 5,0 und 4,5 min |
+| K1 | erfüllt: Kern im Median nach 2,6 min fertig (letzte drei Läufe mit der endgültigen Aufteilung: 2,8 auf `probe/s-005`, 2,6 und 2,3 auf main; vorher kam jede Rückmeldung erst nach 5,7 bis 6,6 min) |
+| K2 | erfüllt: alles im Median nach 5,0 min (5,0 / 5,3 / 4,6 in denselben drei Läufen). Solange APK Debug und Release ein Job waren, 4,9 / 6,7 / 6,5 min (R8 plus doppeltes Kompilieren, 5 min 51 s Gradle-Zeit) |
 | K3 | fünf statt vier parallele Jobs: APK Debug und APK Release getrennt (Abweichung von der Spec, wegen K2) |
 | K4 | Probelauf rot (Zweig `probe/s-005-rot`, Lauf 38017341210): roter Test in `:core:pure`, Kompilierfehler in `:feature:gallery`, Falle in `strings.xml`; alle fünf Jobs liefen zu Ende, jeder meldete seinen Befund |
 | K5 | detekt 1.23.8 als eigenes Programm (unabhängig von Kotlin 2.4), nur Regeln mit Fehlerbezug, 23 alte Funde in `config/detekt/baseline.xml`; Android Lint für alle Android-Module, 94 alte Funde in 8 Baselines. JVM-Module prüft nur detekt (Lint findet dort kaum etwas). Alle drei Proben in jedem Lauf erkannt |
 | K6 | `fallen.sh` erkennt Leerzeichen am Textende; Probe erkannt, im Probelauf rot den echten Fund gemeldet |
-| K7 | Zusammenfassung auf der Lauf-Seite und in `ci-logs-fast/summary.md` (Probezweige: `ci-logs-probe`); gleiche Kompilierfehler mehrerer Jobs stehen einmal da. Laborvergleich lokal mit absichtlich verschlechtertem Bericht geprüft (Rauschen +19 % ergibt eine Warnung) |
+| K7 | Zusammenfassung auf der Lauf-Seite und in `ci-logs-fast/summary.md` (Probezweige: `ci-logs-probe`); gleiche Kompilierfehler mehrerer Jobs stehen einmal da. Laborvergleich lokal mit absichtlich verschlechtertem Bericht geprüft (Rauschen +19 % ergibt eine Warnung). Im zweiten Lauf auf main (S-006 der anderen Sitzung) nannte die Lauf-Seite sofort die zwei roten Tests in `SelfTestTest` und die geänderten Laborzeilen; der Zeilenvergleich verrutschte dabei bei einer neuen Zeile und gleicht seitdem Zeile für Zeile ab |
 | K8 | `ci-logs-fast` schreibt nur der Bericht-Job; `fast.log` bleibt als Zusammenfassung aller Protokolle |
 | K9, K10, K11 | erfüllt (Workflow-Datei) |
 
