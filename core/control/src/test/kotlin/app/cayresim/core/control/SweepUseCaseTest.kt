@@ -149,7 +149,7 @@ class SweepUseCaseTest {
         assertTrue(progress.size >= SweepUseCase.TOTAL_SECONDS * 4 - 2, "Fortschritt mindestens alle 250 ms: ${progress.size}")
         // Bewegungen in fester Reihenfolge, jede kommt vor
         val moves = progress.map { it.move }.fold(mutableListOf<app.cayresim.core.pure.SweepGuide.Move>()) { l, m -> if (l.lastOrNull() != m) l += m; l }
-        assertEquals(app.cayresim.core.pure.SweepGuide.Move.entries, moves)
+        assertEquals(app.cayresim.core.pure.SweepGuide.Move.entries.toList(), moves.toList())
         val first = progress.first()
         assertEquals(app.cayresim.core.pure.SweepGuide.Move.TAP, first.move); assertEquals(3, first.secondsLeft)
         assertEquals(app.cayresim.core.pure.SweepGuide.Move.YAW, first.next)

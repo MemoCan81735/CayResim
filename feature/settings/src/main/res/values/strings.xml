@@ -146,7 +146,7 @@
     <string name="sweep_start">Schwenk-Messung starten</string>
     <string name="sweep_running">Läuft …</string>
     <string name="sweep_time_before">Vorher</string>
-    <string name="sweep_time_range">%1$d bis %2$d s</string>
+    <string name="sweep_time_range">%1$s bis %2$s s</string>
     <string name="sweep_move_start">Quelle vor die Kamera</string>
     <string name="sweep_move_start_how">Handy quer halten, Kamera auf die Musik richten, Start tippen.</string>
     <string name="sweep_move_tap">Zweimal tippen</string>

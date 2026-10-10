@@ -21,7 +21,7 @@ class SweepGuideTest {
         assertNull(at(25.0)); assertNull(at(-0.1))
         assertEquals(25.0, SweepGuide.TOTAL_SECONDS)
         assertEquals(3.0, SweepGuide.TAP_SECONDS)
-        assertEquals(SweepGuide.Move.entries, SweepGuide.PHASES.map { it.move })
+        assertEquals(SweepGuide.Move.entries.toList(), SweepGuide.PHASES.map { it.move })
     }
 
     @Test fun `S-014 Abdeckung laufend wie am Ende`() {

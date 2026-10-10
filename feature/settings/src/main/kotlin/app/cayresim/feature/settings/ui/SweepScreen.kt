@@ -130,7 +130,7 @@ private fun GuideList() {
                 Column(Modifier.padding(start = 12.dp).weight(1f)) {
                     // Zeiten aus SweepGuide, damit Anleitung und Ablauf nie auseinanderlaufen
                     val time = if (i == 0) stringResource(R.string.sweep_time_before)
-                        else SweepGuide.PHASES[i - 1].let { p -> stringResource(R.string.sweep_time_range, p.fromSeconds.toInt(), p.toSeconds.toInt()) }
+                        else SweepGuide.PHASES[i - 1].let { p -> stringResource(R.string.sweep_time_range, p.fromSeconds.toInt().toString(), p.toSeconds.toInt().toString()) }
                     Text(time, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Text(stringResource(g.title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     Text(stringResource(g.how), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
