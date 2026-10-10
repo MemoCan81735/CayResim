@@ -79,5 +79,5 @@ K10); ohne Stabilisator stand "aktiv: kein Aufnahmeergebnis" (K11); Maßstäbe i
 der Kamera); Messung des Bezugsbilds zu langsam (K2c); Hinweis nur 4 s sichtbar. Ergänzt: Tests K2b und K7b. Die
 Rauschschätzung liegt bei reinem 8-Bit-Rauschen in 12 Läufen 8,5 bis 10 % unter der Wahrheit (vermutlich die Rundung
 auf 8 Bit); K1 hält die Grenze von 15 % ein. K2b schützt ein Verhalten, das schon vorher stimmte; er konnte mit dem
-alten Code nicht rot werden. Nach der Freigabe geändert (bitte bestätigen): K3 an den Test angepasst, K6 mit 3
-Nachkommastellen und "Bezugsbild" statt "Bild 1", K7b bis K11 und die längere Anzeige des Hinweises ergänzt.
+alten Code nicht rot werden. Nach der Freigabe geändert: K3 an den Test angepasst, K6 mit 3
+Nachkommastellen und "Bezugsbild" statt "Bild 1", K7b bis K11 und die längere Anzeige des Hinweises ergänzt; bestätigt von Arslan am 10.10., 6:32 Uhr.
