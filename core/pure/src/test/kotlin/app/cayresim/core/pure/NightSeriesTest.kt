@@ -171,7 +171,9 @@ class NightSeriesTest {
             best = minOf(best, System.nanoTime() - t0); size = out.size()
         }
         println("Nachtserie je Bild: ${best / 1_000_000} ms, ${size / 1000} kB")
-        assertTrue(best < 40_000_000, "je Bild ${best / 1e6} ms")
+        // Grenze aus dem Takt: der Schreiber muss 10 Bilder je Sekunde schaffen (100 ms), mit Reserve. Lokal 22 ms,
+        // CI-Runner 57 ms (erste Grenze 40 ms war fuer den Runner zu knapp, Lauf 38071628148)
+        assertTrue(best < 80_000_000, "je Bild ${best / 1e6} ms")
         assertTrue(size < 1_000_000, "je Bild $size Byte")
     }
 }
