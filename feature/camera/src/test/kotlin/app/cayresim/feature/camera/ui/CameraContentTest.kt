@@ -281,6 +281,12 @@ class CameraContentTest {
         compose.waitUntil(5_000) { compose.onAllNodesWithText("33 Bilder, 3 verworfen, Aufhellung x12,0, Wackeln bis 12 px", substring = true).fetchSemanticsNodes().isNotEmpty() }
     }
 
+    @Test fun nacht_hinweis_wackeln_nicht_messbar() {
+        show(running.copy(message = UserMessage(9, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 72, 0, 64f, shakePx = 0, shakeMeasurable = false))))
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Aufhellung x64,0, Wackeln nicht messbar", substring = true).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     @Test fun selbstausloeser_zeigt_countdown_und_schalter() {
         show(running.copy(timer = true, countdown = 2))
         compose.onNodeWithTag("countdown").assertIsDisplayed()

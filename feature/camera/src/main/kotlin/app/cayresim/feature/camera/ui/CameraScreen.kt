@@ -481,7 +481,9 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
     val gain = String.format(java.util.Locale.GERMANY, "%.1f", n.gain)
     val detail = stringResource(R.string.night_detail, exposure, n.used, n.dropped, gain)
     // S-003: groesster Versatz zum Bezugsbild, z. B. ", Wackeln bis 12 px"
-    val shaken = n.shakePx?.let { detail + stringResource(R.string.night_shake, it) } ?: detail
+    // S-006: im Rauschen nicht erkennbar, dann keine Zahl
+    val shaken = if (!n.shakeMeasurable) detail + stringResource(R.string.night_shake_unknown)
+        else n.shakePx?.let { detail + stringResource(R.string.night_shake, it) } ?: detail
     val cut = if (n.shortened) shaken + stringResource(R.string.night_shortened) else shaken
     // S-001 K5: Dauer vom Ausloesen bis gespeichert, z. B. ", Dauer 4,2 s"
     val full = n.durationMs?.let { cut + stringResource(R.string.night_duration, String.format(java.util.Locale.GERMANY, "%.1f", it / 1000f)) } ?: cut

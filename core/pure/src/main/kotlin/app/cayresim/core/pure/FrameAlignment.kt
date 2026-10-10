@@ -35,7 +35,11 @@ class FrameAligner(val width: Int, val height: Int, private val robust: Boolean 
      * bestimmte dort allein das Ergebnis (bis 30 Pixel daneben). Deshalb werden die besten
      * Grobschaetzungen (begrenzt und einfach), keine Verschiebung und [hint] in voller Aufloesung verglichen.
      */
+    /** S-006: true, wenn beim letzten [shiftOf] die beste Verschiebung nicht klar besser passte als keine (nur Rauschen). */
+    var lastRejected = false; private set
+
     fun shiftOf(refSmall: ByteArray, refLuma: ByteArray, small: ByteArray, frame: ByteArray, hint: Pair<Int, Int>? = null): Pair<Int, Int> {
+        lastRejected = false
         val centers = LinkedHashSet<Pair<Int, Int>>()
         if (maxShift > 0) {
             if (robust) coarse(refSmall, small).forEach { (dx, dy) -> centers += dx * SCALE to dy * SCALE }
@@ -54,7 +58,8 @@ class FrameAligner(val width: Int, val height: Int, private val robust: Boolean 
                 if (e < fineErr) { fineErr = e; fine = dx to dy }
             }
             val (bx, by) = fine
-            return if ((bx != 0 || by != 0) && fineErr > SHIFT_GAIN * alignError(refLuma, fl, 0, 0, step = 2, cap = false)) 0 to 0 else fine
+            lastRejected = (bx != 0 || by != 0) && fineErr > SHIFT_GAIN * alignError(refLuma, fl, 0, 0, step = 2, cap = false)
+            return if (lastRejected) 0 to 0 else fine
         }
         // Vorauswahl auf jedem 4. Pixel, dann fein auf jedem 2. Pixel um den besten Kandidaten
         var best = 0 to 0; var bestErr = Long.MAX_VALUE
@@ -69,7 +74,8 @@ class FrameAligner(val width: Int, val height: Int, private val robust: Boolean 
         }
         val (bx, by) = fine
         // Sehr verrauschte Bilder (RAW im Dunkeln): eine Verschiebung nur annehmen, wenn sie klar besser passt als keine
-        return if ((bx != 0 || by != 0) && fineErr > SHIFT_GAIN * alignError(refLuma, fl, 0, 0, step = 2)) 0 to 0 else fine
+        lastRejected = (bx != 0 || by != 0) && fineErr > SHIFT_GAIN * alignError(refLuma, fl, 0, 0, step = 2)
+        return if (lastRejected) 0 to 0 else fine
     }
 
     /** Grobsuche auf dem verkleinerten, leicht weichgezeichneten Bild: die besten Verschiebungen, mindestens 2 Stufen auseinander. */

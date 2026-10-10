@@ -173,6 +173,30 @@ class NightMergeTest {
         assertEquals(0, NightMerge(w, h).apply { repeat(3) { add(blockScene(0, 0, rng)) } }.maxShake)
     }
 
+    @Test fun `S-006 Wackeln ist bei reinem Rauschen nicht messbar, bei Struktur schon`() {
+        // Nachttest S24+ 10.10.: "Wackeln bis 0 px" bei fast reinem Rauschen war keine Messung
+        val rng = SeededRng(12)
+        // groesseres Bild wie auf dem Geraet: bei 128 x 96 Pixeln faellt das beste von 49 Rauschmustern zufaellig 3 % besser aus
+        val bw = 640; val bh = 480
+        val noise = NightMerge(bw, bh).apply { repeat(8) { add(ByteArray(bw * bh * 3) { (rng.nextInt(7)).toByte() }) } }
+        assertFalse(noise.shakeMeasurable, "reines Rauschen")
+        val shaky = NightMerge(w, h).apply { listOf(0 to 0, 4 to 0, -8 to 4, 12 to -4, 0 to 8).forEach { (dx, dy) -> add(blockScene(dx, dy, rng)) } }
+        assertTrue(shaky.shakeMeasurable); assertEquals(12, shaky.maxShake)
+    }
+
+    @Test fun `S-006 Boden-Modus erkennt Dunkelheit auch bei Rauschen ueber Stufe 1`() {
+        // vorher nur ueber den Anteil der Pixel auf Stufe 0 oder 1; bei ISO 3200 rauschen sie bis Stufe 5
+        val rng = SeededRng(13)
+        // Rauschen um 0 (Summe dreier Gleichverteilungen, fast normalverteilt, Streuung etwa 2,4 Stufen), bei 0 abgeschnitten
+        fun frame() = ByteArray(w * h * 3) { (rng.nextInt(5) + rng.nextInt(5) + rng.nextInt(5) - 6).coerceAtLeast(0).toByte() }
+        val m = NightMerge(w, h).apply { repeat(36) { add(frame()) } }
+        val r = m.finish()
+        assertTrue(m.floorShare < NightTone.FLOOR_SHARE, "Anteil 0/1 allein haette nicht gereicht: ${m.floorShare}")
+        assertTrue(m.noiseFloor, "lichtlos nicht erkannt")
+        // vorher Nebel auf Stufe 39 (Median-Ziel); jetzt bleibt reines Rauschen dunkles Korn (gemessen 12,9)
+        assertTrue(r.rgb.map { it.toInt() and 0xFF }.average() <= 20.0, "Rauschen zu Nebel aufgehellt: ${r.rgb.map { it.toInt() and 0xFF }.average()}")
+    }
+
     @Test fun `S-003 Fehlerfall vorbeilaufendes helles Objekt wird nicht zum Bezug`() {
         // Zweitpruefung: mit dem Mittelwert der Kantenenergie war das Bild mit Objekt 4-mal "schaerfer" und wurde Bezug
         val rng = SeededRng(5)

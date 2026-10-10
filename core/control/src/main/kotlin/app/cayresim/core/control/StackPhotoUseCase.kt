@@ -16,6 +16,8 @@ import javax.inject.Inject
 data class NightReport(
     val exposureNs: Long?, val iso: Int?, val used: Int, val dropped: Int, val gain: Float, val raw: Boolean = false,
     val durationMs: Long? = null, val meterExposureNs: Long? = null, val meterIso: Int? = null, val shakePx: Int? = null,
+    /** S-006: false = Wackeln im Rauschen nicht messbar. */
+    val shakeMeasurable: Boolean = true,
 )
 
 sealed interface StackOutcome {

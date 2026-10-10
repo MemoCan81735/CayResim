@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.withIndex
+import kotlinx.coroutines.flow.takeWhile
 import javax.inject.Inject
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -46,37 +47,43 @@ class NightUseCase @Inject constructor(
         return NightPlan.isDark(l?.exposureNs, l?.iso) == true
     }
 
-    suspend operator fun invoke(count: Int = NightPlan.FRAMES): StackOutcome {
+    /** [count]: feste Bildzahl (Tests); null = nach der Messung ([NightPlan.framesFor], S-006 bis 72 Bilder). */
+    suspend operator fun invoke(count: Int? = null): StackOutcome {
         val caps = manual.manualCapabilities.value
         val expRange = caps?.exposureRangeNanos; val isoRange = caps?.isoRange
         if (caps?.canExpose != true || expRange == null || isoRange == null)
             return StackOutcome.Failed(StackOutcome.Stage.COLLECT, "NO_MANUAL_EXPOSURE")
         val start = clock?.nowMillis()
-        if (nightPath?.load()?.path == NightPath.RAW) rawNight(count, expRange, isoRange, start)?.let { return it }
+        if (nightPath?.load()?.path == NightPath.RAW) rawNight(count ?: NightPlan.FRAMES, expRange, isoRange, start)?.let { return it }
         val before = manual.manualState.value
         var plan: NightPlan.Exposure? = null
         var meter: app.cayresim.core.boundary.LightSnapshot? = null
+        // Strom fuer die groesste Serie anfordern, nach der Messung auf die gewaehlte Zahl kuerzen
+        var chosen = count ?: NightPlan.FRAMES_DEEP
         try {
-            val stream = frames.frames(METER + SETTLE + count)
+            val stream = frames.frames(METER + SETTLE + (count ?: NightPlan.FRAMES_DEEP))
                 .withIndex()
                 .onEach { (i, _) ->
                     if (i == METER - 1) {
                         val l = camera.state.value.light
                         meter = l
+                        if (count == null) chosen = NightPlan.framesFor(l?.exposureNs, l?.iso)
                         // Ohne Messung: wie bei voller Dunkelheit
                         val p = NightPlan.plan(l?.exposureNs ?: FALLBACK_NS, l?.iso ?: isoRange.last, expRange.last, isoRange.first, isoRange.last)
                         // Befund M6: nur melden, was wirklich eingestellt wurde
                         plan = if (manual.setExposure(p.exposureNs, p.iso)) p else null
                     }
                 }
+                .takeWhile { it.index < METER + SETTLE + chosen }
                 .filter { it.index >= METER + SETTLE }
                 .map { it.value }
             return when (val r = processing.night(stream)) {
                 is ProcessResult.Saved -> {
-                    val used = r.night?.used ?: count
-                    StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
+                    val used = r.night?.used ?: chosen
+                    StackOutcome.Saved(r.uri, used, used < chosen * 3 / 4,
                         NightReport(plan?.exposureNs, plan?.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, durationMs = since(start),
-                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso, shakePx = r.night?.maxShake))
+                            meterExposureNs = meter?.exposureNs, meterIso = meter?.iso, shakePx = r.night?.maxShake,
+                            shakeMeasurable = r.night?.shakeMeasurable ?: true))
                 }
                 is ProcessResult.Failed -> StackOutcome.Failed(StackOutcome.Stage.PROCESS, r.reason.name)
             }
@@ -98,7 +105,8 @@ class NightUseCase @Inject constructor(
                 val used = r.night?.used ?: count
                 StackOutcome.Saved(r.uri, used, used < count * 3 / 4,
                     NightReport(p.exposureNs, p.iso, used, r.night?.dropped ?: 0, r.night?.gain ?: 1f, raw = true, durationMs = since(start),
-                        meterExposureNs = l?.exposureNs, meterIso = l?.iso, shakePx = r.night?.maxShake))
+                        meterExposureNs = l?.exposureNs, meterIso = l?.iso, shakePx = r.night?.maxShake,
+                        shakeMeasurable = r.night?.shakeMeasurable ?: true))
             }
             is ProcessResult.Failed -> null
         }

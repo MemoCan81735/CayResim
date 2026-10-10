@@ -65,6 +65,7 @@
     <string name="night_raw_prefix">"RAW, "</string>
     <string name="night_shortened">, Serie gekürzt</string>
     <string name="night_shake">, Wackeln bis %1$d px</string>
+    <string name="night_shake_unknown">, Wackeln nicht messbar</string>
     <string name="timer_off">Selbstauslöser aus</string>
     <string name="timer_on">Selbstauslöser 2 s</string>
     <string name="timer_short">2 s</string>

@@ -7,6 +7,7 @@ import app.cayresim.core.boundary.fake.FakeFrameBoundary
 import app.cayresim.core.boundary.fake.FakeManualCameraBoundary
 import app.cayresim.core.boundary.fake.FakeProcessingBoundary
 import kotlinx.coroutines.test.runTest
+import app.cayresim.core.pure.NightPlan
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.onEach
@@ -144,6 +145,21 @@ class NightUseCaseTest {
         assertEquals(1280, r.night!!.iso, "hoechstens 4-mal so hell wie die Automatik")
         val raw = assertIs<StackOutcome.Saved>(rawNight(app.cayresim.core.pure.NightPath.RAW)(10))
         assertEquals(50_000_000L, raw.night!!.meterExposureNs); assertEquals(640, raw.night!!.meterIso)
+    }
+
+    @Test fun `Nachttest S24+ tiefe Dunkelheit nimmt 72 Bilder, maessige 36`() = runTest {
+        // S-006: Automatik 1/25 s bei ISO 3200 (10. Oktober, Vorhang): Samsung belichtete bis 8 s, wir bisher 3,6 s
+        cam.start(); cam.measure(LightSnapshot(40_000_000, 3200))
+        val deep = assertIs<StackOutcome.Saved>(night())
+        assertEquals(listOf(NightPlan.FRAMES_DEEP), proc.nightRuns); assertEquals(72, deep.frames); kotlin.test.assertFalse(deep.shortened)
+        cam.measure(LightSnapshot(33_333_333, 800)) // Lichtwert 27: dunkel, aber nicht tief
+        night()
+        assertEquals(listOf(72, NightPlan.FRAMES), proc.nightRuns)
+    }
+
+    @Test fun `Bericht sagt, wenn das Wackeln nicht messbar ist`() = runTest {
+        cam.start(); cam.measure(LightSnapshot(66_666_666, 3200)); proc.nightShakeMeasurable = false
+        assertFalse(assertIs<StackOutcome.Saved>(night(10)).night!!.shakeMeasurable)
     }
 
     @Test fun `Bericht nennt das Wackeln`() = runTest {

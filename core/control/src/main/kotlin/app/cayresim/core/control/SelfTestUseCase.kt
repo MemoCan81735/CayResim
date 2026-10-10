@@ -1,5 +1,7 @@
 package app.cayresim.core.control
 
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import app.cayresim.core.boundary.CameraBoundary
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.CaptureResult
@@ -86,7 +88,11 @@ class SelfTestUseCase @Inject constructor(
             items += SelfTestItem(SelfTestCheck.ULTRA_HDR, true, 0, detail = if (caps.ultraHdr) "ja" else "nein")
             items += SelfTestItem(SelfTestCheck.RAW, true, 0, detail = if (caps.raw) "ja" else "nein")
             // S-003: Stabilisator aktiv laut letzter Aufnahme
-            caps.device?.let { items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = it.copy(oisActive = camera.state.value.stabilization)) }
+            caps.device?.let { d ->
+                // S-006: der Wert kommt erst mit dem ersten Aufnahmeergebnis (Geraet 10.10.: direkt nach dem Start "unbekannt")
+                val ois = if (d.ois == true) withTimeoutOrNull(OIS_WAIT_MS) { camera.state.first { it.stabilization != null } }?.stabilization else null
+                items += SelfTestItem(SelfTestCheck.DEVICE, true, 0, device = d.copy(oisActive = ois))
+            }
         }
 
         val previous = camera.state.value.requestedMode
@@ -178,6 +184,8 @@ class SelfTestUseCase @Inject constructor(
 
     internal companion object {
         const val STEP_RAW = "RAW-Serie"
+        /** S-006: so lange wartet der Selbsttest auf das erste Aufnahmeergebnis mit dem Stabilisator-Wert. */
+        const val OIS_WAIT_MS = 1_500L
         const val STEP_RAW_NIGHT = "RAW-Nacht"
         /** Messung wie fuer die Nacht: 8 Bilder bei 1/10 s und ISO 3200. */
         const val RAW_FRAMES = 8

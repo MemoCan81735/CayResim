@@ -2,6 +2,12 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## nächste Version (S-006)
+- Nacht fast ohne Licht: Hintergrund bleibt schwarz statt blaugrauem Nebel, das wenige Licht bleibt sichtbar und warm.
+- Tiefe Dunkelheit: bis 72 statt 36 Bilder (etwa 9 s Aufnahme).
+- Selbsttest zeigt, ob der Stabilisator aktiv ist; der Nacht-Hinweis sagt "Wackeln nicht messbar" statt "0 px", wenn es im Rauschen nicht erkennbar ist.
+- Gerät: der Vorhang von heute Nacht noch einmal (Hinweis-Screenshot, Dauer unter 10 s?), Selbsttest.
+
 ## Kurzer Lauf (10. Oktober 2026, S-005)
 - CI prüft parallel in fünf Jobs (Kern, Oberfläche, Analyse, APK Debug, APK Release); der Kern meldet sich nach etwa
   3 Minuten, alles nach etwa 5. Die Lauf-Seite zeigt rote Tests, Kompilierfehler, Analysefunde und Laborwerte im

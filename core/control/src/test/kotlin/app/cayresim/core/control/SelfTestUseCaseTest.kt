@@ -13,6 +13,7 @@ import app.cayresim.core.boundary.fake.FakeSelfTestJournalBoundary
 import kotlin.test.assertFailsWith
 import app.cayresim.core.pure.Clock
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -242,6 +243,11 @@ class SelfTestUseCaseTest {
         val cam = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true); stabilize(true) }
         val d = SelfTestUseCase(cam, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!
         assertEquals(true, d.ois); assertEquals(true, d.oisActive)
+        // S-006: der Wert kommt erst mit dem ersten Aufnahmeergebnis; der Selbsttest wartet darauf
+        val late = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }
+        val job = launch { kotlinx.coroutines.delay(500); late.stabilize(true) }
+        assertEquals(true, SelfTestUseCase(late, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
+        job.join()
         val unknown = FakeCameraBoundary().apply { deviceReport = app.cayresim.core.boundary.DeviceReport(ois = true) }
         assertEquals(null, SelfTestUseCase(unknown, StepClock(), FakeSelfTestJournalBoundary())().items.single { it.check == SelfTestCheck.DEVICE }.device!!.oisActive)
     }

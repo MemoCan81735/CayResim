@@ -38,6 +38,19 @@ object NightPlan {
     /** Bildzahl fuer etwa 4 s Licht bei 1/10 s je Bild. */
     const val FRAMES = 36
 
+    /**
+     * S-006: bei tiefer Dunkelheit doppelt so viele Bilder (7,2 s Licht; Samsung belichtete im Nachttest vom 10. Oktober
+     * bis 8 s). Tief heisst: Lichtwert der Automatik ab [DEEP_DARK_LEVEL]. Gemessen am S24+: 1/25 s bei ISO 3200 (128,
+     * Vorhang im fast lichtlosen Raum) und 1/15 s bei ISO 1279 (85, 8. Oktober) gegen 1/20 s bei ISO 640 (32, beleuchtetes
+     * Wohnzimmer, 9. Oktober).
+     */
+    const val FRAMES_DEEP = 72
+    const val DEEP_DARK_LEVEL = 80.0
+
+    /** Bildzahl der Serie; ohne Messung wie bei tiefer Dunkelheit (dann gilt auch der Plan fuer volle Dunkelheit). */
+    fun framesFor(aeExposureNs: Long?, aeIso: Int?): Int =
+        if (aeExposureNs == null || aeIso == null || level(aeExposureNs, aeIso) >= DEEP_DARK_LEVEL) FRAMES_DEEP else FRAMES
+
     data class Exposure(val exposureNs: Long, val iso: Int)
 
     /** Lichtwert der Automatik; null, wenn unbekannt. */
@@ -83,6 +96,8 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     private val pixels = width * height
     private val sum = FloatArray(pixels * 3)
+    /** S-006: Summe der Quadrate je Kanal (nur 8 Bit), daraus die Streuung je Pixel fuer [Declip]. */
+    private var sumSq: FloatArray? = null
     private val tilesX = (width + tile - 1) / tile
     private val tilesY = (height + tile - 1) / tile
     /** Summe der Gewichte je Pixel. */
@@ -116,6 +131,13 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     /** Groesster angenommener Versatz zum Bezugsbild in Pixeln (S-003: zeigt auf dem Geraet, wie stark gewackelt wurde). */
     var maxShake = 0; private set
+
+    /** S-006: Zahl der ausgerichteten Bilder und davon, wo eine Verschiebung nicht klar besser passte als keine. */
+    private var aligned = 0
+    private var rejected = 0
+
+    /** S-006: false = bei der Haelfte der Bilder oder mehr war das Wackeln im Rauschen nicht erkennbar ([maxShake] sagt dann nichts). */
+    val shakeMeasurable: Boolean get() = aligned == 0 || rejected * 2 < aligned
 
     /** S-003: Kopien der ersten Bilder, solange der Bezug noch wechseln darf (hoechstens [REF_CANDIDATES] - 1, R19). */
     private val early = ArrayList<ByteArray>(REF_CANDIDATES - 1)
@@ -152,9 +174,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
 
     /** Leert die Summe fuer einen neuen Bezug. */
     private fun restart() {
-        sum.fill(0f); weight.fill(0f)
+        sum.fill(0f); weight.fill(0f); sumSq?.fill(0f)
         refSmall = null; refLuma = null; refSharpness = 0.0; refRobust = 0.0
-        used = 0; dropped = 0; maxShake = 0; floorShare = 0f
+        used = 0; dropped = 0; maxShake = 0; floorShare = 0f; aligned = 0; rejected = 0
         early.clear()
     }
 
@@ -189,6 +211,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             // Bei RAW ist der Schwarzwert bekannt: kein Raten des Rauschbodens
             floorShare = if (linear != null) 0f else refLuma!!.count { (it.toInt() and 0xFF) <= 1 }.toFloat() / pixels
             for (i in sum.indices) sum[i] = linear?.get(i) ?: LIN[frame[i].toInt() and 0xFF]
+            if (linear == null) { val q = sumSq ?: FloatArray(pixels * 3).also { sumSq = it }; for (i in q.indices) q[i] = sum[i] * sum[i] }
             weight.fill(1f); used = 1
             return true
         }
@@ -196,6 +219,7 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         if (refSharpness > 0 && sharpness(small) < BLUR_LIMIT * refSharpness) { dropped++; return false }
         val rl = refLuma!!
         val (dx, dy) = aligner.shiftOf(ref, rl, small, frame)
+        aligned++; if (aligner.lastRejected) rejected++
         maxShake = maxOf(maxShake, abs(dx), abs(dy))
         // Abweichung je Kachel nach dem Ausrichten
         val tiles = tilesX * tilesY
@@ -237,9 +261,10 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
                 if (linear != null) {
                     sum[d] += wt * linear[s]; sum[d + 1] += wt * linear[s + 1]; sum[d + 2] += wt * linear[s + 2]
                 } else {
-                    sum[d] += wt * LIN[frame[s].toInt() and 0xFF]
-                    sum[d + 1] += wt * LIN[frame[s + 1].toInt() and 0xFF]
-                    sum[d + 2] += wt * LIN[frame[s + 2].toInt() and 0xFF]
+                    val q = sumSq!!
+                    val a = LIN[frame[s].toInt() and 0xFF]; val b = LIN[frame[s + 1].toInt() and 0xFF]; val c = LIN[frame[s + 2].toInt() and 0xFF]
+                    sum[d] += wt * a; sum[d + 1] += wt * b; sum[d + 2] += wt * c
+                    q[d] += wt * a * a; q[d + 1] += wt * b * b; q[d + 2] += wt * c * c
                 }
                 weight[p] += wt
             }
@@ -256,8 +281,35 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
             val inv = 1f / weight[p]
             mean[p * 3] = sum[p * 3] * inv; mean[p * 3 + 1] = sum[p * 3 + 1] * inv; mean[p * 3 + 2] = sum[p * 3 + 2] * inv
         }
+        // S-006: 8 Bit, abgeschnittenes Rauschen zurueckrechnen; liegt das Signal des mittleren Pixels nicht ueber dem
+        // Rauschen der Serie, ist die Szene lichtlos: Boden-Modus, auch wenn das Rauschen der Einzelbilder ueber Stufe 1 reicht
+        val q = sumSq
+        noiseFloor = false
+        if (!linearInput && q != null && used >= MIN_DECLIP_FRAMES) {
+            // Rauschen je Kanal fuer das ganze Bild: Median der Schaetzungen je Pixel, wo das Abschneiden wirkt
+            val sigma = FloatArray(3) { c ->
+                val est = ArrayList<Float>()
+                for (p in 0 until pixels) { val i = p * 3 + c; Declip.noise(mean[i], q[i] / weight[p])?.let { est += it } }
+                if (est.size < pixels / 20) 0f else est.toFloatArray().let { NightTone.quantile(it, 0.5f) }
+            }
+            if (sigma.any { it > 0f }) {
+                val sigmaL = kotlin.math.sqrt((0 until 3).sumOf { c -> ((LUMA[c] * sigma[c]) * (LUMA[c] * sigma[c])).toDouble() }).toFloat()
+                // Signal des mittleren Pixels je Kanal zurueckgerechnet (die Helligkeit aus drei abgeschnittenen Kanaelen ist
+                // selbst nicht abgeschnitten-normal), gegen das Rauschen des Mittels aus allen Bildern
+                val medianSignal = (0 until 3).sumOf { c ->
+                    val ch = FloatArray(pixels) { p -> mean[p * 3 + c] }
+                    (LUMA[c] * Declip.signalFromMean(NightTone.quantile(ch, 0.5f), sigma[c])).toDouble()
+                }.toFloat()
+                noiseFloor = medianSignal <= FLOOR_SNR * sigmaL / kotlin.math.sqrt(NightTone.quantile(weight, 0.5f).coerceAtLeast(1f))
+                if (noiseFloor) {
+                    // Boden-Modus: der abgeschnittene Rauschanteil ohne Licht (0,4-mal das Rauschen) ist Schwarz. Nur
+                    // abziehen, nicht je Pixel zurueckrechnen: das verstaerkte das Rauschen bis 6-fach (Labor 10.10.)
+                    for (i in mean.indices) mean[i] -= Declip.ZERO_SIGNAL_MEAN * sigma[i % 3]
+                }
+            }
+        }
         // RAW: Rauschen ist nicht abgeschnitten, einzelne Bilder sagen nichts; der Boden wird am Mittel gemessen
-        val share = if (linearInput) {
+        val share = if (noiseFloor) maxOf(floorShare, NightTone.FLOOR_SHARE) else if (linearInput) {
             var n = 0
             for (p in 0 until pixels) if (0.2126f * mean[p * 3] + 0.7152f * mean[p * 3 + 1] + 0.0722f * mean[p * 3 + 2] <= NightTone.FLOOR_LINEAR) n++
             n.toFloat() / pixels
@@ -265,6 +317,9 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         return NightTone.finishNight(mean, width, NightTone.maxGainFor(used), share,
             if (linearInput) NightTone.FLOOR_BLACK_RAW else NightTone.FLOOR_BLACK)
     }
+
+    /** S-006: true = das Signal des mittleren Pixels liegt nicht ueber dem Rauschen der Serie (Boden-Modus). */
+    var noiseFloor = false; private set
 
     /** Mittlere Zahl der Bilder, die je Pixel wirklich beigetragen haben. */
     fun effectiveFrames(): Float = weight.average().toFloat()
@@ -331,6 +386,11 @@ class NightMerge(val width: Int, val height: Int, private val tile: Int = 8) {
         /** Unter 50 % der Kantenenergie der Referenz gilt ein Bild als verwackelt. */
         const val BLUR_LIMIT = 0.5
         const val SHIFT_GAIN = FrameAligner.SHIFT_GAIN
+        /** S-006: Mindestzahl der Bilder fuer eine verlaessliche Streuung je Pixel. */
+        const val MIN_DECLIP_FRAMES = 8
+        /** S-006: Boden-Modus, wenn das mittlere Signal hoechstens so viel wie das Rauschen der Serie betraegt. */
+        const val FLOOR_SNR = 1f
+        private val LUMA = floatArrayOf(0.2126f, 0.7152f, 0.0722f)
         /** S-003: so viele erste Bilder kommen als Bezug in Frage; 1 = immer das erste (Rueckweg). */
         const val REF_CANDIDATES = 3
         /** Ein Kandidat muss so viel schaerfer sein, damit der Bezug wechselt (Rauschen allein reicht nicht). */

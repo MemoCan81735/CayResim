@@ -147,9 +147,10 @@ class QualityLabTest {
         return t
     }
 
-    private fun captureColor(t: DoubleArray, lab: Lab, electrons: Double = 20_000.0, read: Double = 2.0, offset: DoubleArray = DoubleArray(3)) = ByteArray(t.size) { i ->
-        val e = t[i] * electrons
-        val noisy = (e + lab.gauss() * sqrt(e + read * read)) / electrons + offset[i % 3]
+    private fun captureColor(t: DoubleArray, lab: Lab, electrons: Double = 20_000.0, read: Double = 2.0, offset: DoubleArray = DoubleArray(3),
+                             readScale: DoubleArray = doubleArrayOf(1.0, 1.0, 1.0)) = ByteArray(t.size) { i ->
+        val e = t[i] * electrons; val r = read * readScale[i % 3]
+        val noisy = (e + lab.gauss() * sqrt(e + r * r)) / electrons + offset[i % 3]
         (NightTone.linearToSrgb(noisy.toFloat()) * 255f + 0.5f).toInt().coerceIn(0, 255).toByte()
     }
 
@@ -213,6 +214,45 @@ class QualityLabTest {
         assertTrue(roomL <= 8.0, "Raum aufgehellt: $roomL")
         assertTrue(doorL - roomL >= 15.0, "Tuer geht unter: Raum $roomL, Tuer $doorL")
         assertTrue(kotlin.math.abs(blueCast) <= 3.0, "Farbstich im Raum: $blueCast")
+    }
+
+    /**
+     * S-006: Nachttest S24+ am 10. Oktober, 4:21 Uhr. Fast lichtloser Raum, ein schwach beleuchteter Vorhang links, eine
+     * dunkle Wand rechts, darunter schwarz. Automatik 1/25 s bei ISO 3200, Rauschen der Einzelbilder bis Stufe 5.
+     * Samsung (bis 8 s belichtet): Vorhang (70, 54, 13), Wand (15, 8, 7), Boden (3, 1, 6), Median 2,5.
+     * CayResim 0.1.90: alles Stufe 39 bis 43, Blau 9 Stufen ueber Rot, der Vorhang hebt sich nur um 4 Stufen ab.
+     */
+    private fun curtainNight(frames: Int, seed: Long = 81): Triple<ByteArray, NightMerge, Unit> {
+        val c = 0.0002; val wall = 0.00003
+        val truth = DoubleArray(w * h * 3).also { t ->
+            for (y in 20 until 110) for (x in 0 until w) {
+                val i = (y * w + x) * 3
+                if (x in 20 until 80) { t[i] = 0.9 * c; t[i + 1] = 0.7 * c; t[i + 2] = 0.2 * c }
+                else if (x in 90 until 180) { t[i] = 0.9 * wall; t[i + 1] = 0.6 * wall; t[i + 2] = 0.5 * wall }
+            }
+        }
+        val lab = Lab(seed)
+        val merge = NightMerge(w, h).apply { repeat(frames) { add(captureColor(truth, lab, read = 15.0, readScale = doubleArrayOf(1.0, 1.0, 1.3))) } }
+        return Triple(merge.finish().rgb, merge, Unit)
+    }
+
+    @Test fun `Nachttest S24+ Vorhang im fast lichtlosen Raum bleibt Nacht wie bei Samsung`() {
+        val (rgb, merge, _) = curtainNight(72)
+        val curtain = Rect(25, 30, 75, 100); val wallR = Rect(95, 30, 175, 100); val floor = Rect(10, 118, 182, 140)
+        val cL = ImageQuality.mean(rgb, w, curtain); val wL = ImageQuality.mean(rgb, w, wallR); val fL = ImageQuality.mean(rgb, w, floor)
+        fun srgb(v: Double) = NightTone.linearToSrgb(v.toFloat()) * 255.0
+        val (fRgb, _) = linearPatch(rgb, floor); val (cRgb, _) = linearPatch(rgb, curtain)
+        val cast = srgb(fRgb[2]) - srgb(fRgb[0]); val warm = srgb(cRgb[0]) - srgb(cRgb[2])
+        report("32-vorhang-nacht", "\n## Vorhang im fast lichtlosen Raum (72 Bilder, Rauschen bis Stufe 5)\n\nVorhang ${"%.1f".format(cL)}, Wand ${"%.1f".format(wL)}, " +
+            "Boden ${"%.1f".format(fL)}, Blau minus Rot am Boden ${"%.1f".format(cast)}, Vorhang Rot minus Blau ${"%.1f".format(warm)} " +
+            "(Samsung: Vorhang 56, Wand 9, Boden 1; CayResim 0.1.90: alles 39 bis 43); Boden-Modus ${merge.noiseFloor}, Anteil 0/1 ${"%.2f".format(merge.floorShare)}\n")
+        assertTrue(fL <= 10.0, "Boden aufgehellt (Rauschnebel): $fL")
+        // Samsung hat etwa 2,2-mal mehr Licht (bis 8 s statt 7,2 s aus 72 Bildern mit nur 1/10 s): 15 statt 55 Stufen Abstand;
+        // 0.1.90 kam auf 4 (Geraet) bzw. 8 (Labor)
+        assertTrue(cL - fL >= 15.0, "Vorhang geht unter: Vorhang $cL, Boden $fL")
+        assertTrue(wL < cL, "Wand heller als Vorhang: $wL / $cL")
+        assertTrue(kotlin.math.abs(cast) <= 3.0, "Farbstich am Boden: $cast")
+        assertTrue(warm >= 10.0, "Vorhang verliert seine warme Farbe: Rot minus Blau $warm")
     }
 
     @Test fun `Testlabor heller gestreifter Vorhang brennt nicht aus`() {
