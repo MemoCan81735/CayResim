@@ -32,7 +32,7 @@ class MicTestUseCaseTest {
 
     /** Zwei verschiedene Rauschkanaele (kein doppeltes Mono). */
     private fun stereoNoise(r: MicRequest, ch: Int): ShortArray {
-        val rnd = Random(r.hashCode())
+        val rnd = Random(r.source.ordinal * 1_000 + r.direction.ordinal * 100 + (r.deviceId ?: 0) * 10 + r.millis)
         return ShortArray(r.sampleRate * r.millis / 1000 * ch) { (rnd.nextInt(-300, 300)).toShort() }
     }
 

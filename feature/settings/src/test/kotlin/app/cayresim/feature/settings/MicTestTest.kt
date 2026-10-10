@@ -61,7 +61,9 @@ class MicTestTest {
     private val clock = app.cayresim.core.pure.Clock { t }
 
     private fun noise(r: MicRequest, ch: Int): ShortArray {
-        val rnd = Random(r.hashCode()); return ShortArray(r.sampleRate * r.millis / 1000 * ch) { rnd.nextInt(-200, 200).toShort() }
+        // fester Startwert je Anfrage: hashCode() von Enums aendert sich von Lauf zu Lauf (Screenshot wich sonst ab)
+        val seed = r.source.ordinal * 1_000 + r.direction.ordinal * 100 + (r.deviceId ?: 0) * 10 + r.millis
+        val rnd = Random(seed); return ShortArray(r.sampleRate * r.millis / 1000 * ch) { rnd.nextInt(-200, 200).toShort() }
     }
 
     private fun dualMono(r: MicRequest, ch: Int): ShortArray {
