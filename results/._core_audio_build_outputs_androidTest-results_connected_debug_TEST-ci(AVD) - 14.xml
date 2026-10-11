@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="4" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-10-11T07:25:40" hostname="localhost">
+  <testsuite name="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" tests="4" failures="0" errors="0" skipped="0" time="4.671" timestamp="2026-10-11T07:25:40" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="s008AbbruchGibtFrei" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="1.273" />
+    <testcase name="s008AufnahmeUndFreigabe" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="2.192" />
+    <testcase name="s008InventarStuerztNichtAb" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="0.046" />
+    <testcase name="s010Zeitbezug" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="1.160" />
+  </testsuite>
+</testsuites>
