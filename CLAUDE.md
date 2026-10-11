@@ -86,6 +86,8 @@ ein zweiter Agent den Diff ohne die Begründungen des ersten, nur gegen Spec und
   Bild wären auf dem Gerät leer gewesen, alle Tests grün).
 - `StateFlow.value` nie innerhalb von `setContent` lesen, auch nicht in Tests, weil Lint Testquellen mitprüft
   (`StateFlowValueCalledInComposition`); den Wert vorher in eine Variable holen.
+- Sensor-Flüsse (`MotionSensorBoundary`) immer mit `.catch { }` vor `flowOn` abschließen, weil ein Sensorfehler sonst die
+  Aufnahme abbricht; er beendet nur die Zusatzfunktion (R14).
 
 ## 4. Definition of Done
 
@@ -95,6 +97,8 @@ Eine Änderung ist fertig, wenn alles davon stimmt:
 - Testlabor-Bericht angesehen, Werte in der Spec eingetragen
 - Architekturvorgaben und Testkonzept synchron: Projektdokument und Tab im Claude Doc "Foto-App Plan"
 - Änderungsprotokoll `docs/CHANGELOG.md` ergänzt
+- Funktionsliste `docs/ideen.md` und Projektstand `claude/foto-app-projektstand.md` auf den Stand der Änderung gebracht (bei
+  Release: Version, offene Gerätetests), weil sie sonst den alten Status zeigen
 - Grenzen und offene Punkte ehrlich genannt, auch die eigenen Fehler
 - bei Releases: Anleitung für den Gerätetest an Arslan
 
