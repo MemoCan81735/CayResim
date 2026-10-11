@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.SweepUseCaseTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-11T06:57:16.834Z" hostname="runnervmmprz5" time="3.346">
+  <properties/>
+  <testcase name="S-010 Abbruch gibt Mikrofon und Sensor frei" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.064"/>
+  <testcase name="S-012 Signalstaerke in meta" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.784"/>
+  <testcase name="S-010 Ton und Lage laufen gleichzeitig und werden gespeichert" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.516"/>
+  <testcase name="S-010 Abbruch waehrend der Auswertung speichert nichts" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.091"/>
+  <testcase name="S-014 Ablauf mit Abdeckung" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.656"/>
+  <testcase name="S-010 ohne Berechtigung, ohne Sensor, Aufnahme scheitert" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.422"/>
+  <testcase name="S-010 Speicher voll laesst die Auswertung stehen" classname="app.cayresim.core.control.SweepUseCaseTest" time="0.809"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

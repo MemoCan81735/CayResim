@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.camera.ui.CameraContentTest" tests="51" skipped="0" failures="0" errors="0" timestamp="2026-10-11T06:57:22.886Z" hostname="runnervmmprz5" time="41.217">
+  <properties/>
+  <testcase name="ohne_zoom_stufen_keine_leiste" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="24.029"/>
+  <testcase name="nacht_hinweis_meldet_gekuerzte_serie" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.721"/>
+  <testcase name="ausloeser_gesperrt_waehrend_serie" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.653"/>
+  <testcase name="galerie_und_einstellungen" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.395"/>
+  <testcase name="nacht_hinweis_zeigt_die_diagnose" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.358"/>
+  <testcase name="bild_laeuft" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="1.433"/>
+  <testcase name="nacht_hinweis_zeigt_das_wackeln" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.235"/>
+  <testcase name="modus_chip_sendet_modus" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.233"/>
+  <testcase name="erlaubnis_knopf_fragt_erneut" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.116"/>
+  <testcase name="nacht_halte_kreis" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.32"/>
+  <testcase name="nacht_hinweis_nennt_den_raw_weg" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.163"/>
+  <testcase name="nacht_hinweis_diagnose_kein_abschneiden" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.238"/>
+  <testcase name="look_knopf_sendet_ereignis" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.142"/>
+  <testcase name="bild_serienwahl" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.629"/>
+  <testcase name="pro_ohne_faehigkeiten_zeigt_hinweis" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.087"/>
+  <testcase name="selbstausloeser_aus_ohne_countdown" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.13"/>
+  <testcase name="bild_ausloeser_scharf" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.141"/>
+  <testcase name="bild_aufnahme_laeuft" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.113"/>
+  <testcase name="letztes_foto_knopf_oeffnet_uri" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.075"/>
+  <testcase name="bild_serie_mit_look" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.244"/>
+  <testcase name="nacht_hinweis_wackeln_nicht_messbar" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.103"/>
+  <testcase name="ausloeser_unter_der_serienwahl_ist_gesperrt" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.289"/>
+  <testcase name="nacht_hinweis_serie_nicht_gespeichert" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.169"/>
+  <testcase name="bild_pro_panel" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.326"/>
+  <testcase name="bild_keine_erlaubnis" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.174"/>
+  <testcase name="selbstausloeser_zeigt_countdown_und_schalter" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.319"/>
+  <testcase name="zoom_stufe_zeigt_genauen_wert_und_sendet" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.124"/>
+  <testcase name="serie_waehlen_und_anlegen" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.605"/>
+  <testcase name="pro_ohne_warnung_bei_kurzer_zeit" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.162"/>
+  <testcase name="nacht_hinweis_diagnose_nicht_geprueft" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.091"/>
+  <testcase name="bild_kamerafehler" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.156"/>
+  <testcase name="nacht_hinweis_zeigt_die_automatik" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.184"/>
+  <testcase name="meldung_wird_bestaetigt" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="2.589"/>
+  <testcase name="nacht_hinweis_haltung" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.107"/>
+  <testcase name="rueckfall_hinweis_sichtbar" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.063"/>
+  <testcase name="ausloeser_reagiert_nicht_waehrend_aufnahme" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.059"/>
+  <testcase name="nacht_hinweis_serie" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.173"/>
+  <testcase name="bild_hell" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.171"/>
+  <testcase name="bild_quer" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.15"/>
+  <testcase name="bild_grosse_schrift" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.183"/>
+  <testcase name="bild_fokusring" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.112"/>
+  <testcase name="bild_rueckfall" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.123"/>
+  <testcase name="bild_zoom_zwischen_den_stufen" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.155"/>
+  <testcase name="nacht_hinweis_ohne_serie" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.135"/>
+  <testcase name="ausloeser_sendet_ereignis" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.104"/>
+  <testcase name="einstellungen_bleiben_nach_foto_erreichbar" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.08"/>
+  <testcase name="scharfer_ausloeser_laesst_sich_beenden" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.079"/>
+  <testcase name="nacht_hinweis_zeigt_die_dauer" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.12"/>
+  <testcase name="pro_warnt_vor_verwackeln" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.259"/>
+  <testcase name="nacht_hinweis_zeigt_die_werte" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.104"/>
+  <testcase name="ausloeser_reagiert_nicht_ohne_laufende_kamera" classname="app.cayresim.feature.camera.ui.CameraContentTest" time="0.131"/>
+  <system-out><![CDATA[Roborazzi: camera_running.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_night_hold.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_series_picker.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_trigger_armed.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_capturing.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_series_look.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_pro.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_denied.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_countdown.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_error.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_night_series.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_running_light.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_landscape.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=2673, height=1233) changed:false
+Roborazzi: camera_fontscale.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_focus_ring.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_fallback.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_zoom.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: camera_pro_shake.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

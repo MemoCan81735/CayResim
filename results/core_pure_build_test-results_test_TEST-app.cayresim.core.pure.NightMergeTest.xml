@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.NightMergeTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2026-10-11T06:57:11.341Z" hostname="runnervmmprz5" time="2.921">
+  <properties/>
+  <testcase name="Aufhellung waechst mit der Bildzahl" classname="app.cayresim.core.pure.NightMergeTest" time="0.504"/>
+  <testcase name="S-007 Diagnose lichtlos schaetzt das Rauschen nahe der Wahrheit" classname="app.cayresim.core.pure.NightMergeTest" time="0.354"/>
+  <testcase name="Guter Fall viele Bilder senken das Rauschen und hellen auf" classname="app.cayresim.core.pure.NightMergeTest" time="0.183"/>
+  <testcase name="Randfall nur ein Bild ergibt ein gueltiges Ergebnis" classname="app.cayresim.core.pure.NightMergeTest" time="0.019"/>
+  <testcase name="S-003 Wackeln wird gemessen" classname="app.cayresim.core.pure.NightMergeTest" time="0.044"/>
+  <testcase name="Randfall starkes Wackeln wertet keine ungesehenen Kacheln ab" classname="app.cayresim.core.pure.NightMergeTest" time="0.075"/>
+  <testcase name="S-006 Wackeln ist bei reinem Rauschen nicht messbar, bei Struktur schon" classname="app.cayresim.core.pure.NightMergeTest" time="0.374"/>
+  <testcase name="S-006 Boden-Modus erkennt Dunkelheit auch bei Rauschen ueber Stufe 1" classname="app.cayresim.core.pure.NightMergeTest" time="0.196"/>
+  <testcase name="Fehlerfall verwackeltes Bild wird verworfen" classname="app.cayresim.core.pure.NightMergeTest" time="0.01"/>
+  <testcase name="S-003 Fehlerfall vorbeilaufendes helles Objekt wird nicht zum Bezug" classname="app.cayresim.core.pure.NightMergeTest" time="0.082"/>
+  <testcase name="S-003 verwackeltes erstes Bild wird nicht zum Bezug" classname="app.cayresim.core.pure.NightMergeTest" time="0.034"/>
+  <testcase name="S-007 Diagnose helle Szene ist kein Boden" classname="app.cayresim.core.pure.NightMergeTest" time="0.491"/>
+  <testcase name="Fehlerfall bewegtes Objekt hinterlaesst keinen Geist" classname="app.cayresim.core.pure.NightMergeTest" time="0.071"/>
+  <testcase name="S-007 Diagnose misst nach einem Bezugswechsel das neue Bezugsbild" classname="app.cayresim.core.pure.NightMergeTest" time="0.027"/>
+  <testcase name="S-003 Randfall Bezug wechselt nur in den ersten Bildern" classname="app.cayresim.core.pure.NightMergeTest" time="0.016"/>
+  <testcase name="S-007 Randfall wenige Bilder und RAW" classname="app.cayresim.core.pure.NightMergeTest" time="0.174"/>
+  <testcase name="S-007 Diagnose misst das erste Bild" classname="app.cayresim.core.pure.NightMergeTest" time="0.016"/>
+  <testcase name="Guter Fall verwackelte Serie wird ausgerichtet, Kanten bleiben scharf" classname="app.cayresim.core.pure.NightMergeTest" time="0.081"/>
+  <testcase name="Fehlerfall falsche Groessen und leer" classname="app.cayresim.core.pure.NightMergeTest" time="0.002"/>
+  <testcase name="S-007 Messung des Bezugsbilds dauert bei 1,6 MP hoechstens 10 ms" classname="app.cayresim.core.pure.NightMergeTest" time="0.15"/>
+  <system-out><![CDATA[S-007 Messung des Bezugsbilds: 6.3 ms (5 Laeufe: 6.5, 6.3, 6.3, 6.3, 6.4)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
