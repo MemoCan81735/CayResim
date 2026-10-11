@@ -157,4 +157,23 @@ endet mit "Schalter wieder aus".
 Geänderte Screenshot-Grundlagen: `settings.png`, `settings_nightseries.png`, `camera_night_series.png`. Release v0.1.127.
 
 ## Ergebnis
-Gerätetest offen.
+Gerätetest 11.10., 06:39 Uhr (v0.1.133, Innenraum, Fenster mit Vorhang in der Dämmerung, freihändig), **ohne Serie**
+(Schalter war aus, der Hinweis hat keine Serienzeile). Hinweis der App: 1/10 s, ISO 3200 (Automatik 1/25 s, ISO 3200),
+69 Bilder, 0 verworfen, Aufhellung ×60,5, Wackeln nicht messbar, Dauer 9,4 s; Boden-Modus nein: Signal 0,056,
+Schwelle 0,017, Rauschen 0,143, Median 0,107 (linear), geschätzt an R/G/B 100 %; Bezugsbild 42 % Nullen, Stufen
+1,4 / 1,4 / 1,6. Gemessen mit `tools/nacht-serie/vergleich.py` (lange Seite 1440 px):
+
+| Messgröße | CayResim | Samsung |
+|---|---|---|
+| Helligkeit | 40,3 | 12,9 |
+| dunkelste / hellste 1 % | 26,0 / 58,0 | 0,9 / 137,7 |
+| Sättigung | 20,8 % | 56,5 % |
+| Korn dunkle Flächen | 5,4 | 1,9 |
+| Schwarz R / G / B (dunkelste 20 %) | 30,6 / 30,4 / 39,0 | 2,7 / 0,7 / 3,9 |
+
+Befund: graublauer Schleier statt Schwarz (Schwarzpunkt 26, Blau 9 Stufen höher), Lichter nur bis 58, also nur
+32 Stufen Umfang gegen 137 bei Samsung. Das Rauschen (0,143) liegt über dem Signal (0,056); die Aufhellung ×60,5 hebt
+vor allem Rauschen und den Versatz der abgeschnittenen Nullen. Samsung hält das Bild dunkel (Helligkeit 13) und das
+Schwarz bei etwa 1. Ursache ohne Einzelbilder nicht trennbar; nächster Schritt: dieselbe Szene mit eingeschaltetem
+Schalter "Nachtserie speichern" (schaltet sich nach einer Serie selbst aus), dann eigene Spec für Schwarzpunkt und
+Aufhellung bei sehr wenig Licht.
