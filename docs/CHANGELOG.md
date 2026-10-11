@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Halte-Kreis bei der Nachtaufnahme (11. Oktober 2026, S-016, noch nicht veröffentlicht)
+## 0.1.140 Halte-Kreis bei der Nachtaufnahme (11. Oktober 2026, S-016)
 - Während der Nachtaufnahme zeigt der Sucher in der Mitte einen Kreis und einen Punkt, der zeigt, wohin die Kamera
   gegenüber dem Start zeigt (Lagesensor). Bis 0,5° Abweichung ist der Punkt grün, sonst orange; ein Ring zeigt den
   Fortschritt.
