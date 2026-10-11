@@ -28,6 +28,8 @@ import app.cayresim.core.boundary.ManualStateSnapshot
 import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.StackMode
 import app.cayresim.core.boundary.TriggerMode
+import app.cayresim.core.control.HoldGuideUseCase
+import app.cayresim.core.pure.HoldGuide
 import kotlinx.coroutines.Job
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +60,8 @@ class CameraViewModel @Inject constructor(
     private val focusStack: FocusStackUseCase,
     private val astro: AstroUseCase,
     private val night: NightUseCase,
+    /** S-016: Halte-Kreis waehrend der Nachtaufnahme; null in Tests ohne Lagesensor. */
+    private val hold: HoldGuideUseCase? = null,
 ) : ViewModel() {
 
     private data class Local(
@@ -76,6 +80,7 @@ class CameraViewModel @Inject constructor(
         /** S-003: Selbstausloeser (nicht gespeichert). */
         val timer: Boolean = false,
         val countdown: Int? = null,
+        val hold: HoldUi? = null,
     )
 
     private var triggerJob: Job? = null
@@ -271,9 +276,27 @@ class CameraViewModel @Inject constructor(
         if (nightJob?.isActive == true) return // Befund H2: nie zwei Nachtaufnahmen zugleich
         local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
         nightJob = viewModelScope.launch {
-            val r = try { night() } finally { local.update { it.copy(specialStatus = SpecialStatus.IDLE) } }
+            // S-016: Halte-Kreis parallel zur Aufnahme; endet mit ihr, auch bei Abbruch (R17)
+            val stats = HoldGuide.Stats()
+            val holdJob = hold?.let { h ->
+                launch {
+                    var first = Long.MIN_VALUE
+                    h.track().collect { u ->
+                        if (first == Long.MIN_VALUE) first = u.nanos
+                        stats.add(u.nanos, u.deviation.totalDeg)
+                        val progress = ((u.nanos - first) / HOLD_PLANNED_NANOS.toFloat()).coerceIn(0f, 1f)
+                        local.update { it.copy(hold = HoldUi(u.deviation.rightDeg, u.deviation.upDeg, u.deviation.steady, progress)) }
+                    }
+                }
+            }
+            val r = try { night() } finally {
+                holdJob?.cancel()
+                local.update { it.copy(specialStatus = SpecialStatus.IDLE, hold = null) }
+            }
+            val share = stats.insideShare.takeIf { stats.count > 1 }
+            val maxDeg = stats.maxDeg.takeIf { stats.count > 1 }
             when (r) {
-                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened, it.raw, it.durationMs, it.meterExposureNs, it.meterIso, it.shakePx, it.shakeMeasurable, it.diagnosis, it.seriesName, it.seriesBytes, it.seriesFailed) }) { it.copy(lastPhotoUri = r.uri) }
+                is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened, it.raw, it.durationMs, it.meterExposureNs, it.meterIso, it.shakePx, it.shakeMeasurable, it.diagnosis, it.seriesName, it.seriesBytes, it.seriesFailed, share, maxDeg) }) { it.copy(lastPhotoUri = r.uri) }
                 is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED)
             }
         }
@@ -363,6 +386,7 @@ class CameraViewModel @Inject constructor(
         specialStatus = l.specialStatus,
         timer = l.timer,
         countdown = l.countdown,
+        hold = l.hold,
         zoomRatio = s.zoom.ratio,
         zoomPresets = s.zoom.presets.map { r ->
             // Hervorheben nur, wenn der Zoom nahe an der Stufe liegt (wie bei Samsung)
@@ -374,5 +398,7 @@ class CameraViewModel @Inject constructor(
         const val OVERLAY_PX = 1440
         /** S-003: Selbstausloeser in Sekunden. */
         const val TIMER_SECONDS = 2
+        /** S-016: geplante Dauer fuer den Fortschrittsring: Budget der Aufnahme plus etwa 1 s Messen und Einschwingen. */
+        const val HOLD_PLANNED_NANOS = (NightUseCase.CAPTURE_BUDGET_MS + 1_000L) * 1_000_000L
     }
 }
