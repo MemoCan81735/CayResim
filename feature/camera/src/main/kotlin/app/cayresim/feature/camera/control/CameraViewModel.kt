@@ -29,7 +29,6 @@ import app.cayresim.core.boundary.FrameBoundary
 import app.cayresim.core.boundary.StackMode
 import app.cayresim.core.boundary.TriggerMode
 import app.cayresim.core.control.HoldGuideUseCase
-import app.cayresim.core.pure.HoldGuide
 import kotlinx.coroutines.Job
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -277,13 +276,13 @@ class CameraViewModel @Inject constructor(
         local.update { it.copy(specialStatus = SpecialStatus.COLLECTING) }
         nightJob = viewModelScope.launch {
             // S-016: Halte-Kreis parallel zur Aufnahme; endet mit ihr, auch bei Abbruch (R17)
-            val stats = HoldGuide.Stats()
+            var lastHold: app.cayresim.core.control.HoldUpdate? = null
             val holdJob = hold?.let { h ->
                 launch {
                     var first = Long.MIN_VALUE
                     h.track().collect { u ->
                         if (first == Long.MIN_VALUE) first = u.nanos
-                        stats.add(u.nanos, u.deviation.totalDeg)
+                        lastHold = u
                         val progress = ((u.nanos - first) / HOLD_PLANNED_NANOS.toFloat()).coerceIn(0f, 1f)
                         local.update { it.copy(hold = HoldUi(u.deviation.rightDeg, u.deviation.upDeg, u.deviation.steady, progress)) }
                     }
@@ -293,8 +292,9 @@ class CameraViewModel @Inject constructor(
                 holdJob?.cancel()
                 local.update { it.copy(specialStatus = SpecialStatus.IDLE, hold = null) }
             }
-            val share = stats.insideShare.takeIf { stats.count > 1 }
-            val maxDeg = stats.maxDeg.takeIf { stats.count > 1 }
+            val measured = lastHold?.takeIf { it.measuredNanos > 0 }
+            val share = measured?.insideShare
+            val maxDeg = measured?.maxDeg
             when (r) {
                 is StackOutcome.Saved -> post(MessageKind.NIGHT_SAVED, r.night?.let { NightInfo(it.exposureNs, it.iso, it.used, it.dropped, it.gain, r.shortened, it.raw, it.durationMs, it.meterExposureNs, it.meterIso, it.shakePx, it.shakeMeasurable, it.diagnosis, it.seriesName, it.seriesBytes, it.seriesFailed, share, maxDeg) }) { it.copy(lastPhotoUri = r.uri) }
                 is StackOutcome.Failed -> post(MessageKind.NIGHT_FAILED)

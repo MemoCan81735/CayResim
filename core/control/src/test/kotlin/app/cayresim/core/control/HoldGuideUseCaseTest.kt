@@ -46,6 +46,15 @@ class HoldGuideUseCaseTest {
         assertEquals(last.nanos / 1e9, last.deviation.rightDeg, 0.05)
         assertTrue(updates.zipWithNext().all { (a, b) -> b.deviation.rightDeg >= a.deviation.rightDeg - 1e-9 }, "steigt")
         assertTrue(updates.first { it.deviation.rightDeg > 0.5 }.let { !it.deviation.steady })
+        // Kennzahlen aus allen Lagewerten: 0,5 Grad nach 0,5 s, also bis dahin im Kreis
+        assertEquals(0.5 / (last.nanos / 1e9), last.insideShare, 0.02)
+        assertEquals(last.deviation.rightDeg, last.maxDeg, 0.011)
+        // Sensorfehler: der Kreis endet still, keine Ausnahme (R14)
+        val failing = object : app.cayresim.core.boundary.MotionSensorBoundary {
+            override fun availability() = MotionAvailability(rotation = true, acceleration = true)
+            override fun samples(periodMicros: Int) = kotlinx.coroutines.flow.flow<MotionSample> { throw SecurityException("Sensor verweigert") }
+        }
+        assertTrue(HoldGuideUseCase(failing, here()).track().toList().isEmpty())
         // ohne Drehvektor: keine Meldung, kein Sensor
         val none = FakeMotionSensorBoundary(MotionAvailability(rotation = false, acceleration = true), samples())
         assertTrue(HoldGuideUseCase(none, here()).track().toList().isEmpty()); assertEquals(0, none.registrations)

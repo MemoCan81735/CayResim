@@ -27,7 +27,7 @@ Abweichung), damit jeder Gerätetest diese Zahl mitliefert.
 | K2 | Kennzahlen: Anteil der Zeit im Kreis und größte Abweichung aus einer Folge von Lagen (zeitgewichtet) | `HoldGuideTest > S-016 Kennzahlen` |
 | K3 | `HoldGuideUseCase` meldet je Lagewert (höchstens etwa 30 je Sekunde) die Abweichung gegen den ersten Wert; beim Abbruch ist der Sensor abgemeldet (R17, R29) | `HoldGuideUseCaseTest > S-016 Abweichung und Abmelden` |
 | K4 | Kamera-ViewModel: während der Nachtaufnahme ist der Halte-Zustand gesetzt, danach leer; der Hinweis trägt Anteil und größte Abweichung | `CameraViewModelTest > S-016 Halte-Kreis waehrend der Nachtaufnahme` |
-| K5 | Oberfläche: Kreis, Punkt und Ring im Sucher (Screenshot); Hinweis ergänzt um ", ruhig gehalten 78 % der Zeit, Abweichung bis 0,9°" | `CameraContentTest > nacht_halte_kreis`, `CameraContentTest > nacht_hinweis_haltung` |
+| K5 | Oberfläche: Kreis, Punkt und Ring im Sucher (Screenshot, Zustand "im Kreis" oder "außerhalb des Kreises" für TalkBack); Hinweis ergänzt um ", ruhig gehalten 78 % der Zeit, Abweichung bis 0,9°" | `CameraContentTest > nacht_halte_kreis`, `CameraContentTest > nacht_hinweis_haltung` |
 | K6 | Gerätetest S24+: Punkt folgt der Drehung in die richtige Richtung (Kamera nach rechts drehen, Punkt geht nach rechts), hochkant und quer; Hinweis nennt Anteil und Abweichung | Gerätetest |
 
 Tests zuerst rot: K1 bis K4 lokal bzw. über CI (Kamera-ViewModel ist ein Android-Modul), weil Rechnung, UseCase und
@@ -63,6 +63,31 @@ Zustand fehlen; K5 in CI.
 
 ## Kosten
 Etwa 2 kurze Läufe (neuer Screenshot), Emulator wegen Kamera-Modul, ein Release nach Wunsch.
+
+## Umsetzung (11.10.2026)
+- `HoldGuide` rechnet Abweichung, Bildschirm-Abbildung und zeitgewichtete Kennzahlen; Werte mit älterem Zeitstempel
+  werden verworfen.
+- `HoldGuideUseCase` führt die Kennzahlen aus jedem Lagewert (etwa 100 je Sekunde) und meldet höchstens etwa 30 je
+  Sekunde an die Anzeige. Ein Sensorfehler beendet nur den Kreis, nie die Nachtaufnahme (`.catch`).
+- Der Kreis (Halbmesser 30 dp, Ring 40 dp) liegt in einer Zeichenfläche von 200 dp; der Punkt wird kreisförmig auf das
+  Dreifache des Kreises begrenzt. Kein Text im Kreis (der Hinweis "Handy ruhig halten" steht schon oben); TalkBack liest
+  "Ruhig halten, im Kreis" oder "außerhalb des Kreises".
+- Lokal: `:core:pure` 171 Tests, Boundary und Control 36 Tests, Architekturregeln 0 Verstöße, Struktur und Fallen ohne
+  Funde.
+
+### Zweitprüfung (unabhängiger Agent, nur gegen Spec und Regeln): kein Fehler, Geometrie für alle vier Drehungen nachgerechnet
+| Nr. | Befund | Schwere | Erledigt |
+|---|---|---|---|
+| W1 | Sensorfehler im Halte-Job bricht die Nachtaufnahme ab (R14) | Warnung | `.catch { }` im UseCase, Test mit werfendem Sensor |
+| W2 | K1 nur mit Startlage "gerade", vertauschte Drehreihenfolge fiele nicht auf | Warnung | Test `S-016 Abweichung mit echter Haltung` (hochkant aufrecht, quer) |
+| W3 | Kennzahlen aus gedrosselten Werten, größte Abweichung zu klein | Warnung | Kennzahlen je Lagewert im UseCase, `HoldUpdate` trägt sie |
+| H4 | Zeit rückwärts zählt doppelt; "0 %" bei Gesamtzeit 0 | Hinweis | ältere Werte verworfen, Hinweis nur bei gemessener Zeit über 0, Randfälle in K2 |
+| H5 | Punkt nur bis etwa 1,8-fach, eckige Grenze, verdeckt den Ring | Hinweis | größere Fläche, kreisförmige Grenze beim Dreifachen |
+| H6 | Text verschiebt den Kreis aus der Mitte, TalkBack ohne Zusammenfassung | Hinweis | Text entfernt, `mergeDescendants` |
+| H10 | K4-Grenze 0,2 bis 0,5 zu weit | Hinweis | 0,34 ± 0,02 |
+| H7 | Ring bleibt bei kurzer Nacht halb voll (Fortschritt gegen feste 9,5 s) | Hinweis | offen, nach Gerätetest K6 |
+| H8 | Bezugslage ist der Moment des Tippens (Ruck) | Hinweis | offen, im Gerätetest beobachten |
+| H9 | etwa 30 Neuaufbauten des Suchers je Sekunde | Hinweis | offen, nur bei Ruckeln auf dem Gerät |
 
 ## Ergebnis
 Noch offen.

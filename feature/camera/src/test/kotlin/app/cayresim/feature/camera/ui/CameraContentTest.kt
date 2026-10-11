@@ -354,7 +354,7 @@ class CameraContentTest {
         show(running.copy(specialStatus = app.cayresim.feature.camera.control.SpecialStatus.COLLECTING,
             hold = app.cayresim.feature.camera.control.HoldUi(0.6, 0.3, false, 0.4f)))
         compose.onNodeWithTag("hold_circle").assertIsDisplayed()
-        compose.onNodeWithText("Ruhig halten").assertIsDisplayed()
+            .assert(androidx.compose.ui.test.SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "außerhalb des Kreises"))
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_night_hold.png")
     }
 

@@ -44,9 +44,15 @@ object HoldGuide {
         var maxDeg = 0.0; private set
         var count = 0; private set
         val insideShare: Double get() = if (total > 0) inside.toDouble() / total else 0.0
+        /** Gemessene Zeit in ns; 0 = noch keine Kennzahl (ein Wert oder gleiche Zeitstempel). */
+        val totalNanos: Long get() = total
 
-        /** Lage zum Zeitpunkt [nanos] mit Abweichung [deg]; der Abschnitt seit dem letzten Wert zaehlt mit dessen Abweichung. */
+        /**
+         * Lage zum Zeitpunkt [nanos] mit Abweichung [deg]; der Abschnitt seit dem letzten Wert zaehlt mit dessen
+         * Abweichung. Werte mit aelterem Zeitstempel werden verworfen (Zweitpruefung S-016, H4).
+         */
         fun add(nanos: Long, deg: Double) {
+            if (lastNanos != Long.MIN_VALUE && nanos < lastNanos) return
             if (lastNanos != Long.MIN_VALUE && nanos > lastNanos) {
                 val dt = nanos - lastNanos
                 total += dt

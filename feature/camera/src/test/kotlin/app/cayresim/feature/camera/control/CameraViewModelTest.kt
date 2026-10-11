@@ -453,7 +453,8 @@ class CameraViewModelTest {
         assertNull(vm.uiState.value.hold, "nach der Aufnahme kein Kreis")
         assertEquals(0, sensors.active, "Sensor abgemeldet")
         val n = assertNotNull(vm.uiState.value.message?.night)
-        assertTrue(n.holdShare!! in 0.2..0.5, "Anteil im Kreis ${n.holdShare}")
+        // 1 s von 3 s im Kreis (zeitgewichtet; nach Anzahl der Werte waere es anders)
+        assertEquals(0.34, n.holdShare!!, 0.02)
         assertEquals(1.5, n.holdMaxDeg!!, 0.05)
     }
 
