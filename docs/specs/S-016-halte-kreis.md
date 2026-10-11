@@ -72,6 +72,8 @@ Etwa 2 kurze Läufe (neuer Screenshot), Emulator wegen Kamera-Modul, ein Release
 - Der Kreis (Halbmesser 30 dp, Ring 40 dp) liegt in einer Zeichenfläche von 200 dp; der Punkt wird kreisförmig auf das
   Dreifache des Kreises begrenzt. Kein Text im Kreis (der Hinweis "Handy ruhig halten" steht schon oben); TalkBack liest
   "Ruhig halten, im Kreis" oder "außerhalb des Kreises".
+- Screenshot `camera_night_hold.png` (Lauf 38119144052) angesehen und übernommen: Kreis in der Bildmitte, Punkt oben rechts
+  bei 0,6° rechts und 0,3° oben, Ring zu 40 % gefüllt.
 - Lokal: `:core:pure` 171 Tests, Boundary und Control 36 Tests, Architekturregeln 0 Verstöße, Struktur und Fallen ohne
   Funde.
 
@@ -82,7 +84,7 @@ Etwa 2 kurze Läufe (neuer Screenshot), Emulator wegen Kamera-Modul, ein Release
 | W2 | K1 nur mit Startlage "gerade", vertauschte Drehreihenfolge fiele nicht auf | Warnung | Test `S-016 Abweichung mit echter Haltung` (hochkant aufrecht, quer) |
 | W3 | Kennzahlen aus gedrosselten Werten, größte Abweichung zu klein | Warnung | Kennzahlen je Lagewert im UseCase, `HoldUpdate` trägt sie |
 | H4 | Zeit rückwärts zählt doppelt; "0 %" bei Gesamtzeit 0 | Hinweis | ältere Werte verworfen, Hinweis nur bei gemessener Zeit über 0, Randfälle in K2 |
-| H5 | Punkt nur bis etwa 1,8-fach, eckige Grenze, verdeckt den Ring | Hinweis | größere Fläche, kreisförmige Grenze beim Dreifachen |
+| H5 | Punkt nur bis etwa 1,8-fach, eckige Grenze, verdeckt den Ring | Hinweis | größere Fläche, kreisförmige Grenze beim Dreifachen; der Ring (40 dp) liegt weiter im Bereich des Punkts, bei etwa 0,67° liegt der Punkt auf dem Ring (Screenshot), der Punkt wird darüber gezeichnet und bleibt sichtbar |
 | H6 | Text verschiebt den Kreis aus der Mitte, TalkBack ohne Zusammenfassung | Hinweis | Text entfernt, `mergeDescendants` |
 | H10 | K4-Grenze 0,2 bis 0,5 zu weit | Hinweis | 0,34 ± 0,02 |
 | H7 | Ring bleibt bei kurzer Nacht halb voll (Fortschritt gegen feste 9,5 s) | Hinweis | offen, nach Gerätetest K6 |
