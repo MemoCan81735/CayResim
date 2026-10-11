@@ -77,6 +77,10 @@
     <string name="night_diag_yes">ja</string>
     <string name="night_diag_no">nein</string>
     <string name="night_diag_frame">"; Bezugsbild %1$d %% Nullen, Stufen %2$s / %3$s / %4$s"</string>
+    <string name="night_hold">", ruhig gehalten %1$s %% der Zeit, Abweichung bis %2$s°"</string>
+    <string name="hold_still">Ruhig halten</string>
+    <string name="hold_inside">im Kreis</string>
+    <string name="hold_outside">außerhalb des Kreises</string>
     <string name="night_series_saved">Nachtserie gespeichert: %1$s (%2$s MB), Schalter wieder aus</string>
     <string name="night_series_failed">Nachtserie nicht gespeichert</string>
     <string name="msg_night_saved">Nachtaufnahme gespeichert</string>

@@ -202,6 +202,8 @@ fun CameraContent(
                 Box(contentAlignment = Alignment.Center) { Text(c.toString(), style = MaterialTheme.typography.displayLarge) }
             }
         }
+        // S-016: Halte-Kreis in der Mitte, nur waehrend der Nachtaufnahme
+        state.hold?.let { HoldCircle(it, Modifier.align(Alignment.Center)) }
         // S-003: Selbstausloeser als runder Knopf unter dem Zahnrad, immer sichtbar (in der Leiste rutschte er aus dem Bild)
         val timerLabel = stringResource(if (state.timer) R.string.timer_on else R.string.timer_off)
         Surface(onClick = onToggleTimer, shape = CircleShape,
@@ -490,7 +492,12 @@ internal fun nightDetail(n: app.cayresim.feature.camera.control.NightInfo): Stri
     // S-001 K5: Dauer vom Ausloesen bis gespeichert, z. B. ", Dauer 4,2 s"
     val full = n.durationMs?.let { cut + stringResource(R.string.night_duration, String.format(java.util.Locale.GERMANY, "%.1f", it / 1000f)) } ?: cut
     val line = if (n.raw) stringResource(R.string.night_raw_prefix) + full else full
-    val withDiagnosis = n.diagnosis?.let { line + "\n" + nightDiagnosis(it) } ?: line
+    // S-016: wie ruhig gehalten, z. B. ", ruhig gehalten 78 % der Zeit, Abweichung bis 0,9°"
+    val held = n.holdShare?.let { share ->
+        line + stringResource(R.string.night_hold, (share * 100).roundToIntSafe().toString(),
+            String.format(java.util.Locale.GERMANY, "%.1f", n.holdMaxDeg ?: 0.0))
+    } ?: line
+    val withDiagnosis = n.diagnosis?.let { held + "\n" + nightDiagnosis(it) } ?: held
     // S-011: Nachtserie als ZIP, z. B. "Nachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB)"
     val series = when {
         n.seriesName != null -> stringResource(R.string.night_series_saved, n.seriesName,
@@ -519,3 +526,5 @@ internal fun nightDiagnosis(d: app.cayresim.core.pure.NightDiagnosis): String {
     }
     return decision + stringResource(R.string.night_diag_frame, pct(d.zeroShare), lvl(d.firstR), lvl(d.firstG), lvl(d.firstB))
 }
+
+private fun Double.roundToIntSafe(): Int = if (isNaN()) 0 else kotlin.math.round(this).toInt()

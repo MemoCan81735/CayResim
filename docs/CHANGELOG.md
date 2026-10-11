@@ -2,6 +2,14 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Halte-Kreis bei der Nachtaufnahme (11. Oktober 2026, S-016, noch nicht veröffentlicht)
+- Während der Nachtaufnahme zeigt der Sucher in der Mitte einen Kreis und einen Punkt, der zeigt, wohin die Kamera
+  gegenüber dem Start zeigt (Lagesensor). Bis 0,5° Abweichung ist der Punkt grün, sonst orange; ein Ring zeigt den
+  Fortschritt.
+- Der Hinweis nach der Aufnahme nennt, wie ruhig gehalten wurde, z. B. "ruhig gehalten 78 % der Zeit, Abweichung bis 0,9°".
+- Gerät: eine Nachtaufnahme hochkant und eine quer; dabei die Kamera kurz nach rechts drehen und prüfen, dass der Punkt
+  nach rechts geht. Hinweis als Screenshot.
+
 ## 0.1.133 Bebilderte Schwenk-Anleitung (11. Oktober 2026, S-014)
 - Die Schwenk-Messung zeigt den Ablauf vor dem Start als sechs Bilder mit Zeitangabe.
 - Während der Messung steht groß die aktuelle Bewegung als Bild mit Restzeit und nächster Bewegung, dazu ein Balken

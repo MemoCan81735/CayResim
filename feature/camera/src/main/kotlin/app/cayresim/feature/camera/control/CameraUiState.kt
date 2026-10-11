@@ -49,7 +49,16 @@ data class NightInfo(val exposureNs: Long?, val iso: Int?, val used: Int, val dr
     /** S-007: Werte der Boden-Entscheidung, null beim RAW-Weg. */
     val diagnosis: app.cayresim.core.pure.NightDiagnosis? = null,
     /** S-011: gespeicherte Nachtserie (Dateiname, Groesse in Byte); [seriesFailed] = eingeschaltet, aber nicht gespeichert. */
-    val seriesName: String? = null, val seriesBytes: Long? = null, val seriesFailed: Boolean = false)
+    val seriesName: String? = null, val seriesBytes: Long? = null, val seriesFailed: Boolean = false,
+    /** S-016: Anteil der Zeit im Halte-Kreis (0 bis 1) und groesste Abweichung in Grad; null ohne Lagesensor. */
+    val holdShare: Double? = null, val holdMaxDeg: Double? = null)
+
+/**
+ * S-016: Halte-Kreis waehrend der Nachtaufnahme. Abweichung im Geraetesystem (rechts, oben in Grad); auf den Bildschirm
+ * bildet die Oberflaeche je nach Drehung der Anzeige ab. [progress] 0 bis 1 nach der Zeit.
+ */
+@Immutable
+data class HoldUi(val rightDeg: Double, val upDeg: Double, val steady: Boolean, val progress: Float)
 
 /** Eine Zoom-Schnellwahl, z. B. "0,6x"; [active] = sie entspricht dem aktuellen Zoom. */
 @Immutable
@@ -91,6 +100,8 @@ data class CameraUiState(
     val timer: Boolean = false,
     /** Laufender Countdown in Sekunden, null = keiner. */
     val countdown: Int? = null,
+    /** S-016: Halte-Kreis, nur waehrend der Nachtaufnahme. */
+    val hold: HoldUi? = null,
 ) {
     val zoomLabel: String get() = zoomLabel(zoomRatio)
 

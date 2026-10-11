@@ -47,4 +47,4 @@ Schleier` (Schwarz höchstens 5, Hintergrund höchstens 20, Streifen mindestens 
 beleuchtet bleibt ohne Boden` (Auto-ähnliche Szene, Verhältnis mindestens 9). Beide waren mit dem alten Code rot.
 
 ## Nicht Teil dieser Änderung
-- Ausrichten mit dem Lagesensor (S-016), Halte-Kreis (F14).
+- Halte-Kreis (F14, S-016), Ausrichten mit dem Lagesensor (S-017).

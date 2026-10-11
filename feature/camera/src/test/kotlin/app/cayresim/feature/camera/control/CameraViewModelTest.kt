@@ -428,6 +428,36 @@ class CameraViewModelTest {
         assertNotNull(vm.uiState.value.lastPhotoUri)
     }
 
+    @Test fun `S-016 Halte-Kreis waehrend der Nachtaufnahme`() = runTest {
+        // Lage alle 10 ms ueber 3 s, Kamera dreht langsam nach rechts (0,5 Grad je Sekunde)
+        val samples = List(301) { i ->
+            val h = -i * 0.005 * Math.PI / 360
+            app.cayresim.core.boundary.MotionSample(app.cayresim.core.boundary.MotionKind.ROTATION, i * 10_000_000L,
+                kotlin.math.cos(h).toFloat(), 0f, kotlin.math.sin(h).toFloat(), 0f)
+        }
+        val sensors = app.cayresim.core.boundary.fake.FakeMotionSensorBoundary(samples = samples, paced = true)
+        vm = CameraViewModel(cam, CaptureUseCase(TakePhotoUseCase(cam), cam, proc, series, Clock { 1 }), series, proc,
+            app.cayresim.core.control.StackPhotoUseCase(frames, proc), frames, manual,
+            app.cayresim.core.control.FocusStackUseCase(manual, proc), app.cayresim.core.control.AstroUseCase(manual, frames, proc),
+            app.cayresim.core.control.NightUseCase(cam, manual, frames, proc), app.cayresim.core.control.HoldGuideUseCase(sensors, Dispatchers.Main))
+        frames.intervalMs = 100
+        visibleAndGranted(); vm.onModeSelected(ModeOption.NIGHT)
+        cam.measure(app.cayresim.core.boundary.LightSnapshot(66_666_666, 3200))
+        assertNull(vm.uiState.value.hold, "vor der Aufnahme kein Kreis")
+        vm.onShutter()
+        advanceTimeBy(1_500)
+        val h = assertNotNull(vm.uiState.value.hold, "Kreis waehrend der Aufnahme")
+        assertTrue(h.rightDeg > 0.5 && !h.steady && h.progress > 0f, "Halte-Zustand $h")
+        assertEquals(1, sensors.active, "Sensor angemeldet")
+        advanceTimeBy(60_000)
+        assertNull(vm.uiState.value.hold, "nach der Aufnahme kein Kreis")
+        assertEquals(0, sensors.active, "Sensor abgemeldet")
+        val n = assertNotNull(vm.uiState.value.message?.night)
+        // 1 s von 3 s im Kreis (zeitgewichtet; nach Anzahl der Werte waere es anders)
+        assertEquals(0.34, n.holdShare!!, 0.02)
+        assertEquals(1.5, n.holdMaxDeg!!, 0.05)
+    }
+
     @Test fun `S-007 Nacht-Hinweis traegt die Diagnose`() = runTest {
         val d = app.cayresim.core.pure.NightDiagnosis(true, false, 0.01f, 0.004f, 0.002f, 0.001f, 0.6f, 0.55f, 0.7f, 0.41f, 12f, 11f, 15f)
         proc.nightDiagnosis = d

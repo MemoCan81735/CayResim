@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -347,6 +348,24 @@ class CameraContentTest {
             compose.onAllNodesWithText("Aufhellung x15,7\nNachtserie gespeichert: Nachtserie-20261010-183012.zip (48,3 MB), Schalter wieder aus", substring = true).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/camera_night_series.png")
+    }
+
+    @Test fun nacht_halte_kreis() {
+        // S-016 K5: Kreis, Punkt (ausserhalb, rechts oben) und Fortschrittsring waehrend der Nachtaufnahme
+        show(running.copy(specialStatus = app.cayresim.feature.camera.control.SpecialStatus.COLLECTING,
+            hold = app.cayresim.feature.camera.control.HoldUi(0.6, 0.3, false, 0.4f)))
+        compose.onNodeWithTag("hold_circle").assertIsDisplayed()
+            .assert(androidx.compose.ui.test.SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "außerhalb des Kreises"))
+        compose.onRoot().captureRoboImage("src/test/screenshots/camera_night_hold.png")
+    }
+
+    @Test fun nacht_hinweis_haltung() {
+        // S-016 K5: Anteil der Zeit im Kreis und groesste Abweichung im Hinweis
+        show(running.copy(message = UserMessage(16, MessageKind.NIGHT_SAVED,
+            app.cayresim.feature.camera.control.NightInfo(100_000_000, 3200, 67, 0, 15.7f, durationMs = 9_400, holdShare = 0.78, holdMaxDeg = 0.94))))
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Dauer 9,4 s, ruhig gehalten 78 % der Zeit, Abweichung bis 0,9°", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test fun nacht_hinweis_serie_nicht_gespeichert() {
