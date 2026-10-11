@@ -177,3 +177,20 @@ vor allem Rauschen und den Versatz der abgeschnittenen Nullen. Samsung hält das
 Schwarz bei etwa 1. Ursache ohne Einzelbilder nicht trennbar; nächster Schritt: dieselbe Szene mit eingeschaltetem
 Schalter "Nachtserie speichern" (schaltet sich nach einer Serie selbst aus), dann eigene Spec für Schwarzpunkt und
 Aufhellung bei sehr wenig Licht.
+
+Erste Serie (11.10., 06:42 Uhr, `Nachtserie-20261011-064229.zip`, 46,7 MB, gleiche Szene, Hinweis fast gleich: 67 Bilder,
+×60,1, Signal 0,057, Rauschen 0,143), ausgewertet mit `tools/nacht-serie/auswerten.py` (K9 erfüllt: 67 Einträge = 67
+verwendet, 0 ausgelassen, 10,3 Bilder je Sekunde ohne Lücke):
+- Einzelbilder fast schwarz: Helligkeit im Mittel 1,3 von 255, 47 bis 49 % Nullen, Stufe 1 noch 22 %. Im Mittel aller
+  67 Bilder liegt der Hintergrund bei 1,27 (Median), das Fenster bei 3,55 (99,9 %).
+- Ausrichtung: bei allen 66 Bildern "Versatz verworfen" (Spitze der eigenen Korrelation 0,04 bis 0,06): das Bild ist
+  zu dunkel zum Ausrichten, gemittelt wurde ohne Ausrichtung. Der Lagesensor zeigt in 9,4 s bis 0,94° Drehung (Median
+  0,54°), bei etwa 20 px je Grad also bis etwa 18 px Verschmieren. Deshalb ist das Fenster weich.
+- Schleier: In diesem Fall entscheidet die App nicht auf Boden-Modus (Signal 0,000222 linear liegt über der Schwelle
+  0,0000685, Anteil 0 und 1 im Bezugsbild 70 % unter 85 %). Dann zieht sie den Versatz des abgeschnittenen Rauschens
+  nicht ab und hellt nach dem Median auf (Ziel 0,021 linear, etwa 40 in 8 Bit). Der Median ist hier zu etwa der Hälfte
+  dieser Versatz (Mittel 0,000422 gegen Signal 0,000222): er wird zum grauen Schleier. Blau liegt in den dunklen
+  Flächen der Farbbilder schon vorher höher (0,49 bis 0,63 gegen Rot 0,34): Blaustich.
+- Gegenprobe nur mit der Helligkeit: Hintergrund (Median 1,27) als Schwarz abziehen, dann nach dem Fenster aufhellen
+  ergibt schwarzen Hintergrund und ein helles Fenster wie bei Samsung; mehr Einzelheiten (Wand, Vorhang) sind in den
+  8-Bit-Bildern kaum enthalten.
