@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.architecture.ProjectArchitectureTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-11T06:51:46.276Z" hostname="runnervmmprz5" time="3.559">
+  <properties/>
+  <testcase name="Projekt hat keine Architekturverstoesse" classname="app.cayresim.architecture.ProjectArchitectureTest" time="3.544"/>
+  <testcase name="Jede Hauptdatei ist einer Schicht zugeordnet" classname="app.cayresim.architecture.ProjectArchitectureTest" time="0.012"/>
+  <testcase name="Innere Module sind reine JVM-Module ohne Android-Plugin" classname="app.cayresim.architecture.ProjectArchitectureTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

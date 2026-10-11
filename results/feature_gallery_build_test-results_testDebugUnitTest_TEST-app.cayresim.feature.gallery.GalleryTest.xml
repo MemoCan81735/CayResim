@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.gallery.GalleryTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-11T06:53:02.104Z" hostname="runnervmmprz5" time="54.344">
+  <properties/>
+  <testcase name="zeitraffer_guter_fall" classname="app.cayresim.feature.gallery.GalleryTest" time="27.016"/>
+  <testcase name="zeitraffer_unbekannte_serie" classname="app.cayresim.feature.gallery.GalleryTest" time="0.293"/>
+  <testcase name="zeitraffer_fehler_wird_gemeldet" classname="app.cayresim.feature.gallery.GalleryTest" time="0.237"/>
+  <testcase name="antippen_oeffnet_foto" classname="app.cayresim.feature.gallery.GalleryTest" time="8.628"/>
+  <testcase name="bild_galerie_mit_serien" classname="app.cayresim.feature.gallery.GalleryTest" time="3.775"/>
+  <testcase name="viewmodel_neueste_zuerst_und_aktualisiert" classname="app.cayresim.feature.gallery.GalleryTest" time="0.264"/>
+  <testcase name="zeitraffer_zu_wenige_fotos" classname="app.cayresim.feature.gallery.GalleryTest" time="0.277"/>
+  <testcase name="zeitraffer_knopf_sendet_serie" classname="app.cayresim.feature.gallery.GalleryTest" time="0.439"/>
+  <testcase name="waehrend_laden_kein_leer_hinweis" classname="app.cayresim.feature.gallery.GalleryTest" time="0.339"/>
+  <testcase name="viewmodel_begrenzt_auf_limit" classname="app.cayresim.feature.gallery.GalleryTest" time="0.201"/>
+  <testcase name="leere_galerie_zeigt_hinweis" classname="app.cayresim.feature.gallery.GalleryTest" time="0.321"/>
+  <system-out><![CDATA[Roborazzi: gallery_series.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=150400, width=320, height=470) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
