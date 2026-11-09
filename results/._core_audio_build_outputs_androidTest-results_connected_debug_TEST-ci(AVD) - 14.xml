@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="7" failures="0" errors="0" skipped="0" time="0.000" timestamp="2026-11-09T23:53:57" hostname="localhost">
+  <testsuite name="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" tests="7" failures="0" errors="0" skipped="0" time="11.512" timestamp="2026-11-09T23:53:57" hostname="localhost">
+    <properties>
+      <property name="device" value="emulator-5554" />
+    </properties>
+    <testcase name="s008AbbruchGibtFrei" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="1.258" />
+    <testcase name="s019DreiKanaele" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="0.614" />
+    <testcase name="s008AufnahmeUndFreigabe" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="2.323" />
+    <testcase name="s018TonstromLiefertStueckeUndGibtFrei" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="3.638" />
+    <testcase name="s008InventarStuerztNichtAb" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="0.193" />
+    <testcase name="s020ZweiAufnahmenGleichzeitig" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="2.383" />
+    <testcase name="s010Zeitbezug" classname="app.cayresim.core.audio.AudioRecordMicrophoneAdapterTest" time="1.103" />
+  </testsuite>
+</testsuites>
