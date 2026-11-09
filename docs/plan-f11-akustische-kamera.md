@@ -53,3 +53,41 @@ Grenze).
 
 ## Reihenfolge
 Stufe 1 bauen und auf dem S24+ messen. Erst mit diesen Zahlen Stufe 2 und 3 vorschlagen (je eigene Spec, Freigabe).
+
+## Prüfung des Stands gegen das Ziel (9.11.2026, 20:40 Uhr, auf Wunsch von Arslan)
+
+Ziel: Im Sucherbild sehen, woher ein Ton kommt.
+
+| Baustein | Stand | Belegt durch | Offen |
+|---|---|---|---|
+| Richtung links/rechts je Tonhöhen-Bereich | gebaut (`SoundBands`) | Labor: 30° in allen Bereichen innerhalb 6°, kein falscher Streifen in 648 Aufnahmen mit unabhängigem Rauschen | Gerät (K19) |
+| Laufender Ton aus dem Mikrofon | gebaut (`MicrophoneBoundary.stream`) | nur der Fake; der Adapter ist weder übersetzt noch gelaufen | CI, Emulator (läuft auf dem Seiten-Branch nicht), Gerät |
+| Anzeige als Streifen | gebaut (`SoundImageScreen`) | noch nichts; erster Lauf ohne Vergleichsbilder | CI, Bilder ansehen |
+| Haltung quer, links/rechts richtig herum | gebaut | Rechnung; Vorzeichen der Achse nur aus einem Schwenk-Lauf | Gerät: Quelle rechts muss rechts stehen |
+| Mikrofon bei laufender Kamera | nicht begonnen | | Freigabe, Messung (Stufe 2) |
+| Streifen im Sucherbild | nicht begonnen | | Stufe 3; Bildwinkel der Hauptkamera quer etwa 70°, also nur ±35° der ±90° im Bild |
+| Oben/unten | nicht möglich aus einer Haltung mit zwei Mikrofonen | | Schwenken (F12) oder drittes Mikrofon |
+| Vorne/hinten | wie oben | | wie oben |
+
+### Die vier größten Lücken
+1. **Eine Zeile, kein Bild.** Zwei Mikrofone liefern nur den Winkel zu ihrer Achse. Geräte, die man "akustische
+   Kamera" nennt, haben Dutzende Mikrofone. Erreichbar ist mit dem Handy: ein Streifen an der richtigen Stelle im
+   Sucher für eine laute, eher nahe Quelle. Zwei Quellen im selben Tonhöhen-Bereich trennen sich erst ab etwa 40 bis
+   60° Abstand.
+2. **Hall.** Am 10.10. kam bei Musik in 1 m über 1 kHz fast nur Raumschall an; unter 800 Hz zieht der Raumschall die
+   Anzeige zur Mitte (Labor: 15° und 24° statt 40°). Ob nahe Quellen (40 cm) alle Bereiche füllen, misst K19.
+3. **Nichts davon ist auf dem Gerät bestätigt:** Tonstrom, Vorzeichen, Tonquelle `CAMCORDER`, Verhalten mit Kamera.
+4. **Das dritte Mikrofon ist ungeprüft.** Das S24+ hat ein Mikrofon unten, eines oben und ein verstecktes neben der
+   Ultraweitwinkel-Kamera (Android nennt es "back"). Der Mikrofon-Test hat nur ein und zwei Kanäle angefragt und
+   bekam unten plus hinten. Liefert Android auf Anfrage drei Kanäle, liegen die Mikrofone nicht mehr auf einer Linie:
+   dann wäre oben/unten oder vorne/hinten ohne Schwenken messbar. Das ist die größte Chance und billig zu prüfen.
+
+### Vorschlag für die Reihenfolge
+1. S-018 fertigstellen (CI, Zweitprüfung, Vergleichsbilder), Release, Gerätetest K19.
+2. Im selben Release messen, ob Android drei oder vier Kanäle liefert (Erweiterung des Mikrofon-Tests um eine Anfrage
+   mit Kanal-Index-Maske, eigene kleine Spec). Kein neues Speichern außer den WAV-Dateien, die der Test schon ablegt.
+3. Danach entscheiden: mit drittem Mikrofon erst die Höhe einbauen, sonst gleich Stufe 2 und 3 (Kamera und Sucher).
+4. F12 (Schwenken) bleibt der Weg zur Höhe, falls es kein drittes Mikrofon gibt. Dort fehlen weiter die vier Läufe.
+
+Quellen: TechRadar zum versteckten Mikrofon des S24
+(https://www.techradar.com/phones/samsung-galaxy-phones/i-didnt-know-this-existed-samsung-galaxy-s24-owners-have-spotted-the-phones-hidden-microphone).
