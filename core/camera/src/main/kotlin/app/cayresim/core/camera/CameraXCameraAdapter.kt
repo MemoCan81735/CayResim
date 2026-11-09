@@ -211,13 +211,15 @@ class CameraXCameraAdapter @Inject constructor(
         val formats = runCatching { ImageCapture.getImageCaptureCapabilities(info).supportedOutputFormats }.getOrDefault(emptySet())
         _manualCaps.value = readManualCapabilities(info, ImageCapture.OUTPUT_FORMAT_RAW_JPEG in formats)
         manualEntity = _manualCaps.value?.let { c -> ManualSettingsEntity(ManualLimits(c.exposureRangeNanos, c.isoRange, c.maxFocusDiopters)) }
+        // liest auch die Optik (S-021), deshalb vor dem Zusammenbau
+        val device = readDeviceReport(info).also { oisAvailable = it.ois == true }
         return CameraCapabilitiesSnapshot(
             modes = selection.offeredModes.map { it.toPhotoMode() },
             lowLightBoost = runCatching { info.isLowLightBoostSupported }.getOrDefault(false),
             ultraHdr = ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR in formats,
             raw = ImageCapture.OUTPUT_FORMAT_RAW in formats,
-            lens = readLens(info),
-            device = readDeviceReport(info).also { oisAvailable = it.ois == true },
+            lens = lens,
+            device = device,
         )
     }
 
@@ -434,6 +436,9 @@ class CameraXCameraAdapter @Inject constructor(
             }
         }
     }
+
+    /** S-021: Optik der Kamera, gelesen zusammen mit den Geraetewerten. */
+    private var lens: LensSnapshot? = null
 
     // S-021: Bilder je Sekunde im Sucherstrom, einmal je Sekunde in den Zustand (nicht je Bild, R22)
     @Volatile private var fpsWindowStart = 0L
@@ -784,6 +789,11 @@ class CameraXCameraAdapter @Inject constructor(
         val caps = ch(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
         val pixels = ch(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
         val zoom = runCatching { info.zoomState.value }.getOrNull()
+        // S-021: Brennweite und Sensorgroesse fuer den Bildwinkel; null, wenn das Geraet sie nicht nennt
+        val focal = ch(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.firstOrNull()
+        val physical = ch(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)
+        lens = if (focal == null || physical == null || focal <= 0f || physical.width <= 0f || physical.height <= 0f) null
+        else LensSnapshot(focal, maxOf(physical.width, physical.height), minOf(physical.width, physical.height))
         return DeviceReport(
             hardwareLevel = when (ch(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)) {
                 CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> HardwareLevel.LEVEL_3
@@ -809,15 +819,6 @@ class CameraXCameraAdapter @Inject constructor(
             system = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.DISPLAY}",
         )
     }
-
-    /** S-021: Brennweite und Sensorgroesse fuer den Bildwinkel; null, wenn das Geraet sie nicht nennt. */
-    private fun readLens(info: androidx.camera.core.CameraInfo): LensSnapshot? = runCatching {
-        val c2 = Camera2CameraInfo.from(info)
-        val focal = c2.getCameraCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.firstOrNull()
-        val size = c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)
-        if (focal == null || size == null || focal <= 0f || size.width <= 0f || size.height <= 0f) null
-        else LensSnapshot(focal, maxOf(size.width, size.height), minOf(size.width, size.height))
-    }.getOrNull()
 
     private fun readManualCapabilities(info: androidx.camera.core.CameraInfo, raw: Boolean): ManualCapabilitiesSnapshot? = runCatching {
         val c2 = Camera2CameraInfo.from(info)

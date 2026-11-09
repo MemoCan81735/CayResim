@@ -363,7 +363,7 @@ private fun TiltCircle(m: SoundMotionUi, axis: PanelAxis) {
     Canvas(Modifier.size(132.dp).background(PANEL_BACKGROUND).testTag("soundimage_circle").semantics { contentDescription = description }) {
         val center = Offset(size.width / 2, size.height / 2)
         // 1 = innerer Rand; das Feld reicht bis RIM_MAX_DEG, der Ring liegt knapp ausserhalb davon
-        val unit = size.minDimension / 2 / RING_OUTER
+        val unit = (size.minDimension / 2 / RING_OUTER).toFloat()
         fun at(x: Double, y: Double): Offset {
             val (dx, dy) = dotOnScreen(x, y, axis)
             return Offset(center.x + dx * unit, center.y + dy * unit)
