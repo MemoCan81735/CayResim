@@ -117,3 +117,9 @@ hinten neben der Ultraweitwinkel-Kamera (Zoom-Mikrofon für Video). Android meld
 
 Quellen: Aufbau des S24 (https://gadgetguideonline.com/s24/layout-of-galaxy-s24-galaxy-s24-and-galaxy-s24-ultra/),
 verstecktes Mikrofon (TechRadar, siehe oben).
+
+## Nachtrag S-020 (9.11.2026, 23:26 Uhr)
+Gerätetest mit v0.1.146: Auch über `VOICE_COMMUNICATION`, `VOICE_PERFORMANCE` und zwei Aufnahmen gleichzeitig kommen nur
+die Mikrofone 16 und 17 an (Werte in `docs/specs/S-020-mikrofon-paare.md`). Die Wege über Androids Tonschnittstelle sind
+damit geprüft. Für Stufe 5 bleiben das Schwenken (F12) oder ein Zusatzmikrofon. Nächster Schritt: Stufe 2 (Mikrofon bei
+laufender Kamera), mit Freigabe.

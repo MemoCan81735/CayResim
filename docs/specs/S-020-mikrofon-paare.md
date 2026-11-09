@@ -1,6 +1,6 @@
 # S-020: Mikrofon-Test mit weiteren Tonquellen und zwei Aufnahmen gleichzeitig
 
-**Stand:** 9.11.2026 · **Status:** umgesetzt, Gerätetest offen (K7); freigegeben von Arslan am 9.11.2026, 22:09 Uhr ("Ja"), samt der Ausnahme von "eine
+**Stand:** 9.11.2026 · **Status:** umgesetzt, Gerätetest erledigt (9.11., 23:26 Uhr): kein drittes Mikrofon; freigegeben von Arslan am 9.11.2026, 22:09 Uhr ("Ja"), samt der Ausnahme von "eine
 Aufnahme zur Zeit" für diese Messung und einem Release
 **Anlass:** S-019 (9.11., 22:03 Uhr): Über drei und vier Kanäle kommt auf dem S24+ nur Stille; Android meldet nur die
 Mikrofone 16 (bottom) und 17 (back), das obere fehlt. Ungeprüft sind (Plan F11, "Wege zum dritten Mikrofon"): andere
@@ -99,4 +99,18 @@ Umgesetzt am 9.11.2026 mit v0.1.146.
   Aufnahme endet als Fehlerwert statt den Lauf abzubrechen.
 
 **Grenzen:** Die Probe unterscheidet Mikrofone nur über ihr Eigenrauschen; starke Rauschunterdrückung der
-Telefonie-Quelle kann "unklar" ergeben. Der Emulator-Test (K6) läuft erst im Lauf auf main. Gerätetest K7 offen.
+Telefonie-Quelle kann "unklar" ergeben. Der Emulator-Test (K6) läuft erst im Lauf auf main.
+
+**Gerätetest S24+ (9.11.2026, 23:26 Uhr, v0.1.146, Lauf 26,4 s):**
+- `VOICE_COMMUNICATION`: zweimal derselbe Kanal (gleiche Werte 100 %, Korrelation 1,00), Pegel -83,8 dBFS, genutztes
+  Gerät 16, aktives Mikrofon nur 16. Also das untere Mikrofon in Mono, nicht das obere.
+- `VOICE_PERFORMANCE`: zwei verschiedene Kanäle (-74,6 / -76,9 dBFS), aktive Mikrofone 16 und 17. Dasselbe Paar wie `MIC`.
+- Probe `MIC` mit `CAMCORDER`: 2 verschiedene Mikrofone, derselbe Datenstrom; Gleichklang 1-2: 0,03; 1-3: 1,00;
+  2-3: 0,03; 1-4: 0,03; 2-4: 1,00; 3-4: 0,03. `CAMCORDER` nutzt also dasselbe Paar wie `MIC`.
+- Probe `MIC` mit `VOICE_COMMUNICATION`: Urteil "erste Aufnahme mono", alle sechs Paare 1,00. Läuft die
+  Telefonie-Quelle mit, bekommt auch `MIC` nur noch ihren Mono-Ton; alle vier Kanäle sind dasselbe Mikrofon.
+- Gegenprobe still genug (0,03). Zusammen mit S-019: Über mehrere Kanäle, andere Tonquellen und zwei Aufnahmen
+  gleichzeitig gibt das S24+ einer App nur die Mikrofone 16 und 17. Das obere Mikrofon ist nicht erreichbar.
+- Folge für F11: Höhe und vorne/hinten nur über das Schwenken (F12) oder ein Zusatzmikrofon; weiter mit Stufe 2 und 3.
+- Nebenbefund: Die Klatsch-Probe meldete "nicht geeicht", weil das Handy für die Stille-Messung lag. Das lag an meiner
+  Anleitung, nicht am Gerät.
