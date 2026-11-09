@@ -1,6 +1,6 @@
 # S-021: Schallbild bei laufender Kamera messen, mit Neigung und Bewegung des Handys
 
-**Stand:** 9.11.2026 · **Status:** freigegeben von Arslan am 9.11.2026, 23:38 Uhr ("Ja bitte"), samt
+**Stand:** 9.11.2026 · **Status:** umgesetzt, Gerätetest offen (K15); freigegeben von Arslan am 9.11.2026, 23:38 Uhr ("Ja bitte"), samt
 Ergänzung zu R28 (Kamera und Mikrofon gleichzeitig), Kamera-Sitzung im Schallbild, Kamera-Berechtigung im Schallbild,
 Lage-Kreis und einem Release
 **Anlass:** Plan F11, Stufe 2. Die Stufe 3 (Streifen im Sucherbild) taugt nur, wenn das Mikrofon bei laufender Kamera
@@ -163,4 +163,30 @@ Zwei kurze Läufe auf einem Seiten-Branch, ein Lauf für die Vergleichsbilder (S
 Release (etwa 30 Minuten). Unabhängige Zweitprüfung (über 150 Zeilen, Kamera-Adapter). Gerätetest durch Arslan (K15).
 
 ## Ergebnis
-(nach der Umsetzung)
+Umgesetzt am 10.11.2026 mit v0.1.152.
+
+**Labor (JVM, künstliche Daten):** Neigung und Drehung innerhalb 0,5° gegen gedrehte Achsen, für beide Querhaltungen;
+Rechenzeit der Lage 0,0003 ms je Moment (Grenze 0,1 ms); Richtung im Raum bleibt bei 20° Drehung nach rechts und nach
+links innerhalb 5° stehen; eine Runde am Rand füllt 12 von 12 Abschnitten.
+
+**Beim Bauen gegenüber dem freigegebenen Entwurf gestrichen** (in den Abschnitten oben vermerkt): Wärmereserve,
+Zeitversatz zwischen Ton und Lage, aktive Mikrofone je Phase, Pegel je Tonhöhen-Bereich und Rechenzeit je Phase.
+Ergänzt: Dauer der Messung, Art der Sitzung und Schlüssel des Kamerafehlers im Ergebnis.
+
+**Unabhängige Zweitprüfung (10.11.):** 17 Befunde, kein Rechenfehler in der Lage. Eingearbeitet:
+- Bilder je Sekunde zählten über Pausen hinweg; nach einem Neubinden wäre 0 gemeldet worden und der Emulator-Test rot.
+  Jetzt zählt jede Bindung neu, ein altes Fenster wird verworfen.
+- Der Modus NORMAL wird vor dem Start gewählt (ein Binden weniger); die Dauer der Messung steht im Ergebnis.
+- Vertragstest "ohne Sucher" für Fake und Adapter; die Kamera wird gestoppt, falls sie vor der Messung lief.
+- Drehgeschwindigkeit über mindestens 40 ms statt aus zwei Nachbarwerten (sonst falsches "bewegt" bei zittrigen
+  Zeitstempeln).
+- Ein Wert "keine Zahl" vom Sensor setzte einen Abschnitt des Rings; Test K3 verglich zwei Konstanten; K8 prüfte den
+  Ausfall nur für eine ganze Tonquelle; K18 hatte kein eigenes Vergleichsbild.
+- Nicht behoben, als Grenze vermerkt: stehenbleibende Lage ohne Sensorwerte, Mischung im Lage-Kreis bei stark
+  gekipptem Start, Speicher je Sensorwert nicht gemessen.
+
+**Eigene Fehler:** Die erste Fassung kompilierte in der Oberfläche nicht (Zahlentyp im Lage-Kreis) und las die Optik
+über neue Aufrufe, die Lint als neue Funde meldete; beides fand erst CI. Ein deutsches Wort ("wich") hielt Lint für
+einen englischen Tippfehler.
+
+**Offen:** Gerätetest K15. Der Emulator-Test K13 läuft erst im Lauf auf main.

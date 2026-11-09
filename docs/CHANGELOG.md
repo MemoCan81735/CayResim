@@ -2,6 +2,23 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## 0.1.152 Schallbild: Lage des Handys, Lage-Kreis und Vergleich mit Kamera (10. November 2026, S-021)
+- Das Schallbild zeigt jetzt die Lage des Handys: Neigung quer, Kippen, Drehung seit dem Start und "ruhig" oder
+  "bewegt". Dazu die Richtung im Raum: Sie soll stehen bleiben, wenn man das Handy dreht.
+- Neu: der Lage-Kreis. Ein Punkt zeigt Drehung (waagerecht) und Schrägstellen (senkrecht) seit dem Start. Führt man
+  ihn einmal am inneren Rand entlang (15°), füllt sich der Ring außen. "Neu ansetzen" setzt Start und Ring zurück.
+  Das ist die Vorbereitung, um später aus einer solchen Runde die Höhe einer Tonquelle zu rechnen.
+- Bei einem Stoß oder schneller Drehung zeigt das Schallbild kurz keine Richtung, weil Griffgeräusche sonst wie eine
+  Tonquelle aussehen.
+- Neu: "Mit Kamera vergleichen" (Stufe 2 der akustischen Kamera). Die App nimmt denselben Ton ohne, mit und wieder
+  ohne laufende Kamera auf, für beide Tonquellen, und sagt je Tonquelle, ob die Kamera den Ton ändert. Dauer etwa
+  30 Sekunden. Gespeichert wird nichts.
+- Dafür laufen Kamera und Mikrofon erstmals gleichzeitig (freigegebene Ergänzung zu R28); die Kamera-Berechtigung wird
+  auch im Schallbild erfragt.
+- Grenzen: Die Kamera läuft in der Messung als Foto-Sitzung ohne sichtbares Kamerabild. Vorzeichen von Neigung und
+  Drehung und die Grenzen (5°, 3 dB) sind noch nicht auf dem Gerät bestätigt.
+- Gerät: siehe Anleitung in der Spec (K15): Vergleich mit Kamera, langsam drehen, schräg halten, eine Runde im Lage-Kreis.
+
 ## Ohne Version: Zeitmesstest ruhiger (9. November 2026)
 - Der Zeitmesstest für die Messung des Bezugsbilds (S-007) wärmt länger auf und nimmt den besten von 15 Läufen. Die
   Grenze von 10 ms bleibt. Anlass: Er machte den Release-Lauf von 0.1.146 einmal zufällig rot. Für die App ändert sich nichts.
