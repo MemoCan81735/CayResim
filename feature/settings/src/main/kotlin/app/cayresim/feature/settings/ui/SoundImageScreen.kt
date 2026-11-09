@@ -97,11 +97,15 @@ internal fun panelAxis(hold: SoundHoldUi?, rotationDegrees: Int): PanelAxis {
  * S-021: Punkt des Lage-Kreises auf dem Bildschirm. [x], [y] aus Sicht des Nutzers (rechts, oben); zurueck kommt der
  * Versatz nach rechts und nach unten auf der Oberflaeche, je nachdem, wie sie gegenueber dem Nutzer gedreht ist.
  */
-internal fun dotOnScreen(x: Double, y: Double, axis: PanelAxis): Pair<Float, Float> = when (axis) {
-    PanelAxis.RIGHT -> x.toFloat() to -y.toFloat()
-    PanelAxis.LEFT -> -x.toFloat() to y.toFloat()
-    PanelAxis.DOWN -> y.toFloat() to x.toFloat()
-    PanelAxis.UP -> -y.toFloat() to -x.toFloat()
+internal fun dotOnScreen(x: Double, y: Double, axis: PanelAxis): Pair<Float, Float> {
+    // 0 minus Wert statt Vorzeichenwechsel: sonst entsteht aus 0 ein "minus null"
+    val fx = x.toFloat(); val fy = y.toFloat()
+    return when (axis) {
+        PanelAxis.RIGHT -> fx to (0f - fy)
+        PanelAxis.LEFT -> (0f - fx) to fy
+        PanelAxis.DOWN -> fy to fx
+        PanelAxis.UP -> (0f - fy) to (0f - fx)
+    }
 }
 
 @Composable
@@ -415,7 +419,7 @@ private fun VerdictLine(index: Int, r: SoundCheckResultUi) {
 private fun PhaseLine(index: Int, p: SoundCheckPhaseUi) {
     val head = stringResource(R.string.soundimage_check_phase_head, sourceText(p.source), cameraText(p.cameraOn))
     val text = if (!p.recorded) stringResource(R.string.soundimage_check_phase_failed, head) else {
-        val direction = p.angleDeg?.let { angleText(it) } ?: stringResource(R.string.soundimage_band_none)
+        val direction = p.angleDeg?.let { angleText(it) } ?: stringResource(R.string.soundimage_check_phase_no_direction)
         val base = stringResource(R.string.soundimage_check_phase, head, direction, levelText(p.levelADbfs), levelText(p.levelBDbfs))
         val mono = if (p.stereo) "" else stringResource(R.string.soundimage_check_phase_mono)
         val motion = if (p.movedPercent == null) "" else stringResource(R.string.soundimage_check_phase_motion,

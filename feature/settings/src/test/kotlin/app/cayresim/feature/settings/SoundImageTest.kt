@@ -181,9 +181,12 @@ class SoundImageTest {
         compose.setContent { CayResimTheme(dark = true) { SoundImageContent(fixed(), 90, {}, {}, {}, {}) } }
         compose.onNodeWithTag("soundimage_panel").assertIsDisplayed()
         compose.onNodeWithText("Hauptrichtung: 30° rechts").assertIsDisplayed()
-        compose.onNodeWithText("400 bis 800 Hz: 30° rechts, Anteil 0,85, -42 dBFS").assertIsDisplayed()
-        compose.onNodeWithText("3200 bis 6400 Hz: keine Richtung, Anteil 0,12, -71 dBFS").assertExists()
         compose.onNodeWithText("Anhalten").assertIsDisplayed()
+        // S-021: unter dem Lage-Kreis liegen die Zeilen je Band, quer erst nach dem Rollen sichtbar
+        compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_band_1"))
+        compose.onNodeWithText("400 bis 800 Hz: 30° rechts, Anteil 0,85, -42 dBFS").assertIsDisplayed()
+        compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_band_4"))
+        compose.onNodeWithText("3200 bis 6400 Hz: keine Richtung, Anteil 0,12, -71 dBFS").assertExists()
         compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_stats"))
         compose.onNodeWithText("Messung: Bilder je Sekunde 10, Rechenzeit je Bild (ms) 0,4, verlorene Tonstücke 0").assertIsDisplayed()
         compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("back"))
@@ -378,7 +381,7 @@ class SoundImageTest {
         compose.onNodeWithText("Videoton (CAMCORDER): nur ein Kanal. Mit Kamera kommen nicht mehr zwei verschiedene Mikrofone an.").assertIsDisplayed()
         compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 29° rechts, Pegel (dBFS) -42 / -43, bewegt 3 %, Drehung 0,8°, Neigung quer +2°, Kippen -5°, Bilder je Sekunde 30").assertExists()
         compose.onNodeWithText("Mikrofon (MIC), Kamera aus: Richtung 30° rechts, Pegel (dBFS) -41 / -43, bewegt 0 %, Drehung 0,6°, Neigung quer +2°, Kippen -4°, verlorene Tonstücke 2").assertExists()
-        compose.onNodeWithText("Videoton (CAMCORDER), Kamera an: Richtung keine Richtung, Pegel (dBFS) -44 / -44, nur ein Kanal", substring = true).assertExists()
+        compose.onNodeWithText("Videoton (CAMCORDER), Kamera an: Richtung nicht bestimmbar, Pegel (dBFS) -44 / -44, nur ein Kanal", substring = true).assertExists()
         compose.onNodeWithText("Videoton (CAMCORDER), Kamera aus: Aufnahme gescheitert").assertExists()
         compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_check_footer"))
         compose.onNodeWithText("Bildwinkel der Kamera: 75,8° breit, 60,5° hoch").assertExists()
@@ -400,12 +403,12 @@ class SoundImageTest {
         compose.onNodeWithText("Lage nicht verfügbar (kein Lagesensor).").assertExists()
         // ohne Lagesensor entfallen die Lagewerte der Phase; ohne Bilder steht ein Fragezeichen
         compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 10° rechts, Pegel (dBFS) -40 / -40, Bilder je Sekunde ?").assertExists()
-        compose.onNodeWithText("Mikrofon (MIC): verändert. Mit Kamera weichen Richtung oder Pegel ab.").assertExists()
+        compose.onNodeWithText("Mikrofon (MIC): verändert. Mit Kamera sind Richtung oder Pegel anders.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): kein Ton. Die Aufnahme mit Kamera scheiterte oder war stumm.").assertExists()
         state = SoundImageUiState(checkResult = checked().copy(cameraFailure = SoundCameraFailureUi.NO_FRAMES,
             verdicts = SoundVerdictUi.entries.drop(4).map { SoundCheckVerdictUi(SoundSourceUi.MIC, it) }))
         compose.onNodeWithText("Die Kamera lief, lieferte ohne Sucher aber keine Bilder.").assertExists()
-        compose.onNodeWithText("Mikrofon (MIC): Szene unruhig. Schon ohne Kamera wich der Ton zwischen den Phasen ab. Bitte wiederholen.").assertExists()
+        compose.onNodeWithText("Mikrofon (MIC): Szene unruhig. Schon ohne Kamera änderte sich der Ton zwischen den Phasen. Bitte wiederholen.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): bewegt. Das Handy wurde zu stark bewegt. Bitte ruhig halten und wiederholen.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): keine Quelle. Ohne Kamera war kein gerichteter Ton zu hören. Bitte Musik näher stellen.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): Kamera scheitert. Die Kamera lief in der Messung nicht.").assertExists()
