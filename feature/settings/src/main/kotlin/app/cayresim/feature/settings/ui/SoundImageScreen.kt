@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -49,16 +51,27 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.cayresim.core.pure.DeviceTilt
 import app.cayresim.core.pure.SoundBands
+import app.cayresim.core.pure.SoundCameraCheck
 import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.SoundBandUi
+import app.cayresim.feature.settings.control.SoundCameraFailureUi
+import app.cayresim.feature.settings.control.SoundCheckPhaseUi
+import app.cayresim.feature.settings.control.SoundCheckProgressUi
+import app.cayresim.feature.settings.control.SoundCheckResultUi
 import app.cayresim.feature.settings.control.SoundFailureUi
 import app.cayresim.feature.settings.control.SoundHoldUi
 import app.cayresim.feature.settings.control.SoundImageUiState
 import app.cayresim.feature.settings.control.SoundImageViewModel
+import app.cayresim.feature.settings.control.SoundMotionUi
 import app.cayresim.feature.settings.control.SoundSourceUi
+import app.cayresim.feature.settings.control.SoundVerdictUi
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
 import kotlin.math.roundToInt
 
 /** Wohin "rechts vom Nutzer" auf dem Bildschirm zeigt. */
@@ -80,11 +93,28 @@ internal fun panelAxis(hold: SoundHoldUi?, rotationDegrees: Int): PanelAxis {
     }
 }
 
+/**
+ * S-021: Punkt des Lage-Kreises auf dem Bildschirm. [x], [y] aus Sicht des Nutzers (rechts, oben); zurueck kommt der
+ * Versatz nach rechts und nach unten auf der Oberflaeche, je nachdem, wie sie gegenueber dem Nutzer gedreht ist.
+ */
+internal fun dotOnScreen(x: Double, y: Double, axis: PanelAxis): Pair<Float, Float> {
+    // 0 minus Wert statt Vorzeichenwechsel: sonst entsteht aus 0 ein "minus null"
+    val fx = x.toFloat(); val fy = y.toFloat()
+    return when (axis) {
+        PanelAxis.RIGHT -> fx to (0f - fy)
+        PanelAxis.LEFT -> (0f - fx) to fy
+        PanelAxis.DOWN -> fy to fx
+        PanelAxis.UP -> (0f - fy) to (0f - fx)
+    }
+}
+
 @Composable
 fun SoundImageRoute(onBack: () -> Unit, viewModel: SoundImageViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.onPermissionResult(it) }
+    // S-021: die Kamera-Berechtigung wird hier nur fuer die Messung mit Kamera erfragt
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.onCameraPermissionResult(it) }
     val activity = LocalActivity.current
     // Hintergrund haelt an, Mikrofon und Sensor werden frei (R28, R29); Drehen der Oberflaeche ist kein Abbruch
     LifecycleStartEffect(Unit) { onStopOrDispose { if (activity?.isChangingConfigurations != true) viewModel.onStop() } }
@@ -96,8 +126,9 @@ fun SoundImageRoute(onBack: () -> Unit, viewModel: SoundImageViewModel = hiltVie
         onDispose { if (activity?.isChangingConfigurations == false) activity?.requestedOrientation = before }
     }
     val view = LocalView.current
-    DisposableEffect(state.running) {
-        view.keepScreenOn = state.running
+    val busy = state.running || state.checkProgress != null
+    DisposableEffect(busy) {
+        view.keepScreenOn = busy
         onDispose { view.keepScreenOn = false }
     }
     SoundImageContent(
@@ -111,13 +142,20 @@ fun SoundImageRoute(onBack: () -> Unit, viewModel: SoundImageViewModel = hiltVie
         onStop = viewModel::onStop,
         onSource = viewModel::onSourceSelected,
         onBack = onBack,
+        onResetCircle = viewModel::onResetCircle,
+        onCheck = {
+            val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            if (granted) viewModel.onCameraPermissionResult(true) else cameraLauncher.launch(Manifest.permission.CAMERA)
+        },
     )
 }
 
 @Composable
 fun SoundImageContent(
     state: SoundImageUiState, rotationDegrees: Int, onStart: () -> Unit, onStop: () -> Unit, onSource: (SoundSourceUi) -> Unit, onBack: () -> Unit,
+    onResetCircle: () -> Unit = {}, onCheck: () -> Unit = {},
 ) {
+    val busy = state.running || state.checkProgress != null
     Surface(Modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 16.dp).testTag("soundimage"),
@@ -127,8 +165,8 @@ fun SoundImageContent(
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text(stringResource(R.string.back)) }
                     Text(stringResource(R.string.soundimage_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).padding(start = 8.dp))
-                    Button(onClick = if (state.running) onStop else onStart, modifier = Modifier.testTag("soundimage_start")) {
-                        Text(stringResource(if (state.running) R.string.soundimage_stop else R.string.soundimage_start))
+                    Button(onClick = if (busy) onStop else onStart, modifier = Modifier.testTag("soundimage_start")) {
+                        Text(stringResource(if (busy) R.string.soundimage_stop else R.string.soundimage_start))
                     }
                 }
             }
@@ -139,13 +177,31 @@ fun SoundImageContent(
             if (state.failed) item {
                 Text(stringResource(R.string.soundimage_error), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("soundimage_error"))
             }
-            if (!state.running) item { Text(stringResource(R.string.soundimage_intro), style = MaterialTheme.typography.bodyMedium) }
+            if (state.cameraDenied) item {
+                Text(stringResource(R.string.soundimage_camera_denied), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("soundimage_camera_denied"))
+            }
+            state.checkProgress?.let { p -> item { CheckProgress(p) } }
+            state.checkResult?.let { r ->
+                item { Text(stringResource(R.string.soundimage_check_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("soundimage_check_result")) }
+                items(r.verdicts.size) { n -> VerdictLine(n, r) }
+                items(r.phases.size) { n -> PhaseLine(n, r.phases[n]) }
+                item { CheckFooter(r) }
+            }
+            if (!busy && state.checkResult == null) item { Text(stringResource(R.string.soundimage_intro), style = MaterialTheme.typography.bodyMedium) }
             if (state.running) {
-                item { Panel(state, panelAxis(state.hold, rotationDegrees)) }
+                val axis = panelAxis(state.hold, rotationDegrees)
+                item { Panel(state, axis) }
                 item { Status(state) }
+                item { MotionBlock(state, axis, onResetCircle) }
                 items(state.bands.size) { n -> BandLine(n, state.bands[n]) }
             }
-            item { Sources(state.source, onSource) }
+            if (state.checkProgress == null) item { Sources(state.source, onSource) }
+            if (state.running) item {
+                Column {
+                    OutlinedButton(onClick = onCheck, modifier = Modifier.testTag("soundimage_check")) { Text(stringResource(R.string.soundimage_check)) }
+                    Text(stringResource(R.string.soundimage_check_hint), style = MaterialTheme.typography.bodySmall)
+                }
+            }
             if (state.running) item {
                 Column {
                     // R27: Takt, Rechenzeit und Verluste als Zahlen, damit der Geraetetest sie mitliefert
@@ -273,6 +329,149 @@ private fun BandLine(index: Int, b: SoundBandUi) {
     }
 }
 
+/** S-021: Lagezeile, Richtung im Raum und Lage-Kreis. */
+@Composable
+private fun MotionBlock(state: SoundImageUiState, axis: PanelAxis, onResetCircle: () -> Unit) {
+    val m = state.motion
+    if (m == null) {
+        Text(stringResource(R.string.soundimage_motion_none), style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("soundimage_motion"))
+        return
+    }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        TiltCircle(m, axis)
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.soundimage_motion, signedDeg(m.rollDeg), signedDeg(m.pitchDeg), signedDeg(m.yawDeg),
+                    stringResource(if (m.moving) R.string.soundimage_motion_moving else R.string.soundimage_motion_calm)),
+                style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.testTag("soundimage_motion"),
+            )
+            state.worldAngleDeg?.let { Text(stringResource(R.string.soundimage_world, angleText(it)), style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("soundimage_world")) }
+            val visited = Integer.bitCount(m.coverageMask)
+            Text(
+                if (visited >= DeviceTilt.SECTORS) stringResource(R.string.soundimage_circle_done)
+                else stringResource(R.string.soundimage_circle, visited.toString(), DeviceTilt.SECTORS.toString(), dec0(DeviceTilt.RIM_DEG)),
+                style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("soundimage_circle_text"),
+            )
+            TextButton(onClick = onResetCircle, modifier = Modifier.testTag("soundimage_reset")) { Text(stringResource(R.string.soundimage_reset)) }
+        }
+    }
+}
+
+/**
+ * Lage-Kreis: innerer Rand bei [DeviceTilt.RIM_DEG], aussen der Ring mit den besuchten Abschnitten, der Punkt zeigt
+ * Drehung (waagerecht) und Schraegstellen (senkrecht) seit dem Start. Am Rand wird der Punkt gruen.
+ */
+@Composable
+private fun TiltCircle(m: SoundMotionUi, axis: PanelAxis) {
+    val description = stringResource(R.string.soundimage_circle_description)
+    Canvas(Modifier.size(132.dp).background(PANEL_BACKGROUND).testTag("soundimage_circle").semantics { contentDescription = description }) {
+        val center = Offset(size.width / 2, size.height / 2)
+        // 1 = innerer Rand; das Feld reicht bis RIM_MAX_DEG, der Ring liegt knapp ausserhalb davon
+        val unit = (size.minDimension / 2 / RING_OUTER).toFloat()
+        fun at(x: Double, y: Double): Offset {
+            val (dx, dy) = dotOnScreen(x, y, axis)
+            return Offset(center.x + dx * unit, center.y + dy * unit)
+        }
+        drawCircle(PANEL_LABEL, radius = unit, center = center, alpha = 0.7f, style = Stroke(1.5.dp.toPx()))
+        drawCircle(PANEL_LABEL, radius = 2.dp.toPx(), center = center, alpha = 0.5f)
+        val step = 360.0 / DeviceTilt.SECTORS
+        for (n in 0 until DeviceTilt.SECTORS) {
+            val visited = m.coverageMask and (1 shl n) != 0
+            val path = Path()
+            for (k in 0..6) {
+                val a = Math.toRadians(n * step + GAP_DEG + k * (step - 2 * GAP_DEG) / 6)
+                val p = at(RING_MIDDLE * cos(a), RING_MIDDLE * sin(a))
+                if (k == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
+            }
+            drawPath(path, if (visited) DOT_AT_RIM else PANEL_LABEL, alpha = if (visited) 1f else 0.25f, style = Stroke(5.dp.toPx()))
+        }
+        val radius = hypot(m.dotX, m.dotY) * DeviceTilt.RIM_DEG
+        val atRim = radius >= DeviceTilt.RIM_MIN_DEG && radius <= DeviceTilt.RIM_MAX_DEG
+        val dot = at(m.dotX, m.dotY)
+        drawCircle(Color.Black, radius = 9.dp.toPx(), center = dot)
+        drawCircle(if (atRim) DOT_AT_RIM else Color.White, radius = 7.dp.toPx(), center = dot)
+    }
+}
+
+@Composable
+private fun CheckProgress(p: SoundCheckProgressUi) {
+    Text(
+        stringResource(R.string.soundimage_check_progress, (p.index + 1).toString(), p.total.toString(), sourceText(p.source), cameraText(p.cameraOn)),
+        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.testTag("soundimage_check_progress"),
+    )
+}
+
+@Composable private fun sourceText(s: SoundSourceUi) = stringResource(if (s == SoundSourceUi.MIC) R.string.soundimage_source_mic else R.string.soundimage_source_camcorder)
+@Composable private fun cameraText(on: Boolean) = stringResource(if (on) R.string.soundimage_camera_on else R.string.soundimage_camera_off)
+
+@Composable
+private fun VerdictLine(index: Int, r: SoundCheckResultUi) {
+    val v = r.verdicts[index]
+    val good = v.verdict == SoundVerdictUi.SAME
+    Text(
+        stringResource(R.string.soundimage_check_verdict, sourceText(v.source), stringResource(verdictText(v.verdict))),
+        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold,
+        color = if (good) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error, modifier = Modifier.testTag("soundimage_verdict_$index"),
+    )
+}
+
+@Composable
+private fun PhaseLine(index: Int, p: SoundCheckPhaseUi) {
+    val head = stringResource(R.string.soundimage_check_phase_head, sourceText(p.source), cameraText(p.cameraOn))
+    val text = if (!p.recorded) stringResource(R.string.soundimage_check_phase_failed, head) else {
+        val direction = p.angleDeg?.let { angleText(it) } ?: stringResource(R.string.soundimage_check_phase_no_direction)
+        val base = stringResource(R.string.soundimage_check_phase, head, direction, dec2(p.share), levelText(p.levelADbfs), levelText(p.levelBDbfs))
+        val mono = if (p.stereo) "" else stringResource(R.string.soundimage_check_phase_mono)
+        val motion = if (p.movedPercent == null) "" else stringResource(R.string.soundimage_check_phase_motion,
+            p.movedPercent.toString(), dec1(p.turnDeg ?: 0.0), signedDeg(p.rollDeg), signedDeg(p.pitchDeg))
+        val camera = if (!p.cameraOn) "" else stringResource(R.string.soundimage_check_phase_camera, p.previewFps?.toString() ?: "?")
+        val lost = if (p.lostChunks == 0L) "" else stringResource(R.string.soundimage_check_phase_lost, p.lostChunks.toString())
+        base + mono + motion + camera + lost
+    }
+    Text(text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("soundimage_phase_$index"))
+}
+
+@Composable
+private fun CheckFooter(r: SoundCheckResultUi) {
+    Column(Modifier.testTag("soundimage_check_footer")) {
+        val small = MaterialTheme.typography.bodySmall
+        when (r.cameraFailure) {
+            SoundCameraFailureUi.NOT_STARTED -> Text(stringResource(R.string.soundimage_check_camera_not_started, r.cameraErrorKey ?: "?"), style = small, color = MaterialTheme.colorScheme.error)
+            SoundCameraFailureUi.NO_FRAMES -> Text(stringResource(R.string.soundimage_check_camera_no_frames), style = small, color = MaterialTheme.colorScheme.error)
+            null -> Unit
+        }
+        Text(
+            if (r.viewWideDeg != null && r.viewHighDeg != null) stringResource(R.string.soundimage_check_view, dec1(r.viewWideDeg), dec1(r.viewHighDeg))
+            else stringResource(R.string.soundimage_check_view_unknown), style = small,
+        )
+        if (!r.motionAvailable) Text(stringResource(R.string.soundimage_motion_none), style = small)
+        Text(stringResource(R.string.soundimage_check_limits, dec0(SoundCameraCheck.ANGLE_LIMIT_DEG), dec0(SoundCameraCheck.LEVEL_LIMIT_DB)), style = small)
+        // R27 und K7: die Dauer der ganzen Messung steht im Ergebnis; gemessen wird die Foto-Sitzung ohne Sucher
+        Text(stringResource(R.string.soundimage_check_duration, dec1(r.durationSeconds)), style = small)
+        Text(stringResource(R.string.soundimage_check_send), style = small)
+    }
+}
+
+private fun verdictText(v: SoundVerdictUi) = when (v) {
+    SoundVerdictUi.SAME -> R.string.soundimage_verdict_same
+    SoundVerdictUi.CHANGED -> R.string.soundimage_verdict_changed
+    SoundVerdictUi.ONE_CHANNEL -> R.string.soundimage_verdict_one_channel
+    SoundVerdictUi.NO_SOUND -> R.string.soundimage_verdict_no_sound
+    SoundVerdictUi.SCENE_UNSTEADY -> R.string.soundimage_verdict_unsteady
+    SoundVerdictUi.MOVED -> R.string.soundimage_verdict_moved
+    SoundVerdictUi.NO_SOURCE -> R.string.soundimage_verdict_no_source
+    SoundVerdictUi.CAMERA_FAILED -> R.string.soundimage_verdict_camera_failed
+}
+
+/** Winkel mit Vorzeichen ohne Nachkommastelle, "?" wenn unbekannt; -0 wird 0. */
+internal fun signedDeg(deg: Double?): String {
+    if (deg == null || deg.isNaN()) return "?"
+    val whole = deg.roundToInt()
+    return if (whole > 0) "+$whole" else whole.toString()
+}
+
+internal fun dec0(v: Double): String = String.format(Locale.GERMANY, "%.0f", v)
+
 /** Pegel ohne Nachkommastelle; Stille (minus unendlich) wird auf -99 begrenzt. */
 internal fun levelText(levelDbfs: Double): String =
     String.format(Locale.GERMANY, "%.0f", if (levelDbfs.isNaN()) -99.0 else levelDbfs.coerceIn(-99.0, 0.0))
@@ -305,3 +504,8 @@ private val GRID_ANGLES = listOf(-90.0, -45.0, 0.0, 45.0, 90.0)
 private const val STRIPE_FLOOR = 0.6f
 /** Ein gueltiges Band ist immer sichtbar, auch wenn es leise ist. */
 private const val MIN_STRIPE_ALPHA = 0.25f
+/** Lage-Kreis in Einheiten des inneren Rands: Mitte und Aussenkante des Rings, Luecke zwischen den Abschnitten in Grad. */
+private const val RING_MIDDLE = 1.5
+private const val RING_OUTER = 1.65
+private const val GAP_DEG = 3.0
+private val DOT_AT_RIM = Color(0xFF34C759)

@@ -27,6 +27,19 @@ object CameraBoundaryContract {
         check(c.capabilities.value!!.modes.first() == PhotoMode.NORMAL, "NORMAL steht an erster Stelle")
     }
 
+    /** S-021: ohne sichtbaren Sucher laufen; vor dem Start und nach dem Stopp gibt es weder Bilder noch eine Zaehlung. */
+    suspend fun runsWithoutViewfinder(c: CameraBoundary) {
+        check(!c.runWithoutViewfinder(), "ohne Start darf runWithoutViewfinder() nicht gelingen")
+        check(c.state.value.previewFps == null, "vor dem Start keine Bilder je Sekunde")
+        c.start()
+        check(c.runWithoutViewfinder(), "nach start() muss die Kamera ohne Sucher Bilder liefern")
+        val fps = c.state.value.previewFps
+        check(fps != null && fps > 0, "Bilder je Sekunde muessen gemessen sein, war $fps")
+        c.stop()
+        check(c.state.value.previewFps == null, "nach stop() keine Bilder je Sekunde, war ${c.state.value.previewFps}")
+        check(!c.runWithoutViewfinder(), "nach stop() darf runWithoutViewfinder() nicht gelingen")
+    }
+
     suspend fun captureSavesAndDeletes(c: CameraBoundary) {
         c.start()
         val r = c.capture()
@@ -99,5 +112,6 @@ object CameraBoundaryContract {
         "Zoom und Fokus vor Start abgelehnt" to ::zoomAndFocusBeforeStartAreRejected,
         "Zoom bleibt in den Grenzen" to ::zoomStaysWithinLimits,
         "Fokus ausserhalb abgelehnt" to ::focusOutsideTheImageIsRejected,
+        "Ohne Sucher laufen" to ::runsWithoutViewfinder,
     )
 }
