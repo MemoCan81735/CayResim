@@ -163,7 +163,7 @@ Zwei kurze Läufe auf einem Seiten-Branch, ein Lauf für die Vergleichsbilder (S
 Release (etwa 30 Minuten). Unabhängige Zweitprüfung (über 150 Zeilen, Kamera-Adapter). Gerätetest durch Arslan (K15).
 
 ## Ergebnis
-Umgesetzt am 10.11.2026 mit v0.1.152.
+Umgesetzt am 10.11.2026 mit v0.1.153.
 
 **Labor (JVM, künstliche Daten):** Neigung und Drehung innerhalb 0,5° gegen gedrehte Achsen, für beide Querhaltungen;
 Rechenzeit der Lage 0,0003 ms je Moment (Grenze 0,1 ms); Richtung im Raum bleibt bei 20° Drehung nach rechts und nach

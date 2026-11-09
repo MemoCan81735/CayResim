@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## 0.1.152 Schallbild: Lage des Handys, Lage-Kreis und Vergleich mit Kamera (10. November 2026, S-021)
+## 0.1.153 Schallbild: Lage des Handys, Lage-Kreis und Vergleich mit Kamera (10. November 2026, S-021)
 - Das Schallbild zeigt jetzt die Lage des Handys: Neigung quer, Kippen, Drehung seit dem Start und "ruhig" oder
   "bewegt". Dazu die Richtung im Raum: Sie soll stehen bleiben, wenn man das Handy dreht.
 - Neu: der Lage-Kreis. Ein Punkt zeigt Drehung (waagerecht) und Schrägstellen (senkrecht) seit dem Start. Führt man
