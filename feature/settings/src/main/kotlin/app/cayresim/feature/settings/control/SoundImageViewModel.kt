@@ -38,6 +38,10 @@ data class SoundImageUiState(
     val bands: List<SoundBandUi> = emptyList(),
     val mainAngleDeg: Double? = null,
     val mainShare: Double = 0.0,
+    /** Messwerte des Laufs (R27): Bilder und mittlere Rechenzeit der letzten Sekunde, verworfene Tonstuecke seit dem Start. */
+    val framesPerSecond: Int = 0,
+    val computeMillis: Double = 0.0,
+    val lostChunks: Long = 0,
     val failure: SoundFailureUi? = null,
     val permissionDenied: Boolean = false,
     /** Unerwarteter Fehler im Lauf (R24). */
@@ -83,7 +87,8 @@ class SoundImageViewModel @Inject constructor(private val useCase: SoundImageUse
             }.collect { e ->
                 when (e) {
                     is SoundImageEvent.Frame -> _state.update {
-                        it.copy(hold = holdUi(e.hold), bands = e.bands.map(::bandUi), mainAngleDeg = e.mainAngleDeg, mainShare = e.mainShare)
+                        it.copy(hold = holdUi(e.hold), bands = e.bands.map(::bandUi), mainAngleDeg = e.mainAngleDeg, mainShare = e.mainShare,
+                            framesPerSecond = e.stats.framesPerSecond, computeMillis = e.stats.computeMillis, lostChunks = e.stats.lostChunks)
                     }
                     is SoundImageEvent.Failed -> _state.update { s ->
                         SoundImageUiState(source = s.source, failure = failureUi(e.reason), permissionDenied = e.reason == SoundImageFailure.NO_PERMISSION)

@@ -66,8 +66,11 @@ sealed interface MicRecordResult {
     data class Failed(val reason: MicFailure) : MicRecordResult
 }
 
-/** Ein Stueck laufender Ton (S-018): verschraenkt je Frame, 16 Bit. Das Feld gehoert dem Empfaenger. */
-class MicChunk(val sampleRate: Int, val channels: Int, val pcm: ShortArray)
+/**
+ * Ein Stueck laufender Ton (S-018): verschraenkt je Frame, 16 Bit. Das Feld gehoert dem Empfaenger. [index]: laufende
+ * Nummer seit Beginn des Stroms ab 0; eine Luecke heisst, dass Stuecke verworfen wurden (R27: auf dem Geraet sichtbar).
+ */
+class MicChunk(val sampleRate: Int, val channels: Int, val pcm: ShortArray, val index: Long)
 
 /** Meldungen des Tonstroms; nach [Failed] endet er (R24). */
 sealed interface MicStreamEvent {

@@ -126,15 +126,17 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             val (start, exact) = startOfFirstFrame(rec, warmFrames, roughStart)
             return MicRecordResult.Ok(MicCapture(request, rec.sampleRate, channels, pcm, routed, active, start, exact))
         } finally {
-            // R28: genau ein Freigabeblock, auch bei Abbruch
-            withContext(NonCancellable) {
-                val r = rec
-                if (opened && r != null) {
-                    runCatching { if (r.recordingState == AudioRecord.RECORDSTATE_RECORDING) r.stop() }
-                    runCatching { r.release() }
-                    openRecordings--
-                }
-            }
+            // R28: genau ein Freigabeblock je Aufnahme, auch bei Abbruch
+            close(rec, opened)
+        }
+    }
+
+    /** Der eine Freigabeblock fuer Einzelaufnahme und Tonstrom (R28): anhalten, freigeben, Zaehler senken. */
+    private suspend fun close(rec: AudioRecord?, opened: Boolean) = withContext(NonCancellable) {
+        if (opened && rec != null) {
+            runCatching { if (rec.recordingState == AudioRecord.RECORDSTATE_RECORDING) rec.stop() }
+            runCatching { rec.release() }
+            openRecordings--
         }
     }
 
@@ -210,22 +212,16 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             val warm = ShortArray(request.sampleRate * WARMUP_MS / 1000 * channels)
             if (!fill(rec, warm, step, SystemClock.elapsedRealtime() + WARMUP_MS + GRACE_MS)) return MicFailure.READ_FAILED
             val frames = (request.sampleRate.toLong() * chunkMillis / 1000).toInt().coerceAtLeast(1)
+            var index = 0L
             while (true) {
                 val pcm = ShortArray(frames * channels)
                 // Frist je Stueck (R27): ein haengendes Geraet endet als READ_FAILED statt endlos zu lesen
                 if (!fill(rec, pcm, step, SystemClock.elapsedRealtime() + chunkMillis + GRACE_MS)) return MicFailure.READ_FAILED
-                onChunk(MicChunk(rec.sampleRate, channels, pcm))
+                onChunk(MicChunk(rec.sampleRate, channels, pcm, index++))
             }
         } finally {
-            // R28: genau ein Freigabeblock, auch bei Abbruch
-            withContext(NonCancellable) {
-                val r = rec
-                if (opened && r != null) {
-                    runCatching { if (r.recordingState == AudioRecord.RECORDSTATE_RECORDING) r.stop() }
-                    runCatching { r.release() }
-                    openRecordings--
-                }
-            }
+            // R28: genau ein Freigabeblock je Aufnahme, auch bei Abbruch
+            close(rec, opened)
         }
     }
 

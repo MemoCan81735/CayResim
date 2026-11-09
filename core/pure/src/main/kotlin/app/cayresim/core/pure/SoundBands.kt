@@ -35,7 +35,8 @@ object SoundBands {
     const val GRID = 61
     /**
      * Mindestanteil gerichteten Schalls; darunter kein Streifen. Unabhaengiges Rauschen erreicht eingeschwungen im
-     * tiefsten Band (nur 4 Frequenzen) hoechstens 0,21 in 16.800 Momentaufnahmen, in den anderen weniger (Labor 9.11.).
+     * tiefsten Band (nur 4 Frequenzen) hoechstens 0,25 in zusammen rund 35.000 Momentaufnahmen (Labor und Zweitpruefung
+     * 9.11.), in den anderen Baendern weniger.
      */
     const val MIN_SHARE = 0.3
     /**
@@ -49,6 +50,15 @@ object SoundBands {
     const val FULL_LEVEL_DBFS = -40.0
     /** Anteil der Schwerkraft auf der Querachse, ab dem das Handy als quer gilt (bis 60 Grad nach hinten geneigt). */
     const val LANDSCAPE_MIN = 0.5
+    /** Einmal quer, bleibt es quer bis zu diesem Anteil, damit die Anzeige an der Grenze nicht flackert. */
+    const val LANDSCAPE_KEEP = 0.4
+    /** Kurzes Mittel fuer die Abklingregel. */
+    const val FADE_TIME_CONSTANT_SECONDS = 0.15
+    /**
+     * Abklingregel: Liegt die Leistung eines Bands im kurzen Mittel 15 dB unter dem langen, ist der Ton zu Ende und der
+     * Streifen verschwindet (nach etwa 0,8 s). Ohne sie blieb er nach einem lauten Ton 4 s stehen (Zweitpruefung S-018).
+     */
+    const val FADE_RATIO = 0.0316
     /**
      * S24+ (Schwenk-Lauf 10.10., 22:14 Uhr, und Klatsch-Probe 12:33 Uhr): positive Laufzeit heisst, die Quelle liegt am
      * unteren Ende des Handys. Vorlaeufig, bis der Geraetetest S-018 K19 es mit einer Quelle rechts bestaetigt.
@@ -77,15 +87,16 @@ object SoundBands {
 
     /**
      * Haltung aus dem Beschleunigungssensor in Ruhe (zeigt im Geraet nach oben): x des Geraets nach oben heisst, die
-     * Oberkante zeigt nach links. Hochkant, flach liegend oder ohne gueltigen Wert: nicht quer.
+     * Oberkante zeigt nach links. Hochkant, flach liegend oder ohne gueltigen Wert: nicht quer. [previous]: letzte
+     * Haltung, fuer die Schwelle beim Verlassen ([LANDSCAPE_KEEP]).
      */
-    fun hold(ax: Double, ay: Double, az: Double): Hold {
+    fun hold(ax: Double, ay: Double, az: Double, previous: Hold = Hold.NOT_LANDSCAPE): Hold {
         val len = sqrt(ax * ax + ay * ay + az * az)
         if (!len.isFinite() || len < 1.0) return Hold.NOT_LANDSCAPE
         val up = ax / len
         return when {
-            up >= LANDSCAPE_MIN -> Hold.TOP_LEFT
-            up <= -LANDSCAPE_MIN -> Hold.TOP_RIGHT
+            up >= (if (previous == Hold.TOP_LEFT) LANDSCAPE_KEEP else LANDSCAPE_MIN) -> Hold.TOP_LEFT
+            up <= -(if (previous == Hold.TOP_RIGHT) LANDSCAPE_KEEP else LANDSCAPE_MIN) -> Hold.TOP_RIGHT
             else -> Hold.NOT_LANDSCAPE
         }
     }
@@ -125,6 +136,10 @@ object SoundBands {
         private val cre = DoubleArray(bins); private val cim = DoubleArray(bins)
         /** Summe der Gewichte des gleitenden Mittels; gleicht den Anlauf aus. */
         private var weight = 0.0
+        /** Abklingregel: Leistung je Band im kurzen Mittel, mit eigenem Gewicht. */
+        private val keepFast = exp(-HOP / (sampleRate * FADE_TIME_CONSTANT_SECONDS))
+        private val fast = DoubleArray(EDGES_HZ.size - 1)
+        private var weightFast = 0.0
         private val steerCos = DoubleArray(GRID * bins); private val steerSin = DoubleArray(GRID * bins)
         private val a = DoubleArray(FRAME); private val b = DoubleArray(FRAME)
         private var filled = 0
@@ -169,6 +184,12 @@ object SoundBands {
                 cim[k] = keep * cim[k] + add * (ai[j] * br[j] - ar[j] * bi[j])
             }
             weight = keep * weight + add
+            for (n in fast.indices) {
+                var p = 0.0
+                for (k in bandStart[n] until bandStart[n + 1]) { val j = firstBin + k; p += ar[j] * ar[j] + ai[j] * ai[j] + br[j] * br[j] + bi[j] * bi[j] }
+                fast[n] = keepFast * fast[n] + (1 - keepFast) * p
+            }
+            weightFast = keepFast * weightFast + (1 - keepFast)
         }
 
         fun snapshot(): Snapshot {
@@ -190,7 +211,9 @@ object SoundBands {
                 val power = if (weight > 0.0) (pa + pb) / 2 / weight * 2 / (FRAME * windowPower) else 0.0
                 val level = if (power > 0.0) 10 * log10(power) else Double.NEGATIVE_INFINITY
                 val peak = peak(curve)
-                val ok = weight >= READY_WEIGHT && peak.second >= MIN_SHARE && level >= MIN_LEVEL_DBFS
+                // Abklingregel: beide Mittel auf ihr Gewicht bezogen
+                val sounding = weightFast > 0.0 && weight > 0.0 && fast[n] / weightFast >= FADE_RATIO * (pa + pb) / weight
+                val ok = weight >= READY_WEIGHT && sounding && peak.second >= MIN_SHARE && level >= MIN_LEVEL_DBFS
                 if (ok) { valid++; for (i in 0 until GRID) sum[i] += curve[i] }
                 Band(EDGES_HZ[n], EDGES_HZ[n + 1], level, peak.second.coerceIn(0.0, 1.0), if (ok) peak.first else null, List(GRID) { curve[it].toFloat() })
             }

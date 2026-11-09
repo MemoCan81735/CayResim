@@ -5,11 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import app.cayresim.core.boundary.AudioSourceKey
 import app.cayresim.core.boundary.MicFailure
 import app.cayresim.core.boundary.MotionKind
@@ -71,7 +73,7 @@ class SoundImageTest {
     /** Quer gehalten, Oberkante links. */
     private fun sensors() = FakeMotionSensorBoundary(samples = List(5) { MotionSample(MotionKind.ACCELERATION, 1_000_000_000L + it * 50_000_000L, 9.81f, 0f, 0f) })
 
-    private fun vm(mic: FakeMicrophoneBoundary = mic(), s: FakeMotionSensorBoundary = sensors()) = SoundImageViewModel(SoundImageUseCase(mic, s, main))
+    private fun vm(mic: FakeMicrophoneBoundary = mic(), s: FakeMotionSensorBoundary = sensors()) = SoundImageViewModel(SoundImageUseCase(mic, s, { main.scheduler.currentTime }, main))
 
     /** Kurve mit einem Gipfel bei [angleDeg], an den Stuetzstellen der Rechnung. */
     private fun curve(angleDeg: Double, share: Double, widthDeg: Double) = List(SoundBands.GRID) { i ->
@@ -81,7 +83,7 @@ class SoundImageTest {
 
     /** Fester Zustand: Quelle 30 Grad rechts in vier Baendern, das hoechste Band ohne Richtung. */
     private fun fixed() = SoundImageUiState(
-        running = true, hold = SoundHoldUi.TOP_LEFT, mainAngleDeg = 30.2, mainShare = 0.8,
+        running = true, hold = SoundHoldUi.TOP_LEFT, mainAngleDeg = 30.2, mainShare = 0.8, framesPerSecond = 10, computeMillis = 0.4, lostChunks = 0,
         bands = listOf(
             SoundBandUi(200, 400, -45.0, 0.9, 22.0, curve(22.0, 0.9, 40.0)),
             SoundBandUi(400, 800, -42.0, 0.85, 30.0, curve(30.0, 0.85, 20.0)),
@@ -103,6 +105,8 @@ class SoundImageTest {
         assertEquals(30.0, assertNotNull(running.mainAngleDeg), 5.0)
         assertEquals(1, mic.open); assertEquals(1, s.active)
         assertEquals(AudioSourceKey.MIC, mic.streamRequests.single().source)
+        // Messwerte kommen im Zustand an: 10 Bilder je Sekunde, nichts verloren
+        assertEquals(10, running.framesPerSecond); assertEquals(0L, running.lostChunks)
         // Wechsel der Quelle: neu gestartet, weiter nur eine Aufnahme offen
         v.onSourceSelected(SoundSourceUi.CAMCORDER)
         main.scheduler.advanceTimeBy(500); main.scheduler.runCurrent()
@@ -161,6 +165,9 @@ class SoundImageTest {
         compose.onNodeWithText("400 bis 800 Hz: 30° rechts, Anteil 0,85, -42 dBFS").assertIsDisplayed()
         compose.onNodeWithText("3200 bis 6400 Hz: keine Richtung, Anteil 0,12, -71 dBFS").assertExists()
         compose.onNodeWithText("Anhalten").assertIsDisplayed()
+        compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_stats"))
+        compose.onNodeWithText("Messung: Bilder je Sekunde 10, Rechenzeit je Bild (ms) 0,4, verlorene Tonstücke 0").assertIsDisplayed()
+        compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("back"))
         compose.onRoot().captureRoboImage("src/test/screenshots/soundimage_running.png")
     }
 
@@ -179,7 +186,7 @@ class SoundImageTest {
             CayResimTheme(dark = true) { SoundImageContent(state, 0, { events += "start" }, { events += "stop" }, { events += it.name }, { events += "back" }) }
         }
         // ohne Lauf: Anleitung, Startknopf, Wahl der Tonquelle
-        compose.onNodeWithText("Halte das Handy quer, Bildschirm zu dir", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Halte das Handy quer und aufrecht, Bildschirm zu dir", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Schallbild starten").assertIsDisplayed()
         compose.onNodeWithTag("soundimage_source_MIC").assertIsSelected()
         compose.onNodeWithTag("soundimage_start").performClick()
@@ -194,7 +201,7 @@ class SoundImageTest {
         assertEquals("stop", events.last())
         // nicht quer gehalten
         state = SoundImageUiState(running = true, hold = SoundHoldUi.NOT_LANDSCAPE)
-        compose.onNodeWithText("Bitte quer halten, Bildschirm zu dir.").assertIsDisplayed()
+        compose.onNodeWithText("Bitte quer und aufrecht halten, Bildschirm zu dir (nicht flach hinlegen).").assertIsDisplayed()
         // quer, aber kein gerichteter Ton; Lage unbekannt
         state = fixed().copy(hold = SoundHoldUi.UNKNOWN, mainAngleDeg = null, bands = fixed().bands.map { it.copy(angleDeg = null) })
         compose.onNodeWithText("Hauptrichtung: kein gerichteter Ton").assertIsDisplayed()

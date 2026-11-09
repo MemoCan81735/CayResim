@@ -71,9 +71,13 @@ class FakeMicrophoneBoundary(
     var streamSound: (MicRequest, Int) -> ShortArray? = { r, _ -> ShortArray(r.sampleRate / 10 * r.channels) }
     var streamChunkDelayMillis: Long = 100
     val streamRequests = mutableListOf<MicRequest>()
+    /** Angefragte Stuecklaenge je Strom. */
+    val streamChunkMillis = mutableListOf<Int>()
+    /** Laufende Nummer je Stueck; eine Luecke simuliert verworfene Stuecke. */
+    var streamIndex: (Int) -> Long = { it.toLong() }
 
     override fun stream(request: MicRequest, chunkMillis: Int): Flow<MicStreamEvent> = flow {
-        streamRequests += request
+        streamRequests += request; streamChunkMillis += chunkMillis
         if (!permission) { emit(MicStreamEvent.Failed(MicFailure.NO_PERMISSION)); return@flow }
         failures[request.source]?.let { emit(MicStreamEvent.Failed(it)); return@flow }
         var opened = false
@@ -84,9 +88,10 @@ class FakeMicrophoneBoundary(
             while (true) {
                 // ohne Wartezeit trotzdem abgeben, sonst kommt ein Sammler auf demselben Thread nie dran
                 if (streamChunkDelayMillis > 0) delay(streamChunkDelayMillis) else yield()
-                val pcm = streamSound(request, index++)
+                val pcm = streamSound(request, index)
                 if (pcm == null) { emit(MicStreamEvent.Failed(MicFailure.READ_FAILED)); return@flow }
-                emit(MicStreamEvent.Chunk(MicChunk(request.sampleRate, ch, pcm)))
+                emit(MicStreamEvent.Chunk(MicChunk(request.sampleRate, ch, pcm, streamIndex(index))))
+                index++
             }
         } finally {
             withContext(NonCancellable) { if (opened) open-- }

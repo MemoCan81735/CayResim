@@ -107,6 +107,7 @@ class SoundBandsTest {
         val rnd = Random(20)
         var shots = 0
         val worst = DoubleArray(5)
+        val wrong = mutableListOf<String>()
         // 8 Neustarts: gerade die ersten Momentaufnahmen nach dem Start mitteln ueber wenige Rahmen
         repeat(8) {
             val a = analyzer()
@@ -118,14 +119,35 @@ class SoundBandsTest {
                     val snap = a.snapshot(); shots++
                     snap.bands.forEachIndexed { i, b ->
                         worst[i] = maxOf(worst[i], b.share)
-                        assertFalse(b.valid, "Band ${b.lowHz} gueltig bei reinem Rauschen (Anteil ${b.share}, Aufnahme $shots)")
+                        if (b.valid) wrong += "Band ${b.lowHz} gueltig (Anteil ${b.share}, Aufnahme $shots)"
                     }
-                    assertNull(snap.mainCosine)
+                    if (snap.mainCosine != null) wrong += "Hauptrichtung in Aufnahme $shots"
                 }
             }
         }
-        println("S-018 K3: $shots Momentaufnahmen, groesster Anteil je Band bei unabhaengigem Rauschen ${worst.joinToString { "%.3f".format(it) }} (Grenze ${SoundBands.MIN_SHARE})")
+        // Werte vor den Pruefungen ausgeben, sonst fehlen sie genau im roten Lauf
+        println("S-018 K3: $shots Momentaufnahmen, groesster Anteil je Band bei unabhaengigem Rauschen (mit Einschwingen) " +
+            "${worst.joinToString { "%.3f".format(it) }} (Grenze ${SoundBands.MIN_SHARE})")
+        assertTrue(wrong.isEmpty(), "falsche Streifen: ${wrong.take(5)}")
         assertTrue(shots >= 600, "nur $shots Momentaufnahmen")
+    }
+
+    @Test fun `S-018 Ton endet, Streifen verschwindet`() {
+        // Zweitpruefung: ohne Abklingregel blieb der Streifen nach einem lauten Ton 4 s stehen
+        val rnd = Random(26)
+        val a = analyzer()
+        feed(a, mix(source(rnd, 200.0, 6400.0, cosOf(30.0), 0.05), noise(rnd, 0.0003)), 2.0)
+        assertTrue(a.snapshot().bands.all { it.valid })
+        // danach nur noch Grundrauschen (-70 dBFS): nach 1,5 s kein Streifen mehr
+        feed(a, noise(rnd, 0.0003), 1.5)
+        val after = a.snapshot()
+        assertTrue(after.bands.none { it.valid }, "Streifen bleiben: ${after.bands.map { it.share }}"); assertNull(after.mainCosine)
+        // ein gleichmaessiger Ton verliert seine Streifen nicht: 20 Momentaufnahmen ueber 2 s
+        val steady = analyzer()
+        val s = mix(source(rnd, 200.0, 6400.0, cosOf(-20.0), 0.03), noise(rnd, 0.003))
+        feed(steady, s, 0.6)
+        var at = (0.6 * sr).toInt(); val chunk = sr / 10
+        repeat(20) { steady.add(pcm(s, at, at + chunk), 2); at += chunk; if (it >= 3) assertTrue(steady.snapshot().bands.all { b -> b.valid }, "Luecke bei Aufnahme $it") }
     }
 
     @Test fun `S-018 reiner Ton steht im richtigen Band`() {
@@ -218,6 +240,11 @@ class SoundBandsTest {
         assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(0.0, 0.0, 9.81))
         assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(0.0, 0.0, 0.0))
         assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(Double.NaN, 0.0, 0.0))
+        // an der Grenze (60 Grad geneigt) flackert es nicht: einmal quer, bleibt es quer bis 0,4
+        assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(4.5, 0.0, 8.7))
+        assertEquals(SoundBands.Hold.TOP_LEFT, SoundBands.hold(4.5, 0.0, 8.7, SoundBands.Hold.TOP_LEFT))
+        assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(3.5, 0.0, 9.2, SoundBands.Hold.TOP_LEFT))
+        assertEquals(SoundBands.Hold.NOT_LANDSCAPE, SoundBands.hold(-4.5, 0.0, 8.7, SoundBands.Hold.TOP_LEFT))
         // Oberkante links: die Unterkante mit dem unteren Mikrofon zeigt nach rechts
         assertEquals(1, SoundBands.screenSign(SoundBands.Hold.TOP_LEFT)); assertEquals(-1, SoundBands.screenSign(SoundBands.Hold.TOP_RIGHT))
         assertEquals(0, SoundBands.screenSign(SoundBands.Hold.NOT_LANDSCAPE))

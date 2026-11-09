@@ -28,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -87,10 +88,12 @@ fun SoundImageRoute(onBack: () -> Unit, viewModel: SoundImageViewModel = hiltVie
     val activity = LocalActivity.current
     // Hintergrund haelt an, Mikrofon und Sensor werden frei (R28, R29); Drehen der Oberflaeche ist kein Abbruch
     LifecycleStartEffect(Unit) { onStopOrDispose { if (activity?.isChangingConfigurations != true) viewModel.onStop() } }
-    // Das Schallbild wird quer benutzt: die Oberflaeche dreht mit, auch wenn "automatisch drehen" aus ist
+    // Das Schallbild wird quer benutzt: die Oberflaeche dreht mit, auch wenn "automatisch drehen" aus ist. Der Wert von
+    // vorher ueberlebt den Neustart der Activity beim Drehen und wird beim Verlassen zurueckgesetzt
+    val before = rememberSaveable { activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
     DisposableEffect(activity) {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        onDispose { if (activity?.isChangingConfigurations == false) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+        onDispose { if (activity?.isChangingConfigurations == false) activity?.requestedOrientation = before }
     }
     val view = LocalView.current
     DisposableEffect(state.running) {
@@ -143,7 +146,14 @@ fun SoundImageContent(
                 items(state.bands.size) { n -> BandLine(n, state.bands[n]) }
             }
             item { Sources(state.source, onSource) }
-            if (state.running) item { Text(stringResource(R.string.soundimage_send), style = MaterialTheme.typography.bodySmall) }
+            if (state.running) item {
+                Column {
+                    // R27: Takt, Rechenzeit und Verluste als Zahlen, damit der Geraetetest sie mitliefert
+                    Text(stringResource(R.string.soundimage_stats, state.framesPerSecond.toString(), dec1(state.computeMillis), state.lostChunks.toString()),
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("soundimage_stats"))
+                    Text(stringResource(R.string.soundimage_send), style = MaterialTheme.typography.bodySmall)
+                }
+            }
             item { Text("", Modifier.padding(bottom = 16.dp)) }
         }
     }

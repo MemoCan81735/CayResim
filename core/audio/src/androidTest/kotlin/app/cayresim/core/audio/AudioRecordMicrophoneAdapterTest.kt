@@ -77,7 +77,8 @@ class AudioRecordMicrophoneAdapterTest {
         withTimeout(20_000) {
             val chunks = mutableListOf<MicStreamEvent.Chunk>()
             var failed: MicStreamEvent.Failed? = null
-            withTimeoutOrNull(1_500) {
+            // 3 s Fenster: der Emulator braucht zum Anlaufen der Aufnahme unterschiedlich lang (Zweitpruefung S-018)
+            withTimeoutOrNull(3_000) {
                 adapter.stream(MicRequest(AudioSourceKey.MIC), 100).collect { e ->
                     when (e) {
                         is MicStreamEvent.Chunk -> chunks += e
@@ -86,7 +87,9 @@ class AudioRecordMicrophoneAdapterTest {
                 }
             }
             assertEquals(null, failed, "Tonstrom gescheitert")
-            assertTrue(chunks.size >= 8, "nur ${chunks.size} Stuecke in 1,5 s")
+            assertTrue(chunks.size >= 8, "nur ${chunks.size} Stuecke in 3 s")
+            val numbers = chunks.map { it.chunk.index }
+            assertTrue(numbers.zipWithNext().all { (a, b) -> b > a }, "Nummern steigen: $numbers")
             val c = chunks.first().chunk
             assertTrue(c.channels in 1..2)
             assertEquals(c.sampleRate / 10 * c.channels, c.pcm.size)

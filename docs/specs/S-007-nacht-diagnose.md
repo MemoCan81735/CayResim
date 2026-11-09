@@ -100,3 +100,5 @@ Selbsttest ist kein Sucher sichtbar; Bilder laufen erst mit der Ersatz-Fläche b
 Die Prüfung der Gerätewerte liegt davor. Ob Samsung den Wert meldet, ist damit weiter offen. RAW-Serie bei Tageslicht:
 Schwarz 0/0/0/0, Werte genau 0: 1,5 %, Signal über Schwarz 327,4, Rauschen 39,5 Stufen; Nachtweg 8 Bit.
 
+Nachtrag K12 (Selbsttest liest den Stabilisator nach der Aufnahme NORMAL): seit 10.10. auf einem Seiten-Branch, kam
+erst am 9.11. mit S-018 in den Hauptzweig (übersehen). Gerätetest offen: Zeile "Optischer Stabilisator" im Selbsttest.
