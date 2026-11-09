@@ -1,6 +1,6 @@
 # S-019: Mikrofon-Test fragt drei und vier Kanäle an
 
-**Stand:** 9.11.2026 · **Status:** umgesetzt in v0.1.143, Gerätetest offen; freigegeben von Arslan am 9.11.2026, 20:39 Uhr ("Ja bitte", mit ins Release von S-018)
+**Stand:** 9.11.2026 · **Status:** umgesetzt in v0.1.143, Gerätetest erledigt (9.11., 22:03 Uhr); freigegeben von Arslan am 9.11.2026, 20:39 Uhr ("Ja bitte", mit ins Release von S-018)
 **Anlass:** Prüfung des Stands der akustischen Kamera (`docs/plan-f11-akustische-kamera.md`, 9.11.). Das S24+ hat drei
 Mikrofone (unten, oben, verstecktes neben der Ultraweitwinkel-Kamera). Der Mikrofon-Test (S-008) fragt nur ein und zwei
 Kanäle an und bekam am 10.10. die Mikrofone 16 (bottom) und 17 (back). Mit drei Mikrofonen, die nicht auf einer Linie
@@ -53,3 +53,22 @@ Im Lauf und Release von S-018 enthalten; Vergleichsbilder des Mikrofon-Tests än
 Lokal: K1 und K2 grün (`AudioMathTest`, `MicTestUseCaseTest`). Vergleichsbilder des Mikrofon-Tests übernommen (vier Zeilen mehr).
 
 Lauf auf main 42689855066 (9.11.): alle Jobs grün, auch der Emulator; Release v0.1.143. Emulator: drei Kanäle angefragt, 3 geliefert (K4); was das S24+ liefert, zeigt K5. Gerätetest offen.
+
+Gerätetest S24+ v0.1.143 (9.11., 22:03 Uhr, Ordner `Mikrotest-20261109-220219`, K5):
+
+| Anfrage | geliefert | Pegel (dBFS) | verschiedene Mikrofone | aktive Mikrofone |
+|---|---|---|---|---|
+| `MIC`, 3 Kanäle | 3 | −48,6 / −45,4 / −inf | 2 | 16, 17 |
+| `MIC`, 4 Kanäle | 4 | −53,5 / −49,1 / −inf / −inf | 2 | 16, 17 |
+| `CAMCORDER`, 3 Kanäle | 3 | −51,4 / −49,4 / −inf | 2 | nicht gemeldet |
+| `CAMCORDER`, 4 Kanäle | 4 | −54,4 / −51,2 / −inf / −inf | 2 | nicht gemeldet |
+
+Ergebnis: **Das S24+ gibt einer fremden App nur zwei Mikrofone.** Android öffnet die Aufnahme mit drei und vier
+Kanälen, füllt Kanal 3 und 4 aber mit Stille. Das dritte Mikrofon (oben) ist über diesen Weg nicht erreichbar. Android
+meldet daneben einen Eintrag Nr. 22 (Lage PERIPHERAL, ohne Position), kein eingebautes Mikrofon. Lauf 21,3 s (unter 30 s).
+Nebenbefund: Die Korrelation der Änderungen zwischen den beiden Mikrofonen schwankt je Aufnahme zwischen 0,00 und 0,43;
+zwei Zeilen ("Richtung zum Bildschirm", "zur Rückseite") galten dadurch in diesem Lauf als "nicht verschieden" (Grenze
+0,3), am 10.10. und im Lauf von 22:00 Uhr lagen sie bei 0,01 bis 0,04. Vermutlich Geräusche im Raum während der
+Aufnahme; die Klatsch-Probe war nicht betroffen (rechts +0,45 ms, wie am 10.10. +0,40 bis +0,44).
+Folge für F11: Höhe und vorne/hinten gibt es nur über Schwenken (F12), nicht über ein drittes Mikrofon.
+

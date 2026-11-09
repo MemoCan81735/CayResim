@@ -91,3 +91,9 @@ Ziel: Im Sucherbild sehen, woher ein Ton kommt.
 
 Quellen: TechRadar zum versteckten Mikrofon des S24
 (https://www.techradar.com/phones/samsung-galaxy-phones/i-didnt-know-this-existed-samsung-galaxy-s24-owners-have-spotted-the-phones-hidden-microphone).
+
+### Nachtrag 9.11., 22:05 Uhr: drittes Mikrofon gemessen (S-019)
+Das S24+ liefert auf Anfrage drei und vier Kanäle, füllt Kanal 3 und 4 aber mit Stille (`MIC` und `CAMCORDER`). Es
+bleibt bei zwei Mikrofonen. Punkt 3 der Reihenfolge ist damit entschieden: weiter mit Stufe 2 und 3 (Kamera und
+Sucher, Freigabe nötig); die Höhe bleibt Sache des Schwenkens (F12). Davor steht noch der Gerätetest des Schallbilds (K19).
+
