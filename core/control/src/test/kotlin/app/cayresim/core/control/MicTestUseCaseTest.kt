@@ -77,8 +77,7 @@ class MicTestUseCaseTest {
         val recorded = r.sources.map { it.outcome }.filterIsInstance<SourceOutcome.Recorded>()
         // nicht aufgenommen: UNPROCESSED und CAMCORDER mit 2, 3 und 4 Kanaelen (S-019)
         assertEquals(plan.size - 4, recorded.size, "Fehler bricht den Lauf nicht ab")
-        // S-020: die Probe mit CAMCORDER traegt den Fehler als Wert, die andere laeuft
-        assertEquals(MicFailure.INIT_FAILED, r.pairs[0].failure); assertNull(r.pairs[0].probe); assertNotNull(r.pairs[1].probe)
+        assertNull(r.pairs[0].probe); assertNotNull(r.pairs[1].probe)
         assertTrue(recorded.all { it.stats.distinctChannels && it.fileUri != null })
         // je gelungener Aufnahme eine Datei: Quellen, dazu MIC aus der ersten Probe und beide aus der zweiten (S-020)
         assertEquals(recorded.size + 3, files.files.size)
@@ -231,6 +230,12 @@ class MicTestUseCaseTest {
         assertTrue(r.sourcesMillis <= 30_000, "Lauf ${r.sourcesMillis} ms")
         // die Klatsch-Probe laeuft danach wie bisher
         assertEquals(3, r.claps.size)
+        // scheitert die zweite Aufnahme, steht der Fehler bei ihr, und die andere Probe laeuft
+        val (mic2, files2, clock2) = setup()
+        mic2.failures[AudioSourceKey.CAMCORDER] = MicFailure.INIT_FAILED
+        val failed = report(mic2, files2, clock2, claps = false).pairs
+        assertNull(failed[0].probe); assertNull(failed[0].firstFailure); assertEquals(MicFailure.INIT_FAILED, failed[0].secondFailure)
+        assertNotNull(failed[1].probe)
     }
 
     @Test fun `S-008 Abstand ohne Positionen ist angenommen`() {

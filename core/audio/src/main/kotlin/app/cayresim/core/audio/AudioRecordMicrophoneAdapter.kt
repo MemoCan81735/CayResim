@@ -31,6 +31,7 @@ import app.cayresim.core.boundary.MicRequest
 import app.cayresim.core.boundary.MicStreamEvent
 import app.cayresim.core.boundary.MicrophoneBoundary
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -108,7 +109,14 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
     private suspend fun checkedRecord(request: MicRequest): MicRecordResult = when {
         !hasPermission() -> MicRecordResult.Failed(MicFailure.NO_PERMISSION)
         request.millis <= 0 || request.channels !in 1..MAX_CHANNELS || request.sampleRate <= 0 -> MicRecordResult.Failed(MicFailure.INIT_FAILED)
-        else -> recordLocked(request)
+        // R24: auch ein unerwarteter Fehler beim Starten wird zum Wert; bei zwei Aufnahmen bricht er sonst die andere ab
+        else -> try {
+            recordLocked(request)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            MicRecordResult.Failed(MicFailure.INIT_FAILED)
+        }
     }
 
     private suspend fun recordLocked(request: MicRequest): MicRecordResult {

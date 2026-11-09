@@ -19,15 +19,32 @@ die Aufnahmen zeitlich versetzt und verschieden gefiltert sind; der Versatz wird
 ausgeglichen. Zwei verschiedene Mikrofone bleiben nahe 0. Als Gegenprobe dient das Paar aus derselben Aufnahme
 (Mikrofone 16 und 17): Ist dessen Gleichklang hoch, war es zu laut, und die Probe gilt nicht.
 
+Grenzen (nach der Zweitprüfung verschärft): ab 0,80 dasselbe Mikrofon, unter 0,30 verschieden, dazwischen keine
+Aussage; Gegenprobe still genug unter 0,10. Kanal 1 und 2 der ersten Aufnahme werden nie zusammengelegt. Je Probe
+gibt es genau ein Urteil:
+
+| Urteil | Bedeutung |
+|---|---|
+| gezählt | die Zahl der verschiedenen Mikrofone gilt |
+| keine Gegenprobe | erste Aufnahme ohne zwei Kanäle mit Ton oder zu kurz |
+| erste Aufnahme mono | Kanal 1 und 2 der ersten Aufnahme sind exakt dieselben Daten |
+| zu laut | Gegenprobe ab 0,10 |
+| zweite stumm | die zweite Aufnahme enthält keinen Ton (Android gibt sie nicht frei); zählt nicht als "2" |
+| unklar | ein Paar liegt zwischen 0,30 und 0,80 (gemischter oder stark bearbeiteter Ton) |
+
+Zusätzlich meldet die Probe "derselbe Datenstrom", wenn jeder Kanal der zweiten Aufnahme zu mindestens 99 % exakt
+dieselben Abtastwerte trägt wie einer der ersten. Der Versatz wird in einem Fenster von 0,3 s gesucht, nach Abzug des
+Unterschieds der Startzeiten beider Aufnahmen.
+
 ## Akzeptanzkriterien
 | Nr. | Kriterium (messbar) | Test |
 |---|---|---|
 | K1 | Zwei Aufnahmen aus unabhängigem Rauschen; zweite Aufnahme: Kanal 1 ist Kanal 1 der ersten, um 7,3 ms versetzt, anders gefiltert und halb so laut, Kanal 2 ein neues Rauschen: 3 verschiedene Mikrofone, Gleichklang des gleichen Paars mindestens 0,8, aller anderen höchstens 0,2, Versatz innerhalb 0,05 ms | `AudioMathTest > S-020 zwei Aufnahmen zusammen zeigen ein drittes Mikrofon` |
 | K2 | Zweite Aufnahme enthält dieselben zwei Mikrofone (auch vertauscht): 2. Zweite Aufnahme doppeltes Mono eines der beiden: 2; eines neuen: 3 | `AudioMathTest > S-020 gleiche Mikrofone in beiden Aufnahmen zaehlen einmal` |
-| K3 | Fehlerfall lauter Raum (gemeinsamer Ton in allen Kanälen): Probe ungültig. Randfälle: stumme Kanäle zählen nicht, zu kurze Aufnahme ungültig, Rechenzeit einer Probe höchstens 1 s (JVM) | `AudioMathTest > S-020 Probe gilt nur im stillen Raum` |
-| K4 | Plan endet mit `VOICE_COMMUNICATION` und `VOICE_PERFORMANCE` (je 1 s, 2 Kanäle); danach die zwei Proben mit je zwei Aufnahmen zu 1 s; vier weitere WAV-Dateien; Ergebnis im Bericht; scheitert die zweite Aufnahme, steht der Fehler als Wert da; Lauf höchstens 30 s | `MicTestUseCaseTest > S-020 neue Quellen und zwei Aufnahmen gleichzeitig` |
-| K5 | Ergebnis zeigt je Probe eine Zeile "Normal (MIC) mit Video (CAMCORDER): verschiedene Mikrofone zusammen 3 …" mit Gleichklang je Paar, oder "zu laut" oder den Fehler | `MicTestTest > S-020 Zeilen fuer zwei Aufnahmen gleichzeitig` |
-| K6 | Adapter (Emulator): zwei Aufnahmen gleichzeitig enden je als Aufnahme oder Fehlerwert, nie als Absturz; danach keine offene Aufnahme | `AudioRecordMicrophoneAdapterTest > s020ZweiAufnahmenGleichzeitig` |
+| K3 | Fehlerfall lauter Raum (gemeinsamer Ton in allen Kanälen): Urteil "zu laut". Randfälle: zweite Aufnahme stumm, erste doppeltes Mono, Paar im Zwischenbereich, zu kurze Aufnahme: je ein eigenes Urteil ohne Zahl; derselbe Datenstrom wird gemeldet; Rechenzeit einer Probe höchstens 1 s (JVM) | `AudioMathTest > S-020 Probe gilt nur im stillen Raum` |
+| K4 | Plan endet mit `VOICE_COMMUNICATION` und `VOICE_PERFORMANCE` (je 1 s, 2 Kanäle); danach die zwei Proben mit je zwei Aufnahmen zu 1 s; vier weitere WAV-Dateien; Ergebnis im Bericht; scheitert eine der beiden Aufnahmen, steht ihr Fehler als Wert da (je Aufnahme getrennt); Lauf höchstens 30 s | `MicTestUseCaseTest > S-020 neue Quellen und zwei Aufnahmen gleichzeitig` |
+| K5 | Ergebnis zeigt je Probe eine Zeile "Normal (MIC) mit Video (CAMCORDER): verschiedene Mikrofone zusammen 3 …" mit Gleichklang je Paar, oder das Urteil in Worten oder den Fehler je Aufnahme; während der Proben steht "Zwei Aufnahmen gleichzeitig: 1/2" | `MicTestTest > S-020 Zeilen fuer zwei Aufnahmen gleichzeitig`, `MicTestTest > S-020 Fortschritt waehrend der zwei Aufnahmen` |
+| K6 | Adapter (Emulator): zwei Aufnahmen gleichzeitig enden je als Aufnahme oder Fehlerwert, nie als Absturz; danach keine offene Aufnahme, auch nach einem Abbruch mitten in beiden | `AudioRecordMicrophoneAdapterTest > s020ZweiAufnahmenGleichzeitig` |
 | K7 | Gerätetest S24+: Mikrofon-Test in einem stillen Raum (nach dem Start nicht bewegen, nicht sprechen, bis die Klatsch-Probe beginnt); Screenshot des Abschnitts "Zwei Aufnahmen gleichzeitig" und der Zeilen der zwei neuen Tonquellen | Arslan |
 
 ## Nicht Teil dieser Änderung
@@ -57,10 +74,29 @@ ausgeglichen. Zwei verschiedene Mikrofone bleiben nahe 0. Als Gegenprobe dient d
 - Samsungs Bearbeitung des Telefonie-Tons (Rauschunterdrückung) kann den Gleichklang auch beim selben Mikrofon senken;
   dann erscheint ein Mikrofon fälschlich als neu. Der Pegel und die WAV-Dateien bleiben zur Kontrolle.
 - Android kann die zweite Aufnahme ablehnen oder stumm schalten; das ist dann das Messergebnis.
+- Android kann beiden Aufnahmen denselben Datenstrom geben (die Quelle der zweiten wird dann ignoriert). Die Probe
+  meldet das; über ein drittes Mikrofon sagt sie dann nichts.
 - Rückweg: Einträge aus dem Plan nehmen; `recordPair` bleibt ungenutzt.
 
 ## Kosten
 Ein Seiten-Lauf, ein Lauf für die Vergleichsbilder des Mikrofon-Tests, ein Release. Gerätetest durch Arslan (K7).
 
 ## Ergebnis
-(nach der Umsetzung)
+Umgesetzt am 9.11.2026, Version siehe Änderungsprotokoll.
+
+**Labor (JVM, künstliches Rauschen):** selbes Mikrofon versetzt, gefiltert und halb so laut: Gleichklang mindestens
+0,8, unabhängige Kanäle 0,02 bis 0,03, Versatz innerhalb 0,05 ms. Rechenzeit einer Probe mit vier Kanälen 54 ms
+(Grenze 1 s). Lauf des Mikrofon-Tests im Fake unter 30 s.
+
+**Unabhängige Zweitprüfung (9.11.):** 11 Befunde zur Rechnung und 5 zum Ablauf, alle eingearbeitet. Die wichtigsten:
+- Eine stumme zweite Aufnahme zählte als "2 Mikrofone" und sah wie ein gültiges Ergebnis aus. Jetzt eigenes Urteil.
+- Die Grenzen 0,5 und 0,3 waren zu locker: ein Mischkanal aus zwei Mikrofonen verband beide zu einer Gruppe. Jetzt
+  0,80, 0,30 und 0,10, das Paar der ersten Aufnahme wird nie zusammengelegt, der Zwischenbereich heißt "unklar".
+- Doppeltes Mono in der ersten Aufnahme wurde als "zu laut" gemeldet. Meine erste Korrektur (Gleichklang ab 0,95)
+  verwechselte es mit einem lauten Raum; jetzt entscheidet der Anteil exakt gleicher Abtastwerte.
+- Ein Versatz über 200 ms zwischen den Aufnahmen wurde nicht gefunden. Jetzt Suchfenster 0,3 s plus Startzeiten.
+- Fehler wurden nur für die Probe insgesamt gemeldet, jetzt je Aufnahme; eine Ausnahme beim Öffnen der zweiten
+  Aufnahme endet als Fehlerwert statt den Lauf abzubrechen.
+
+**Grenzen:** Die Probe unterscheidet Mikrofone nur über ihr Eigenrauschen; starke Rauschunterdrückung der
+Telefonie-Quelle kann "unklar" ergeben. Der Emulator-Test (K6) läuft erst im Lauf auf main. Gerätetest K7 offen.

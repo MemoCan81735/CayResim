@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.cayresim.core.pure.AudioMath
 import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.CalibrationFailureUi
 import app.cayresim.feature.settings.control.ClapPhaseUi
@@ -46,6 +47,7 @@ import app.cayresim.feature.settings.control.MicTestResultUi
 import app.cayresim.feature.settings.control.MicTestUiState
 import app.cayresim.feature.settings.control.MicTestViewModel
 import app.cayresim.feature.settings.control.PairRowUi
+import app.cayresim.feature.settings.control.PairVerdictUi
 import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
 import java.util.Locale
@@ -242,18 +244,31 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
 private fun PairLine(p: PairRowUi, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
         Text(stringResource(R.string.mictest_pair_label, sourceName(p.first), sourceName(p.second)), fontWeight = FontWeight.Medium)
-        val control = p.control
-        when {
-            p.failure != null -> Text(stringResource(failureText(p.failure)), style = MaterialTheme.typography.bodySmall)
-            // ohne Gegenprobe oder zu laut: die Zahl gilt nicht
-            control == null -> Text(stringResource(R.string.mictest_pair_no_control), style = MaterialTheme.typography.bodySmall)
-            !p.quiet -> Text(stringResource(R.string.mictest_pair_loud, dec2(control)), style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error)
-            else -> Text(stringResource(R.string.mictest_pair_result, p.distinctMics.toString()), style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium)
+        val small = MaterialTheme.typography.bodySmall
+        // je Aufnahme: "Android lehnt die zweite ab" ist selbst ein Messergebnis
+        p.firstFailure?.let { Text(stringResource(R.string.mictest_pair_first_failed, stringResource(failureText(it))), style = small) }
+        p.secondFailure?.let { Text(stringResource(R.string.mictest_pair_second_failed, stringResource(failureText(it))), style = small) }
+        when (p.verdict) {
+            null -> Unit
+            PairVerdictUi.COUNTED -> {
+                Text(stringResource(R.string.mictest_pair_result, p.distinctMics.toString()), style = small, fontWeight = FontWeight.Medium)
+                if (p.sharedStream) Text(stringResource(R.string.mictest_pair_shared), style = small)
+            }
+            PairVerdictUi.LOUD -> Text(
+                stringResource(R.string.mictest_pair_loud, dec2(p.control ?: 0.0), dec2(AudioMath.QUIET_COHERENCE)), style = small,
+                color = MaterialTheme.colorScheme.error,
+            )
+            PairVerdictUi.NO_CONTROL -> Text(stringResource(R.string.mictest_pair_no_control), style = small)
+            PairVerdictUi.FIRST_MONO -> Text(stringResource(R.string.mictest_pair_first_mono), style = small)
+            PairVerdictUi.SECOND_SILENT -> Text(stringResource(R.string.mictest_pair_second_silent), style = small)
+            PairVerdictUi.UNCLEAR -> Text(
+                stringResource(R.string.mictest_pair_unclear, dec2(AudioMath.UNCLEAR_COHERENCE), dec2(AudioMath.SAME_MIC_COHERENCE)), style = small,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
-        if (p.failure == null && p.coherence.isNotEmpty()) Text(stringResource(R.string.mictest_pair_coherence, pairText(p.coherence)),
-            style = MaterialTheme.typography.bodySmall)
+        if (p.coherence.isNotEmpty()) Text(
+            stringResource(R.string.mictest_pair_coherence, dec2(AudioMath.SAME_MIC_COHERENCE), pairText(p.coherence)), style = small,
+        )
     }
 }
 

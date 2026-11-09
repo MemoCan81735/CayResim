@@ -83,29 +83,52 @@ object AudioMath {
     )
 
     /**
+     * S-020: Urteil der Probe. Nur [COUNTED] ist eine Messung; alle anderen sagen, warum keine Aussage moeglich ist.
+     * NO_CONTROL: die erste Aufnahme hat keine zwei Kanaele mit Ton oder die Aufnahmen sind zu kurz. FIRST_MONO: die erste
+     * Aufnahme lieferte zweimal denselben Kanal. LOUD: die beiden bekannten Mikrofone klangen zu aehnlich, der Raum war
+     * nicht still. SECOND_SILENT: die zweite Aufnahme war stumm. UNCLEAR: ein Kanal aehnelt einem anderen nur
+     * teilweise (Mischung mehrerer Mikrofone oder stark bearbeiteter Ton).
+     */
+    enum class PairVerdict { COUNTED, NO_CONTROL, FIRST_MONO, LOUD, SECOND_SILENT, UNCLEAR }
+
+    /**
      * S-020: zwei gleichzeitige Aufnahmen zusammen betrachtet. [channels]: Kanaele beider Aufnahmen hintereinander (je
      * hoechstens zwei). [coherence] und [lagSeconds] je Kanalpaar in der Reihenfolge 1-2, 1-3, 2-3, 1-4, 2-4, 3-4:
      * Gleichklang im hohen Tonbereich nach Ausgleich des Versatzes (0 bis 1) und der Versatz (positiv: der erste Kanal
      * des Paars hoert spaeter). [control]: Gleichklang der beiden Kanaele der ersten Aufnahme, die sicher verschiedene
-     * Mikrofone sind; null ohne solches Paar. [valid]: die Gegenprobe liegt unter [QUIET_COHERENCE], der Raum war still
-     * genug. [distinctMics]: Gruppen von Kanaelen mit Gleichklang ab [SAME_MIC_COHERENCE]; stumme Kanaele zaehlen nicht.
+     * Mikrofone sind; null ohne solches Paar. [distinctMics]: Gruppen von Kanaelen mit Gleichklang ab
+     * [SAME_MIC_COHERENCE], nur bei [PairVerdict.COUNTED] eine Aussage; stumme Kanaele zaehlen nicht. [sharedStream]:
+     * jeder Kanal der zweiten Aufnahme traegt exakt die Daten eines der ersten; dann lieferte Android vermutlich
+     * beiden Aufnahmen denselben Datenstrom, und die Zahl sagt nichts ueber die zweite Quelle allein.
      */
     data class PairProbe(
-        val channels: Int, val distinctMics: Int, val valid: Boolean, val control: Double?,
-        val coherence: List<Double>, val lagSeconds: List<Double>,
-    )
+        val channels: Int, val distinctMics: Int, val verdict: PairVerdict, val control: Double?,
+        val coherence: List<Double>, val lagSeconds: List<Double>, val sharedStream: Boolean = false,
+    ) {
+        val valid: Boolean get() = verdict == PairVerdict.COUNTED
+    }
 
     /** S-020: Fenster der Probe in Abtastwerten (0,68 s bei 48 kHz). */
     const val PROBE_WINDOW = 32_768
-    /** Groesster gesuchter Versatz zwischen zwei Aufnahmen. */
-    const val PROBE_MAX_LAG_SECONDS = 0.2
+    /** Groesster gesuchter Versatz zwischen zwei Aufnahmen, nach Abzug des Unterschieds ihrer Startzeiten. */
+    const val PROBE_MAX_LAG_SECONDS = 0.3
     /** Hoher Tonbereich: hier ueberwiegt im stillen Raum das Eigenrauschen der Mikrofone. */
     const val PROBE_LOW_HZ = 2_000.0
     const val PROBE_HIGH_HZ = 8_000.0
-    /** Ab diesem Gleichklang gelten zwei Kanaele als dasselbe Mikrofon. */
-    const val SAME_MIC_COHERENCE = 0.5
-    /** Unter diesem Gleichklang der Gegenprobe war der Raum still genug. */
-    const val QUIET_COHERENCE = 0.3
+    /**
+     * Ab diesem Gleichklang gelten zwei Kanaele als dasselbe Mikrofon. Zweitpruefung S-020: dasselbe Mikrofon liegt auch
+     * gefiltert, begrenzt oder mit 6 dB leiserem Zusatzrauschen bei 0,8 bis 1,0, unabhaengige bei 0,02.
+     */
+    const val SAME_MIC_COHERENCE = 0.8
+    /** Zwischen diesem Wert und [SAME_MIC_COHERENCE] ist ein Paar weder gleich noch verschieden: Urteil UNCLEAR. */
+    const val UNCLEAR_COHERENCE = 0.3
+    /** Unter diesem Gleichklang der Gegenprobe war der Raum still genug (still gemessen 0,02 bis 0,03). */
+    const val QUIET_COHERENCE = 0.1
+    /**
+     * Ab diesem Anteil exakt gleicher Abtastwerte (nach Ausgleich des Versatzes) sind zwei Kanaele dieselben Daten:
+     * doppeltes Mono in einer Aufnahme oder derselbe Datenstrom in beiden. Ein lauter Raum oder ein Filter erreicht das nie.
+     */
+    const val SAME_DATA_SHARE = 0.99
 
     const val IDENTICAL_LIMIT = 0.999
     const val DIFF_CORRELATION_LIMIT = 0.3
@@ -156,30 +179,64 @@ object AudioMath {
      * gleichen sich dort auch dann, wenn die Aufnahmen versetzt und verschieden gefiltert sind; der Versatz wird vorher
      * ueber GCC-PHAT gesucht und ausgeglichen. Verschraenktes PCM, je Aufnahme zaehlen die ersten zwei Kanaele.
      */
-    fun pairProbe(first: ShortArray, firstChannels: Int, second: ShortArray, secondChannels: Int, sampleRate: Int): PairProbe {
+    fun pairProbe(
+        first: ShortArray, firstChannels: Int, second: ShortArray, secondChannels: Int, sampleRate: Int,
+        /** Um wie viel die zweite Aufnahme spaeter begann als die erste (aus den Zeitstempeln); 0, wenn unbekannt. */
+        secondLaterSeconds: Double = 0.0,
+    ): PairProbe {
         val ch = ArrayList<FloatArray>(4)
         if (firstChannels >= 1) ch += deinterleave(first, firstChannels).take(2)
         val firstCount = ch.size
         if (secondChannels >= 1) ch += deinterleave(second, secondChannels).take(2)
         val frames = ch.minOfOrNull { it.size } ?: 0
-        if (ch.size < 2 || frames < PROBE_WINDOW || sampleRate <= 0) return PairProbe(ch.size, 0, false, null, emptyList(), emptyList())
-        // Anfang ueberspringen, soweit die Aufnahme reicht
+        if (ch.size < 2 || frames < PROBE_WINDOW || sampleRate <= 0) return PairProbe(ch.size, 0, PairVerdict.NO_CONTROL, null, emptyList(), emptyList())
+        // Anfang ueberspringen, soweit die Aufnahme reicht; das Fenster der zweiten Aufnahme um ihren spaeteren Start verschoben
         val start = minOf(frames - PROBE_WINDOW, sampleRate / 10)
-        val w = ch.map { it.copyOfRange(start, start + PROBE_WINDOW) }
+        val hint = if (secondLaterSeconds.isFinite()) Math.round(secondLaterSeconds * sampleRate).toInt() else 0
+        val start2 = (start - hint).coerceIn(0, frames - PROBE_WINDOW)
+        val begin = IntArray(ch.size) { if (it < firstCount) start else start2 }
+        val w = ch.mapIndexed { i, x -> x.copyOfRange(begin[i], begin[i] + PROBE_WINDOW) }
         val loud = w.map { x -> dbfs(sqrt(x.sumOf { it.toDouble() * it } / x.size)) > SILENT_DBFS }
         val n = w.size
         val coherence = ArrayList<Double>(n * (n - 1) / 2); val lags = ArrayList<Double>(n * (n - 1) / 2)
         val group = IntArray(n) { it }
         fun root(i: Int): Int { var r = i; while (group[r] != r) r = group[r]; return r }
+        var unclear = false
+        val sameData = ArrayList<Boolean>(n * (n - 1) / 2)
         for (j in 1 until n) for (i in 0 until j) {
             val d = if (loud[i] && loud[j]) gccPhat(w[i], w[j], sampleRate, PROBE_MAX_LAG_SECONDS) else null
             val c = if (d == null) 0.0 else bandCoherence(w[i], w[j], Math.round(d.seconds * sampleRate).toInt(), sampleRate)
-            coherence += c; lags += d?.seconds ?: 0.0
-            if (c >= SAME_MIC_COHERENCE) group[root(j)] = root(i)
+            coherence += c
+            sameData += d != null && equalShare(w[i], w[j], Math.round(d.seconds * sampleRate).toInt()) >= SAME_DATA_SHARE
+            // Versatz in den Abtastwerten der Aufnahmen selbst: Fensteranfaenge einrechnen
+            lags += if (d == null) 0.0 else d.seconds + (begin[i] - begin[j]).toDouble() / sampleRate
+            // die beiden Kanaele der ersten Aufnahme sind die Gegenprobe und werden nie zusammengelegt
+            if (i == 0 && j == 1 && firstCount == 2) continue
+            if (c >= SAME_MIC_COHERENCE) group[root(j)] = root(i) else if (c >= UNCLEAR_COHERENCE) unclear = true
         }
         val control = if (firstCount == 2 && loud[0] && loud[1]) coherence[0] else null
+        val secondLoud = (firstCount until n).filter { loud[it] }
+        val verdict = when {
+            control == null -> PairVerdict.NO_CONTROL
+            sameData[0] -> PairVerdict.FIRST_MONO
+            control >= QUIET_COHERENCE -> PairVerdict.LOUD
+            secondLoud.isEmpty() -> PairVerdict.SECOND_SILENT
+            unclear -> PairVerdict.UNCLEAR
+            else -> PairVerdict.COUNTED
+        }
         val distinct = (0 until n).filter { loud[it] }.map { root(it) }.toSet().size
-        return PairProbe(n, distinct, control != null && control < QUIET_COHERENCE, control, coherence, lags)
+        // Stelle des Paars (i, j) mit i < j in der Liste: j * (j - 1) / 2 + i
+        val shared = verdict == PairVerdict.COUNTED && secondLoud.all { j -> (0 until firstCount).any { i -> sameData[j * (j - 1) / 2 + i] } }
+        return PairProbe(n, distinct, verdict, control, coherence, lags, shared)
+    }
+
+    /** Anteil exakt gleicher Abtastwerte von x und y, wobei x um [lag] Abtastwerte spaeter liegt als y. */
+    private fun equalShare(x: FloatArray, y: FloatArray, lag: Int): Double {
+        val from = maxOf(0, lag); val to = minOf(x.size, y.size + lag)
+        if (to <= from) return 0.0
+        var same = 0
+        for (i in from until to) if (x[i] == y[i - lag]) same++
+        return same.toDouble() / (to - from)
     }
 
     /**

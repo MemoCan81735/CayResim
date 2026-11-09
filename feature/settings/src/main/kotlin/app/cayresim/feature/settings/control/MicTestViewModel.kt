@@ -9,6 +9,7 @@ import app.cayresim.core.control.MicTestEvent
 import app.cayresim.core.control.MicTestReport
 import app.cayresim.core.control.MicTestUseCase
 import app.cayresim.core.control.SourceOutcome
+import app.cayresim.core.pure.AudioMath
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,15 +53,20 @@ data class SourceRowUi(
     val pairDiffCorrelation: List<Double> = emptyList(),
 )
 
+/** S-020: Urteil einer Probe mit zwei Aufnahmen gleichzeitig (Spiegel von AudioMath.PairVerdict). */
+enum class PairVerdictUi { COUNTED, NO_CONTROL, FIRST_MONO, LOUD, SECOND_SILENT, UNCLEAR }
+
 /**
- * S-020: Probe mit zwei Aufnahmen gleichzeitig. [distinctMics]: verschiedene Mikrofone in beiden zusammen; [quiet]: der
- * Raum war still genug, die Zahl gilt; [coherence]: Gleichklang je Kanalpaar (1-2, 1-3, 2-3, 1-4, 2-4, 3-4), Kanal 1 und
- * 2 aus der ersten Quelle.
+ * S-020: Probe mit zwei Aufnahmen gleichzeitig. [verdict] null, wenn eine Aufnahme scheiterte ([firstFailure],
+ * [secondFailure]). [distinctMics]: verschiedene Mikrofone in beiden zusammen, nur bei COUNTED eine Aussage;
+ * [sharedStream]: beide Aufnahmen trugen dieselben Daten; [coherence]: Gleichklang je Kanalpaar (1-2, 1-3, 2-3, 1-4,
+ * 2-4, 3-4), Kanal 1 und 2 aus der ersten Quelle.
  */
 @Immutable
 data class PairRowUi(
-    val first: SourceUi, val second: SourceUi, val failure: MicFailureUi?,
-    val distinctMics: Int = 0, val quiet: Boolean = false, val control: Double? = null, val coherence: List<Double> = emptyList(),
+    val first: SourceUi, val second: SourceUi, val firstFailure: MicFailureUi? = null, val secondFailure: MicFailureUi? = null,
+    val verdict: PairVerdictUi? = null, val distinctMics: Int = 0, val sharedStream: Boolean = false, val control: Double? = null,
+    val coherence: List<Double> = emptyList(),
 )
 
 @Immutable data class ClapUi(val timeSeconds: Double, val delayMs: Double, val angleDegrees: Double?, val similarity: Double, val levelDiffDb: Double)
@@ -161,6 +167,16 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
     }
 
     internal companion object {
+        /** Erschoepfend statt valueOf: ein neues Urteil faellt beim Kompilieren auf. */
+        fun verdictUi(v: AudioMath.PairVerdict) = when (v) {
+            AudioMath.PairVerdict.COUNTED -> PairVerdictUi.COUNTED
+            AudioMath.PairVerdict.NO_CONTROL -> PairVerdictUi.NO_CONTROL
+            AudioMath.PairVerdict.FIRST_MONO -> PairVerdictUi.FIRST_MONO
+            AudioMath.PairVerdict.LOUD -> PairVerdictUi.LOUD
+            AudioMath.PairVerdict.SECOND_SILENT -> PairVerdictUi.SECOND_SILENT
+            AudioMath.PairVerdict.UNCLEAR -> PairVerdictUi.UNCLEAR
+        }
+
         fun rowOf(r: MicRequest, failure: MicFailure?) = SourceRowUi(
             SourceUi.valueOf(r.source.name), DirectionUi.valueOf(r.direction.name), r.deviceId, failure?.let { MicFailureUi.valueOf(it.name) },
             requestedChannels = r.channels,
@@ -199,8 +215,10 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
             pairs = pairs.map { p ->
                 val probe = p.probe
                 PairRowUi(
-                    SourceUi.valueOf(p.first.source.name), SourceUi.valueOf(p.second.source.name), p.failure?.let { MicFailureUi.valueOf(it.name) },
-                    distinctMics = probe?.distinctMics ?: 0, quiet = probe?.valid == true, control = probe?.control, coherence = probe?.coherence.orEmpty(),
+                    SourceUi.valueOf(p.first.source.name), SourceUi.valueOf(p.second.source.name),
+                    p.firstFailure?.let { MicFailureUi.valueOf(it.name) }, p.secondFailure?.let { MicFailureUi.valueOf(it.name) },
+                    verdict = probe?.let { verdictUi(it.verdict) }, distinctMics = probe?.distinctMics ?: 0, sharedStream = probe?.sharedStream == true,
+                    control = probe?.control, coherence = probe?.coherence.orEmpty(),
                 )
             },
         )

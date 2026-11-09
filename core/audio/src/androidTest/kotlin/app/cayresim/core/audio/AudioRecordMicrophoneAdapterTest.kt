@@ -132,7 +132,11 @@ class AudioRecordMicrophoneAdapterTest {
             for (s in listOf(AudioSourceKey.VOICE_COMMUNICATION, AudioSourceKey.VOICE_PERFORMANCE)) adapter.record(MicRequest(s, millis = 300))
             assertEquals(0, adapter.openRecordings)
             assertIs<MicRecordResult.Ok>(adapter.record(MicRequest(AudioSourceKey.MIC, millis = 300)))
-            Unit
+            // Abbruch mitten in zwei Aufnahmen gibt beide frei
+            val job = launch(Dispatchers.Default) { adapter.recordPair(MicRequest(AudioSourceKey.MIC, millis = 5_000), MicRequest(AudioSourceKey.CAMCORDER, millis = 5_000)) }
+            delay(500)
+            job.cancel(); job.join()
+            assertEquals(0, adapter.openRecordings, "Mikrofon nach Abbruch zweier Aufnahmen frei")
         }
     }
 

@@ -306,7 +306,17 @@ class AudioMathTest {
     @Test fun `S-020 gleiche Mikrofone in beiden Aufnahmen zaehlen einmal`() {
         val rnd = Random(21)
         val m1 = selfNoise(rnd); val m2 = selfNoise(rnd); val m3 = selfNoise(rnd)
-        assertEquals(2, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m1, 200), again(m2, 200)), 2, sr).distinctMics)
+        val same = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m1, 200), again(m2, 200)), 2, sr)
+        assertEquals(2, same.distinctMics); assertTrue(same.valid); assertFalse(same.sharedStream, "gefiltert ist nicht derselbe Datenstrom")
+        // genau dieselben Daten in beiden Aufnahmen: Android gab vermutlich beiden denselben Strom (S5)
+        val copy = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(m1, m2), 2, sr)
+        assertEquals(2, copy.distinctMics); assertTrue(copy.sharedStream)
+        // die zweite Aufnahme begann 250 ms spaeter: mit der Startzeit als Vorgabe gefunden, ohne sie noch im Suchfenster (S6)
+        fun late(x: DoubleArray, shift: Int) = DoubleArray(x.size) { if (it + shift < x.size) x[it + shift] else 0.0 }
+        val shifted = stereo(late(m1, 12_000), late(m3, 12_000))
+        val hinted = AudioMath.pairProbe(stereo(m1, m2), 2, shifted, 2, sr, secondLaterSeconds = 0.25)
+        assertEquals(3, hinted.distinctMics); assertTrue(hinted.valid); assertEquals(0.25, hinted.lagSeconds[1], 0.0005)
+        assertEquals(3, AudioMath.pairProbe(stereo(m1, m2), 2, shifted, 2, sr).distinctMics)
         assertEquals(2, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m2, -100 + 300), again(m1, 200)), 2, sr).distinctMics, "vertauscht")
         // doppeltes Mono (Telefonie): eines der beiden oder ein neues
         val monoOld = again(m2, 480)
@@ -328,12 +338,25 @@ class AudioMathTest {
         fun plus(x: DoubleArray, lag: Int) = DoubleArray(sr) { x[it] + room[(it - lag).coerceIn(0, sr - 1)] }
         val loud = AudioMath.pairProbe(stereo(plus(m1, 0), plus(m2, 5)), 2, stereo(plus(m3, 9), plus(m3, 9)), 2, sr)
         assertFalse(loud.valid, "Gegenprobe ${loud.control}")
-        // stumme Kanaele zaehlen nicht
+        assertEquals(AudioMath.PairVerdict.LOUD, loud.verdict)
+        // stumme zweite Aufnahme (Android schaltet sie stumm): keine Aussage statt "2 Mikrofone" (Zweitpruefung S1)
         val silent = AudioMath.pairProbe(stereo(m1, m2), 2, ShortArray(sr * 2), 2, sr)
-        assertEquals(2, silent.distinctMics); assertTrue(silent.valid)
+        assertEquals(AudioMath.PairVerdict.SECOND_SILENT, silent.verdict); assertFalse(silent.valid)
+        // ein stummer Kanal neben einem mit Ton zaehlt nicht mit
+        val half = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(m3, DoubleArray(sr)), 2, sr)
+        assertTrue(half.valid); assertEquals(3, half.distinctMics)
+        // erste Aufnahme doppeltes Mono: eigenes Urteil statt "zu laut" (S4)
+        assertEquals(AudioMath.PairVerdict.FIRST_MONO, AudioMath.pairProbe(stereo(m1, m1), 2, stereo(m2, m3), 2, sr).verdict)
+        // Mischkanal aus beiden bekannten Mikrofonen: unklar statt einer falschen Zahl (S2)
+        val mixed = DoubleArray(sr) { (m1[it] + m2[it]) * 0.7 }
+        val mix = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(mixed, mixed), 2, sr)
+        assertEquals(AudioMath.PairVerdict.UNCLEAR, mix.verdict, "Gleichklang ${mix.coherence}")
+        // dasselbe Mikrofon mit gleich lautem Zusatzrauschen (Gleichklang um 0,5): unklar statt "neues Mikrofon" (S3)
+        val noisy = DoubleArray(sr) { m1[it] + gauss(rnd) * 300 }
+        assertEquals(AudioMath.PairVerdict.UNCLEAR, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(noisy, m3), 2, sr).verdict)
         // zu kurz oder leer: ungueltig, keine Ausnahme
         val short = AudioMath.pairProbe(ShortArray(2_000), 2, ShortArray(2_000), 2, sr)
-        assertFalse(short.valid); assertEquals(0, short.distinctMics)
+        assertFalse(short.valid); assertEquals(0, short.distinctMics); assertEquals(AudioMath.PairVerdict.NO_CONTROL, short.verdict)
         assertFalse(AudioMath.pairProbe(ShortArray(0), 2, ShortArray(0), 2, sr).valid)
         // erste Aufnahme Mono: keine Gegenprobe, also ungueltig
         assertFalse(AudioMath.pairProbe(ShortArray(sr) { m1[it].roundToInt().toShort() }, 1, stereo(m2, m3), 2, sr).valid)

@@ -2,6 +2,17 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## 0.1.VERSION Mikrofon-Test: zwei Aufnahmen gleichzeitig (9. November 2026, S-020)
+- Der Mikrofon-Test nimmt zusätzlich mit den Tonquellen "Telefonie" und "Bühnenton" auf.
+- Neu: zwei Proben mit je zwei Aufnahmen gleichzeitig (Normal mit Video, Normal mit Telefonie). Die App vergleicht das
+  Eigenrauschen der bis zu vier Kanäle und sagt, wie viele verschiedene Mikrofone darin stecken. Erscheint "3", gibt
+  Android auf diesem Weg das dritte Mikrofon her.
+- Statt einer Zahl kann auch stehen: zu laut, zweite Aufnahme stumm, unklar, derselbe Datenstrom, oder der Fehler
+  je Aufnahme. Das sind ebenfalls Ergebnisse.
+- Für diese Messung gilt die freigegebene Ausnahme von "eine Aufnahme zur Zeit" (nur im Mikrofon-Test).
+- Gerät: Mikrofon-Test in einem stillen Raum, Handy hinlegen, nicht sprechen, bis die Klatsch-Probe beginnt.
+  Screenshots: Zeilen der zwei neuen Tonquellen und Abschnitt "Zwei Aufnahmen gleichzeitig".
+
 ## 0.1.143 Schallbild und Mikrofon-Kanäle (9. November 2026, S-018 und S-019)
 - Neu unter Einstellungen: "Schallbild". Es zeigt live, aus welcher Richtung Töne kommen: je Tonhöhen-Bereich ein
   Streifen zwischen links und rechts, Farbe nach Tonhöhe, Helligkeit nach Lautstärke, dazu Hauptrichtung und Zahlen.

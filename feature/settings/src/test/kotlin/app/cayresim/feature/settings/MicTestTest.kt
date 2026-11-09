@@ -1,5 +1,8 @@
 package app.cayresim.feature.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -22,6 +25,7 @@ import app.cayresim.feature.settings.control.MicStepUi
 import app.cayresim.feature.settings.control.MicTestUiState
 import app.cayresim.feature.settings.control.MicFailureUi
 import app.cayresim.feature.settings.control.PairRowUi
+import app.cayresim.feature.settings.control.PairVerdictUi
 import app.cayresim.feature.settings.control.MicTestViewModel
 import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
@@ -178,24 +182,49 @@ class MicTestTest {
         // zwei neue Quellen am Ende des Plans, zwei Proben; der Fake liefert je Aufnahme unabhaengiges Rauschen
         assertEquals(listOf(SourceUi.VOICE_COMMUNICATION, SourceUi.VOICE_PERFORMANCE), result.sources.takeLast(2).map { it.source })
         assertEquals(listOf(SourceUi.MIC to SourceUi.CAMCORDER, SourceUi.MIC to SourceUi.VOICE_COMMUNICATION), result.pairs.map { it.first to it.second })
-        assertTrue(result.pairs.all { it.failure == null && it.coherence.size == 6 })
-        // feste Zeilen: drittes Mikrofon gefunden, zu laut, gescheitert
-        val rows = listOf(
-            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, null, 3, true, 0.04, listOf(0.04, 0.93, 0.03, 0.02, 0.05, 0.03)),
-            PairRowUi(SourceUi.MIC, SourceUi.VOICE_COMMUNICATION, null, 1, false, 0.62, listOf(0.62, 0.7, 0.66, 0.7, 0.66, 1.0)),
-            PairRowUi(SourceUi.MIC, SourceUi.VOICE_PERFORMANCE, MicFailureUi.INIT_FAILED),
-        )
-        val shown = s.copy(result = result.copy(pairs = rows))
-        compose.setContent { CayResimTheme(dark = true) { MicTestContent(shown, {}, {}) } }
+        assertTrue(result.pairs.all { it.verdict == PairVerdictUi.COUNTED && it.distinctMics == 4 && it.coherence.size == 6 && !it.sharedStream })
+        assertEquals(app.cayresim.core.pure.AudioMath.PairVerdict.entries.map { it.name }, PairVerdictUi.entries.map { it.name })
+        // feste Zeilen: drittes Mikrofon gefunden, zu laut, zweite Aufnahme gescheitert, stumm, unklar, derselbe Datenstrom
+        var rows by mutableStateOf(listOf(
+            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.COUNTED, distinctMics = 3, control = 0.04,
+                coherence = listOf(0.04, 0.93, 0.03, 0.02, 0.05, 0.03)),
+            PairRowUi(SourceUi.MIC, SourceUi.VOICE_COMMUNICATION, verdict = PairVerdictUi.LOUD, distinctMics = 1, control = 0.62,
+                coherence = listOf(0.62, 0.7, 0.66, 0.7, 0.66, 1.0)),
+        ))
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(s.copy(result = result.copy(pairs = rows)), {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_0"))
         compose.onNodeWithText("Normal (MIC) mit Video (CAMCORDER)", substring = true).assertExists()
         compose.onNodeWithText("Verschiedene Mikrofone zusammen: 3", substring = true).assertExists()
-        compose.onNodeWithText("1-2: 0,04; 1-3: 0,93; 2-3: 0,03; 1-4: 0,02; 2-4: 0,05; 3-4: 0,03", substring = true).assertExists()
-        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_2"))
-        compose.onNodeWithText("Zu laut für diese Probe (Gegenprobe 0,62", substring = true).assertExists()
+        compose.onNodeWithText("(ab 0,80 dasselbe Mikrofon): 1-2: 0,04; 1-3: 0,93; 2-3: 0,03; 1-4: 0,02; 2-4: 0,05; 3-4: 0,03", substring = true).assertExists()
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_1"))
+        compose.onNodeWithText("Die zwei bekannten Mikrofone klangen zu ähnlich (0,62, erlaubt unter 0,10)", substring = true).assertExists()
+        rows = listOf(
+            PairRowUi(SourceUi.MIC, SourceUi.VOICE_PERFORMANCE, secondFailure = MicFailureUi.INIT_FAILED),
+            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.SECOND_SILENT, control = 0.02, coherence = listOf(0.02, 0.0, 0.0)),
+        )
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_0"))
         compose.onNodeWithText("Normal (MIC) mit Bühnenton (VOICE_PERFORMANCE)", substring = true).assertExists()
-        // waehrend der Probe
-        assertEquals(listOf("IDLE", "INVENTORY", "SOURCES", "PAIRS", "PREPARE", "CLAP", "DONE"), MicStepUi.entries.map { it.name })
+        compose.onNodeWithText("Zweite Aufnahme: Aufnahme ließ sich nicht starten", substring = true).assertExists()
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_1"))
+        compose.onNodeWithText("Die zweite Aufnahme war stumm", substring = true).assertExists()
+        rows = listOf(
+            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.UNCLEAR, control = 0.03, coherence = listOf(0.03, 0.52, 0.52)),
+            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.COUNTED, distinctMics = 2, sharedStream = true, control = 0.03),
+        )
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_0"))
+        compose.onNodeWithText("nur teilweise (Gleichklang zwischen 0,30 und 0,80)", substring = true).assertExists()
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_1"))
+        compose.onNodeWithText("Beide Aufnahmen enthielten genau dieselben Daten", substring = true).assertExists()
+        rows = listOf(PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.NO_CONTROL), PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, verdict = PairVerdictUi.FIRST_MONO, control = 1.0))
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_1"))
+        compose.onNodeWithText("Die erste Aufnahme hatte keine zwei Kanäle mit Ton", substring = true).assertExists()
+        compose.onNodeWithText("lieferte hier zweimal denselben Kanal", substring = true).assertExists()
+    }
+
+    @Test fun `S-020 Fortschritt waehrend der zwei Aufnahmen`() {
+        val state = MicTestUiState(running = true, step = MicStepUi.PAIRS, sourceIndex = 0, sourceTotal = 2)
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(state, {}, {}) } }
+        compose.onNodeWithText("Zwei Aufnahmen gleichzeitig: 1/2", substring = true).assertExists()
     }
 
     @Test fun mikrotest_ergebnis() {

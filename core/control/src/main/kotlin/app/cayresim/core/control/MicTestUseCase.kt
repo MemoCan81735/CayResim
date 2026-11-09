@@ -41,9 +41,12 @@ data class SourceResult(val request: MicRequest, val outcome: SourceOutcome)
 
 /**
  * S-020: zwei Aufnahmen gleichzeitig. [probe]: wie viele verschiedene Mikrofone in beiden zusammen stecken; null, wenn
- * eine der beiden scheiterte ([failure] nennt den ersten Grund).
+ * eine der beiden scheiterte. Der Grund steht je Aufnahme da, weil "Android lehnt die zweite ab" selbst ein Messergebnis ist.
  */
-data class PairResult(val first: MicRequest, val second: MicRequest, val probe: AudioMath.PairProbe?, val failure: MicFailure? = null)
+data class PairResult(
+    val first: MicRequest, val second: MicRequest, val probe: AudioMath.PairProbe?,
+    val firstFailure: MicFailure? = null, val secondFailure: MicFailure? = null,
+)
 
 data class ClapResult(val phase: ClapPhase, val claps: List<AudioMath.Clap>, val fileUri: String?, val failure: MicFailure? = null)
 
@@ -131,8 +134,12 @@ class MicTestUseCase @Inject constructor(
             for ((n, c) in listOf(ca, cb).withIndex()) if (c != null && folder != null) {
                 if (files.saveWav(folder, "paar${i + 1}-${n + 1}-${c.request.source.name}-$FORMAT.wav", Wav.encode(c.pcm, c.sampleRate, c.channels)) == null) storageFailed = true
             }
-            pairs += if (ca != null && cb != null) PairResult(a, b, AudioMath.pairProbe(ca.pcm, ca.channels, cb.pcm, cb.channels, ca.sampleRate))
-            else PairResult(a, b, null, (r.first as? MicRecordResult.Failed)?.reason ?: (r.second as? MicRecordResult.Failed)?.reason)
+            pairs += if (ca != null && cb != null) {
+                // spaeterer Start der zweiten Aufnahme aus den Zeitstempeln, soweit beide einen haben
+                val sa = ca.startBootNanos; val sb = cb.startBootNanos
+                val later = if (sa != null && sb != null) (sb - sa) / 1e9 else 0.0
+                PairResult(a, b, AudioMath.pairProbe(ca.pcm, ca.channels, cb.pcm, cb.channels, ca.sampleRate, later))
+            } else PairResult(a, b, null, (r.first as? MicRecordResult.Failed)?.reason, (r.second as? MicRecordResult.Failed)?.reason)
         }
         val sourcesMillis = clock.nowMillis() - t0
         val clapSource = chooseClapSource(sources)
