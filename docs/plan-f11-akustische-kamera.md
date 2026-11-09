@@ -97,3 +97,23 @@ Das S24+ liefert auf Anfrage drei und vier Kanäle, füllt Kanal 3 und 4 aber mi
 bleibt bei zwei Mikrofonen. Punkt 3 der Reihenfolge ist damit entschieden: weiter mit Stufe 2 und 3 (Kamera und
 Sucher, Freigabe nötig); die Höhe bleibt Sache des Schwenkens (F12). Davor steht noch der Gerätetest des Schallbilds (K19).
 
+
+### Wege zum dritten Mikrofon (geprüft 9.11., 22:15 Uhr, auf Wunsch von Arslan)
+Das S24+ hat drei Mikrofone: unten (Hauptmikrofon), oben an der Vorderseite (bei Anrufen gegen Störgeräusche) und
+hinten neben der Ultraweitwinkel-Kamera (Zoom-Mikrofon für Video). Android meldet einer App nur "bottom" (16) und
+"back" (17); das obere fehlt in der Liste.
+
+| Weg | Stand | Aussicht |
+|---|---|---|
+| Drei oder vier Kanäle anfragen | gemessen (S-019): Stille | erledigt, geht nicht |
+| Jedes gemeldete Gerät einzeln wählen | gemessen (S-008): nur 16 und 17 | erledigt, geht nicht |
+| Andere Audioquellen: `VOICE_COMMUNICATION` (Telefonie nutzt oben und unten), `VOICE_PERFORMANCE` | ungeprüft | möglich, aber der Ton ist dann stark bearbeitet und meist Mono |
+| `CAMCORDER` nutzt vielleicht ein anderes Paar als `MIC` (Android meldet dort keine aktiven Mikrofone) | ungeprüft | möglich; dann gäben `MIC` und `CAMCORDER` zusammen drei Mikrofone |
+| Zwei Aufnahmen gleichzeitig (z. B. `MIC` und `CAMCORDER` oder `VOICE_COMMUNICATION`) und alle Kanäle vergleichen | ungeprüft | einzige Messung, die die beiden Zeilen darüber sicher entscheidet; braucht eine Ausnahme von "eine Aufnahme zur Zeit" (Freigabe) |
+| Samsungs eigene Wege (Audio-Zoom der Kamera, Interview-Modus des Diktiergeräts) | nur für Samsung-Apps | geht nicht |
+| Root oder Eingriff ins System | | kommt nicht in Frage |
+| Externes USB-Mikrofonfeld (4 bis 8 Mikrofone am USB-C-Anschluss) | ungeprüft | technisch der sichere Weg zu einem echten Schallbild mit Höhe; kostet Hardware (grob 70 bis 110 Euro), Zusammenspiel mit dem S24+ nicht bestätigt |
+| Schwenken (F12) | gebaut als Messung | bleibt der Weg ohne Zusatzgerät |
+
+Quellen: Aufbau des S24 (https://gadgetguideonline.com/s24/layout-of-galaxy-s24-galaxy-s24-and-galaxy-s24-ultra/),
+verstecktes Mikrofon (TechRadar, siehe oben).
