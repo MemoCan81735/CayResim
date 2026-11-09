@@ -2,6 +2,10 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Ohne Version: Zeitmesstest ruhiger (9. November 2026)
+- Der Zeitmesstest für die Messung des Bezugsbilds (S-007) wärmt länger auf und nimmt den besten von 15 Läufen. Die
+  Grenze von 10 ms bleibt. Anlass: Er machte den Release-Lauf von 0.1.146 einmal zufällig rot. Für die App ändert sich nichts.
+
 ## 0.1.146 Mikrofon-Test: zwei Aufnahmen gleichzeitig (9. November 2026, S-020)
 - Der Mikrofon-Test nimmt zusätzlich mit den Tonquellen "Telefonie" und "Bühnenton" auf.
 - Neu: zwei Proben mit je zwei Aufnahmen gleichzeitig (Normal mit Video, Normal mit Telefonie). Die App vergleicht das

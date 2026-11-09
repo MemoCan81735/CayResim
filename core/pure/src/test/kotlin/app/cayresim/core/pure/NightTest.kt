@@ -255,10 +255,12 @@ class NightMergeTest {
         val big = 1440 * 1080
         val frame = ByteArray(big * 3) { (it * 7 % 251).toByte() }
         val m = NightMerge(1440, 1080)
-        m.measureFirst(frame) // Aufwaermen
-        val runs = (0 until 5).map { val t0 = System.nanoTime(); m.measureFirst(frame); (System.nanoTime() - t0) / 1e6 }
+        // 9.11.: auf einem langsamen CI-Rechner 12,6 ms nach nur einem Aufwaermlauf (Code noch nicht fertig uebersetzt).
+        // Die Grenze bleibt, damit die langsame erste Fassung weiter auffaellt; mehr Aufwaermen und mehr Laeufe.
+        repeat(20) { m.measureFirst(frame) }
+        val runs = (0 until 15).map { val t0 = System.nanoTime(); m.measureFirst(frame); (System.nanoTime() - t0) / 1e6 }
         val best = runs.min()
-        println("S-007 Messung des Bezugsbilds: ${"%.1f".format(best)} ms (5 Laeufe: ${runs.joinToString { "%.1f".format(it) }})")
+        println("S-007 Messung des Bezugsbilds: ${"%.1f".format(best)} ms (15 Laeufe: ${runs.joinToString { "%.1f".format(it) }})")
         assertTrue(best <= 10.0, "Messung des Bezugsbilds $best ms")
     }
 
