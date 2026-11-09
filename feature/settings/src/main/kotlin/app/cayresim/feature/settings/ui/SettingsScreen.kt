@@ -36,19 +36,22 @@ import app.cayresim.feature.settings.control.SettingsViewModel
 
 /** Einstellungen mit Zustand aus [SettingsViewModel]; S-011: Schalter "Nachtserie speichern". */
 @Composable
-fun SettingsRoute(onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> Unit, onMicTest: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> Unit, onMicTest: () -> Unit, onSoundImage: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val nightSeries by viewModel.saveNightSeries.collectAsStateWithLifecycle()
-    SettingsContent(onGuide, onSelfTest, onBack, onMicTest, nightSeries = nightSeries, onNightSeries = viewModel::onSaveNightSeries)
+    SettingsContent(onGuide, onSelfTest, onBack, onMicTest, nightSeries = nightSeries, onNightSeries = viewModel::onSaveNightSeries, onSoundImage = onSoundImage)
 }
 
 /**
- * Einstieg hinter dem Zahnrad: Anleitung, Selbsttest, Mikrofon-Test (S-008) und der Mess-Schalter "Nachtserie
- * speichern" (S-011). Reine Anzeige, den Zustand haelt [SettingsRoute].
+ * Einstieg hinter dem Zahnrad: Anleitung, Selbsttest, Mikrofon-Test (S-008), Schallbild (S-018) und der Mess-Schalter
+ * "Nachtserie speichern" (S-011). Reine Anzeige, den Zustand haelt [SettingsRoute].
  */
 @Composable
 fun SettingsContent(
     onGuide: () -> Unit, onSelfTest: () -> Unit, onBack: () -> Unit, onMicTest: () -> Unit = {},
-    nightSeries: Boolean = false, onNightSeries: (Boolean) -> Unit = {},
+    nightSeries: Boolean = false, onNightSeries: (Boolean) -> Unit = {}, onSoundImage: () -> Unit = {},
 ) {
     Surface(Modifier.fillMaxSize()) {
         // scrollbar: mit grosser Schrift passt der Hinweis zur Nachtserie sonst nicht (Zweitpruefung S-011)
@@ -60,6 +63,9 @@ fun SettingsContent(
             Entry(R.string.selftest_title, R.string.settings_selftest_hint, onSelfTest, "settings_selftest")
             HorizontalDivider()
             Entry(R.string.mictest_title, R.string.settings_mictest_hint, onMicTest, "settings_mictest")
+            HorizontalDivider()
+            // S-018: Stufe 1 der akustischen Kamera
+            Entry(R.string.soundimage_title, R.string.settings_soundimage_hint, onSoundImage, "settings_soundimage")
             HorizontalDivider()
             Toggle(R.string.settings_nightseries, R.string.settings_nightseries_hint, nightSeries, onNightSeries, "settings_nightseries")
         }
@@ -101,6 +107,7 @@ internal val guideSections: List<Pair<Int, Int>> = listOf(
     R.string.guide_gallery_title to R.string.guide_gallery_body,
     R.string.guide_selftest_title to R.string.guide_selftest_body,
     R.string.guide_mictest_title to R.string.guide_mictest_body,
+    R.string.guide_soundimage_title to R.string.guide_soundimage_body,
 )
 
 /** Anleitung fuer Einsteiger. Reine Anzeige aus Textressourcen. */

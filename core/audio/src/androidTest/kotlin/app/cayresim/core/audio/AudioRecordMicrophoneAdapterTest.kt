@@ -6,12 +6,15 @@ import androidx.test.rule.GrantPermissionRule
 import app.cayresim.core.boundary.AudioSourceKey
 import app.cayresim.core.boundary.MicRecordResult
 import app.cayresim.core.boundary.MicRequest
+import app.cayresim.core.boundary.MicStreamEvent
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,6 +70,32 @@ class AudioRecordMicrophoneAdapterTest {
         println("S-010 Zeitbezug: genau=${c.timeExact}, Start ${(start - before) / 1_000_000} ms nach Aufruf")
         assertTrue(start in before..after, "Start $start nicht zwischen $before und $after (genau: ${c.timeExact})")
         assertTrue(after - start >= 900_000_000L, "erster Frame mindestens 0,9 s vor dem Ende")
+    }
+
+    /** S-018 K18: Tonstrom liefert Stuecke zu 100 ms, bis der Sammler abbricht, und gibt das Mikrofon frei. */
+    @Test fun s018TonstromLiefertStueckeUndGibtFrei() = runBlocking {
+        withTimeout(20_000) {
+            val chunks = mutableListOf<MicStreamEvent.Chunk>()
+            var failed: MicStreamEvent.Failed? = null
+            withTimeoutOrNull(1_500) {
+                adapter.stream(MicRequest(AudioSourceKey.MIC), 100).collect { e ->
+                    when (e) {
+                        is MicStreamEvent.Chunk -> chunks += e
+                        is MicStreamEvent.Failed -> failed = e
+                    }
+                }
+            }
+            assertEquals(null, failed, "Tonstrom gescheitert")
+            assertTrue(chunks.size >= 8, "nur ${chunks.size} Stuecke in 1,5 s")
+            val c = chunks.first().chunk
+            assertTrue(c.channels in 1..2)
+            assertEquals(c.sampleRate / 10 * c.channels, c.pcm.size)
+            assertEquals(0, adapter.openRecordings, "Mikrofon nach Abbruch des Tonstroms frei")
+            // danach geht eine Einzelaufnahme und wieder ein Strom
+            assertIs<MicRecordResult.Ok>(adapter.record(MicRequest(AudioSourceKey.MIC, millis = 300)))
+            assertIs<MicStreamEvent.Chunk>(adapter.stream(MicRequest(AudioSourceKey.MIC), 100).first())
+            assertEquals(0, adapter.openRecordings)
+        }
     }
 
     @Test fun s008InventarStuerztNichtAb() = runBlocking {

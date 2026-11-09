@@ -190,4 +190,32 @@
     <string name="sweep_storage_failed">Die Datei konnte nicht gespeichert werden.</string>
     <string name="sweep_send">Bitte einen Screenshot und die WAV-Datei an Claude schicken.</string>
     <string name="mictest_send">Bitte einen Screenshot und den Ordner mit den WAV-Dateien an Claude schicken.</string>
+    <!-- S-018 Schallbild (Stufe 1 der akustischen Kamera) -->
+    <string name="soundimage_title">Schallbild</string>
+    <string name="settings_soundimage_hint">Zeigt live, aus welcher Richtung Töne kommen. Handy quer halten</string>
+    <string name="guide_soundimage_title">Schallbild</string>
+    <string name="guide_soundimage_body">Unter Einstellungen und dann \"Schallbild\" zeigt CayResim live, aus welcher Richtung Töne kommen. Halte das Handy quer, Bildschirm zu dir. Jeder Streifen steht für einen Bereich von Tonhöhen: Rot ist tief, Violett ist hoch, und je lauter der Ton, desto heller der Streifen. Zwei Mikrofone erkennen nur links und rechts, nicht vorne oder hinten. In halligen Räumen klappt es am besten mit einer nahen Quelle. Gespeichert wird nichts.</string>
+    <string name="soundimage_intro">Halte das Handy quer, Bildschirm zu dir, und tippe auf Start. Jeder Streifen steht für einen Bereich von Tonhöhen: Rot ist tief, Violett ist hoch. Je lauter der Ton, desto heller der Streifen. Zwei Mikrofone erkennen nur links und rechts, nicht vorne oder hinten. Gespeichert wird nichts.</string>
+    <string name="soundimage_start">Schallbild starten</string>
+    <string name="soundimage_stop">Anhalten</string>
+    <string name="soundimage_listening">Hört zu …</string>
+    <string name="soundimage_label_left">links</string>
+    <string name="soundimage_label_right">rechts</string>
+    <string name="soundimage_main">Hauptrichtung: %1$s</string>
+    <string name="soundimage_main_none">Hauptrichtung: kein gerichteter Ton</string>
+    <string name="soundimage_angle_right">%1$s° rechts</string>
+    <string name="soundimage_angle_left">%1$s° links</string>
+    <string name="soundimage_angle_center">Mitte</string>
+    <string name="soundimage_band">%1$s bis %2$s Hz: %3$s, Anteil %4$s, %5$s dBFS</string>
+    <string name="soundimage_band_none">keine Richtung</string>
+    <string name="soundimage_hold_not">Bitte quer halten, Bildschirm zu dir.</string>
+    <string name="soundimage_hold_unknown">Lage unbekannt: Bitte die Oberkante des Handys nach links halten.</string>
+    <string name="soundimage_source">Tonquelle</string>
+    <string name="soundimage_source_mic">Mikrofon (MIC)</string>
+    <string name="soundimage_source_camcorder">Videoton (CAMCORDER)</string>
+    <string name="soundimage_no_permission">Ohne Mikrofon-Berechtigung geht das Schallbild nicht. Tippe noch einmal auf Start oder erlaube das Mikrofon in den Android-Einstellungen.</string>
+    <string name="soundimage_no_stereo">Diese Tonquelle liefert nur ein Mikrofon. Damit lässt sich keine Richtung bestimmen. Bitte die andere Tonquelle wählen.</string>
+    <string name="soundimage_record_failed">Die Aufnahme ist gescheitert. Bitte noch einmal starten.</string>
+    <string name="soundimage_error">Das Schallbild ist mit einem Fehler abgebrochen. Bitte noch einmal starten.</string>
+    <string name="soundimage_send">Für den Gerätetest: je Stand der Tonquelle einen Screenshot an Claude schicken.</string>
 </resources>

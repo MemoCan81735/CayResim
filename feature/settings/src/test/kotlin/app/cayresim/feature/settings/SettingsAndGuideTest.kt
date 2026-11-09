@@ -36,7 +36,8 @@ class SettingsAndGuideTest {
     private val events = mutableListOf<String>()
 
     private fun settings() = compose.setContent {
-        CayResimTheme { SettingsContent(onGuide = { events += "guide" }, onSelfTest = { events += "selftest" }, onBack = { events += "back" }, onMicTest = { events += "mictest" }) }
+        CayResimTheme { SettingsContent(onGuide = { events += "guide" }, onSelfTest = { events += "selftest" }, onBack = { events += "back" }, onMicTest = { events += "mictest" },
+            onSoundImage = { events += "soundimage" }) }
     }
 
     @Test fun bild_einstellungen() { settings(); compose.onRoot().captureRoboImage("src/test/screenshots/settings.png") }
@@ -46,8 +47,10 @@ class SettingsAndGuideTest {
         compose.onNodeWithTag("settings_guide").performClick()
         compose.onNodeWithTag("settings_selftest").performClick()
         compose.onNodeWithTag("settings_mictest").performClick()
+        // S-018: Einstieg ins Schallbild
+        compose.onNodeWithTag("settings_soundimage").performClick()
         compose.onNodeWithTag("back").performClick()
-        assertEquals(listOf("guide", "selftest", "mictest", "back"), events)
+        assertEquals(listOf("guide", "selftest", "mictest", "soundimage", "back"), events)
     }
 
     @Test fun einstellungen_nachtserie() {
