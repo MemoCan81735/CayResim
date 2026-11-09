@@ -8,11 +8,13 @@ import app.cayresim.core.boundary.MotionSample
 import app.cayresim.core.boundary.MotionSensorBoundary
 import app.cayresim.core.boundary.fake.FakeMicrophoneBoundary
 import app.cayresim.core.boundary.fake.FakeMotionSensorBoundary
+import app.cayresim.core.boundary.fake.landscapeMotion
 import app.cayresim.core.boundary.fake.stereoTones
 import app.cayresim.core.pure.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -141,5 +143,58 @@ class SoundImageUseCaseTest {
         val firstLoss = frames.first { it.stats.lostChunks > 0 }
         assertEquals(2L, firstLoss.stats.lostChunks); assertEquals(10, firstLoss.stats.framesPerSecond)
         assertTrue(frames.takeWhile { it !== firstLoss }.all { it.stats.lostChunks == 0L })
+    }
+
+    @Test fun `S-021 Lage je Momentaufnahme und neu ansetzen`() = runTest {
+        val step = 10_000_000L
+        // Quelle fest bei +30 Grad im Raum: das Handy hat sich in 1 s 20 Grad nach rechts gedreht, gemessen werden +10 Grad
+        val turned = FakeMotionSensorBoundary(samples = (0..5).flatMap { landscapeMotion(it * 20 * step, yawRightDeg = it * 4.0, rollRightUpDeg = 10.0) })
+        val f = SoundImageUseCase(mic(sound(10.0)), turned, clock, here()).run().filterIsInstance<SoundImageEvent.Frame>()
+            .first { it.mainAngleDeg != null && it.bands.count { b -> b.angleDeg != null } >= 4 }
+        val m = assertNotNull(f.motion)
+        assertEquals(20.0, assertNotNull(m.yawDeg), 0.5); assertEquals(10.0, assertNotNull(m.rollDeg), 0.5); assertEquals(0.0, assertNotNull(m.pitchDeg), 0.5)
+        assertEquals(false, m.moving)
+        assertEquals(10.0, assertNotNull(f.mainAngleDeg), 5.0)
+        assertEquals(30.0, assertNotNull(f.worldAngleDeg), 3.0)
+        assertEquals(20.0 / 15.0, m.dotX, 0.05, "Punkt am Rand des Felds")
+        assertEquals(2, f.channelDbfs.size); assertTrue(f.channelDbfs.all { it in -40.0..-10.0 }, "${f.channelDbfs}")
+        // Stoss: der Moment ist bewegt und zeigt keine Richtung, Pegel und Kurven bleiben
+        val tapped = FakeMotionSensorBoundary(samples = (0..20).flatMap { landscapeMotion(it * step, shake = if (it == 20) 3f else 0f) })
+        val moving = SoundImageUseCase(mic(sound(30.0)), tapped, clock, here()).run().filterIsInstance<SoundImageEvent.Frame>().take(12).toList().last()
+        assertEquals(true, assertNotNull(moving.motion).moving)
+        assertNull(moving.mainAngleDeg); assertNull(moving.worldAngleDeg); assertTrue(moving.bands.none { it.angleDeg != null })
+        assertEquals(5, moving.bands.size); assertTrue(moving.bands.all { it.response.isNotEmpty() })
+        // nur Schwerkraft, kein Drehvektor: Neigung ja, Drehung und Richtung im Raum nein
+        val tiltOnly = SoundImageUseCase(mic(sound(30.0)), gravity(9.81f, 0f, 0f), clock, here()).run().filterIsInstance<SoundImageEvent.Frame>()
+            .first { it.mainAngleDeg != null }
+        assertEquals(0.0, assertNotNull(assertNotNull(tiltOnly.motion).rollDeg), 0.5); assertNull(tiltOnly.motion?.yawDeg); assertNull(tiltOnly.worldAngleDeg)
+        // Sensorfehler oder kein Sensor: keine Lage, das Schallbild laeuft
+        val none = FakeMotionSensorBoundary(availability = MotionAvailability(rotation = false, acceleration = false))
+        assertNull(SoundImageUseCase(mic(sound(30.0)), none, clock, here()).run().filterIsInstance<SoundImageEvent.Frame>().first().motion)
+
+        // Lage-Kreis: eine Runde am Rand in 2 s, im Takt der Zeitstempel; nach "Neu ansetzen" steht der Punkt in der Mitte
+        val round = FakeMotionSensorBoundary(paced = true, samples = (0..300).flatMap {
+            val a = Math.toRadians(minOf(it, 200) * 1.8)
+            landscapeMotion(it * step, yawRightDeg = 15.0 * kotlin.math.cos(a), rollRightUpDeg = 15.0 * kotlin.math.sin(a))
+        })
+        // der Start liegt schon am Rand (15 Grad rechts): gemeinsamer Bezug aus einer aufrechten Lage
+        val origin = TurnOrigin()
+        SoundImageUseCase(mic(sound(30.0)), FakeMotionSensorBoundary(samples = landscapeMotion(0)), clock, here()).run(origin = origin)
+            .filterIsInstance<SoundImageEvent.Frame>().first { it.motion?.yawDeg != null }
+        val resets = MutableStateFlow(0)
+        val slow = mic(sound(30.0)).apply { streamChunkDelayMillis = 100 }
+        val frames = mutableListOf<SoundImageEvent.Frame>()
+        SoundImageUseCase(slow, round, clock, here()).run(resets = resets, origin = origin).filterIsInstance<SoundImageEvent.Frame>().take(28).collect {
+            frames += it
+            if (frames.size == 22) resets.value = 1
+        }
+        val masks = frames.map { Integer.bitCount(assertNotNull(it.motion).coverageMask) }
+        assertTrue(masks.zipWithNext().take(20).all { (a, b) -> b >= a }, "Abdeckung waechst: $masks")
+        assertEquals(12, masks[21], "volle Runde nach 2 s: $masks")
+        val atRim = assertNotNull(frames[21].motion); assertEquals(1.0, kotlin.math.hypot(atRim.dotX, atRim.dotY), 0.1)
+        val after = assertNotNull(frames.last().motion)
+        assertTrue(Integer.bitCount(after.coverageMask) == 0, "Ring nach neu ansetzen leer: ${after.coverageMask}")
+        assertEquals(0.0, kotlin.math.hypot(after.dotX, after.dotY), 0.05, "Punkt in der Mitte")
+        assertEquals(0.0, assertNotNull(after.yawDeg), 0.5)
     }
 }

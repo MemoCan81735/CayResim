@@ -71,6 +71,7 @@ import app.cayresim.core.boundary.CameraStateSnapshot
 import app.cayresim.core.boundary.ZoomSnapshot
 import app.cayresim.core.boundary.DeviceReport
 import app.cayresim.core.boundary.HardwareLevel
+import app.cayresim.core.boundary.LensSnapshot
 import app.cayresim.core.boundary.LightSnapshot
 import app.cayresim.core.boundary.OisState
 import app.cayresim.core.boundary.Frame
@@ -188,7 +189,8 @@ class CameraXCameraAdapter @Inject constructor(
             fallbackSink = null
             imageCapture = null
             // Befund H4: alte Lichtmessung gilt nach dem Stopp nicht mehr (z. B. Wiederoeffnen bei Tageslicht)
-            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, light = null, stabilization = null) }
+            fpsWindowStart = 0L; fpsFrames = 0
+            _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, light = null, stabilization = null, previewFps = null) }
         }
     }
 
@@ -214,6 +216,7 @@ class CameraXCameraAdapter @Inject constructor(
             lowLightBoost = runCatching { info.isLowLightBoostSupported }.getOrDefault(false),
             ultraHdr = ImageCapture.OUTPUT_FORMAT_JPEG_ULTRA_HDR in formats,
             raw = ImageCapture.OUTPUT_FORMAT_RAW in formats,
+            lens = readLens(info),
             device = readDeviceReport(info).also { oisAvailable = it.ois == true },
         )
     }
@@ -432,6 +435,29 @@ class CameraXCameraAdapter @Inject constructor(
         }
     }
 
+    // S-021: Bilder je Sekunde im Sucherstrom, einmal je Sekunde in den Zustand (nicht je Bild, R22)
+    @Volatile private var fpsWindowStart = 0L
+    @Volatile private var fpsFrames = 0
+
+    private fun countFrame() {
+        val now = SystemClock.elapsedRealtime()
+        val start = fpsWindowStart
+        if (start == 0L) { fpsWindowStart = now; fpsFrames = 0; return }
+        val frames = fpsFrames + 1
+        val elapsed = now - start
+        if (elapsed < FPS_WINDOW_MS) { fpsFrames = frames; return }
+        val fps = ((frames * 1000L + elapsed / 2) / elapsed).toInt()
+        fpsWindowStart = now; fpsFrames = 0
+        if (_state.value.previewFps != fps) _state.update { it.copy(previewFps = fps) }
+    }
+
+    override suspend fun runWithoutViewfinder(): Boolean = withContext(dispatcher) {
+        if (_state.value.status != CameraStatus.RUNNING) return@withContext false
+        ensureSurface()
+        withTimeoutOrNull(FIRST_FPS_TIMEOUT_MS) { _state.first { it.previewFps != null || it.status != CameraStatus.RUNNING } }
+        _state.value.status == CameraStatus.RUNNING && _state.value.previewFps != null
+    }
+
     /** Liest Belichtungszeit und ISO aus jedem 10. Kamerabild; Grundlage fuer "ist es dunkel?" (Nacht-Kern). */
     private val lightMeter = object : android.hardware.camera2.CameraCaptureSession.CaptureCallback() {
         private var n = 0
@@ -440,6 +466,7 @@ class CameraXCameraAdapter @Inject constructor(
             request: CaptureRequest,
             result: android.hardware.camera2.TotalCaptureResult,
         ) {
+            countFrame()
             val ae = result.get(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE)
             aeState = ae
             // S-003: ob der Stabilisator laeuft, sagt nur das Aufnahmeergebnis
@@ -782,6 +809,15 @@ class CameraXCameraAdapter @Inject constructor(
             system = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.DISPLAY}",
         )
     }
+
+    /** S-021: Brennweite und Sensorgroesse fuer den Bildwinkel; null, wenn das Geraet sie nicht nennt. */
+    private fun readLens(info: androidx.camera.core.CameraInfo): LensSnapshot? = runCatching {
+        val c2 = Camera2CameraInfo.from(info)
+        val focal = c2.getCameraCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.firstOrNull()
+        val size = c2.getCameraCharacteristic(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)
+        if (focal == null || size == null || focal <= 0f || size.width <= 0f || size.height <= 0f) null
+        else LensSnapshot(focal, maxOf(size.width, size.height), minOf(size.width, size.height))
+    }.getOrNull()
 
     private fun readManualCapabilities(info: androidx.camera.core.CameraInfo, raw: Boolean): ManualCapabilitiesSnapshot? = runCatching {
         val c2 = Camera2CameraInfo.from(info)
@@ -1172,6 +1208,9 @@ class CameraXCameraAdapter @Inject constructor(
 
     companion object {
         const val PHOTO_DIR = "Pictures/CayResim"
+        /** S-021: Fenster der Bildzaehlung und Wartezeit auf die erste Messung ohne Sucher. */
+        const val FPS_WINDOW_MS = 1_000L
+        const val FIRST_FPS_TIMEOUT_MS = 4_000L
         const val CAPTURE_TIMEOUT_MS = 8_000L
         /** Obergrenze je RAW-Bild in der Messung; das Tempo selbst bewertet der Selbsttest. */
         const val RAW_FRAME_TIMEOUT_MS = 5_000L

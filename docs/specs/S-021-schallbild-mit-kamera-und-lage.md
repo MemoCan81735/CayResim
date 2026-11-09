@@ -1,6 +1,8 @@
 # S-021: Schallbild bei laufender Kamera messen, mit Neigung und Bewegung des Handys
 
-**Stand:** 9.11.2026 · **Status:** Entwurf, wartet auf Freigabe
+**Stand:** 9.11.2026 · **Status:** freigegeben von Arslan am 9.11.2026, 23:38 Uhr ("Ja bitte"), samt
+Ergänzung zu R28 (Kamera und Mikrofon gleichzeitig), Kamera-Sitzung im Schallbild, Kamera-Berechtigung im Schallbild,
+Lage-Kreis und einem Release
 **Anlass:** Plan F11, Stufe 2. Die Stufe 3 (Streifen im Sucherbild) taugt nur, wenn das Mikrofon bei laufender Kamera
 denselben Ton liefert wie ohne. Samsung kann das Mikrofon dann anders schalten (bei Video nutzt die Kamera-App das
 hintere Mikrofon als Zoom-Mikrofon). Gemessen ist bisher nur der Ton ohne Kamera (S-018 bis S-020: zwei Mikrofone, 16
@@ -28,6 +30,15 @@ um unbrauchbare Momente zu erkennen. Reine Messung, es wird nichts gespeichert.
 | Lufttemperatur | Schallgeschwindigkeit (0 bis 35 Grad: etwa 3 % Unterschied, bei 45° rund 2° Fehler) | nein: Das S24+ hat keinen Sensor dafür; bleibt als bekannte Grenze |
 | Annäherung und Helligkeit | verdecktes Mikrofon erkennen | nein: Der Sensor sitzt oben vorne, die Mikrofone unten und hinten; ein verdecktes Mikrofon zeigt sich schon am Pegel |
 | Bildstabilisator | verschiebt das Bild um Bruchteile eines Grads | nein: erst in Stufe 3 prüfen, falls die Streifen sichtbar wackeln |
+
+## Lage-Kreis (Wunsch von Arslan, 9.11., 23:35 Uhr)
+Im Schallbild steht ein Kreis mit einem kleinen Punkt. Der Punkt zeigt die Lage gegenüber dem Start: waagerecht die
+Drehung nach links und rechts, senkrecht das Schrägstellen (Neigung quer). In der Ausgangslage steht er in der Mitte,
+der innere Rand des Kreises entspricht 15°. Ziel ist, den Punkt einmal am inneren Rand entlangzuführen; ein Ring außen
+füllt sich in 12 Abschnitten dort, wo der Punkt am Rand war (zwischen 10° und 20° Auslenkung). Kippen nach vorne oder
+hinten dreht das Handy um die Mikrofonachse und ändert am Ton nichts; es wird im Kreis nicht gezeigt. "Neu ansetzen"
+setzt Startlage und Ring zurück. In dieser Spec ist der Kreis nur Anzeige und Messung der Abdeckung; die Höhe der
+Quelle aus der Runde zu rechnen, ist eine eigene spätere Spec.
 
 ## Ablauf der Messung
 Handy quer und aufrecht halten, eine gleichmäßige Tonquelle (Musik vom zweiten Handy) etwa 40 cm rechts. Sechs Phasen
@@ -73,16 +84,22 @@ Urteil je Tonquelle (genau eines):
 | K12 | Ohne Kamera-Berechtigung: Knopf fragt nach der Berechtigung; abgelehnt: Hinweis, das Schallbild ohne Kamera bleibt nutzbar | `SoundImageTest > S-021 ohne Kamera-Berechtigung` |
 | K13 | Adapter (Emulator): Tonstrom und Kamera gleichzeitig starten und stoppen, zehnmal hintereinander, ohne Absturz und ohne offene Aufnahme; der Bildwinkel ist gesetzt oder ausdrücklich unbekannt | `SoundWithCameraDeviceTest > s021TonstromMitKamera` |
 | K14 | Zeit und Speicher: Rechnung der Lage je Moment höchstens 0,1 ms (JVM, bester von 15 nach 20 Aufwärmläufen); keine neuen Puffer je Moment; Messzeile im Schallbild bleibt | `DeviceTiltTest > S-021 Rechenzeit der Lage` |
+| K16 | Lage-Kreis, Punktlage: Drehung +15° nach rechts ergibt den Punkt am rechten Rand (x = 1, y = 0 innerhalb 0,02), Schrägstellen +15° den oberen Rand; über 20° bleibt der Punkt am Rand des Felds (Betrag höchstens 1,33); Kippen allein bewegt ihn nicht (höchstens 0,02) | `DeviceTiltTest > S-021 Punkt im Lage-Kreis` |
+| K17 | Lage-Kreis, Abdeckung: eine volle Runde bei 15° füllt 12 von 12 Abschnitten; eine Runde bei 5° füllt keinen; eine halbe Runde 6 oder 7; "Neu ansetzen" leert den Ring und setzt die Startlage | `DeviceTiltTest > S-021 Abdeckung des Rands`, `SoundImageUseCaseTest > S-021 Lage je Momentaufnahme und neu ansetzen` |
+| K18 | Schallbild zeigt den Kreis mit Punkt und Ring; bei voller Abdeckung steht "Runde vollständig" | `SoundImageTest > S-021 Lage-Kreis halb gefüllt` (ein Vergleichsbild), `SoundImageTest > S-021 Lage-Kreis vollständig` |
 | K15 | Gerätetest S24+ (siehe unten) | Arslan |
 
 **Gerätetest (K15):** Schallbild öffnen, Musik vom zweiten Handy 40 cm rechts, Handy quer und aufrecht ruhig halten,
 "Mit Kamera vergleichen" starten, 26 Sekunden warten, Screenshot des Ergebnisses. Dann ohne Messung: Handy langsam
 etwa 20° nach links drehen und zurück, Screenshot der Lagezeile am Ende der Drehung (die "Richtung im Raum" soll stehen
-bleiben). Einmal das Handy 10° schräg halten, Screenshot.
+bleiben). Einmal das Handy 10° schräg halten, Screenshot. Zuletzt "Neu ansetzen" und den Punkt einmal am
+inneren Rand entlangführen: Folgt der Punkt der Bewegung in dieselbe Richtung, ist die Runde bequem zu schaffen, füllt
+sich der Ring? Screenshot am Ende.
 
 ## Nicht Teil dieser Änderung
 - Keine Streifen im Sucherbild (Stufe 3) und kein sichtbares Kamerabild in dieser Messung.
 - Kein Speichern von Ton, Bild oder Messwerten; der Nachweis ist der Screenshot.
+- Keine Rechnung der Höhe der Quelle aus der Runde im Lage-Kreis (eigene Spec danach).
 - Keine Korrektur der Richtung durch die Neigung; sie wird gemessen und angezeigt. Die Umrechnung in eine Stelle im
   Bild gehört zu Stufe 3.
 - Schwenk-Messung (F12), Mikrofon-Test und die Kamera-Modi bleiben unverändert.

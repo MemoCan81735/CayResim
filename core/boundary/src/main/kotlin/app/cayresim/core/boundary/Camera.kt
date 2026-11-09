@@ -13,9 +13,17 @@ data class CameraCapabilitiesSnapshot(
     val lowLightBoost: Boolean,
     val ultraHdr: Boolean,
     val raw: Boolean,
+    /**
+     * S-021: Optik der Kamera fuer den Bildwinkel; null, wenn das Geraet sie nicht nennt. Ohne Standardwert, damit
+     * jeder Adapter sie setzen muss.
+     */
+    val lens: LensSnapshot?,
     /** Geraetewerte fuer die Diagnose im Selbsttest; null, wenn nicht lesbar. */
     val device: DeviceReport? = null,
 )
+
+/** S-021: Brennweite und Groesse des Sensors in mm (Breite ist die lange Seite). Den Bildwinkel rechnet `ViewAngle`. */
+data class LensSnapshot(val focalLengthMm: Float, val sensorWidthMm: Float, val sensorHeightMm: Float)
 
 enum class HardwareLevel { LEGACY, LIMITED, FULL, LEVEL_3, EXTERNAL, UNKNOWN }
 
@@ -67,6 +75,8 @@ data class CameraStateSnapshot(
     val light: LightSnapshot? = null,
     /** S-003: optischer Stabilisator laut letzter Aufnahme der eigenen Pipeline; null = noch kein Ergebnis (z. B. Samsung-Modi). */
     val stabilization: OisState? = null,
+    /** S-021: Bilder je Sekunde im Sucherstrom, einmal je Sekunde gemessen; null, solange noch keine Sekunde gelaufen ist. */
+    val previewFps: Int? = null,
 )
 
 /**
@@ -110,6 +120,13 @@ interface CameraBoundary {
      * (0,0 = oben links des Kamerabilds). false bei ungueltigem Punkt oder ohne laufende Kamera.
      */
     suspend fun focusAt(x: Float, y: Float): Boolean
+
+    /**
+     * S-021: Laesst die laufende Kamera ohne sichtbaren Sucher Bilder liefern (unsichtbare Ersatz-Flaeche) und wartet
+     * auf die erste Messung von [CameraStateSnapshot.previewFps]. false, wenn die Kamera nicht laeuft oder keine
+     * Bilder kommen.
+     */
+    suspend fun runWithoutViewfinder(): Boolean
 
     /** Gespeicherte Aufnahme loeschen (Selbsttest raeumt damit auf). */
     suspend fun delete(uri: String): Boolean

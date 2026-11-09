@@ -32,6 +32,12 @@ class FakeCameraBoundary(
     var zoomPresets: List<Float> = emptyList()
     var deviceReport: app.cayresim.core.boundary.DeviceReport? = null
     var lastFocus: Pair<Float, Float>? = null; private set
+    /** S-021: Optik der simulierten Kamera; Bilder je Sekunde ohne Sucher, null = es kommen keine Bilder. */
+    var lens: app.cayresim.core.boundary.LensSnapshot? = app.cayresim.core.boundary.LensSnapshot(6.3f, 9.8f, 7.35f)
+    var headlessFps: Int? = 30
+    var headlessCalls = 0; private set
+    /** Laeuft nach jedem Start; Tests pruefen damit, was waehrend laufender Kamera gilt. */
+    var onStart: () -> Unit = {}
     var startCalls = 0; private set
     var stopCalls = 0; private set
     private var counter = 0
@@ -39,7 +45,7 @@ class FakeCameraBoundary(
     override suspend fun start() {
         startCalls++
         val modes = listOf(PhotoMode.NORMAL) + PhotoMode.entries.filter { it in availableModes && it != PhotoMode.NORMAL }
-        _caps.value = CameraCapabilitiesSnapshot(modes, lowLightBoost = false, ultraHdr = false, raw = false, device = deviceReport)
+        _caps.value = CameraCapabilitiesSnapshot(modes, lowLightBoost = false, ultraHdr = false, raw = false, lens = lens, device = deviceReport)
         val err = startError
         _state.update {
             if (err != null) it.copy(status = CameraStatus.ERROR, error = err, preview = null)
@@ -47,11 +53,20 @@ class FakeCameraBoundary(
                 zoom = ZoomSnapshot(it.zoom.ratio.coerceIn(zoomRange.start, zoomRange.endInclusive), zoomRange.start, zoomRange.endInclusive, zoomPresets))
         }
         if (err == null) applyMode(_state.value.requestedMode)
+        onStart()
+    }
+
+    override suspend fun runWithoutViewfinder(): Boolean {
+        headlessCalls++
+        if (_state.value.status != CameraStatus.RUNNING) return false
+        val fps = headlessFps ?: return false
+        _state.update { it.copy(previewFps = fps) }
+        return true
     }
 
     override suspend fun stop() {
         stopCalls++
-        _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false) }
+        _state.update { it.copy(status = CameraStatus.IDLE, preview = null, capturing = false, previewFps = null) }
     }
 
     override suspend fun selectMode(mode: PhotoMode) = applyMode(mode)
