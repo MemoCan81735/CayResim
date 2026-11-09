@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.SoundCameraUseCaseTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:50:56.305Z" hostname="runnervm7aw5e" time="2.4">
+  <properties/>
+  <testcase name="S-021 sechs Phasen, Kamera in Phase 2 und 5" classname="app.cayresim.core.control.SoundCameraUseCaseTest" time="0.676"/>
+  <testcase name="S-021 Abbruch gibt alles frei" classname="app.cayresim.core.control.SoundCameraUseCaseTest" time="0.58"/>
+  <testcase name="S-021 Fehler enden als Werte" classname="app.cayresim.core.control.SoundCameraUseCaseTest" time="1.144"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

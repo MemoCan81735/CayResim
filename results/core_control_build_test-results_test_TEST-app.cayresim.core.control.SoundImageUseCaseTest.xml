@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.SoundImageUseCaseTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:50:58.708Z" hostname="runnervm7aw5e" time="2.075">
+  <properties/>
+  <testcase name="S-018 Messwerte zeigen Takt, Rechenzeit und verlorene Stuecke" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="0.178"/>
+  <testcase name="S-018 hochkant zeigt keine Streifen" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="0.179"/>
+  <testcase name="S-018 Abbruch gibt Mikrofon und Sensor frei" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="0.178"/>
+  <testcase name="S-018 Fehlerfaelle enden als Werte" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="0.198"/>
+  <testcase name="S-021 Lage je Momentaufnahme und neu ansetzen" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="1.126"/>
+  <testcase name="S-018 Quelle rechts steht rechts, gedreht links" classname="app.cayresim.core.control.SoundImageUseCaseTest" time="0.215"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

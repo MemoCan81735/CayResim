@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.boundary.FakeSeriesBoundaryContractTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:50:42.193Z" hostname="runnervm7aw5e" time="0.051">
+  <properties/>
+  <testcase name="Fake erfuellt den Serien-Vertrag" classname="app.cayresim.core.boundary.FakeSeriesBoundaryContractTest" time="0.051"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

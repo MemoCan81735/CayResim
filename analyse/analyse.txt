@@ -1,0 +1,6 @@
+Fallen: keine Funde
+Fallen-Probe: erkannt
+detekt-Probe: erkannt
+detekt: keine neuen Funde
+Lint-Probe: erkannt
+Lint: keine neuen Funde
