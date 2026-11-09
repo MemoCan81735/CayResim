@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.ViewAngleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:51:26.134Z" hostname="runnervm7aw5e" time="0.001">
+  <properties/>
+  <testcase name="S-021 Bildwinkel aus Brennweite und Sensor" classname="app.cayresim.core.pure.ViewAngleTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.DeviceTiltTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:51:07.048Z" hostname="runnervm7aw5e" time="0.212">
+  <properties/>
+  <testcase name="S-021 bewegte Momente" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.013"/>
+  <testcase name="S-021 Rechenzeit der Lage" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.182"/>
+  <testcase name="S-021 Neigung quer und Kippen aus der Schwerkraft" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.01"/>
+  <testcase name="S-021 Drehung seit dem Start und Drehgeschwindigkeit" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.001"/>
+  <testcase name="S-021 Punkt im Lage-Kreis" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.001"/>
+  <testcase name="S-021 Abdeckung des Rands" classname="app.cayresim.core.pure.DeviceTiltTest" time="0.001"/>
+  <system-out><![CDATA[S-021 K14: Lage je Moment 0.0011 ms (15 Laeufe, groesster 0.0070)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

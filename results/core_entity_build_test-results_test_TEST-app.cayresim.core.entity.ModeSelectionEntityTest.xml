@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.entity.ModeSelectionEntityTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:50:52.199Z" hostname="runnervm7aw5e" time="0.305">
+  <properties/>
+  <testcase name="Gescheitertes Binden nimmt den Modus aus dem Angebot" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.081"/>
+  <testcase name="Wegfall der Verfuegbarkeit nach der Wahl fuehrt zum Rueckfall" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.007"/>
+  <testcase name="Verfuegbarer Modus wird genutzt" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.0"/>
+  <testcase name="NORMAL kann nie als gescheitert markiert werden" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.002"/>
+  <testcase name="Nicht verfuegbarer Modus faellt auf NORMAL zurueck und wird vermerkt" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.0"/>
+  <testcase name="Zuruecksetzen bietet gescheiterte Modi wieder an" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.0"/>
+  <testcase name="Wirksamer Modus ist immer angeboten (Eigenschaft)" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.209"/>
+  <testcase name="NORMAL ist auch bei leerer Verfuegbarkeit da" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.001"/>
+  <testcase name="Startzustand ist NORMAL ohne Rueckfall" classname="app.cayresim.core.entity.ModeSelectionEntityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.control.HoldGuideUseCaseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:51:12.372Z" hostname="runnervm7aw5e" time="0.181">
+  <properties/>
+  <testcase name="S-016 Abweichung und Abmelden" classname="app.cayresim.core.control.HoldGuideUseCaseTest" time="0.181"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

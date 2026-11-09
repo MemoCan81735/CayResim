@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.feature.settings.SoundImageTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:52:58.011Z" hostname="runnervm7aw5e" time="3.365">
+  <properties/>
+  <testcase name="S-021 Ergebnis der Messung mit Kamera" classname="app.cayresim.feature.settings.SoundImageTest" time="0.33"/>
+  <testcase name="S-018 ViewModel meldet Fehler im Zustand" classname="app.cayresim.feature.settings.SoundImageTest" time="0.294"/>
+  <testcase name="S-021 Lagezeile im Schallbild" classname="app.cayresim.feature.settings.SoundImageTest" time="0.139"/>
+  <testcase name="S-021 Lage-Kreis vollstaendig" classname="app.cayresim.feature.settings.SoundImageTest" time="0.079"/>
+  <testcase name="S-021 ohne Kamera-Berechtigung" classname="app.cayresim.feature.settings.SoundImageTest" time="0.32"/>
+  <testcase name="S-018 Bildschirm hochkant zeigt die Streifen quer" classname="app.cayresim.feature.settings.SoundImageTest" time="0.155"/>
+  <testcase name="S-021 Lage-Kreis halb gefuellt" classname="app.cayresim.feature.settings.SoundImageTest" time="0.147"/>
+  <testcase name="S-018 Zustaende ohne Streifen" classname="app.cayresim.feature.settings.SoundImageTest" time="0.355"/>
+  <testcase name="S-018 ViewModel startet, stoppt und wechselt die Quelle" classname="app.cayresim.feature.settings.SoundImageTest" time="0.307"/>
+  <testcase name="S-021 Ergebnis nennt Kamerafehler und fehlende Werte" classname="app.cayresim.feature.settings.SoundImageTest" time="0.112"/>
+  <testcase name="S-021 ViewModel misst mit Kamera und meldet die Lage" classname="app.cayresim.feature.settings.SoundImageTest" time="0.836"/>
+  <testcase name="S-018 Bildschirm zeigt Streifen und Zahlen" classname="app.cayresim.feature.settings.SoundImageTest" time="0.23"/>
+  <testcase name="S-018 Streifen folgen der Haltung, nicht der Drehung der Oberflaeche" classname="app.cayresim.feature.settings.SoundImageTest" time="0.037"/>
+  <system-out><![CDATA[Roborazzi: soundimage_check.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: soundimage_upright.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: soundimage_circle.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=2673, height=1233) changed:false
+Roborazzi: soundimage_idle.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=1233, height=2673) changed:false
+Roborazzi: soundimage_running.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=3295809, width=2673, height=1233) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

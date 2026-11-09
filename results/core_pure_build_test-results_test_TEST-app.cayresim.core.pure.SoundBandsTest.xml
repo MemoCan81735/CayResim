@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.cayresim.core.pure.SoundBandsTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-09T23:51:20.079Z" hostname="runnervm7aw5e" time="2.111">
+  <properties/>
+  <testcase name="S-018 reiner Ton steht im richtigen Band" classname="app.cayresim.core.pure.SoundBandsTest" time="0.099"/>
+  <testcase name="S-018 folgt einem Sprung der Quelle" classname="app.cayresim.core.pure.SoundBandsTest" time="0.168"/>
+  <testcase name="S-018 Ton endet, Streifen verschwindet" classname="app.cayresim.core.pure.SoundBandsTest" time="0.175"/>
+  <testcase name="S-018 Rauschen aus 30 Grad steht in allen Baendern" classname="app.cayresim.core.pure.SoundBandsTest" time="0.062"/>
+  <testcase name="S-018 Haltung aus der Schwerkraft" classname="app.cayresim.core.pure.SoundBandsTest" time="0.001"/>
+  <testcase name="S-018 Randfall Stille" classname="app.cayresim.core.pure.SoundBandsTest" time="0.04"/>
+  <testcase name="S-018 zwei Quellen stehen je Band an ihrer Stelle" classname="app.cayresim.core.pure.SoundBandsTest" time="0.094"/>
+  <testcase name="S-018 Fehlerfall unabhaengiges Rauschen zeigt nichts" classname="app.cayresim.core.pure.SoundBandsTest" time="0.573"/>
+  <testcase name="S-018 Hall zieht nur tiefe Baender zur Mitte" classname="app.cayresim.core.pure.SoundBandsTest" time="0.837"/>
+  <testcase name="S-018 Pegel je Band" classname="app.cayresim.core.pure.SoundBandsTest" time="0.015"/>
+  <testcase name="S-018 Rechnung haelt das Zeitbudget" classname="app.cayresim.core.pure.SoundBandsTest" time="0.043"/>
+  <system-out><![CDATA[S-018 K2 Pegel je Band: -35.3, -32.3, -51.2, -35.3, -32.3
+S-018 K3: 648 Momentaufnahmen, groesster Anteil je Band bei unabhaengigem Rauschen (mit Einschwingen) 0.259, 0.177, 0.189, 0.125, 0.107 (Grenze 0.3)
+S-018 K9 Hall gleich laut, Quelle 40 Grad: 200 Hz: 15 Grad, Anteil 0.90, 400 Hz: 24 Grad, Anteil 0.60, 800 Hz: 40 Grad, Anteil 0.59, 1600 Hz: 40 Grad, Anteil 0.54, 3200 Hz: 39 Grad, Anteil 0.52; Hauptrichtung 39
+S-018 K8: 100 ms Ton und Momentaufnahme in 0.39 ms (5 Laeufe: 0.44, 0.40, 0.39, 0.42, 0.39)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
