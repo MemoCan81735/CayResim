@@ -154,6 +154,8 @@ class DeviceTiltTest {
         assertEquals(1, DeviceTilt.RimCoverage().apply { add(DeviceTilt.Turn(15.0, 1.0, 0.0)) }.mask)
         assertEquals(1 shl 3, DeviceTilt.RimCoverage().apply { add(DeviceTilt.Turn(-0.5, 15.0, 0.0)) }.mask)
         full.reset(); assertEquals(0, full.mask)
+        // Unsinn vom Sensor setzt keinen Abschnitt
+        assertEquals(0, DeviceTilt.RimCoverage().apply { add(DeviceTilt.Turn(Double.NaN, 15.0, 0.0)); add(DeviceTilt.Turn(15.0, Double.POSITIVE_INFINITY, 0.0)) }.mask)
     }
 
     @Test fun `S-021 Rechenzeit der Lage`() {

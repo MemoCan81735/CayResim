@@ -157,6 +157,11 @@ class SoundImageUseCaseTest {
         assertEquals(10.0, assertNotNull(f.mainAngleDeg), 5.0)
         assertEquals(30.0, assertNotNull(f.worldAngleDeg), 3.0)
         assertEquals(20.0 / 15.0, m.dotX, 0.05, "Punkt am Rand des Felds")
+        // Gegenrichtung: 20 Grad nach links gedreht, dieselbe Quelle erscheint bei +50 Grad
+        val turnedLeft = FakeMotionSensorBoundary(samples = (0..5).flatMap { landscapeMotion(it * 20 * step, yawRightDeg = it * -4.0) })
+        val g = SoundImageUseCase(mic(sound(50.0)), turnedLeft, clock, here()).run().filterIsInstance<SoundImageEvent.Frame>()
+            .first { it.mainAngleDeg != null && it.bands.count { b -> b.angleDeg != null } >= 4 }
+        assertEquals(-20.0, assertNotNull(assertNotNull(g.motion).yawDeg), 0.5); assertEquals(30.0, assertNotNull(g.worldAngleDeg), 5.0)
         assertEquals(2, f.channelDbfs.size); assertTrue(f.channelDbfs.all { it in -40.0..-10.0 }, "${f.channelDbfs}")
         // Stoss: der Moment ist bewegt und zeigt keine Richtung, Pegel und Kurven bleiben
         val tapped = FakeMotionSensorBoundary(samples = (0..20).flatMap { landscapeMotion(it * step, shake = if (it == 20) 3f else 0f) })

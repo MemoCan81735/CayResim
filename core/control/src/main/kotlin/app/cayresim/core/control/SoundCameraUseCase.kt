@@ -6,6 +6,7 @@ import app.cayresim.core.boundary.CameraError
 import app.cayresim.core.boundary.CameraStatus
 import app.cayresim.core.boundary.ComputeDispatcher
 import app.cayresim.core.boundary.PhotoMode
+import app.cayresim.core.pure.Clock
 import app.cayresim.core.pure.SoundCameraCheck
 import app.cayresim.core.pure.ViewAngle
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,6 +39,8 @@ data class SoundCameraVerdict(val source: AudioSourceKey, val verdict: SoundCame
 data class SoundCameraReport(
     val phases: List<SoundCameraPhase>, val verdicts: List<SoundCameraVerdict>, val cameraError: CameraError?, val cameraFrames: Boolean,
     val viewWideDeg: Double?, val viewHighDeg: Double?, val motionAvailable: Boolean,
+    /** Dauer der ganzen Messung samt Start und Stopp der Kamera (R27, K7: auf dem Geraet hoechstens 30 s). */
+    val durationMillis: Long,
 )
 
 sealed interface SoundCameraEvent {
@@ -56,11 +59,15 @@ sealed interface SoundCameraEvent {
 class SoundCameraUseCase @Inject constructor(
     private val soundImage: SoundImageUseCase,
     private val camera: CameraBoundary,
+    private val clock: Clock,
     @ComputeDispatcher private val compute: CoroutineDispatcher,
 ) {
     /** [phaseMillis]: Dauer je Phase; Tests kuerzen sie, weil der lokale Lauf mit echter Zeit rechnet. */
     fun run(phaseMillis: Long = PHASE_MILLIS): Flow<SoundCameraEvent> = flow {
         val origin = TurnOrigin()
+        val startedAt = clock.nowMillis()
+        // die Phasen ohne Kamera gelten nur, wenn sie wirklich aus ist (Zweitpruefung S-021)
+        if (camera.state.value.status != CameraStatus.IDLE) camera.stop()
         val phases = mutableListOf<SoundCameraPhase>()
         val verdicts = mutableListOf<SoundCameraVerdict>()
         var cameraError: CameraError? = null
@@ -75,14 +82,13 @@ class SoundCameraUseCase @Inject constructor(
                 var started = false
                 try {
                     started = true
+                    // Samsungs Modi melden keine Aufnahmeergebnisse und binden anders: gemessen wird der normale Modus.
+                    // Vor dem Start gewaehlt, damit die Kamera nur einmal bindet
+                    camera.selectMode(PhotoMode.NORMAL)
                     camera.start()
                     val running = camera.state.value.status == CameraStatus.RUNNING
                     if (!running) { cameraError = camera.state.value.error ?: CameraError.UNKNOWN; cameraFailed = true }
-                    else {
-                        // Samsungs Modi melden keine Aufnahmeergebnisse und binden anders: gemessen wird der normale Modus
-                        camera.selectMode(PhotoMode.NORMAL)
-                        if (!camera.runWithoutViewfinder()) { cameraFrames = false; cameraFailed = true }
-                    }
+                    else if (!camera.runWithoutViewfinder()) { cameraFrames = false; cameraFailed = true }
                     // der Ton laeuft auch dann zu Ende, wenn die Kamera scheitert: die Phase bleibt als Messwert
                     phases += measure(source, origin, cameraOn = true, phaseMillis)
                 } finally {
@@ -101,6 +107,7 @@ class SoundCameraUseCase @Inject constructor(
             ViewAngle.degrees(lens?.focalLengthMm?.toDouble(), lens?.sensorWidthMm?.toDouble()),
             ViewAngle.degrees(lens?.focalLengthMm?.toDouble(), lens?.sensorHeightMm?.toDouble()),
             motionAvailable = phases.any { it.stats?.movedShare != null },
+            durationMillis = clock.nowMillis() - startedAt,
         )))
     }.flowOn(compute)
 

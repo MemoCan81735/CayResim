@@ -310,6 +310,9 @@ class CameraXCameraAdapter @Inject constructor(
         // Jede Bindung bekommt eine Nummer; spaet eintreffende Anfragen frueherer Bindungen werden ignoriert.
         pendingRequest = null
         val generation = ++bindGeneration
+        // S-021: jede Bindung zaehlt ihre Bilder neu (Zweitpruefung: ein altes Fenster ergab sonst 0 Bilder je Sekunde)
+        fpsWindowStart = 0L; fpsFrames = 0
+        if (_state.value.previewFps != null) _state.update { it.copy(previewFps = null) }
         preview.setSurfaceProvider { request ->
             if (generation != bindGeneration) { request.willNotProvideSurface(); return@setSurfaceProvider }
             request.addRequestCancellationListener(ContextCompat.getMainExecutor(context)) {
@@ -451,9 +454,12 @@ class CameraXCameraAdapter @Inject constructor(
         val frames = fpsFrames + 1
         val elapsed = now - start
         if (elapsed < FPS_WINDOW_MS) { fpsFrames = frames; return }
-        val fps = ((frames * 1000L + elapsed / 2) / elapsed).toInt()
         fpsWindowStart = now; fpsFrames = 0
-        if (_state.value.previewFps != fps) _state.update { it.copy(previewFps = fps) }
+        // nach einer Pause (Stopp, Neubinden) gilt das alte Fenster nicht: neu zaehlen statt eine zu kleine Zahl melden
+        if (elapsed > 2 * FPS_WINDOW_MS) return
+        val fps = ((frames * 1000L + elapsed / 2) / elapsed).toInt()
+        // spaete Ergebnisse nach dem Stopp schreiben nichts mehr in den Zustand
+        _state.update { if (it.status == CameraStatus.RUNNING && it.previewFps != fps) it.copy(previewFps = fps) else it }
     }
 
     override suspend fun runWithoutViewfinder(): Boolean = withContext(dispatcher) {

@@ -420,7 +420,7 @@ private fun PhaseLine(index: Int, p: SoundCheckPhaseUi) {
     val head = stringResource(R.string.soundimage_check_phase_head, sourceText(p.source), cameraText(p.cameraOn))
     val text = if (!p.recorded) stringResource(R.string.soundimage_check_phase_failed, head) else {
         val direction = p.angleDeg?.let { angleText(it) } ?: stringResource(R.string.soundimage_check_phase_no_direction)
-        val base = stringResource(R.string.soundimage_check_phase, head, direction, levelText(p.levelADbfs), levelText(p.levelBDbfs))
+        val base = stringResource(R.string.soundimage_check_phase, head, direction, dec2(p.share), levelText(p.levelADbfs), levelText(p.levelBDbfs))
         val mono = if (p.stereo) "" else stringResource(R.string.soundimage_check_phase_mono)
         val motion = if (p.movedPercent == null) "" else stringResource(R.string.soundimage_check_phase_motion,
             p.movedPercent.toString(), dec1(p.turnDeg ?: 0.0), signedDeg(p.rollDeg), signedDeg(p.pitchDeg))
@@ -436,7 +436,7 @@ private fun CheckFooter(r: SoundCheckResultUi) {
     Column(Modifier.testTag("soundimage_check_footer")) {
         val small = MaterialTheme.typography.bodySmall
         when (r.cameraFailure) {
-            SoundCameraFailureUi.NOT_STARTED -> Text(stringResource(R.string.soundimage_check_camera_not_started), style = small, color = MaterialTheme.colorScheme.error)
+            SoundCameraFailureUi.NOT_STARTED -> Text(stringResource(R.string.soundimage_check_camera_not_started, r.cameraErrorKey ?: "?"), style = small, color = MaterialTheme.colorScheme.error)
             SoundCameraFailureUi.NO_FRAMES -> Text(stringResource(R.string.soundimage_check_camera_no_frames), style = small, color = MaterialTheme.colorScheme.error)
             null -> Unit
         }
@@ -446,6 +446,8 @@ private fun CheckFooter(r: SoundCheckResultUi) {
         )
         if (!r.motionAvailable) Text(stringResource(R.string.soundimage_motion_none), style = small)
         Text(stringResource(R.string.soundimage_check_limits, dec0(SoundCameraCheck.ANGLE_LIMIT_DEG), dec0(SoundCameraCheck.LEVEL_LIMIT_DB)), style = small)
+        // R27 und K7: die Dauer der ganzen Messung steht im Ergebnis; gemessen wird die Foto-Sitzung ohne Sucher
+        Text(stringResource(R.string.soundimage_check_duration, dec1(r.durationSeconds)), style = small)
         Text(stringResource(R.string.soundimage_check_send), style = small)
     }
 }

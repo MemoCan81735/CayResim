@@ -38,7 +38,8 @@ class SoundWithCameraDeviceTest {
     private val camera = CameraXCameraAdapter(context, Dispatchers.Main.immediate)
     private val mic = AudioRecordMicrophoneAdapter(context, Dispatchers.IO)
     private val sensors = MotionSensorAdapter(context)
-    private val useCase = SoundCameraUseCase(SoundImageUseCase(mic, sensors, Clock { SystemClock.elapsedRealtime() }, Dispatchers.Default), camera, Dispatchers.Default)
+    private val clock = Clock { SystemClock.elapsedRealtime() }
+    private val useCase = SoundCameraUseCase(SoundImageUseCase(mic, sensors, clock, Dispatchers.Default), camera, clock, Dispatchers.Default)
 
     @After fun tearDown() = runBlocking { camera.stop() }
 
@@ -50,7 +51,7 @@ class SoundWithCameraDeviceTest {
                 assertEquals(6, events.count { it is SoundCameraEvent.Phase })
                 val r = assertIs<SoundCameraEvent.Done>(events.last()).report
                 // Werte vor den Pruefungen ausgeben, damit sie auch im roten Lauf im Protokoll stehen
-                println("S-021 K13 Lauf $it: Kamerafehler ${r.cameraError}, Bilder ${r.cameraFrames}, Bilder je Sekunde " +
+                println("S-021 K13 Lauf $it: Dauer ${r.durationMillis} ms, Kamerafehler ${r.cameraError}, Bilder ${r.cameraFrames}, Bilder je Sekunde " +
                     "${r.phases.map { p -> p.previewFps }}, Bildwinkel ${r.viewWideDeg} / ${r.viewHighDeg}, Lage ${r.motionAvailable}, " +
                     "Urteile ${r.verdicts.map { v -> v.verdict }}, Aufnahme ${r.phases.map { p -> p.failure }}")
                 assertEquals(CameraStatus.IDLE, camera.state.value.status, "Kamera nach der Messung gestoppt")
@@ -61,6 +62,8 @@ class SoundWithCameraDeviceTest {
             }
             for (r in reports) {
                 assertEquals(6, r.phases.size)
+                // sechs Phasen zu 0,6 s; der Rest ist Start und Stopp der Kamera (auf dem Geraet: 24 s plus dieser Rest, K7)
+                assertTrue(r.durationMillis - 6 * 600 <= 12_000, "Start und Stopp der Kamera dauern ${r.durationMillis - 6 * 600} ms")
                 assertNull(r.cameraError, "Kamera gestartet")
                 assertTrue(r.cameraFrames, "Kamera liefert ohne Sucher Bilder")
                 assertTrue(r.phases.filter { it.cameraOn }.all { (it.previewFps ?: 0) > 0 }, "Bilder je Sekunde gemessen")

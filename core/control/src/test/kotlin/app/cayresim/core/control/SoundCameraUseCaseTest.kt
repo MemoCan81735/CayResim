@@ -56,7 +56,7 @@ class SoundCameraUseCaseTest {
     private fun still() = FakeMotionSensorBoundary(samples = (0..3).flatMap { landscapeMotion(it * 10_000_000L) })
 
     private suspend fun useCase(mic: FakeMicrophoneBoundary, camera: FakeCameraBoundary, sensors: MotionSensorBoundary = still()) =
-        SoundCameraUseCase(SoundImageUseCase(mic, sensors, clock, here()), camera, here())
+        SoundCameraUseCase(SoundImageUseCase(mic, sensors, clock, here()), camera, clock, here())
 
     private suspend fun report(mic: FakeMicrophoneBoundary, camera: FakeCameraBoundary, sensors: MotionSensorBoundary = still()) =
         assertIs<SoundCameraEvent.Done>(useCase(mic, camera, sensors).run(phaseMillis).toList().last()).report
@@ -87,6 +87,13 @@ class SoundCameraUseCaseTest {
         assertEquals(2, camera.startCalls); assertEquals(2, camera.stopCalls); assertEquals(2, camera.headlessCalls)
         assertEquals(CameraStatus.IDLE, camera.state.value.status)
         assertEquals(PhotoMode.NIGHT, camera.state.value.requestedMode, "Modus von vorher wiederhergestellt")
+        // lief die Kamera vorher schon, wird sie fuer die Phasen ohne Kamera gestoppt
+        val busy = FakeCameraBoundary().apply { start() }
+        val seen = mutableListOf<CameraStatus>()
+        val m2 = mic(); val base2 = m2.streamSound
+        m2.streamSound = { r, i -> if (i == 0) seen += busy.state.value.status; base2(r, i) }
+        useCase(m2, busy).run(phaseMillis).toList()
+        assertEquals(CameraStatus.IDLE, seen.first())
         assertEquals(0, m.open); assertEquals(1, m.maxOpen)
 
         val r = assertIs<SoundCameraEvent.Done>(events.last()).report
@@ -104,6 +111,8 @@ class SoundCameraUseCaseTest {
         assertEquals(listOf(AudioSourceKey.MIC to SoundCameraCheck.Verdict.SAME, AudioSourceKey.CAMCORDER to SoundCameraCheck.Verdict.SAME),
             r.verdicts.map { it.source to it.verdict })
         assertNull(r.cameraError); assertTrue(r.cameraFrames); assertTrue(r.motionAvailable)
+        // die Dauer der ganzen Messung steht im Ergebnis (Uhr des Tests: 1 ms je Lesen)
+        assertTrue(r.durationMillis > 0, "Dauer ${r.durationMillis}")
         assertEquals(75.8, assertNotNull(r.viewWideDeg), 0.1); assertEquals(60.5, assertNotNull(r.viewHighDeg), 0.1)
     }
 
@@ -127,6 +136,15 @@ class SoundCameraUseCaseTest {
         assertEquals(listOf(SoundCameraCheck.Verdict.SAME, SoundCameraCheck.Verdict.NO_SOUND), d.verdicts.map { it.verdict })
         assertTrue(d.phases.drop(3).all { it.stats == null && it.failure == SoundImageFailure.RECORD_FAILED })
         assertEquals(0, half.open)
+        // Mikrofon scheitert nur in den Phasen mit Kamera: Fehler als Wert, die uebrigen Phasen laufen
+        val camP = FakeCameraBoundary()
+        val torn = mic()
+        val whole = torn.streamSound
+        torn.streamSound = { r, i -> if (camP.state.value.status == CameraStatus.RUNNING && i >= 3) null else whole(r, i) }
+        val p = report(torn, camP)
+        assertEquals(listOf(SoundCameraCheck.Verdict.NO_SOUND, SoundCameraCheck.Verdict.NO_SOUND), p.verdicts.map { it.verdict })
+        assertEquals(listOf(true, false, true, true, false, true), p.phases.map { it.stats != null })
+        assertEquals(SoundImageFailure.RECORD_FAILED, p.phases[1].failure); assertEquals(0, torn.open)
         // mit laufender Kamera kommt nur noch ein Mikrofon auf beiden Kanaelen
         val cam = FakeCameraBoundary()
         val mono = mic()

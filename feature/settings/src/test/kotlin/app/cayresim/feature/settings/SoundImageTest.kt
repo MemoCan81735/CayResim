@@ -88,7 +88,7 @@ class SoundImageTest {
 
     private fun vm(mic: FakeMicrophoneBoundary = mic(), s: FakeMotionSensorBoundary = sensors(), camera: FakeCameraBoundary = FakeCameraBoundary()): SoundImageViewModel {
         val sound = SoundImageUseCase(mic, s, { main.scheduler.currentTime }, main)
-        return SoundImageViewModel(sound, SoundCameraUseCase(sound, camera, main))
+        return SoundImageViewModel(sound, SoundCameraUseCase(sound, camera, { main.scheduler.currentTime }, main))
     }
 
     /** Kurve mit einem Gipfel bei [angleDeg], an den Stuetzstellen der Rechnung. */
@@ -252,9 +252,9 @@ class SoundImageTest {
             SoundCheckPhaseUi(SoundSourceUi.CAMCORDER, false, true, 30.0, -44.0, -45.0, true, 0, 0.5, 2.0, -4.0, null, 0),
             SoundCheckPhaseUi(SoundSourceUi.CAMCORDER, true, true, null, -44.0, -44.0, false, 0, 0.5, 2.0, -4.0, 29, 0),
             SoundCheckPhaseUi(SoundSourceUi.CAMCORDER, false, false),
-        ),
+        ).map { it.copy(share = 0.72) },
         verdicts = listOf(SoundCheckVerdictUi(SoundSourceUi.MIC, SoundVerdictUi.SAME), SoundCheckVerdictUi(SoundSourceUi.CAMCORDER, SoundVerdictUi.ONE_CHANNEL)),
-        cameraFailure = null, viewWideDeg = 75.8, viewHighDeg = 60.5, motionAvailable = true,
+        cameraFailure = null, viewWideDeg = 75.8, viewHighDeg = 60.5, motionAvailable = true, durationSeconds = 28.44,
     )
 
     @Test fun `S-021 ViewModel misst mit Kamera und meldet die Lage`() {
@@ -288,6 +288,7 @@ class SoundImageTest {
         assertEquals(6, result.phases.size); assertTrue(result.phases.all { it.recorded && it.stereo })
         assertEquals(listOf(null, 30, null, null, 30, null), result.phases.map { it.previewFps })
         assertEquals(75.8, assertNotNull(result.viewWideDeg), 0.1); assertTrue(result.motionAvailable); assertNull(result.cameraFailure)
+        assertEquals(24.0, result.durationSeconds, 0.5); assertTrue(result.phases.all { it.share > 0.3 })
         assertEquals(0, mic.open); assertEquals(0, s.active); assertEquals(CameraStatus.IDLE, camera.state.value.status); assertEquals(2, camera.stopCalls)
         // das Ergebnis bleibt stehen, wenn das Schallbild wieder laeuft und angehalten wird; Anhalten bricht eine Messung ab
         v.onPermissionResult(true); main.scheduler.advanceTimeBy(500); main.scheduler.runCurrent()
@@ -304,6 +305,7 @@ class SoundImageTest {
         w.onCameraPermissionResult(true); main.scheduler.advanceTimeBy(30_000); main.scheduler.runCurrent()
         val failed = assertNotNull(w.uiState.value.checkResult)
         assertEquals(SoundCameraFailureUi.NOT_STARTED, failed.cameraFailure); assertEquals(SoundVerdictUi.CAMERA_FAILED, failed.verdicts.first().verdict)
+        assertEquals("IN_USE", failed.cameraErrorKey); assertEquals(24.0, failed.durationSeconds, 0.5)
     }
 
     @Test fun `S-021 ohne Kamera-Berechtigung`() {
@@ -357,6 +359,7 @@ class SoundImageTest {
         assertEquals(-1f to 0f, dotOnScreen(1.0, 0.0, PanelAxis.LEFT)); assertEquals(0f to 1f, dotOnScreen(0.0, 1.0, PanelAxis.LEFT))
         assertEquals(0f to 1f, dotOnScreen(1.0, 0.0, PanelAxis.DOWN)); assertEquals(1f to 0f, dotOnScreen(0.0, 1.0, PanelAxis.DOWN))
         assertEquals(0f to -1f, dotOnScreen(1.0, 0.0, PanelAxis.UP)); assertEquals(-1f to 0f, dotOnScreen(0.0, 1.0, PanelAxis.UP))
+        compose.onRoot().captureRoboImage("src/test/screenshots/soundimage_circle.png")
     }
 
     @Test fun `S-021 Lage-Kreis vollstaendig`() {
@@ -379,13 +382,14 @@ class SoundImageTest {
         state = SoundImageUiState(checkResult = checked())
         compose.onNodeWithText("Mikrofon (MIC): gleich. Die Kamera ändert den Ton nicht.").assertIsDisplayed()
         compose.onNodeWithText("Videoton (CAMCORDER): nur ein Kanal. Mit Kamera kommen nicht mehr zwei verschiedene Mikrofone an.").assertIsDisplayed()
-        compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 29° rechts, Pegel (dBFS) -42 / -43, bewegt 3 %, Drehung 0,8°, Neigung quer +2°, Kippen -5°, Bilder je Sekunde 30").assertExists()
-        compose.onNodeWithText("Mikrofon (MIC), Kamera aus: Richtung 30° rechts, Pegel (dBFS) -41 / -43, bewegt 0 %, Drehung 0,6°, Neigung quer +2°, Kippen -4°, verlorene Tonstücke 2").assertExists()
-        compose.onNodeWithText("Videoton (CAMCORDER), Kamera an: Richtung nicht bestimmbar, Pegel (dBFS) -44 / -44, nur ein Kanal", substring = true).assertExists()
+        compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 29° rechts, Anteil 0,72, Pegel (dBFS) -42 / -43, bewegt 3 %, Drehung 0,8°, Neigung quer +2°, Kippen -5°, Bilder je Sekunde 30").assertExists()
+        compose.onNodeWithText("Mikrofon (MIC), Kamera aus: Richtung 30° rechts, Anteil 0,72, Pegel (dBFS) -41 / -43, bewegt 0 %, Drehung 0,6°, Neigung quer +2°, Kippen -4°, verlorene Tonstücke 2").assertExists()
+        compose.onNodeWithText("Videoton (CAMCORDER), Kamera an: Richtung nicht bestimmbar, Anteil 0,72, Pegel (dBFS) -44 / -44, nur ein Kanal", substring = true).assertExists()
         compose.onNodeWithText("Videoton (CAMCORDER), Kamera aus: Aufnahme gescheitert").assertExists()
         compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("soundimage_check_footer"))
         compose.onNodeWithText("Bildwinkel der Kamera: 75,8° breit, 60,5° hoch").assertExists()
         compose.onNodeWithText("Gleich heißt: Richtung höchstens 5°, Pegel je Kanal höchstens 3 dB Abweichung.").assertExists()
+        compose.onNodeWithText("Dauer der Messung (s): 28,4. Gemessen mit der Foto-Sitzung der Kamera, ohne sichtbares Kamerabild.").assertExists()
         compose.onNodeWithText("Schallbild starten").assertExists()
         compose.onNodeWithTag("soundimage").performScrollToNode(hasTestTag("back"))
         compose.onRoot().captureRoboImage("src/test/screenshots/soundimage_check.png")
@@ -393,16 +397,16 @@ class SoundImageTest {
 
     @Test fun `S-021 Ergebnis nennt Kamerafehler und fehlende Werte`() {
         var state by mutableStateOf(SoundImageUiState(checkResult = checked().copy(
-            cameraFailure = SoundCameraFailureUi.NOT_STARTED, viewWideDeg = null, viewHighDeg = null, motionAvailable = false,
+            cameraFailure = SoundCameraFailureUi.NOT_STARTED, cameraErrorKey = "IN_USE", viewWideDeg = null, viewHighDeg = null, motionAvailable = false,
             verdicts = SoundVerdictUi.entries.take(4).map { SoundCheckVerdictUi(SoundSourceUi.MIC, it) },
             phases = listOf(SoundCheckPhaseUi(SoundSourceUi.MIC, true, true, 10.0, -40.0, -40.0)),
         )))
         compose.setContent { CayResimTheme(dark = true) { SoundImageContent(state, 0, {}, {}, {}, {}) } }
-        compose.onNodeWithText("Die Kamera ließ sich nicht starten.").assertExists()
+        compose.onNodeWithText("Die Kamera ließ sich nicht starten (IN_USE).").assertExists()
         compose.onNodeWithText("Bildwinkel der Kamera: unbekannt").assertExists()
         compose.onNodeWithText("Lage nicht verfügbar (kein Lagesensor).").assertExists()
         // ohne Lagesensor entfallen die Lagewerte der Phase; ohne Bilder steht ein Fragezeichen
-        compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 10° rechts, Pegel (dBFS) -40 / -40, Bilder je Sekunde ?").assertExists()
+        compose.onNodeWithText("Mikrofon (MIC), Kamera an: Richtung 10° rechts, Anteil 0,00, Pegel (dBFS) -40 / -40, Bilder je Sekunde ?").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): verändert. Mit Kamera sind Richtung oder Pegel anders.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): kein Ton. Die Aufnahme mit Kamera scheiterte oder war stumm.").assertExists()
         state = SoundImageUiState(checkResult = checked().copy(cameraFailure = SoundCameraFailureUi.NO_FRAMES,
@@ -410,7 +414,7 @@ class SoundImageTest {
         compose.onNodeWithText("Die Kamera lief, lieferte ohne Sucher aber keine Bilder.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): Szene unruhig. Schon ohne Kamera änderte sich der Ton zwischen den Phasen. Bitte wiederholen.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): bewegt. Das Handy wurde zu stark bewegt. Bitte ruhig halten und wiederholen.").assertExists()
-        compose.onNodeWithText("Mikrofon (MIC): keine Quelle. Ohne Kamera war kein gerichteter Ton zu hören. Bitte Musik näher stellen.").assertExists()
+        compose.onNodeWithText("Mikrofon (MIC): keine Quelle. Ohne Kamera war kein gerichteter Ton zu hören, oder die Aufnahme scheiterte. Bitte Musik näher stellen und wiederholen.").assertExists()
         compose.onNodeWithText("Mikrofon (MIC): Kamera scheitert. Die Kamera lief in der Messung nicht.").assertExists()
     }
 }

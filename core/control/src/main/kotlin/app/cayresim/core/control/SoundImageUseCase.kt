@@ -137,8 +137,12 @@ class SoundImageUseCase @Inject constructor(
                         }
                         MotionKind.ROTATION -> {
                             val pose = SweepMath.Pose(s.nanos, s.a.toDouble(), s.b.toDouble(), s.c.toDouble(), s.d.toDouble())
-                            previous?.let { gate.rate(s.nanos, DeviceTilt.rateDegPerSecond(it, pose)) }
-                            previous = pose
+                            // Drehgeschwindigkeit ueber mindestens 40 ms, nicht aus zwei Nachbarwerten (Zweitpruefung S-021)
+                            val from = previous
+                            if (from == null) previous = pose
+                            else if (s.nanos - from.nanos >= DeviceTilt.RATE_SPAN_NANOS) {
+                                gate.rate(s.nanos, DeviceTilt.rateDegPerSecond(from, pose)); previous = pose
+                            }
                             // neu ansetzen: auf Wunsch, und wenn das Handy in die andere Querhaltung gedreht wurde
                             val wanted = resets.value
                             val flipped = last != SoundBands.Hold.NOT_LANDSCAPE && turnHold != SoundBands.Hold.NOT_LANDSCAPE && last != turnHold

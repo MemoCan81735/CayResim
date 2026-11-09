@@ -62,6 +62,8 @@ data class SoundCheckPhaseUi(
     val source: SoundSourceUi, val cameraOn: Boolean, val recorded: Boolean, val angleDeg: Double? = null, val levelADbfs: Double = 0.0,
     val levelBDbfs: Double = 0.0, val stereo: Boolean = true, val movedPercent: Int? = null, val turnDeg: Double? = null,
     val rollDeg: Double? = null, val pitchDeg: Double? = null, val previewFps: Int? = null, val lostChunks: Long = 0,
+    /** Anteil gerichteten Schalls (0 bis 1) im Mittel der Momente mit Richtung. */
+    val share: Double = 0.0,
 )
 
 @Immutable
@@ -71,6 +73,9 @@ data class SoundCheckVerdictUi(val source: SoundSourceUi, val verdict: SoundVerd
 data class SoundCheckResultUi(
     val phases: List<SoundCheckPhaseUi>, val verdicts: List<SoundCheckVerdictUi>, val cameraFailure: SoundCameraFailureUi?,
     val viewWideDeg: Double?, val viewHighDeg: Double?, val motionAvailable: Boolean,
+    /** Schluessel des Kamerafehlers (z. B. IN_USE), wenn sie nicht startete; Dauer der ganzen Messung in Sekunden (R27). */
+    val cameraErrorKey: String? = null,
+    val durationSeconds: Double = 0.0,
 )
 
 @Immutable
@@ -224,14 +229,14 @@ class SoundImageViewModel @Inject constructor(
             return SoundCheckPhaseUi(
                 sourceUi(p.source), p.cameraOn, recorded = true, angleDeg = s.angleDeg, levelADbfs = s.levelADbfs, levelBDbfs = s.levelBDbfs,
                 stereo = s.stereo, movedPercent = s.movedShare?.let { (it * 100).roundToInt() }, turnDeg = s.turnDeg, rollDeg = s.rollDeg,
-                pitchDeg = s.pitchDeg, previewFps = p.previewFps, lostChunks = p.lostChunks,
+                pitchDeg = s.pitchDeg, previewFps = p.previewFps, lostChunks = p.lostChunks, share = s.share,
             )
         }
 
         fun resultUi(r: SoundCameraReport) = SoundCheckResultUi(
             r.phases.map(::phaseUi), r.verdicts.map { SoundCheckVerdictUi(sourceUi(it.source), verdictUi(it.verdict)) },
             when { r.cameraError != null -> SoundCameraFailureUi.NOT_STARTED; !r.cameraFrames -> SoundCameraFailureUi.NO_FRAMES; else -> null },
-            r.viewWideDeg, r.viewHighDeg, r.motionAvailable,
+            r.viewWideDeg, r.viewHighDeg, r.motionAvailable, r.cameraError?.name, r.durationMillis / 1000.0,
         )
 
         fun bandUi(b: SoundImageBand) = SoundBandUi(b.lowHz, b.highHz, b.levelDbfs, b.share, b.angleDeg, b.response)

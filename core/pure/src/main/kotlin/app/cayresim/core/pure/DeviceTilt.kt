@@ -25,6 +25,8 @@ object DeviceTilt {
     const val MOVING_RATE_DEG = 30.0
     /** So lange nach dem letzten Stoss bleibt "bewegt": die Mittelung des Schallbilds (0,4 s) traegt ihn noch. */
     const val MOVING_HOLD_NANOS = 500_000_000L
+    /** Die Drehgeschwindigkeit wird ueber mindestens diese Zeit gebildet: einzelne Nachbarwerte mit zittrigen Zeitstempeln blaehen sie auf. */
+    const val RATE_SPAN_NANOS = 40_000_000L
     /** Zeitkonstante des Tiefpasses fuer die Schwerkraft. */
     const val GRAVITY_SECONDS = 0.2
     /** Kleinster Anteil der Schwerkraft in der Bildschirmebene; darunter liegt das Handy zu flach fuer eine Neigung quer. */
@@ -109,7 +111,7 @@ object DeviceTilt {
 
         fun add(t: Turn) {
             val radius = hypot(t.yawDeg, t.rollDeg)
-            if (radius < RIM_MIN_DEG || radius > RIM_MAX_DEG) return
+            if (!radius.isFinite() || radius < RIM_MIN_DEG || radius > RIM_MAX_DEG) return
             val angle = (Math.toDegrees(atan2(t.rollDeg, t.yawDeg)) + 360.0) % 360.0
             mask = mask or (1 shl floor(angle / (360.0 / SECTORS)).toInt().coerceIn(0, SECTORS - 1))
         }

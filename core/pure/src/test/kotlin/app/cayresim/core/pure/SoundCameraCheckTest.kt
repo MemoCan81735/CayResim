@@ -81,7 +81,6 @@ class SoundCameraCheckTest {
             val measured = 30.0 - yaw + if (step % 2 == 0) 1.5 else -1.5 // Messfehler des Schallbilds
             assertEquals(30.0, SoundCameraCheck.worldAngle(measured, yaw), 3.0, "Schritt $step")
         }
-        assertEquals(10.0, 30.0 - 20.0, 0.0)
         assertEquals(-25.0, SoundCameraCheck.worldAngle(-10.0, -15.0), 1e-9)
     }
 }

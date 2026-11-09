@@ -40,6 +40,7 @@ class CameraXAdapterContractTest {
     @Test fun vertragStart() = run { CameraBoundaryContract.startRunsAndOffersNormal(adapter) }
     @Test fun vertragAufnahmeSpeichertUndLoescht() = run { CameraBoundaryContract.captureSavesAndDeletes(adapter) }
     @Test fun vertragStoppUndNeustart() = run { CameraBoundaryContract.stopReleasesAndRestartWorks(adapter) }
+    @Test fun vertragOhneSucher() = run { CameraBoundaryContract.runsWithoutViewfinder(adapter) }
     @Test fun vertragDoppeltesStopp() = run { CameraBoundaryContract.stopTwiceIsHarmless(adapter) }
     @Test fun vertragModusUeberstehtNeustart() = run { CameraBoundaryContract.modeSurvivesRestart(adapter) }
     @Test fun vertragZoomUndFokusVorStart() = run { CameraBoundaryContract.zoomAndFocusBeforeStartAreRejected(adapter) }
