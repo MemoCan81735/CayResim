@@ -11,6 +11,7 @@ import app.cayresim.core.boundary.MicInventorySnapshot
 import app.cayresim.core.boundary.MicLocationKey
 import app.cayresim.core.boundary.MicPatternKey
 import app.cayresim.core.boundary.MicInfoSnapshot
+import app.cayresim.core.boundary.MicPairResult
 import app.cayresim.core.boundary.MicRecordResult
 import app.cayresim.core.boundary.MicRequest
 import app.cayresim.core.boundary.MicStreamEvent
@@ -59,6 +60,22 @@ class FakeMicrophoneBoundary(
             if (recordDelayMillis > 0) delay(recordDelayMillis)
             val ch = channelsFor(request)
             return MicRecordResult.Ok(MicCapture(request, request.sampleRate, ch, sound(request, ch), 1, listOf(1), startBootNanos, timeExact))
+        } finally {
+            withContext(NonCancellable) { if (opened) open-- }
+        }
+    }
+
+    /** Zwei Aufnahmen gleichzeitig (S-020): beide zaehlen als offen, bis beide fertig sind. */
+    val pairRequests = mutableListOf<Pair<MicRequest, MicRequest>>()
+
+    override suspend fun recordPair(first: MicRequest, second: MicRequest): MicPairResult {
+        pairRequests += first to second
+        var opened = false
+        try {
+            open++; opened = true
+            val a = record(first)
+            val b = record(second)
+            return MicPairResult(a, b)
         } finally {
             withContext(NonCancellable) { if (opened) open-- }
         }

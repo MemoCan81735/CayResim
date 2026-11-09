@@ -9,6 +9,7 @@ import app.cayresim.core.control.MicTestEvent
 import app.cayresim.core.control.MicTestReport
 import app.cayresim.core.control.MicTestUseCase
 import app.cayresim.core.control.SourceOutcome
+import app.cayresim.core.pure.AudioMath
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,11 +21,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Spiegel der Boundary- und Control-Typen fuer die UI (R1); nur Schluessel und Zahlen, den Text baut die UI (R23). */
-enum class SourceUi { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED }
+enum class SourceUi { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED, VOICE_COMMUNICATION, VOICE_PERFORMANCE }
 enum class DirectionUi { NONE, TOWARDS_USER, AWAY_FROM_USER }
 enum class MicFailureUi { NO_PERMISSION, NOT_OFFERED, INIT_FAILED, READ_FAILED }
 enum class ClapPhaseUi { LEFT, RIGHT, FRONT }
-enum class MicStepUi { IDLE, INVENTORY, SOURCES, PREPARE, CLAP, DONE }
+enum class MicStepUi { IDLE, INVENTORY, SOURCES, PAIRS, PREPARE, CLAP, DONE }
 enum class CalibrationFailureUi { TOO_FEW_CLAPS, SIDES_NOT_DISTINCT, IMPLAUSIBLE }
 
 @Immutable data class MicUi(val id: Int, val address: String, val location: String, val pattern: String, val position: List<Float>?, val sensitivityDb: Float?)
@@ -52,6 +53,22 @@ data class SourceRowUi(
     val pairDiffCorrelation: List<Double> = emptyList(),
 )
 
+/** S-020: Urteil einer Probe mit zwei Aufnahmen gleichzeitig (Spiegel von AudioMath.PairVerdict). */
+enum class PairVerdictUi { COUNTED, NO_CONTROL, FIRST_MONO, LOUD, SECOND_SILENT, UNCLEAR }
+
+/**
+ * S-020: Probe mit zwei Aufnahmen gleichzeitig. [verdict] null, wenn eine Aufnahme scheiterte ([firstFailure],
+ * [secondFailure]). [distinctMics]: verschiedene Mikrofone in beiden zusammen, nur bei COUNTED eine Aussage;
+ * [sharedStream]: beide Aufnahmen trugen dieselben Daten; [coherence]: Gleichklang je Kanalpaar (1-2, 1-3, 2-3, 1-4,
+ * 2-4, 3-4), Kanal 1 und 2 aus der ersten Quelle.
+ */
+@Immutable
+data class PairRowUi(
+    val first: SourceUi, val second: SourceUi, val firstFailure: MicFailureUi? = null, val secondFailure: MicFailureUi? = null,
+    val verdict: PairVerdictUi? = null, val distinctMics: Int = 0, val sharedStream: Boolean = false, val control: Double? = null,
+    val coherence: List<Double> = emptyList(),
+)
+
 @Immutable data class ClapUi(val timeSeconds: Double, val delayMs: Double, val angleDegrees: Double?, val similarity: Double, val levelDiffDb: Double)
 @Immutable data class ClapRowUi(val phase: ClapPhaseUi, val claps: List<ClapUi>, val failure: MicFailureUi?)
 /** Eichung aus links und rechts (S-009): wirksamer Abstand und Mitte der Laufzeiten. */
@@ -72,6 +89,7 @@ data class MicTestResultUi(
     val storageFailed: Boolean,
     val calibration: CalibrationUi? = null,
     val calibrationFailure: CalibrationFailureUi? = null,
+    val pairs: List<PairRowUi> = emptyList(),
 )
 
 @Immutable
@@ -119,6 +137,9 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
                     is MicTestEvent.Source -> _state.update {
                         it.copy(step = MicStepUi.SOURCES, sourceIndex = e.index, sourceTotal = e.total, currentSource = rowOf(e.request, null))
                     }
+                    is MicTestEvent.Pairing -> _state.update {
+                        it.copy(step = MicStepUi.PAIRS, sourceIndex = e.index, sourceTotal = e.total, currentSource = null)
+                    }
                     is MicTestEvent.ClapPrepare -> _state.update {
                         it.copy(step = MicStepUi.PREPARE, clapPhase = ClapPhaseUi.valueOf(e.phase.name), prepareSeconds = (e.millis / 1000).toInt())
                     }
@@ -146,6 +167,16 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
     }
 
     internal companion object {
+        /** Erschoepfend statt valueOf: ein neues Urteil faellt beim Kompilieren auf. */
+        fun verdictUi(v: AudioMath.PairVerdict) = when (v) {
+            AudioMath.PairVerdict.COUNTED -> PairVerdictUi.COUNTED
+            AudioMath.PairVerdict.NO_CONTROL -> PairVerdictUi.NO_CONTROL
+            AudioMath.PairVerdict.FIRST_MONO -> PairVerdictUi.FIRST_MONO
+            AudioMath.PairVerdict.LOUD -> PairVerdictUi.LOUD
+            AudioMath.PairVerdict.SECOND_SILENT -> PairVerdictUi.SECOND_SILENT
+            AudioMath.PairVerdict.UNCLEAR -> PairVerdictUi.UNCLEAR
+        }
+
         fun rowOf(r: MicRequest, failure: MicFailure?) = SourceRowUi(
             SourceUi.valueOf(r.source.name), DirectionUi.valueOf(r.direction.name), r.deviceId, failure?.let { MicFailureUi.valueOf(it.name) },
             requestedChannels = r.channels,
@@ -181,6 +212,15 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
             storageFailed = storageFailed,
             calibration = calibration?.let { CalibrationUi(it.spacingMeters * 100, it.centerSeconds * 1000) },
             calibrationFailure = calibrationFailure?.let { CalibrationFailureUi.valueOf(it.name) },
+            pairs = pairs.map { p ->
+                val probe = p.probe
+                PairRowUi(
+                    SourceUi.valueOf(p.first.source.name), SourceUi.valueOf(p.second.source.name),
+                    p.firstFailure?.let { MicFailureUi.valueOf(it.name) }, p.secondFailure?.let { MicFailureUi.valueOf(it.name) },
+                    verdict = probe?.let { verdictUi(it.verdict) }, distinctMics = probe?.distinctMics ?: 0, sharedStream = probe?.sharedStream == true,
+                    control = probe?.control, coherence = probe?.coherence.orEmpty(),
+                )
+            },
         )
     }
 }

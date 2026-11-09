@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.cayresim.core.pure.AudioMath
 import app.cayresim.feature.settings.R
 import app.cayresim.feature.settings.control.CalibrationFailureUi
 import app.cayresim.feature.settings.control.ClapPhaseUi
@@ -45,6 +46,8 @@ import app.cayresim.feature.settings.control.MicStepUi
 import app.cayresim.feature.settings.control.MicTestResultUi
 import app.cayresim.feature.settings.control.MicTestUiState
 import app.cayresim.feature.settings.control.MicTestViewModel
+import app.cayresim.feature.settings.control.PairRowUi
+import app.cayresim.feature.settings.control.PairVerdictUi
 import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
 import java.util.Locale
@@ -118,6 +121,10 @@ private fun Progress(state: MicTestUiState) {
                 Text(stringResource(R.string.mictest_step_sources, state.sourceIndex + 1, state.sourceTotal, state.currentSource?.let { sourceLabel(it) } ?: ""))
                 Text(stringResource(R.string.mictest_keep_quiet), style = MaterialTheme.typography.bodySmall)
             }
+            MicStepUi.PAIRS -> {
+                Text(stringResource(R.string.mictest_step_pairs, (state.sourceIndex + 1).toString(), state.sourceTotal.toString()))
+                Text(stringResource(R.string.mictest_keep_quiet), style = MaterialTheme.typography.bodySmall)
+            }
             MicStepUi.PREPARE -> {
                 Text(stringResource(preparePrompt(state.clapPhase)), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.mictest_prepare_how, state.prepareSeconds), style = MaterialTheme.typography.bodyMedium)
@@ -150,6 +157,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(r: MicTestRes
     item { Text(stringResource(R.string.mictest_unprocessed, yesNoText(r.unprocessedSupported)), style = MaterialTheme.typography.bodySmall) }
     item { Heading(R.string.mictest_sources_title) }
     itemsIndexed(r.sources) { i, s -> SourceLine(s, Modifier.testTag("source_$i").semantics(mergeDescendants = true) {}) }
+    // S-020: zwei Aufnahmen gleichzeitig
+    if (r.pairs.isNotEmpty()) {
+        item { Heading(R.string.mictest_pairs_title) }
+        itemsIndexed(r.pairs) { i, p -> PairLine(p, Modifier.testTag("pair_$i").semantics(mergeDescendants = true) {}) }
+    }
     if (r.claps.isNotEmpty()) {
         item { Heading(R.string.mictest_claps_title) }
         item { CalibrationLine(r) }
@@ -229,6 +241,38 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
 }
 
 @Composable
+private fun PairLine(p: PairRowUi, modifier: Modifier) {
+    Column(modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.mictest_pair_label, sourceName(p.first), sourceName(p.second)), fontWeight = FontWeight.Medium)
+        val small = MaterialTheme.typography.bodySmall
+        // je Aufnahme: "Android lehnt die zweite ab" ist selbst ein Messergebnis
+        p.firstFailure?.let { Text(stringResource(R.string.mictest_pair_first_failed, stringResource(failureText(it))), style = small) }
+        p.secondFailure?.let { Text(stringResource(R.string.mictest_pair_second_failed, stringResource(failureText(it))), style = small) }
+        when (p.verdict) {
+            null -> Unit
+            PairVerdictUi.COUNTED -> {
+                Text(stringResource(R.string.mictest_pair_result, p.distinctMics.toString()), style = small, fontWeight = FontWeight.Medium)
+                if (p.sharedStream) Text(stringResource(R.string.mictest_pair_shared), style = small)
+            }
+            PairVerdictUi.LOUD -> Text(
+                stringResource(R.string.mictest_pair_loud, dec2(p.control ?: 0.0), dec2(AudioMath.QUIET_COHERENCE)), style = small,
+                color = MaterialTheme.colorScheme.error,
+            )
+            PairVerdictUi.NO_CONTROL -> Text(stringResource(R.string.mictest_pair_no_control), style = small)
+            PairVerdictUi.FIRST_MONO -> Text(stringResource(R.string.mictest_pair_first_mono), style = small)
+            PairVerdictUi.SECOND_SILENT -> Text(stringResource(R.string.mictest_pair_second_silent), style = small)
+            PairVerdictUi.UNCLEAR -> Text(
+                stringResource(R.string.mictest_pair_unclear, dec2(AudioMath.UNCLEAR_COHERENCE), dec2(AudioMath.SAME_MIC_COHERENCE)), style = small,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        if (p.coherence.isNotEmpty()) Text(
+            stringResource(R.string.mictest_pair_coherence, dec2(AudioMath.SAME_MIC_COHERENCE), pairText(p.coherence)), style = small,
+        )
+    }
+}
+
+@Composable
 private fun ClapLines(c: ClapRowUi, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
         Text(stringResource(phaseName(c.phase)), fontWeight = FontWeight.Medium)
@@ -266,6 +310,8 @@ private fun sourceName(s: SourceUi) = stringResource(
         SourceUi.CAMCORDER -> R.string.mictest_src_camcorder
         SourceUi.VOICE_RECOGNITION -> R.string.mictest_src_voice
         SourceUi.UNPROCESSED -> R.string.mictest_src_unprocessed
+        SourceUi.VOICE_COMMUNICATION -> R.string.mictest_src_communication
+        SourceUi.VOICE_PERFORMANCE -> R.string.mictest_src_performance
     },
 )
 
