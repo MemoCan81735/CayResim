@@ -6,12 +6,15 @@ import androidx.test.rule.GrantPermissionRule
 import app.cayresim.core.boundary.AudioSourceKey
 import app.cayresim.core.boundary.MicRecordResult
 import app.cayresim.core.boundary.MicRequest
+import app.cayresim.core.boundary.MicStreamEvent
 import app.cayresim.core.pure.Wav
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,6 +70,53 @@ class AudioRecordMicrophoneAdapterTest {
         println("S-010 Zeitbezug: genau=${c.timeExact}, Start ${(start - before) / 1_000_000} ms nach Aufruf")
         assertTrue(start in before..after, "Start $start nicht zwischen $before und $after (genau: ${c.timeExact})")
         assertTrue(after - start >= 900_000_000L, "erster Frame mindestens 0,9 s vor dem Ende")
+    }
+
+    /** S-018 K18: Tonstrom liefert Stuecke zu 100 ms, bis der Sammler abbricht, und gibt das Mikrofon frei. */
+    @Test fun s018TonstromLiefertStueckeUndGibtFrei() = runBlocking {
+        withTimeout(20_000) {
+            val chunks = mutableListOf<MicStreamEvent.Chunk>()
+            var failed: MicStreamEvent.Failed? = null
+            // 3 s Fenster: der Emulator braucht zum Anlaufen der Aufnahme unterschiedlich lang (Zweitpruefung S-018)
+            withTimeoutOrNull(3_000) {
+                adapter.stream(MicRequest(AudioSourceKey.MIC), 100).collect { e ->
+                    when (e) {
+                        is MicStreamEvent.Chunk -> chunks += e
+                        is MicStreamEvent.Failed -> failed = e
+                    }
+                }
+            }
+            assertEquals(null, failed, "Tonstrom gescheitert")
+            assertTrue(chunks.size >= 8, "nur ${chunks.size} Stuecke in 3 s")
+            val numbers = chunks.map { it.chunk.index }
+            assertTrue(numbers.zipWithNext().all { (a, b) -> b > a }, "Nummern steigen: $numbers")
+            val c = chunks.first().chunk
+            assertTrue(c.channels in 1..2)
+            assertEquals(c.sampleRate / 10 * c.channels, c.pcm.size)
+            assertEquals(0, adapter.openRecordings, "Mikrofon nach Abbruch des Tonstroms frei")
+            // danach geht eine Einzelaufnahme und wieder ein Strom
+            assertIs<MicRecordResult.Ok>(adapter.record(MicRequest(AudioSourceKey.MIC, millis = 300)))
+            assertIs<MicStreamEvent.Chunk>(adapter.stream(MicRequest(AudioSourceKey.MIC), 100).first())
+            assertEquals(0, adapter.openRecordings)
+        }
+    }
+
+    /** S-019 K4: drei Kanaele ueber die Index-Maske enden als Aufnahme oder Fehlerwert, nie als Absturz. */
+    @Test fun s019DreiKanaele() = runBlocking {
+        withTimeout(20_000) {
+            when (val r = adapter.record(MicRequest(AudioSourceKey.MIC, millis = 500, channels = 3))) {
+                is MicRecordResult.Ok -> {
+                    val c = r.capture
+                    println("S-019 drei Kanaele angefragt: ${c.channels} geliefert")
+                    assertTrue(c.channels in 1..3, "Kanaele ${c.channels}")
+                    assertEquals(24_000, c.pcm.size / c.channels)
+                }
+                is MicRecordResult.Failed -> println("S-019 drei Kanaele angefragt: ${r.reason}")
+            }
+            assertEquals(0, adapter.openRecordings, "Mikrofon frei")
+            // fuenf Kanaele lehnt der Adapter selbst ab
+            assertEquals(MicRecordResult.Failed(app.cayresim.core.boundary.MicFailure.INIT_FAILED), adapter.record(MicRequest(AudioSourceKey.MIC, millis = 500, channels = 5)))
+        }
     }
 
     @Test fun s008InventarStuerztNichtAb() = runBlocking {

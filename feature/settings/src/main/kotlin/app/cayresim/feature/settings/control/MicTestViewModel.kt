@@ -46,6 +46,10 @@ data class SourceRowUi(
     val routedDeviceId: Int? = null,
     val activeMics: List<Int> = emptyList(),
     val saved: Boolean = false,
+    /** S-019: angefragte Kanalzahl, Zahl wirklich verschiedener Mikrofone und Korrelation der Aenderungen je Paar (1-2, 1-3, 2-3, ...). */
+    val requestedChannels: Int = 2,
+    val distinctCount: Int = 0,
+    val pairDiffCorrelation: List<Double> = emptyList(),
 )
 
 @Immutable data class ClapUi(val timeSeconds: Double, val delayMs: Double, val angleDegrees: Double?, val similarity: Double, val levelDiffDb: Double)
@@ -144,6 +148,7 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
     internal companion object {
         fun rowOf(r: MicRequest, failure: MicFailure?) = SourceRowUi(
             SourceUi.valueOf(r.source.name), DirectionUi.valueOf(r.direction.name), r.deviceId, failure?.let { MicFailureUi.valueOf(it.name) },
+            requestedChannels = r.channels,
         )
 
         fun MicTestReport.toUi() = MicTestResultUi(
@@ -157,6 +162,7 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
                         channels = o.stats.channels, distinct = o.stats.distinctChannels, levelDb = o.stats.levelDbfs,
                         identicalShare = o.stats.identicalShare, correlation = o.stats.correlation, diffCorrelation = o.stats.diffCorrelation,
                         routedDeviceId = o.routedDeviceId, activeMics = o.activeMicIds, saved = o.fileUri != null,
+                        distinctCount = o.stats.distinctCount, pairDiffCorrelation = o.stats.pairDiffCorrelation,
                     )
                 }
             },

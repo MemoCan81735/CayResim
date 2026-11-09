@@ -12,6 +12,7 @@ import app.cayresim.feature.camera.ui.CameraRoute
 import app.cayresim.feature.gallery.ui.GalleryRoute
 import app.cayresim.feature.settings.ui.MicTestRoute
 import app.cayresim.feature.settings.ui.SweepRoute
+import app.cayresim.feature.settings.ui.SoundImageRoute
 import app.cayresim.feature.settings.ui.SelfTestRoute
 import app.cayresim.feature.settings.ui.SettingsRoute
 import app.cayresim.feature.settings.ui.GuideContent
@@ -43,12 +44,14 @@ fun AppRoot() {
                     onSelfTest = { control.open(SelfTestKey) },
                     onBack = { control.back() },
                     onMicTest = { control.open(MicTestKey) },
+                    onSoundImage = { control.open(SoundImageKey) },
                 )
             }
             entry<GuideKey> { GuideContent(onBack = { control.back() }) }
             entry<SelfTestKey> { SelfTestRoute(onBack = { control.back() }) }
             entry<MicTestKey> { MicTestRoute(onBack = { control.back() }, onSweep = { control.open(SweepKey) }) }
             entry<SweepKey> { SweepRoute(onBack = { control.back() }) }
+            entry<SoundImageKey> { SoundImageRoute(onBack = { control.back() }) }
         },
     )
 }

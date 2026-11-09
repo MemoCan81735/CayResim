@@ -215,6 +215,11 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
             dec2(noNegativeZero(s.diffCorrelation)),
         )
         Text(detail, style = MaterialTheme.typography.bodySmall)
+        // S-019: bei mehr als zwei angefragten Kanaelen zaehlt, wie viele wirklich verschiedene Mikrofone ankommen
+        if (s.failure == null && s.requestedChannels > 2) Text(
+            stringResource(R.string.mictest_source_distinct, s.distinctCount.toString(), pairText(s.pairDiffCorrelation)),
+            style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium,
+        )
         if (s.failure == null) Text(
             stringResource(R.string.mictest_source_route, s.routedDeviceId?.toString() ?: "?", s.activeMics.joinToString(", ").ifBlank { "?" },
                 yesNoText(s.saved)),
@@ -246,6 +251,7 @@ private fun ClapLines(c: ClapRowUi, modifier: Modifier) {
 private fun sourceLabel(s: SourceRowUi): String {
     val base = sourceName(s.source)
     return when {
+        s.requestedChannels != 2 -> stringResource(R.string.mictest_source_channels, base, s.requestedChannels.toString())
         s.deviceId != null -> stringResource(R.string.mictest_source_device, base, s.deviceId)
         s.direction == DirectionUi.TOWARDS_USER -> stringResource(R.string.mictest_source_towards, base)
         s.direction == DirectionUi.AWAY_FROM_USER -> stringResource(R.string.mictest_source_away, base)
@@ -292,6 +298,17 @@ private fun clapPrompt(p: ClapPhaseUi?) = when (p) {
 }
 
 /** Zahlen deutsch formatiert (Komma), unabhaengig von der Systemsprache der Tests. */
+/** S-019: "1-2: 0,02; 1-3: 1,00; 2-3: 0,02" in der Reihenfolge der Rechnung (zweiter Kanal aufsteigend, dann erster). */
+internal fun pairText(pairs: List<Double>): String {
+    val out = ArrayList<String>(pairs.size)
+    var j = 1; var i = 0
+    for (v in pairs) {
+        out += "${i + 1}-${j + 1}: ${dec2(noNegativeZero(v))}"
+        if (++i == j) { i = 0; j++ }
+    }
+    return out.joinToString("; ")
+}
+
 internal fun dec1(v: Double): String = String.format(Locale.GERMANY, "%.1f", v)
 internal fun dec2(v: Double): String = String.format(Locale.GERMANY, "%.2f", v)
 internal fun signed0(v: Double): String = String.format(Locale.GERMANY, "%+.0f", if (kotlin.math.abs(v) < 0.5) 0.0 else v)

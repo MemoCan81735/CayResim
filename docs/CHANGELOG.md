@@ -2,6 +2,17 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
+## Schallbild und Mikrofon-Kanäle (9. November 2026, S-018 und S-019, Version folgt beim Release)
+- Neu unter Einstellungen: "Schallbild". Es zeigt live, aus welcher Richtung Töne kommen: je Tonhöhen-Bereich ein
+  Streifen zwischen links und rechts, Farbe nach Tonhöhe, Helligkeit nach Lautstärke, dazu Hauptrichtung und Zahlen.
+  Handy quer halten. Das ist Stufe 1 der akustischen Kamera (F11), noch ohne Kamerabild. Gespeichert wird nichts.
+- Der Mikrofon-Test fragt zusätzlich drei und vier Kanäle an und zeigt, wie viele verschiedene Mikrofone ankommen.
+  Damit klärt sich, ob das S24+ einer App ein drittes Mikrofon gibt (dann wäre mehr als links/rechts möglich).
+- Selbsttest: Der Stabilisator wird nach der ersten Aufnahme gelesen (Nachtrag S-007 K12 vom 10. Oktober).
+- Grenzen: nur links/rechts; in halligen Räumen ziehen tiefe Töne zur Mitte, hohe zeigen sich nur bei nahen Quellen.
+- Gerät: Schallbild mit Musik vom zweiten Handy 40 cm rechts, links und vorne, dann in 1,5 m, je mit beiden
+  Tonquellen, je ein Screenshot. Mikrofon-Test: Screenshot der vier neuen Zeilen.
+
 ## 0.1.140 Halte-Kreis bei der Nachtaufnahme (11. Oktober 2026, S-016)
 - Während der Nachtaufnahme zeigt der Sucher in der Mitte einen Kreis und einen Punkt, der zeigt, wohin die Kamera
   gegenüber dem Start zeigt (Lagesensor). Bis 0,5° Abweichung ist der Punkt grün, sonst orange; ein Ring zeigt den

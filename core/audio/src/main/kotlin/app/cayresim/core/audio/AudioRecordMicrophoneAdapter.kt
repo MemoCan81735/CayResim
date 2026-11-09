@@ -18,6 +18,7 @@ import app.cayresim.core.boundary.InputDeviceKind
 import app.cayresim.core.boundary.InputDeviceSnapshot
 import app.cayresim.core.boundary.IoDispatcher
 import app.cayresim.core.boundary.MicCapture
+import app.cayresim.core.boundary.MicChunk
 import app.cayresim.core.boundary.MicDirectionKey
 import app.cayresim.core.boundary.MicFailure
 import app.cayresim.core.boundary.MicInfoSnapshot
@@ -26,13 +27,19 @@ import app.cayresim.core.boundary.MicLocationKey
 import app.cayresim.core.boundary.MicPatternKey
 import app.cayresim.core.boundary.MicRecordResult
 import app.cayresim.core.boundary.MicRequest
+import app.cayresim.core.boundary.MicStreamEvent
 import app.cayresim.core.boundary.MicrophoneBoundary
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -79,24 +86,18 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
 
     override suspend fun record(request: MicRequest): MicRecordResult = lock.withLock {
         if (!hasPermission()) return@withLock MicRecordResult.Failed(MicFailure.NO_PERMISSION)
-        if (request.millis <= 0 || request.channels !in 1..2 || request.sampleRate <= 0) return@withLock MicRecordResult.Failed(MicFailure.INIT_FAILED)
+        if (request.millis <= 0 || request.channels !in 1..MAX_CHANNELS || request.sampleRate <= 0) return@withLock MicRecordResult.Failed(MicFailure.INIT_FAILED)
         withContext(io) { recordLocked(request) }
     }
 
-    @SuppressLint("MissingPermission") // geprueft in record() direkt davor (hasPermission)
     private suspend fun recordLocked(request: MicRequest): MicRecordResult {
-        val mask = if (request.channels == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO
-        val min = AudioRecord.getMinBufferSize(request.sampleRate, mask, AudioFormat.ENCODING_PCM_16BIT)
+        val min = minBuffer(request)
         if (min <= 0) return MicRecordResult.Failed(MicFailure.INIT_FAILED)
         var rec: AudioRecord? = null
         var opened = false
         try {
             rec = try {
-                AudioRecord.Builder()
-                    .setAudioSource(sourceOf(request.source))
-                    .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(request.sampleRate).setChannelMask(mask).build())
-                    .setBufferSizeInBytes(maxOf(min * 4, request.sampleRate * request.channels * 2 / 5))
-                    .build()
+                build(request, min)
             } catch (_: SecurityException) {
                 return MicRecordResult.Failed(MicFailure.NO_PERMISSION)
             } catch (_: Exception) {
@@ -104,14 +105,7 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             }
             opened = true; openRecordings++
             if (rec.state != AudioRecord.STATE_INITIALIZED) return MicRecordResult.Failed(MicFailure.INIT_FAILED)
-            request.deviceId?.let { id ->
-                manager?.getDevices(AudioManager.GET_DEVICES_INPUTS)?.firstOrNull { it.id == id }?.let { rec.setPreferredDevice(it) }
-            }
-            when (request.direction) {
-                MicDirectionKey.TOWARDS_USER -> rec.setPreferredMicrophoneDirection(MicrophoneDirection.MIC_DIRECTION_TOWARDS_USER)
-                MicDirectionKey.AWAY_FROM_USER -> rec.setPreferredMicrophoneDirection(MicrophoneDirection.MIC_DIRECTION_AWAY_FROM_USER)
-                MicDirectionKey.NONE -> Unit
-            }
+            prefer(rec, request)
             rec.startRecording()
             // grober Zeitbezug fuer den Fall ohne Zeitstempel (S-010)
             val roughStart = SystemClock.elapsedRealtimeNanos()
@@ -132,15 +126,102 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             val (start, exact) = startOfFirstFrame(rec, warmFrames, roughStart)
             return MicRecordResult.Ok(MicCapture(request, rec.sampleRate, channels, pcm, routed, active, start, exact))
         } finally {
-            // R28: genau ein Freigabeblock, auch bei Abbruch
-            withContext(NonCancellable) {
-                val r = rec
-                if (opened && r != null) {
-                    runCatching { if (r.recordingState == AudioRecord.RECORDSTATE_RECORDING) r.stop() }
-                    runCatching { r.release() }
-                    openRecordings--
-                }
+            // R28: genau ein Freigabeblock je Aufnahme, auch bei Abbruch
+            close(rec, opened)
+        }
+    }
+
+    /** Der eine Freigabeblock fuer Einzelaufnahme und Tonstrom (R28): anhalten, freigeben, Zaehler senken. */
+    private suspend fun close(rec: AudioRecord?, opened: Boolean) = withContext(NonCancellable) {
+        if (opened && rec != null) {
+            runCatching { if (rec.recordingState == AudioRecord.RECORDSTATE_RECORDING) rec.stop() }
+            runCatching { rec.release() }
+            openRecordings--
+        }
+    }
+
+    @SuppressLint("MissingPermission") // die Aufrufer pruefen hasPermission direkt davor
+    private fun build(request: MicRequest, min: Int): AudioRecord {
+        val format = AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(request.sampleRate)
+        // S-019: ueber Stereo hinaus gibt es nur die Kanal-Index-Maske (Kanal 1 bis n des Geraets, ohne Bedeutung wie links/rechts)
+        if (request.channels > 2) format.setChannelIndexMask((1 shl request.channels) - 1)
+        else format.setChannelMask(if (request.channels == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO)
+        return AudioRecord.Builder()
+            .setAudioSource(sourceOf(request.source))
+            .setAudioFormat(format.build())
+            .setBufferSizeInBytes(maxOf(min * 4, request.sampleRate * request.channels * 2 / 5))
+            .build()
+    }
+
+    /** Mindestpuffer in Byte; fuer mehr als zwei Kanaele aus dem Stereo-Wert hochgerechnet (Android kennt dafuer keine Abfrage). */
+    private fun minBuffer(request: MicRequest): Int {
+        val stereo = request.channels >= 2
+        val min = AudioRecord.getMinBufferSize(request.sampleRate, if (stereo) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        return if (min > 0 && request.channels > 2) min * request.channels / 2 else min
+    }
+
+    /** Bevorzugtes Geraet und Richtung der Anfrage setzen. */
+    private fun prefer(rec: AudioRecord, request: MicRequest) {
+        request.deviceId?.let { id ->
+            manager?.getDevices(AudioManager.GET_DEVICES_INPUTS)?.firstOrNull { it.id == id }?.let { rec.setPreferredDevice(it) }
+        }
+        when (request.direction) {
+            MicDirectionKey.TOWARDS_USER -> rec.setPreferredMicrophoneDirection(MicrophoneDirection.MIC_DIRECTION_TOWARDS_USER)
+            MicDirectionKey.AWAY_FROM_USER -> rec.setPreferredMicrophoneDirection(MicrophoneDirection.MIC_DIRECTION_AWAY_FROM_USER)
+            MicDirectionKey.NONE -> Unit
+        }
+    }
+
+    /**
+     * Tonstrom (S-018): dieselbe Sperre wie [record], also eine Aufnahme zur Zeit. Laeuft, bis der Sammler abbricht
+     * oder ein Fehler kommt; freigegeben wird in genau einem NonCancellable-Block (R28). Jedes Stueck ist ein neues
+     * Feld, das dem Empfaenger gehoert. Hoechstens [STREAM_BUFFER] Stuecke warten; ist der Sammler langsamer, faellt
+     * das aelteste weg, damit die Anzeige nicht hinter dem Ton herlaeuft.
+     */
+    override fun stream(request: MicRequest, chunkMillis: Int): Flow<MicStreamEvent> = flow {
+        lock.withLock {
+            val failure = streamLocked(request, chunkMillis) { emit(MicStreamEvent.Chunk(it)) }
+            if (failure != null) emit(MicStreamEvent.Failed(failure))
+        }
+    }.flowOn(io).buffer(STREAM_BUFFER, BufferOverflow.DROP_OLDEST)
+
+    /** Liest Stuecke und reicht sie an [onChunk], bis zum Abbruch; liefert nur im Fehlerfall zurueck. */
+    private suspend fun streamLocked(request: MicRequest, chunkMillis: Int, onChunk: suspend (MicChunk) -> Unit): MicFailure? {
+        if (!hasPermission()) return MicFailure.NO_PERMISSION
+        if (chunkMillis <= 0 || request.channels !in 1..2 || request.sampleRate <= 0) return MicFailure.INIT_FAILED
+        val min = minBuffer(request)
+        if (min <= 0) return MicFailure.INIT_FAILED
+        var rec: AudioRecord? = null
+        var opened = false
+        try {
+            rec = try {
+                build(request, min)
+            } catch (_: SecurityException) {
+                return MicFailure.NO_PERMISSION
+            } catch (_: Exception) {
+                return MicFailure.INIT_FAILED
             }
+            opened = true; openRecordings++
+            if (rec.state != AudioRecord.STATE_INITIALIZED) return MicFailure.INIT_FAILED
+            prefer(rec, request)
+            rec.startRecording()
+            if (rec.recordingState != AudioRecord.RECORDSTATE_RECORDING) return MicFailure.INIT_FAILED
+            val channels = rec.format.channelCount.takeIf { it in 1..8 } ?: request.channels
+            val step = request.sampleRate / 100 * channels
+            // Einschwingen verwerfen wie bei der Einzelaufnahme
+            val warm = ShortArray(request.sampleRate * WARMUP_MS / 1000 * channels)
+            if (!fill(rec, warm, step, SystemClock.elapsedRealtime() + WARMUP_MS + GRACE_MS)) return MicFailure.READ_FAILED
+            val frames = (request.sampleRate.toLong() * chunkMillis / 1000).toInt().coerceAtLeast(1)
+            var index = 0L
+            while (true) {
+                val pcm = ShortArray(frames * channels)
+                // Frist je Stueck (R27): ein haengendes Geraet endet als READ_FAILED statt endlos zu lesen
+                if (!fill(rec, pcm, step, SystemClock.elapsedRealtime() + chunkMillis + GRACE_MS)) return MicFailure.READ_FAILED
+                onChunk(MicChunk(rec.sampleRate, channels, pcm, index++))
+            }
+        } finally {
+            // R28: genau ein Freigabeblock je Aufnahme, auch bei Abbruch
+            close(rec, opened)
         }
     }
 
@@ -173,6 +254,10 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
         const val WARMUP_MS = 50
         const val GRACE_MS = 1_000
         const val POLL_MS = 5L
+        /** S-019: groesste angefragte Kanalzahl einer Einzelaufnahme. */
+        const val MAX_CHANNELS = 4
+        /** Wartende Stuecke im Tonstrom (S-018): 0,4 s bei Stuecken von 100 ms. */
+        const val STREAM_BUFFER = 4
 
         fun sourceOf(k: AudioSourceKey) = when (k) {
             AudioSourceKey.MIC -> MediaRecorder.AudioSource.MIC

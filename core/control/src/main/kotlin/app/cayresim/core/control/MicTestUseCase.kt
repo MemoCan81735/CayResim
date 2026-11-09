@@ -143,18 +143,23 @@ class MicTestUseCase @Inject constructor(
         const val PREPARE_MILLIS = 2_000L
         const val DEFAULT_SPACING = 0.15
         const val MAX_DEVICES = 4
+        /** S-019: angefragte Kanalzahlen ueber Stereo hinaus, je 1 s (der Lauf bleibt unter 30 s, S-008 K14). */
+        val MULTI_CHANNELS = listOf(3, 4)
+        const val MULTI_MILLIS = 1_000
 
-        /** Feste Reihenfolge: Quellen, dann Richtungen, dann jedes eingebaute Mikrofon einzeln (hoechstens 4). */
+        /** Feste Reihenfolge: Quellen, dann Richtungen, dann jedes eingebaute Mikrofon einzeln (hoechstens 4), dann Mehrkanal (S-019). */
         fun plan(inv: MicInventorySnapshot): List<MicRequest> =
             AudioSourceKey.entries.map { MicRequest(it) } +
                 listOf(MicDirectionKey.TOWARDS_USER, MicDirectionKey.AWAY_FROM_USER).map { MicRequest(AudioSourceKey.MIC, direction = it) } +
-                inv.devices.filter { it.kind == InputDeviceKind.BUILTIN_MIC }.take(MAX_DEVICES).map { MicRequest(AudioSourceKey.MIC, deviceId = it.id) }
+                inv.devices.filter { it.kind == InputDeviceKind.BUILTIN_MIC }.take(MAX_DEVICES).map { MicRequest(AudioSourceKey.MIC, deviceId = it.id) } +
+                // S-019: liefert das Geraet mehr als zwei Mikrofone? Am Ende, damit die bisherigen Dateien ihre Nummern behalten
+                listOf(AudioSourceKey.MIC, AudioSourceKey.CAMCORDER).flatMap { s -> MULTI_CHANNELS.map { MicRequest(s, millis = MULTI_MILLIS, channels = it) } }
 
         /** Erste Quelle mit zwei verschiedenen Kanaelen, roh zuerst (K11). */
         fun chooseClapSource(sources: List<SourceResult>): MicRequest? =
             listOf(AudioSourceKey.UNPROCESSED, AudioSourceKey.VOICE_RECOGNITION, AudioSourceKey.MIC).firstNotNullOfOrNull { key ->
                 sources.firstOrNull { s ->
-                    s.request.source == key && s.request.deviceId == null && s.request.direction == MicDirectionKey.NONE &&
+                    s.request.source == key && s.request.deviceId == null && s.request.direction == MicDirectionKey.NONE && s.request.channels == 2 &&
                         (s.outcome as? SourceOutcome.Recorded)?.stats?.distinctChannels == true
                 }?.request
             }
@@ -174,6 +179,7 @@ class MicTestUseCase @Inject constructor(
             append("%02d-".format(index + 1)); append(r.source.name)
             if (r.direction != MicDirectionKey.NONE) append("-").append(r.direction.name)
             r.deviceId?.let { append("-geraet").append(it) }
+            if (r.channels != 2) append("-").append(r.channels).append("kanal")
             append("-").append(FORMAT).append(".wav")
         }
 

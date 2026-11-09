@@ -5,6 +5,7 @@ import app.cayresim.core.boundary.AudioSourceKey
 import app.cayresim.core.boundary.InputDeviceKind
 import app.cayresim.core.boundary.InputDeviceSnapshot
 import app.cayresim.core.boundary.MicCapture
+import app.cayresim.core.boundary.MicChunk
 import app.cayresim.core.boundary.MicFailure
 import app.cayresim.core.boundary.MicInventorySnapshot
 import app.cayresim.core.boundary.MicLocationKey
@@ -12,10 +13,14 @@ import app.cayresim.core.boundary.MicPatternKey
 import app.cayresim.core.boundary.MicInfoSnapshot
 import app.cayresim.core.boundary.MicRecordResult
 import app.cayresim.core.boundary.MicRequest
+import app.cayresim.core.boundary.MicStreamEvent
 import app.cayresim.core.boundary.MicrophoneBoundary
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 
 /**
  * Mikrofon im Speicher. [sound] liefert je Anfrage das PCM (verschraenkt); [failures] laesst Quellen scheitern.
@@ -54,6 +59,40 @@ class FakeMicrophoneBoundary(
             if (recordDelayMillis > 0) delay(recordDelayMillis)
             val ch = channelsFor(request)
             return MicRecordResult.Ok(MicCapture(request, request.sampleRate, ch, sound(request, ch), 1, listOf(1), startBootNanos, timeExact))
+        } finally {
+            withContext(NonCancellable) { if (opened) open-- }
+        }
+    }
+
+    /**
+     * Tonstrom (S-018): [streamSound] liefert je Anfrage und Nummer das naechste Stueck, null beendet den Strom mit
+     * READ_FAILED. [streamChunkDelayMillis] wartet vor jedem Stueck (virtuelle Zeit), 0 sendet sofort.
+     */
+    var streamSound: (MicRequest, Int) -> ShortArray? = { r, _ -> ShortArray(r.sampleRate / 10 * r.channels) }
+    var streamChunkDelayMillis: Long = 100
+    val streamRequests = mutableListOf<MicRequest>()
+    /** Angefragte Stuecklaenge je Strom. */
+    val streamChunkMillis = mutableListOf<Int>()
+    /** Laufende Nummer je Stueck; eine Luecke simuliert verworfene Stuecke. */
+    var streamIndex: (Int) -> Long = { it.toLong() }
+
+    override fun stream(request: MicRequest, chunkMillis: Int): Flow<MicStreamEvent> = flow {
+        streamRequests += request; streamChunkMillis += chunkMillis
+        if (!permission) { emit(MicStreamEvent.Failed(MicFailure.NO_PERMISSION)); return@flow }
+        failures[request.source]?.let { emit(MicStreamEvent.Failed(it)); return@flow }
+        var opened = false
+        try {
+            open++; opened = true; maxOpen = maxOf(maxOpen, open)
+            val ch = channelsFor(request)
+            var index = 0
+            while (true) {
+                // ohne Wartezeit trotzdem abgeben, sonst kommt ein Sammler auf demselben Thread nie dran
+                if (streamChunkDelayMillis > 0) delay(streamChunkDelayMillis) else yield()
+                val pcm = streamSound(request, index)
+                if (pcm == null) { emit(MicStreamEvent.Failed(MicFailure.READ_FAILED)); return@flow }
+                emit(MicStreamEvent.Chunk(MicChunk(request.sampleRate, ch, pcm, streamIndex(index))))
+                index++
+            }
         } finally {
             withContext(NonCancellable) { if (opened) open-- }
         }

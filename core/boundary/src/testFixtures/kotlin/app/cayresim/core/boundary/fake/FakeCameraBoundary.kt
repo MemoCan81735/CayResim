@@ -59,10 +59,19 @@ class FakeCameraBoundary(
     private fun applyMode(mode: PhotoMode) {
         val ok = mode == PhotoMode.NORMAL || mode in availableModes
         _state.update { it.copy(requestedMode = mode, activeMode = if (ok) mode else PhotoMode.NORMAL, fallbackFrom = if (ok) null else mode) }
+        // wie der Adapter: Samsungs Modi melden keine Aufnahmeergebnisse, der alte Wert gilt nicht mehr
+        if (stabilizationOnCapture != null && ok && mode != PhotoMode.NORMAL) _state.update { it.copy(stabilization = null) }
     }
+
+    /**
+     * Wie das S24+ im Selbsttest (S-007, 10.10.): ohne sichtbaren Sucher kommen Aufnahmeergebnisse erst mit der ersten
+     * Aufnahme. Gesetzt: [capture] im normalen Modus meldet diesen Stabilisator-Wert.
+     */
+    var stabilizationOnCapture: app.cayresim.core.boundary.OisState? = null
 
     override suspend fun capture(): CaptureResult {
         if (_state.value.status != CameraStatus.RUNNING) return CaptureResult.Failed(CaptureFailure.NOT_READY)
+        stabilizationOnCapture?.let { s -> if (_state.value.activeMode == PhotoMode.NORMAL) _state.update { it.copy(stabilization = s) } }
         val result = nextCapture ?: CaptureResult.Saved("content://fake/${++counter}")
         nextCapture = null
         if (result is CaptureResult.Saved) saved += result.uri

@@ -1,5 +1,7 @@
 package app.cayresim.core.boundary
 
+import kotlinx.coroutines.flow.Flow
+
 /** Audioquellen von Android, soweit der Mikrofon-Test sie prueft (S-008). */
 enum class AudioSourceKey { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED }
 
@@ -65,13 +67,32 @@ sealed interface MicRecordResult {
 }
 
 /**
- * Einzige Sicht der App auf das Mikrofon (R28). Eine Aufnahme zur Zeit; das Mikrofon wird nach jeder Aufnahme
- * freigegeben, auch bei Abbruch. Fehler als Werte (R24).
+ * Ein Stueck laufender Ton (S-018): verschraenkt je Frame, 16 Bit. Das Feld gehoert dem Empfaenger. [index]: laufende
+ * Nummer seit Beginn des Stroms ab 0; eine Luecke heisst, dass Stuecke verworfen wurden (R27: auf dem Geraet sichtbar).
+ */
+class MicChunk(val sampleRate: Int, val channels: Int, val pcm: ShortArray, val index: Long)
+
+/** Meldungen des Tonstroms; nach [Failed] endet er (R24). */
+sealed interface MicStreamEvent {
+    class Chunk(val chunk: MicChunk) : MicStreamEvent
+    data class Failed(val reason: MicFailure) : MicStreamEvent
+}
+
+/**
+ * Einzige Sicht der App auf das Mikrofon (R28). Eine Aufnahme zur Zeit, ob einzeln oder als Strom; das Mikrofon wird
+ * nach jeder Aufnahme freigegeben, auch bei Abbruch. Fehler als Werte (R24).
  */
 interface MicrophoneBoundary {
     fun hasPermission(): Boolean
     suspend fun inventory(): MicInventorySnapshot
     suspend fun record(request: MicRequest): MicRecordResult
+
+    /**
+     * Laufender Ton in Stuecken von [chunkMillis] (S-018, R25), bis der Sammler abbricht; dann wird das Mikrofon
+     * freigegeben. [MicRequest.millis] hat hier keine Bedeutung. Ein Fehler kommt als [MicStreamEvent.Failed], danach
+     * endet der Strom. Ist der Sammler zu langsam, gehen Stuecke verloren statt sich zu stauen.
+     */
+    fun stream(request: MicRequest, chunkMillis: Int = 100): Flow<MicStreamEvent>
 }
 
 /** Ablage fuer Tondateien in der Medienablage (Recordings/CayResim). */
