@@ -25,6 +25,7 @@ import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
 import app.cayresim.feature.settings.control.DirectionUi
 import app.cayresim.feature.settings.ui.MicTestContent
+import app.cayresim.feature.settings.ui.pairText
 import app.cayresim.feature.settings.ui.db
 import app.cayresim.feature.settings.ui.signed2
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -149,6 +150,24 @@ class MicTestTest {
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(s, {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("source_1"))
         compose.onNodeWithText("Aufnahme ließ sich nicht starten", substring = true).assertExists()
+    }
+
+    @Test fun `S-019 Zeile fuer drei Kanaele`() {
+        val s = vm(stereoMic()).runToEnd()
+        val result = assertNotNull(s.result)
+        // der Plan endet mit MIC 3, MIC 4, CAMCORDER 3, CAMCORDER 4; der Fake liefert unabhaengiges Rauschen je Kanal
+        val multi = result.sources.takeLast(4)
+        assertEquals(listOf(3, 4, 3, 4), multi.map { it.requestedChannels }); assertEquals(listOf(3, 4, 3, 4), multi.map { it.distinctCount })
+        assertEquals(listOf(3, 6, 3, 6), multi.map { it.pairDiffCorrelation.size })
+        assertEquals("1-2: 0,02; 1-3: 1,00; 2-3: 0,02", pairText(listOf(0.02, 1.0, 0.02)))
+        assertEquals("1-2: 0,00; 1-3: 0,10; 2-3: 0,20; 1-4: 0,30; 2-4: 0,40; 3-4: 0,50", pairText(listOf(-0.001, 0.1, 0.2, 0.3, 0.4, 0.5)))
+        // feste Zeile: dritter Kanal ist eine Kopie des ersten
+        val row = multi.first().copy(distinctCount = 2, pairDiffCorrelation = listOf(0.02, 1.0, 0.02))
+        val shown = s.copy(result = result.copy(sources = result.sources.dropLast(4) + row))
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(shown, {}, {}) } }
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("source_${shown.result!!.sources.lastIndex}"))
+        compose.onNodeWithText("3 Kanäle angefragt", substring = true).assertExists()
+        compose.onNodeWithText("Verschiedene Mikrofone: 2; Korrelation der Änderungen je Paar: 1-2: 0,02; 1-3: 1,00; 2-3: 0,02", substring = true).assertExists()
     }
 
     @Test fun mikrotest_ergebnis() {

@@ -86,19 +86,18 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
 
     override suspend fun record(request: MicRequest): MicRecordResult = lock.withLock {
         if (!hasPermission()) return@withLock MicRecordResult.Failed(MicFailure.NO_PERMISSION)
-        if (request.millis <= 0 || request.channels !in 1..2 || request.sampleRate <= 0) return@withLock MicRecordResult.Failed(MicFailure.INIT_FAILED)
+        if (request.millis <= 0 || request.channels !in 1..MAX_CHANNELS || request.sampleRate <= 0) return@withLock MicRecordResult.Failed(MicFailure.INIT_FAILED)
         withContext(io) { recordLocked(request) }
     }
 
     private suspend fun recordLocked(request: MicRequest): MicRecordResult {
-        val mask = if (request.channels == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO
-        val min = AudioRecord.getMinBufferSize(request.sampleRate, mask, AudioFormat.ENCODING_PCM_16BIT)
+        val min = minBuffer(request)
         if (min <= 0) return MicRecordResult.Failed(MicFailure.INIT_FAILED)
         var rec: AudioRecord? = null
         var opened = false
         try {
             rec = try {
-                build(request, mask, min)
+                build(request, min)
             } catch (_: SecurityException) {
                 return MicRecordResult.Failed(MicFailure.NO_PERMISSION)
             } catch (_: Exception) {
@@ -140,11 +139,24 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
     }
 
     @SuppressLint("MissingPermission") // die Aufrufer pruefen hasPermission direkt davor
-    private fun build(request: MicRequest, mask: Int, min: Int): AudioRecord = AudioRecord.Builder()
-        .setAudioSource(sourceOf(request.source))
-        .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(request.sampleRate).setChannelMask(mask).build())
-        .setBufferSizeInBytes(maxOf(min * 4, request.sampleRate * request.channels * 2 / 5))
-        .build()
+    private fun build(request: MicRequest, min: Int): AudioRecord {
+        val format = AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(request.sampleRate)
+        // S-019: ueber Stereo hinaus gibt es nur die Kanal-Index-Maske (Kanal 1 bis n des Geraets, ohne Bedeutung wie links/rechts)
+        if (request.channels > 2) format.setChannelIndexMask((1 shl request.channels) - 1)
+        else format.setChannelMask(if (request.channels == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO)
+        return AudioRecord.Builder()
+            .setAudioSource(sourceOf(request.source))
+            .setAudioFormat(format.build())
+            .setBufferSizeInBytes(maxOf(min * 4, request.sampleRate * request.channels * 2 / 5))
+            .build()
+    }
+
+    /** Mindestpuffer in Byte; fuer mehr als zwei Kanaele aus dem Stereo-Wert hochgerechnet (Android kennt dafuer keine Abfrage). */
+    private fun minBuffer(request: MicRequest): Int {
+        val stereo = request.channels >= 2
+        val min = AudioRecord.getMinBufferSize(request.sampleRate, if (stereo) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+        return if (min > 0 && request.channels > 2) min * request.channels / 2 else min
+    }
 
     /** Bevorzugtes Geraet und Richtung der Anfrage setzen. */
     private fun prefer(rec: AudioRecord, request: MicRequest) {
@@ -175,14 +187,13 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
     private suspend fun streamLocked(request: MicRequest, chunkMillis: Int, onChunk: suspend (MicChunk) -> Unit): MicFailure? {
         if (!hasPermission()) return MicFailure.NO_PERMISSION
         if (chunkMillis <= 0 || request.channels !in 1..2 || request.sampleRate <= 0) return MicFailure.INIT_FAILED
-        val mask = if (request.channels == 2) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO
-        val min = AudioRecord.getMinBufferSize(request.sampleRate, mask, AudioFormat.ENCODING_PCM_16BIT)
+        val min = minBuffer(request)
         if (min <= 0) return MicFailure.INIT_FAILED
         var rec: AudioRecord? = null
         var opened = false
         try {
             rec = try {
-                build(request, mask, min)
+                build(request, min)
             } catch (_: SecurityException) {
                 return MicFailure.NO_PERMISSION
             } catch (_: Exception) {
@@ -247,6 +258,8 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
         const val WARMUP_MS = 50
         const val GRACE_MS = 1_000
         const val POLL_MS = 5L
+        /** S-019: groesste angefragte Kanalzahl einer Einzelaufnahme. */
+        const val MAX_CHANNELS = 4
         /** Wartende Stuecke im Tonstrom (S-018): 0,4 s bei Stuecken von 100 ms. */
         const val STREAM_BUFFER = 4
 

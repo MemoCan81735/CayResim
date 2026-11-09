@@ -249,6 +249,34 @@ class AudioMathTest {
         assertTrue(b.distinctChannels, "Brummen macht zwei Mikrofone nicht zu einem")
     }
 
+    @Test fun `S-019 zaehlt verschiedene Mikrofone`() {
+        val rnd = Random(19); val n = sr
+        fun ch() = ShortArray(n) { (gauss(rnd) * 800).roundToInt().coerceIn(-32768, 32767).toShort() }
+        fun inter(vararg c: ShortArray) = ShortArray(n * c.size) { c[it % c.size][it / c.size] }
+        val a = ch(); val b = ch(); val c = ch()
+        val three = AudioMath.analyze(inter(a, b, c), 3)
+        assertEquals(3, three.distinctCount); assertEquals(3, three.pairDiffCorrelation.size)
+        assertTrue(three.pairDiffCorrelation.all { abs(it) < 0.1 }, "Paare ${three.pairDiffCorrelation}")
+        // dritter Kanal ist eine Kopie des ersten: Paare in der Reihenfolge 1-2, 1-3, 2-3
+        val copy = AudioMath.analyze(inter(a, b, a), 3)
+        assertEquals(2, copy.distinctCount); assertEquals(1.0, copy.pairDiffCorrelation[1], 1e-9)
+        // dritter Kanal stumm
+        assertEquals(2, AudioMath.analyze(inter(a, b, ShortArray(n)), 3).distinctCount)
+        // vier Kanaele aus zwei Paaren gleicher
+        val four = AudioMath.analyze(inter(a, a, b, b), 4)
+        assertEquals(2, four.distinctCount); assertEquals(6, four.pairDiffCorrelation.size)
+        assertEquals(4, AudioMath.analyze(inter(a, b, c, ch()), 4).distinctCount)
+        // Mono und zwei Kanaele wie bisher
+        val mono = AudioMath.analyze(a, 1)
+        assertEquals(1, mono.distinctCount); assertTrue(mono.pairDiffCorrelation.isEmpty())
+        val two = AudioMath.analyze(inter(a, b), 2)
+        assertTrue(two.distinctChannels); assertEquals(2, two.distinctCount); assertEquals(two.diffCorrelation, two.pairDiffCorrelation.single(), 1e-12)
+        val same = AudioMath.analyze(inter(a, a), 2)
+        assertFalse(same.distinctChannels); assertEquals(1, same.distinctCount)
+        // alles stumm
+        assertEquals(0, AudioMath.analyze(ShortArray(n * 3), 3).distinctCount)
+    }
+
     @Test fun `S-008 Pegel in dBFS`() {
         assertEquals(Double.NEGATIVE_INFINITY, AudioMath.dbfs(0.0))
         assertEquals(0.0, AudioMath.dbfs(1.0), 1e-9)

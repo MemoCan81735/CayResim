@@ -121,6 +121,8 @@
     <string name="mictest_source_towards">%1$s, Richtung zum Bildschirm</string>
     <string name="mictest_source_away">%1$s, Richtung zur Rückseite</string>
     <string name="mictest_source_detail">Kanäle: %1$d, verschieden: %2$s, Pegel (dBFS): %3$s, gleiche Werte: %4$s %%, Korrelation: %5$s, Korrelation der Änderungen: %6$s</string>
+    <string name="mictest_source_channels">%1$s, %2$s Kanäle angefragt</string>
+    <string name="mictest_source_distinct">Verschiedene Mikrofone: %1$s; Korrelation der Änderungen je Paar: %2$s</string>
     <string name="mictest_source_route">Genutztes Gerät: %1$s, aktive Mikrofone: %2$s, gespeichert: %3$s</string>
     <string name="mictest_fail_permission">Keine Mikrofon-Berechtigung</string>
     <string name="mictest_fail_not_offered">Vom Gerät nicht angeboten</string>

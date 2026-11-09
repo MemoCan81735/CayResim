@@ -99,6 +99,7 @@ fun SoundImageRoute(onBack: () -> Unit, viewModel: SoundImageViewModel = hiltVie
     }
     SoundImageContent(
         state = state,
+        // bei jeder Momentaufnahme neu gelesen: ein Drehen von quer nach quer (180 Grad) startet die Activity nicht neu
         rotationDegrees = (view.display?.rotation ?: 0) * 90,
         onStart = {
             val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -203,17 +204,21 @@ private fun DrawScope.drawBand(b: SoundBandUi, color: Color, axis: PanelAxis) {
     }
 }
 
-/** Dreieck am Rand an der Hauptrichtung. */
+/** Dreieck am Rand an der Hauptrichtung: weiss mit dunklem Rand, damit es auch auf einem weissen Streifen sichtbar bleibt. */
 private fun DrawScope.drawMarker(angleDeg: Double, axis: PanelAxis) {
-    val at = along(angleDeg, axis); val h = 10.dp.toPx()
-    val path = Path()
-    if (axis == PanelAxis.RIGHT || axis == PanelAxis.LEFT) {
-        path.moveTo(at - h, size.height); path.lineTo(at + h, size.height); path.lineTo(at, size.height - h * 1.4f)
-    } else {
-        path.moveTo(0f, at - h); path.lineTo(0f, at + h); path.lineTo(h * 1.4f, at)
+    val at = along(angleDeg, axis)
+    fun triangle(h: Float): Path {
+        val path = Path()
+        if (axis == PanelAxis.RIGHT || axis == PanelAxis.LEFT) {
+            path.moveTo(at - h, size.height); path.lineTo(at + h, size.height); path.lineTo(at, size.height - h * 1.4f)
+        } else {
+            path.moveTo(0f, at - h); path.lineTo(0f, at + h); path.lineTo(h * 1.4f, at)
+        }
+        path.close()
+        return path
     }
-    path.close()
-    drawPath(path, Color.White)
+    drawPath(triangle(13.dp.toPx()), Color.Black)
+    drawPath(triangle(9.dp.toPx()), Color.White)
 }
 
 /** Winkel der Stuetzstelle [index] (auch halbe Schritte fuer die Raender eines Streifens). */

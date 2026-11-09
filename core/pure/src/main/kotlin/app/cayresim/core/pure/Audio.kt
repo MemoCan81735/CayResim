@@ -36,6 +36,14 @@ object AudioMath {
          * Mikrofone bei 0 und ein einzelnes bei etwa 0,6 (S-009, Geraetetest S24+).
          */
         val diffCorrelation: Double,
+        /**
+         * S-019: Zahl der wirklich verschiedenen Mikrofone unter allen Kanaelen: groesste Gruppe, in der jedes Paar
+         * verschieden ist (wie [distinctChannels]) und kein Kanal stumm. Android fuellt angefragte, aber nicht
+         * vorhandene Kanaele mit Kopien oder Stille auf.
+         */
+        val distinctCount: Int,
+        /** S-019: Korrelation der Aenderungen je Kanalpaar in der Reihenfolge 1-2, 1-3, 2-3, 1-4, 2-4, 3-4; leer bei Mono. */
+        val pairDiffCorrelation: List<Double>,
     ) {
         /**
          * Zwei wirklich verschiedene Mikrofone: nicht doppeltes Mono, nicht ein Mikrofon auf beiden Kanaelen
@@ -97,11 +105,36 @@ object AudioMath {
         val frames = ch[0].size
         val level = ch.map { x -> if (x.isEmpty()) Double.NEGATIVE_INFINITY else dbfs(sqrt(x.sumOf { it.toDouble() * it } / x.size)) }
         val peak = ch.map { x -> dbfs(x.maxOfOrNull { abs(it).toDouble() } ?: 0.0) }
-        if (channels < 2 || frames == 0) return RecordingStats(frames, channels, level, peak, 1.0, 1.0, 1.0)
+        val loud = level.map { it > SILENT_DBFS }
+        if (channels < 2 || frames == 0) return RecordingStats(frames, channels, level, peak, 1.0, 1.0, 1.0, if (loud.firstOrNull() == true) 1 else 0, emptyList())
         val a = ch[0]; val b = ch[1]
-        var same = 0
-        for (i in 0 until frames) if (pcm[i * channels] == pcm[i * channels + 1]) same++
-        return RecordingStats(frames, channels, level, peak, same.toDouble() / frames, pearson(a, b, 0, 0, frames), diffPearson(a, b))
+        // je Paar (i < j, geordnet nach j, dann i): Anteil gleicher Werte und Korrelation der Aenderungen
+        val pairs = ArrayList<Double>(channels * (channels - 1) / 2)
+        val distinct = Array(channels) { BooleanArray(channels) }
+        var same01 = 0.0
+        for (j in 1 until channels) for (i in 0 until j) {
+            var same = 0
+            for (f in 0 until frames) if (pcm[f * channels + i] == pcm[f * channels + j]) same++
+            val share = same.toDouble() / frames
+            val diff = diffPearson(ch[i], ch[j])
+            pairs += diff
+            if (i == 0 && j == 1) same01 = share
+            val d = loud[i] && loud[j] && share < IDENTICAL_LIMIT && abs(diff) < DIFF_CORRELATION_LIMIT
+            distinct[i][j] = d; distinct[j][i] = d
+        }
+        return RecordingStats(frames, channels, level, peak, same01, pearson(a, b, 0, 0, frames), pairs[0], largestGroup(loud, distinct), pairs)
+    }
+
+    /** Groesste Gruppe von Kanaelen, die paarweise verschieden sind; ein lauter Kanal allein zaehlt 1 (hoechstens 8 Kanaele). */
+    private fun largestGroup(loud: List<Boolean>, distinct: Array<BooleanArray>): Int {
+        val n = loud.size
+        var best = 0
+        for (mask in 1 until (1 shl n)) {
+            val members = (0 until n).filter { mask and (1 shl it) != 0 }
+            if (members.size <= best) continue
+            if (members.all { loud[it] } && members.all { i -> members.all { j -> i == j || distinct[i][j] } }) best = members.size
+        }
+        return best
     }
 
     /**

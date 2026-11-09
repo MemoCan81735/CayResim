@@ -98,6 +98,24 @@ class AudioRecordMicrophoneAdapterTest {
         }
     }
 
+    /** S-019 K4: drei Kanaele ueber die Index-Maske enden als Aufnahme oder Fehlerwert, nie als Absturz. */
+    @Test fun s019DreiKanaele() = runBlocking {
+        withTimeout(20_000) {
+            when (val r = adapter.record(MicRequest(AudioSourceKey.MIC, millis = 500, channels = 3))) {
+                is MicRecordResult.Ok -> {
+                    val c = r.capture
+                    println("S-019 drei Kanaele angefragt: ${c.channels} geliefert")
+                    assertTrue(c.channels in 1..3, "Kanaele ${c.channels}")
+                    assertEquals(24_000, c.pcm.size / c.channels)
+                }
+                is MicRecordResult.Failed -> println("S-019 drei Kanaele angefragt: ${r.reason}")
+            }
+            assertEquals(0, adapter.openRecordings, "Mikrofon frei")
+            // fuenf Kanaele lehnt der Adapter selbst ab
+            assertEquals(MicRecordResult.Failed(app.cayresim.core.boundary.MicFailure.INIT_FAILED), adapter.record(MicRequest(AudioSourceKey.MIC, millis = 500, channels = 5)))
+        }
+    }
+
     @Test fun s008InventarStuerztNichtAb() = runBlocking {
         val inv = adapter.inventory()
         // Der Emulator meldet mindestens ein Eingabegeraet; Mikrofonliste darf leer sein

@@ -24,6 +24,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -69,12 +70,13 @@ class MicTestUseCaseTest {
         assertEquals(plan, r.sources.map { it.request }, "feste Reihenfolge")
         assertEquals(listOf(AudioSourceKey.MIC, AudioSourceKey.CAMCORDER, AudioSourceKey.VOICE_RECOGNITION, AudioSourceKey.UNPROCESSED), plan.take(4).map { it.source })
         assertEquals(MicDirectionKey.TOWARDS_USER, plan[4].direction); assertEquals(MicDirectionKey.AWAY_FROM_USER, plan[5].direction)
-        assertEquals(listOf(1, 2), plan.drop(6).map { it.deviceId }, "nur eingebaute Mikrofone einzeln")
+        assertEquals(listOf(1, 2), plan.drop(6).dropLast(4).map { it.deviceId }, "nur eingebaute Mikrofone einzeln")
         assertEquals(SourceOutcome.Failed(MicFailure.NOT_OFFERED), r.sources[3].outcome)
         assertEquals(SourceOutcome.Failed(MicFailure.INIT_FAILED), r.sources[1].outcome)
         assertFalse(mic.requests.any { it.source == AudioSourceKey.UNPROCESSED }, "nicht angebotene Quelle wird nicht aufgenommen")
         val recorded = r.sources.map { it.outcome }.filterIsInstance<SourceOutcome.Recorded>()
-        assertEquals(plan.size - 2, recorded.size, "Fehler bricht den Lauf nicht ab")
+        // nicht aufgenommen: UNPROCESSED und CAMCORDER mit 2, 3 und 4 Kanaelen (S-019)
+        assertEquals(plan.size - 4, recorded.size, "Fehler bricht den Lauf nicht ab")
         assertTrue(recorded.all { it.stats.distinctChannels && it.fileUri != null })
         assertEquals(recorded.size, files.files.size)
         val first = assertNotNull(Wav.decode(files.files.values.first()))
@@ -148,8 +150,8 @@ class MicTestUseCaseTest {
     @Test fun `S-008 Dauer wird gemessen`() = runTest {
         val (mic, files, clock) = setup()
         val r = report(mic, files, clock, claps = false)
-        val recorded = mic.requests.size
-        assertEquals(recorded * 2_150L, r.sourcesMillis)
+        // S-019: die Mehrkanal-Aufnahmen dauern 1 s, die anderen 2 s; je Aufnahme 150 ms dazu
+        assertEquals(mic.requests.sumOf { it.millis + 150L }, r.sourcesMillis)
         assertTrue(r.sourcesMillis <= 30_000, "Lauf ${r.sourcesMillis} ms")
     }
 
@@ -164,6 +166,30 @@ class MicTestUseCaseTest {
         files2.failFolder = true
         val r2 = report(mic2, files2, clock2, claps = false)
         assertNull(r2.folder); assertTrue(r2.storageFailed); assertTrue(files2.files.isEmpty())
+    }
+
+    @Test fun `S-019 drei und vier Kanaele am Ende des Plans`() = runTest {
+        val (mic, files, clock) = setup()
+        val plan = MicTestUseCase.plan(mic.inventory)
+        // die bisherigen Aufnahmen zuerst und unveraendert, dann die neuen zu je 1 s
+        assertTrue(plan.dropLast(4).all { it.channels == 2 && it.millis == 2_000 })
+        assertEquals(listOf(AudioSourceKey.MIC to 3, AudioSourceKey.MIC to 4, AudioSourceKey.CAMCORDER to 3, AudioSourceKey.CAMCORDER to 4),
+            plan.takeLast(4).map { it.source to it.channels })
+        assertTrue(plan.takeLast(4).all { it.millis == 1_000 && it.deviceId == null && it.direction == MicDirectionKey.NONE })
+        assertEquals("09-MIC-3kanal-v1.wav", MicTestUseCase.fileName(8, plan[plan.size - 4]))
+        // der dritte Kanal ist im Fake eine Kopie des ersten
+        val base = mic.sound
+        mic.sound = { r, ch -> if (ch <= 2) base(r, ch) else { val two = base(r.copy(channels = 2), 2); ShortArray(two.size / 2 * ch) { two[it / ch * 2 + (it % ch) % 2] } } }
+        val r = report(mic, files, clock, claps = true)
+        val multi = r.sources.takeLast(4).map { assertIs<SourceOutcome.Recorded>(it.outcome) }
+        assertEquals(listOf(3, 4, 3, 4), multi.map { it.stats.channels })
+        assertTrue(multi.all { it.stats.distinctCount == 2 && it.fileUri != null }, "verschieden: ${multi.map { it.stats.distinctCount }}")
+        val wav = assertNotNull(Wav.decode(files.files.entries.first { it.key.endsWith("MIC-3kanal-v1.wav") }.value))
+        assertEquals(3, wav.channels); assertEquals(48_000 * 3, wav.samples.size)
+        // die Klatsch-Probe nimmt weiter eine Quelle mit zwei Kanaelen
+        assertEquals(2, assertNotNull(r.clapSource).channels)
+        assertEquals(null, MicTestUseCase.chooseClapSource(r.sources.takeLast(4)), "Mehrkanal ist keine Klatsch-Quelle")
+        assertTrue(r.sourcesMillis <= 30_000, "Lauf ${r.sourcesMillis} ms")
     }
 
     @Test fun `S-008 Abstand ohne Positionen ist angenommen`() {
