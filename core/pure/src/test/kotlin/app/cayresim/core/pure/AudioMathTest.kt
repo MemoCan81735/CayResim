@@ -277,6 +277,74 @@ class AudioMathTest {
         assertEquals(0, AudioMath.analyze(ShortArray(n * 3), 3).distinctCount)
     }
 
+    // ---------- S-020: zwei Aufnahmen gleichzeitig ----------
+
+    /** Eigenrauschen eines Mikrofons, 1 s. */
+    private fun selfNoise(rnd: Random, n: Int = sr) = DoubleArray(n) { gauss(rnd) * 300 }
+    private fun stereo(a: DoubleArray, b: DoubleArray) = ShortArray(a.size * 2) { k -> (if (k % 2 == 0) a[k / 2] else b[k / 2]).roundToInt().coerceIn(-32768, 32767).toShort() }
+    /** Dasselbe Mikrofon in einer zweiten Aufnahme: um [shift] Abtastwerte spaeter, leiser, mit einem einfachen Filter. */
+    private fun again(x: DoubleArray, shift: Int, gain: Double = 0.5) = DoubleArray(x.size) { i ->
+        val j = i - shift
+        if (j < 1) 0.0 else gain * (0.7 * x[j] + 0.3 * x[j - 1])
+    }
+
+    @Test fun `S-020 zwei Aufnahmen zusammen zeigen ein drittes Mikrofon`() {
+        val rnd = Random(20)
+        val m1 = selfNoise(rnd); val m2 = selfNoise(rnd); val m3 = selfNoise(rnd)
+        val shift = 350 // 7,3 ms
+        val p = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m1, shift), m3), 2, sr)
+        assertTrue(p.valid, "Gegenprobe ${p.control}")
+        assertEquals(3, p.distinctMics); assertEquals(4, p.channels)
+        // Paare in der Reihenfolge 1-2, 1-3, 2-3, 1-4, 2-4, 3-4; Kanal 3 ist Kanal 1 der ersten Aufnahme
+        assertEquals(6, p.coherence.size)
+        assertTrue(p.coherence[1] >= 0.8, "gleiches Mikrofon: ${p.coherence}")
+        for (i in listOf(0, 2, 3, 4, 5)) assertTrue(p.coherence[i] <= 0.2, "Paar $i: ${p.coherence}")
+        // Kanal 3 hoert 350 Abtastwerte spaeter als Kanal 1 (negativ: der erste Kanal des Paars ist frueher)
+        assertEquals(-shift.toDouble() / sr, p.lagSeconds[1], 0.00005)
+    }
+
+    @Test fun `S-020 gleiche Mikrofone in beiden Aufnahmen zaehlen einmal`() {
+        val rnd = Random(21)
+        val m1 = selfNoise(rnd); val m2 = selfNoise(rnd); val m3 = selfNoise(rnd)
+        assertEquals(2, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m1, 200), again(m2, 200)), 2, sr).distinctMics)
+        assertEquals(2, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(again(m2, -100 + 300), again(m1, 200)), 2, sr).distinctMics, "vertauscht")
+        // doppeltes Mono (Telefonie): eines der beiden oder ein neues
+        val monoOld = again(m2, 480)
+        assertEquals(2, AudioMath.pairProbe(stereo(m1, m2), 2, stereo(monoOld, monoOld), 2, sr).distinctMics)
+        val monoNew = again(m3, 480)
+        val p = AudioMath.pairProbe(stereo(m1, m2), 2, stereo(monoNew, monoNew), 2, sr)
+        assertEquals(3, p.distinctMics); assertTrue(p.valid)
+        // nur ein Kanal in der zweiten Aufnahme
+        val single = ShortArray(sr) { monoNew[it].roundToInt().toShort() }
+        val q = AudioMath.pairProbe(stereo(m1, m2), 2, single, 1, sr)
+        assertEquals(3, q.distinctMics); assertEquals(3, q.channels); assertEquals(3, q.coherence.size)
+    }
+
+    @Test fun `S-020 Probe gilt nur im stillen Raum`() {
+        val rnd = Random(22)
+        val m1 = selfNoise(rnd); val m2 = selfNoise(rnd); val m3 = selfNoise(rnd)
+        // lauter Raum: ein gemeinsamer Ton liegt 20 dB ueber dem Eigenrauschen in allen Kanaelen
+        val room = DoubleArray(sr) { gauss(rnd) * 3000 }
+        fun plus(x: DoubleArray, lag: Int) = DoubleArray(sr) { x[it] + room[(it - lag).coerceIn(0, sr - 1)] }
+        val loud = AudioMath.pairProbe(stereo(plus(m1, 0), plus(m2, 5)), 2, stereo(plus(m3, 9), plus(m3, 9)), 2, sr)
+        assertFalse(loud.valid, "Gegenprobe ${loud.control}")
+        // stumme Kanaele zaehlen nicht
+        val silent = AudioMath.pairProbe(stereo(m1, m2), 2, ShortArray(sr * 2), 2, sr)
+        assertEquals(2, silent.distinctMics); assertTrue(silent.valid)
+        // zu kurz oder leer: ungueltig, keine Ausnahme
+        val short = AudioMath.pairProbe(ShortArray(2_000), 2, ShortArray(2_000), 2, sr)
+        assertFalse(short.valid); assertEquals(0, short.distinctMics)
+        assertFalse(AudioMath.pairProbe(ShortArray(0), 2, ShortArray(0), 2, sr).valid)
+        // erste Aufnahme Mono: keine Gegenprobe, also ungueltig
+        assertFalse(AudioMath.pairProbe(ShortArray(sr) { m1[it].roundToInt().toShort() }, 1, stereo(m2, m3), 2, sr).valid)
+        // Zeit (R27)
+        val a = stereo(m1, m2); val b = stereo(again(m1, 350), m3)
+        AudioMath.pairProbe(a, 2, b, 2, sr)
+        val runs = (0 until 3).map { val t0 = System.nanoTime(); AudioMath.pairProbe(a, 2, b, 2, sr); (System.nanoTime() - t0) / 1e6 }
+        println("S-020 K3: Probe mit 4 Kanaelen in ${"%.0f".format(runs.min())} ms (3 Laeufe: ${runs.joinToString { "%.0f".format(it) }})")
+        assertTrue(runs.min() <= 1000.0, "zu langsam: ${runs.min()} ms")
+    }
+
     @Test fun `S-008 Pegel in dBFS`() {
         assertEquals(Double.NEGATIVE_INFINITY, AudioMath.dbfs(0.0))
         assertEquals(0.0, AudioMath.dbfs(1.0), 1e-9)

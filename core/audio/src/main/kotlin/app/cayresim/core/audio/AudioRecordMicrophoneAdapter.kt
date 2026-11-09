@@ -23,6 +23,7 @@ import app.cayresim.core.boundary.MicDirectionKey
 import app.cayresim.core.boundary.MicFailure
 import app.cayresim.core.boundary.MicInfoSnapshot
 import app.cayresim.core.boundary.MicInventorySnapshot
+import app.cayresim.core.boundary.MicPairResult
 import app.cayresim.core.boundary.MicLocationKey
 import app.cayresim.core.boundary.MicPatternKey
 import app.cayresim.core.boundary.MicRecordResult
@@ -32,7 +33,9 @@ import app.cayresim.core.boundary.MicrophoneBoundary
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -43,6 +46,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -59,9 +63,9 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
     private val lock = Mutex()
     private val manager: AudioManager? get() = context.getSystemService(AudioManager::class.java)
 
-    /** Offene Aufnahmen; fuer den Geraetetest K13 (muss nach jeder Aufnahme 0 sein). */
-    @Volatile var openRecordings = 0
-        private set
+    /** Offene Aufnahmen; fuer den Geraetetest K13 (muss nach jeder Aufnahme 0 sein). Atomar, weil bei [recordPair] zwei zugleich zaehlen. */
+    private val open = AtomicInteger()
+    val openRecordings: Int get() = open.get()
 
     override fun hasPermission(): Boolean =
         context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -84,10 +88,27 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
         MicInventorySnapshot(mics, devices.map { InputDeviceSnapshot(it.id, kindOf(it.type), it.address, it.channelCounts.toList()) }, unprocessed)
     }
 
-    override suspend fun record(request: MicRequest): MicRecordResult = lock.withLock {
-        if (!hasPermission()) return@withLock MicRecordResult.Failed(MicFailure.NO_PERMISSION)
-        if (request.millis <= 0 || request.channels !in 1..MAX_CHANNELS || request.sampleRate <= 0) return@withLock MicRecordResult.Failed(MicFailure.INIT_FAILED)
-        withContext(io) { recordLocked(request) }
+    override suspend fun record(request: MicRequest): MicRecordResult = lock.withLock { withContext(io) { checkedRecord(request) } }
+
+    /**
+     * S-020: zwei Aufnahmen gleichzeitig unter derselben Sperre (Ausnahme von "eine Aufnahme zur Zeit", freigegeben am
+     * 9.11.2026). Beide laufen als Kinder eines Scopes: Abbruch beendet beide, jede gibt sich in ihrem einen
+     * Freigabeblock frei (R17, R28).
+     */
+    override suspend fun recordPair(first: MicRequest, second: MicRequest): MicPairResult = lock.withLock {
+        withContext(io) {
+            coroutineScope {
+                val a = async { checkedRecord(first) }
+                val b = async { checkedRecord(second) }
+                MicPairResult(a.await(), b.await())
+            }
+        }
+    }
+
+    private suspend fun checkedRecord(request: MicRequest): MicRecordResult = when {
+        !hasPermission() -> MicRecordResult.Failed(MicFailure.NO_PERMISSION)
+        request.millis <= 0 || request.channels !in 1..MAX_CHANNELS || request.sampleRate <= 0 -> MicRecordResult.Failed(MicFailure.INIT_FAILED)
+        else -> recordLocked(request)
     }
 
     private suspend fun recordLocked(request: MicRequest): MicRecordResult {
@@ -103,7 +124,7 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             } catch (_: Exception) {
                 return MicRecordResult.Failed(MicFailure.INIT_FAILED)
             }
-            opened = true; openRecordings++
+            opened = true; open.incrementAndGet()
             if (rec.state != AudioRecord.STATE_INITIALIZED) return MicRecordResult.Failed(MicFailure.INIT_FAILED)
             prefer(rec, request)
             rec.startRecording()
@@ -136,7 +157,7 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
         if (opened && rec != null) {
             runCatching { if (rec.recordingState == AudioRecord.RECORDSTATE_RECORDING) rec.stop() }
             runCatching { rec.release() }
-            openRecordings--
+            open.decrementAndGet()
         }
     }
 
@@ -201,7 +222,7 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             } catch (_: Exception) {
                 return MicFailure.INIT_FAILED
             }
-            opened = true; openRecordings++
+            opened = true; open.incrementAndGet()
             if (rec.state != AudioRecord.STATE_INITIALIZED) return MicFailure.INIT_FAILED
             prefer(rec, request)
             rec.startRecording()
@@ -264,6 +285,8 @@ class AudioRecordMicrophoneAdapter @Inject constructor(
             AudioSourceKey.CAMCORDER -> MediaRecorder.AudioSource.CAMCORDER
             AudioSourceKey.VOICE_RECOGNITION -> MediaRecorder.AudioSource.VOICE_RECOGNITION
             AudioSourceKey.UNPROCESSED -> MediaRecorder.AudioSource.UNPROCESSED
+            AudioSourceKey.VOICE_COMMUNICATION -> MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            AudioSourceKey.VOICE_PERFORMANCE -> MediaRecorder.AudioSource.VOICE_PERFORMANCE
         }
 
         fun locationOf(v: Int) = when (v) {

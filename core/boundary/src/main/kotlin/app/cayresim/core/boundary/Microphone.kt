@@ -2,8 +2,11 @@ package app.cayresim.core.boundary
 
 import kotlinx.coroutines.flow.Flow
 
-/** Audioquellen von Android, soweit der Mikrofon-Test sie prueft (S-008). */
-enum class AudioSourceKey { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED }
+/**
+ * Audioquellen von Android, soweit der Mikrofon-Test sie prueft (S-008). VOICE_COMMUNICATION (Telefonie) und
+ * VOICE_PERFORMANCE seit S-020: nutzen sie ein anderes Mikrofon als MIC?
+ */
+enum class AudioSourceKey { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED, VOICE_COMMUNICATION, VOICE_PERFORMANCE }
 
 /** Bevorzugte Richtung (`setPreferredMicrophoneDirection`); NONE = nicht gesetzt. */
 enum class MicDirectionKey { NONE, TOWARDS_USER, AWAY_FROM_USER }
@@ -66,6 +69,9 @@ sealed interface MicRecordResult {
     data class Failed(val reason: MicFailure) : MicRecordResult
 }
 
+/** Ergebnis zweier gleichzeitiger Aufnahmen (S-020), je fuer sich Aufnahme oder Fehlerwert. */
+class MicPairResult(val first: MicRecordResult, val second: MicRecordResult)
+
 /**
  * Ein Stueck laufender Ton (S-018): verschraenkt je Frame, 16 Bit. Das Feld gehoert dem Empfaenger. [index]: laufende
  * Nummer seit Beginn des Stroms ab 0; eine Luecke heisst, dass Stuecke verworfen wurden (R27: auf dem Geraet sichtbar).
@@ -79,13 +85,20 @@ sealed interface MicStreamEvent {
 }
 
 /**
- * Einzige Sicht der App auf das Mikrofon (R28). Eine Aufnahme zur Zeit, ob einzeln oder als Strom; das Mikrofon wird
- * nach jeder Aufnahme freigegeben, auch bei Abbruch. Fehler als Werte (R24).
+ * Einzige Sicht der App auf das Mikrofon (R28). Eine Aufnahme zur Zeit, ob einzeln oder als Strom; einzige Ausnahme ist
+ * [recordPair] (S-020, freigegeben am 9.11.2026). Das Mikrofon wird nach jeder Aufnahme freigegeben, auch bei Abbruch.
+ * Fehler als Werte (R24).
  */
 interface MicrophoneBoundary {
     fun hasPermission(): Boolean
     suspend fun inventory(): MicInventorySnapshot
     suspend fun record(request: MicRequest): MicRecordResult
+
+    /**
+     * Zwei Aufnahmen gleichzeitig (S-020), um zu messen, ob zwei Audioquellen dieselben Mikrofone nutzen. Kein anderer
+     * Aufruf laeuft daneben. Lehnt das Geraet eine der beiden ab, traegt nur sie den Fehlerwert.
+     */
+    suspend fun recordPair(first: MicRequest, second: MicRequest): MicPairResult
 
     /**
      * Laufender Ton in Stuecken von [chunkMillis] (S-018, R25), bis der Sammler abbricht; dann wird das Mikrofon

@@ -119,6 +119,23 @@ class AudioRecordMicrophoneAdapterTest {
         }
     }
 
+    /** S-020 K6: zwei Aufnahmen gleichzeitig enden je als Aufnahme oder Fehlerwert und geben das Mikrofon frei. */
+    @Test fun s020ZweiAufnahmenGleichzeitig() = runBlocking {
+        withTimeout(20_000) {
+            val pair = adapter.recordPair(MicRequest(AudioSourceKey.MIC, millis = 500), MicRequest(AudioSourceKey.CAMCORDER, millis = 500))
+            for ((name, r) in listOf("MIC" to pair.first, "CAMCORDER" to pair.second)) when (r) {
+                is MicRecordResult.Ok -> { println("S-020 $name: ${r.capture.channels} Kanaele"); assertEquals(24_000, r.capture.pcm.size / r.capture.channels) }
+                is MicRecordResult.Failed -> println("S-020 $name: ${r.reason}")
+            }
+            assertEquals(0, adapter.openRecordings, "Mikrofon frei")
+            // die neuen Quellen stuerzen nicht ab
+            for (s in listOf(AudioSourceKey.VOICE_COMMUNICATION, AudioSourceKey.VOICE_PERFORMANCE)) adapter.record(MicRequest(s, millis = 300))
+            assertEquals(0, adapter.openRecordings)
+            assertIs<MicRecordResult.Ok>(adapter.record(MicRequest(AudioSourceKey.MIC, millis = 300)))
+            Unit
+        }
+    }
+
     @Test fun s008InventarStuerztNichtAb() = runBlocking {
         val inv = adapter.inventory()
         // Der Emulator meldet mindestens ein Eingabegeraet; Mikrofonliste darf leer sein

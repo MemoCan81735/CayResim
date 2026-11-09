@@ -45,6 +45,7 @@ import app.cayresim.feature.settings.control.MicStepUi
 import app.cayresim.feature.settings.control.MicTestResultUi
 import app.cayresim.feature.settings.control.MicTestUiState
 import app.cayresim.feature.settings.control.MicTestViewModel
+import app.cayresim.feature.settings.control.PairRowUi
 import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
 import java.util.Locale
@@ -118,6 +119,10 @@ private fun Progress(state: MicTestUiState) {
                 Text(stringResource(R.string.mictest_step_sources, state.sourceIndex + 1, state.sourceTotal, state.currentSource?.let { sourceLabel(it) } ?: ""))
                 Text(stringResource(R.string.mictest_keep_quiet), style = MaterialTheme.typography.bodySmall)
             }
+            MicStepUi.PAIRS -> {
+                Text(stringResource(R.string.mictest_step_pairs, (state.sourceIndex + 1).toString(), state.sourceTotal.toString()))
+                Text(stringResource(R.string.mictest_keep_quiet), style = MaterialTheme.typography.bodySmall)
+            }
             MicStepUi.PREPARE -> {
                 Text(stringResource(preparePrompt(state.clapPhase)), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.mictest_prepare_how, state.prepareSeconds), style = MaterialTheme.typography.bodyMedium)
@@ -150,6 +155,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(r: MicTestRes
     item { Text(stringResource(R.string.mictest_unprocessed, yesNoText(r.unprocessedSupported)), style = MaterialTheme.typography.bodySmall) }
     item { Heading(R.string.mictest_sources_title) }
     itemsIndexed(r.sources) { i, s -> SourceLine(s, Modifier.testTag("source_$i").semantics(mergeDescendants = true) {}) }
+    // S-020: zwei Aufnahmen gleichzeitig
+    if (r.pairs.isNotEmpty()) {
+        item { Heading(R.string.mictest_pairs_title) }
+        itemsIndexed(r.pairs) { i, p -> PairLine(p, Modifier.testTag("pair_$i").semantics(mergeDescendants = true) {}) }
+    }
     if (r.claps.isNotEmpty()) {
         item { Heading(R.string.mictest_claps_title) }
         item { CalibrationLine(r) }
@@ -229,6 +239,25 @@ private fun SourceLine(s: SourceRowUi, modifier: Modifier) {
 }
 
 @Composable
+private fun PairLine(p: PairRowUi, modifier: Modifier) {
+    Column(modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.mictest_pair_label, sourceName(p.first), sourceName(p.second)), fontWeight = FontWeight.Medium)
+        val control = p.control
+        when {
+            p.failure != null -> Text(stringResource(failureText(p.failure)), style = MaterialTheme.typography.bodySmall)
+            // ohne Gegenprobe oder zu laut: die Zahl gilt nicht
+            control == null -> Text(stringResource(R.string.mictest_pair_no_control), style = MaterialTheme.typography.bodySmall)
+            !p.quiet -> Text(stringResource(R.string.mictest_pair_loud, dec2(control)), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error)
+            else -> Text(stringResource(R.string.mictest_pair_result, p.distinctMics.toString()), style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium)
+        }
+        if (p.failure == null && p.coherence.isNotEmpty()) Text(stringResource(R.string.mictest_pair_coherence, pairText(p.coherence)),
+            style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
 private fun ClapLines(c: ClapRowUi, modifier: Modifier) {
     Column(modifier.fillMaxWidth()) {
         Text(stringResource(phaseName(c.phase)), fontWeight = FontWeight.Medium)
@@ -266,6 +295,8 @@ private fun sourceName(s: SourceUi) = stringResource(
         SourceUi.CAMCORDER -> R.string.mictest_src_camcorder
         SourceUi.VOICE_RECOGNITION -> R.string.mictest_src_voice
         SourceUi.UNPROCESSED -> R.string.mictest_src_unprocessed
+        SourceUi.VOICE_COMMUNICATION -> R.string.mictest_src_communication
+        SourceUi.VOICE_PERFORMANCE -> R.string.mictest_src_performance
     },
 )
 

@@ -20,11 +20,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Spiegel der Boundary- und Control-Typen fuer die UI (R1); nur Schluessel und Zahlen, den Text baut die UI (R23). */
-enum class SourceUi { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED }
+enum class SourceUi { MIC, CAMCORDER, VOICE_RECOGNITION, UNPROCESSED, VOICE_COMMUNICATION, VOICE_PERFORMANCE }
 enum class DirectionUi { NONE, TOWARDS_USER, AWAY_FROM_USER }
 enum class MicFailureUi { NO_PERMISSION, NOT_OFFERED, INIT_FAILED, READ_FAILED }
 enum class ClapPhaseUi { LEFT, RIGHT, FRONT }
-enum class MicStepUi { IDLE, INVENTORY, SOURCES, PREPARE, CLAP, DONE }
+enum class MicStepUi { IDLE, INVENTORY, SOURCES, PAIRS, PREPARE, CLAP, DONE }
 enum class CalibrationFailureUi { TOO_FEW_CLAPS, SIDES_NOT_DISTINCT, IMPLAUSIBLE }
 
 @Immutable data class MicUi(val id: Int, val address: String, val location: String, val pattern: String, val position: List<Float>?, val sensitivityDb: Float?)
@@ -52,6 +52,17 @@ data class SourceRowUi(
     val pairDiffCorrelation: List<Double> = emptyList(),
 )
 
+/**
+ * S-020: Probe mit zwei Aufnahmen gleichzeitig. [distinctMics]: verschiedene Mikrofone in beiden zusammen; [quiet]: der
+ * Raum war still genug, die Zahl gilt; [coherence]: Gleichklang je Kanalpaar (1-2, 1-3, 2-3, 1-4, 2-4, 3-4), Kanal 1 und
+ * 2 aus der ersten Quelle.
+ */
+@Immutable
+data class PairRowUi(
+    val first: SourceUi, val second: SourceUi, val failure: MicFailureUi?,
+    val distinctMics: Int = 0, val quiet: Boolean = false, val control: Double? = null, val coherence: List<Double> = emptyList(),
+)
+
 @Immutable data class ClapUi(val timeSeconds: Double, val delayMs: Double, val angleDegrees: Double?, val similarity: Double, val levelDiffDb: Double)
 @Immutable data class ClapRowUi(val phase: ClapPhaseUi, val claps: List<ClapUi>, val failure: MicFailureUi?)
 /** Eichung aus links und rechts (S-009): wirksamer Abstand und Mitte der Laufzeiten. */
@@ -72,6 +83,7 @@ data class MicTestResultUi(
     val storageFailed: Boolean,
     val calibration: CalibrationUi? = null,
     val calibrationFailure: CalibrationFailureUi? = null,
+    val pairs: List<PairRowUi> = emptyList(),
 )
 
 @Immutable
@@ -118,6 +130,9 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
                     MicTestEvent.Inventory -> _state.update { it.copy(step = MicStepUi.INVENTORY) }
                     is MicTestEvent.Source -> _state.update {
                         it.copy(step = MicStepUi.SOURCES, sourceIndex = e.index, sourceTotal = e.total, currentSource = rowOf(e.request, null))
+                    }
+                    is MicTestEvent.Pairing -> _state.update {
+                        it.copy(step = MicStepUi.PAIRS, sourceIndex = e.index, sourceTotal = e.total, currentSource = null)
                     }
                     is MicTestEvent.ClapPrepare -> _state.update {
                         it.copy(step = MicStepUi.PREPARE, clapPhase = ClapPhaseUi.valueOf(e.phase.name), prepareSeconds = (e.millis / 1000).toInt())
@@ -181,6 +196,13 @@ class MicTestViewModel @Inject constructor(private val useCase: MicTestUseCase) 
             storageFailed = storageFailed,
             calibration = calibration?.let { CalibrationUi(it.spacingMeters * 100, it.centerSeconds * 1000) },
             calibrationFailure = calibrationFailure?.let { CalibrationFailureUi.valueOf(it.name) },
+            pairs = pairs.map { p ->
+                val probe = p.probe
+                PairRowUi(
+                    SourceUi.valueOf(p.first.source.name), SourceUi.valueOf(p.second.source.name), p.failure?.let { MicFailureUi.valueOf(it.name) },
+                    distinctMics = probe?.distinctMics ?: 0, quiet = probe?.valid == true, control = probe?.control, coherence = probe?.coherence.orEmpty(),
+                )
+            },
         )
     }
 }

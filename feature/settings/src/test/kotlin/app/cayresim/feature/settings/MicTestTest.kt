@@ -20,6 +20,8 @@ import app.cayresim.feature.settings.control.CalibrationFailureUi
 import app.cayresim.feature.settings.control.ClapPhaseUi
 import app.cayresim.feature.settings.control.MicStepUi
 import app.cayresim.feature.settings.control.MicTestUiState
+import app.cayresim.feature.settings.control.MicFailureUi
+import app.cayresim.feature.settings.control.PairRowUi
 import app.cayresim.feature.settings.control.MicTestViewModel
 import app.cayresim.feature.settings.control.SourceRowUi
 import app.cayresim.feature.settings.control.SourceUi
@@ -156,18 +158,44 @@ class MicTestTest {
         val s = vm(stereoMic()).runToEnd()
         val result = assertNotNull(s.result)
         // der Plan endet mit MIC 3, MIC 4, CAMCORDER 3, CAMCORDER 4; der Fake liefert unabhaengiges Rauschen je Kanal
-        val multi = result.sources.takeLast(4)
+        val multi = result.sources.dropLast(2).takeLast(4)
         assertEquals(listOf(3, 4, 3, 4), multi.map { it.requestedChannels }); assertEquals(listOf(3, 4, 3, 4), multi.map { it.distinctCount })
         assertEquals(listOf(3, 6, 3, 6), multi.map { it.pairDiffCorrelation.size })
         assertEquals("1-2: 0,02; 1-3: 1,00; 2-3: 0,02", pairText(listOf(0.02, 1.0, 0.02)))
         assertEquals("1-2: 0,00; 1-3: 0,10; 2-3: 0,20; 1-4: 0,30; 2-4: 0,40; 3-4: 0,50", pairText(listOf(-0.001, 0.1, 0.2, 0.3, 0.4, 0.5)))
         // feste Zeile: dritter Kanal ist eine Kopie des ersten
         val row = multi.first().copy(distinctCount = 2, pairDiffCorrelation = listOf(0.02, 1.0, 0.02))
-        val shown = s.copy(result = result.copy(sources = result.sources.dropLast(4) + row))
+        val shown = s.copy(result = result.copy(sources = result.sources.dropLast(6) + row))
         compose.setContent { CayResimTheme(dark = true) { MicTestContent(shown, {}, {}) } }
         compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("source_${shown.result!!.sources.lastIndex}"))
         compose.onNodeWithText("3 Kanäle angefragt", substring = true).assertExists()
         compose.onNodeWithText("Verschiedene Mikrofone: 2; Korrelation der Änderungen je Paar: 1-2: 0,02; 1-3: 1,00; 2-3: 0,02", substring = true).assertExists()
+    }
+
+    @Test fun `S-020 Zeilen fuer zwei Aufnahmen gleichzeitig`() {
+        val s = vm(stereoMic()).runToEnd()
+        val result = assertNotNull(s.result)
+        // zwei neue Quellen am Ende des Plans, zwei Proben; der Fake liefert je Aufnahme unabhaengiges Rauschen
+        assertEquals(listOf(SourceUi.VOICE_COMMUNICATION, SourceUi.VOICE_PERFORMANCE), result.sources.takeLast(2).map { it.source })
+        assertEquals(listOf(SourceUi.MIC to SourceUi.CAMCORDER, SourceUi.MIC to SourceUi.VOICE_COMMUNICATION), result.pairs.map { it.first to it.second })
+        assertTrue(result.pairs.all { it.failure == null && it.coherence.size == 6 })
+        // feste Zeilen: drittes Mikrofon gefunden, zu laut, gescheitert
+        val rows = listOf(
+            PairRowUi(SourceUi.MIC, SourceUi.CAMCORDER, null, 3, true, 0.04, listOf(0.04, 0.93, 0.03, 0.02, 0.05, 0.03)),
+            PairRowUi(SourceUi.MIC, SourceUi.VOICE_COMMUNICATION, null, 1, false, 0.62, listOf(0.62, 0.7, 0.66, 0.7, 0.66, 1.0)),
+            PairRowUi(SourceUi.MIC, SourceUi.VOICE_PERFORMANCE, MicFailureUi.INIT_FAILED),
+        )
+        val shown = s.copy(result = result.copy(pairs = rows))
+        compose.setContent { CayResimTheme(dark = true) { MicTestContent(shown, {}, {}) } }
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_0"))
+        compose.onNodeWithText("Normal (MIC) mit Video (CAMCORDER)", substring = true).assertExists()
+        compose.onNodeWithText("Verschiedene Mikrofone zusammen: 3", substring = true).assertExists()
+        compose.onNodeWithText("1-2: 0,04; 1-3: 0,93; 2-3: 0,03; 1-4: 0,02; 2-4: 0,05; 3-4: 0,03", substring = true).assertExists()
+        compose.onNodeWithTag("mictest").performScrollToNode(hasTestTag("pair_2"))
+        compose.onNodeWithText("Zu laut für diese Probe (Gegenprobe 0,62", substring = true).assertExists()
+        compose.onNodeWithText("Normal (MIC) mit Bühnenton (VOICE_PERFORMANCE)", substring = true).assertExists()
+        // waehrend der Probe
+        assertEquals(listOf("IDLE", "INVENTORY", "SOURCES", "PAIRS", "PREPARE", "CLAP", "DONE"), MicStepUi.entries.map { it.name })
     }
 
     @Test fun mikrotest_ergebnis() {

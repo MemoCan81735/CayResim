@@ -82,6 +82,31 @@ object AudioMath {
         val peak: Double,
     )
 
+    /**
+     * S-020: zwei gleichzeitige Aufnahmen zusammen betrachtet. [channels]: Kanaele beider Aufnahmen hintereinander (je
+     * hoechstens zwei). [coherence] und [lagSeconds] je Kanalpaar in der Reihenfolge 1-2, 1-3, 2-3, 1-4, 2-4, 3-4:
+     * Gleichklang im hohen Tonbereich nach Ausgleich des Versatzes (0 bis 1) und der Versatz (positiv: der erste Kanal
+     * des Paars hoert spaeter). [control]: Gleichklang der beiden Kanaele der ersten Aufnahme, die sicher verschiedene
+     * Mikrofone sind; null ohne solches Paar. [valid]: die Gegenprobe liegt unter [QUIET_COHERENCE], der Raum war still
+     * genug. [distinctMics]: Gruppen von Kanaelen mit Gleichklang ab [SAME_MIC_COHERENCE]; stumme Kanaele zaehlen nicht.
+     */
+    data class PairProbe(
+        val channels: Int, val distinctMics: Int, val valid: Boolean, val control: Double?,
+        val coherence: List<Double>, val lagSeconds: List<Double>,
+    )
+
+    /** S-020: Fenster der Probe in Abtastwerten (0,68 s bei 48 kHz). */
+    const val PROBE_WINDOW = 32_768
+    /** Groesster gesuchter Versatz zwischen zwei Aufnahmen. */
+    const val PROBE_MAX_LAG_SECONDS = 0.2
+    /** Hoher Tonbereich: hier ueberwiegt im stillen Raum das Eigenrauschen der Mikrofone. */
+    const val PROBE_LOW_HZ = 2_000.0
+    const val PROBE_HIGH_HZ = 8_000.0
+    /** Ab diesem Gleichklang gelten zwei Kanaele als dasselbe Mikrofon. */
+    const val SAME_MIC_COHERENCE = 0.5
+    /** Unter diesem Gleichklang der Gegenprobe war der Raum still genug. */
+    const val QUIET_COHERENCE = 0.3
+
     const val IDENTICAL_LIMIT = 0.999
     const val DIFF_CORRELATION_LIMIT = 0.3
     const val MIN_CALIBRATION_CLAPS = 3
@@ -123,6 +148,69 @@ object AudioMath {
             distinct[i][j] = d; distinct[j][i] = d
         }
         return RecordingStats(frames, channels, level, peak, same01, pearson(a, b, 0, 0, frames), pairs[0], largestGroup(loud, distinct), pairs)
+    }
+
+    /**
+     * S-020: Wie viele verschiedene Mikrofone stecken in zwei gleichzeitigen Aufnahmen? Prinzip: Im stillen Raum ist der
+     * hohe Tonbereich fast nur Eigenrauschen, und das ist je Mikrofon unabhaengig. Zwei Kanaele vom selben Mikrofon
+     * gleichen sich dort auch dann, wenn die Aufnahmen versetzt und verschieden gefiltert sind; der Versatz wird vorher
+     * ueber GCC-PHAT gesucht und ausgeglichen. Verschraenktes PCM, je Aufnahme zaehlen die ersten zwei Kanaele.
+     */
+    fun pairProbe(first: ShortArray, firstChannels: Int, second: ShortArray, secondChannels: Int, sampleRate: Int): PairProbe {
+        val ch = ArrayList<FloatArray>(4)
+        if (firstChannels >= 1) ch += deinterleave(first, firstChannels).take(2)
+        val firstCount = ch.size
+        if (secondChannels >= 1) ch += deinterleave(second, secondChannels).take(2)
+        val frames = ch.minOfOrNull { it.size } ?: 0
+        if (ch.size < 2 || frames < PROBE_WINDOW || sampleRate <= 0) return PairProbe(ch.size, 0, false, null, emptyList(), emptyList())
+        // Anfang ueberspringen, soweit die Aufnahme reicht
+        val start = minOf(frames - PROBE_WINDOW, sampleRate / 10)
+        val w = ch.map { it.copyOfRange(start, start + PROBE_WINDOW) }
+        val loud = w.map { x -> dbfs(sqrt(x.sumOf { it.toDouble() * it } / x.size)) > SILENT_DBFS }
+        val n = w.size
+        val coherence = ArrayList<Double>(n * (n - 1) / 2); val lags = ArrayList<Double>(n * (n - 1) / 2)
+        val group = IntArray(n) { it }
+        fun root(i: Int): Int { var r = i; while (group[r] != r) r = group[r]; return r }
+        for (j in 1 until n) for (i in 0 until j) {
+            val d = if (loud[i] && loud[j]) gccPhat(w[i], w[j], sampleRate, PROBE_MAX_LAG_SECONDS) else null
+            val c = if (d == null) 0.0 else bandCoherence(w[i], w[j], Math.round(d.seconds * sampleRate).toInt(), sampleRate)
+            coherence += c; lags += d?.seconds ?: 0.0
+            if (c >= SAME_MIC_COHERENCE) group[root(j)] = root(i)
+        }
+        val control = if (firstCount == 2 && loud[0] && loud[1]) coherence[0] else null
+        val distinct = (0 until n).filter { loud[it] }.map { root(it) }.toSet().size
+        return PairProbe(n, distinct, control != null && control < QUIET_COHERENCE, control, coherence, lags)
+    }
+
+    /**
+     * Mittlerer Gleichklang (Betragsquadrat der Kohaerenz) von x und y zwischen [PROBE_LOW_HZ] und [PROBE_HIGH_HZ], wobei
+     * x um [lag] Abtastwerte spaeter liegt als y. Rahmen von 1024 Werten, halb ueberlappt; unter 8 Rahmen 0.
+     */
+    private fun bandCoherence(x: FloatArray, y: FloatArray, lag: Int, sampleRate: Int): Double {
+        val size = 1024; val hop = size / 2
+        val from = maxOf(0, lag); val to = minOf(x.size, y.size + lag)
+        val count = (to - from - size) / hop + 1
+        if (count < 8) return 0.0
+        val lo = Math.ceil(PROBE_LOW_HZ * size / sampleRate).toInt(); val hi = minOf(size / 2, (PROBE_HIGH_HZ * size / sampleRate).toInt())
+        if (hi <= lo) return 0.0
+        val sxx = DoubleArray(hi - lo); val syy = DoubleArray(hi - lo); val cr = DoubleArray(hi - lo); val ci = DoubleArray(hi - lo)
+        val xr = DoubleArray(size); val xi = DoubleArray(size); val yr = DoubleArray(size); val yi = DoubleArray(size)
+        for (f in 0 until count) {
+            val at = from + f * hop
+            for (k in 0 until size) {
+                val win = 0.5 - 0.5 * cos(2 * PI * k / size)
+                xr[k] = x[at + k] * win; xi[k] = 0.0; yr[k] = y[at + k - lag] * win; yi[k] = 0.0
+            }
+            fft(xr, xi, false); fft(yr, yi, false)
+            for (b in lo until hi) {
+                val k = b - lo
+                sxx[k] += xr[b] * xr[b] + xi[b] * xi[b]; syy[k] += yr[b] * yr[b] + yi[b] * yi[b]
+                cr[k] += xr[b] * yr[b] + xi[b] * yi[b]; ci[k] += xi[b] * yr[b] - xr[b] * yi[b]
+            }
+        }
+        var sum = 0.0
+        for (k in sxx.indices) { val den = sxx[k] * syy[k]; if (den > 0.0) sum += (cr[k] * cr[k] + ci[k] * ci[k]) / den }
+        return sum / sxx.size
     }
 
     /** Groesste Gruppe von Kanaelen, die paarweise verschieden sind; ein lauter Kanal allein zaehlt 1 (hoechstens 8 Kanaele). */

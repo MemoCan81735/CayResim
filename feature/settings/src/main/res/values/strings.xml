@@ -117,6 +117,15 @@
     <string name="mictest_src_camcorder">Video (CAMCORDER)</string>
     <string name="mictest_src_voice">Spracherkennung (VOICE_RECOGNITION)</string>
     <string name="mictest_src_unprocessed">Unbearbeitet (UNPROCESSED)</string>
+    <string name="mictest_src_communication">Telefonie (VOICE_COMMUNICATION)</string>
+    <string name="mictest_src_performance">Bühnenton (VOICE_PERFORMANCE)</string>
+    <string name="mictest_step_pairs">Zwei Aufnahmen gleichzeitig: %1$s/%2$s</string>
+    <string name="mictest_pairs_title">Zwei Aufnahmen gleichzeitig</string>
+    <string name="mictest_pair_label">%1$s mit %2$s</string>
+    <string name="mictest_pair_result">Verschiedene Mikrofone zusammen: %1$s (Kanal 1 und 2 aus der ersten Quelle, 3 und 4 aus der zweiten)</string>
+    <string name="mictest_pair_loud">Zu laut für diese Probe (Gegenprobe %1$s, erlaubt unter 0,30). Bitte in einem stillen Raum wiederholen.</string>
+    <string name="mictest_pair_no_control">Keine Gegenprobe: Die erste Quelle lieferte keine zwei Kanäle mit Ton.</string>
+    <string name="mictest_pair_coherence">Gleichklang im hohen Tonbereich je Paar (ab 0,50 dasselbe Mikrofon): %1$s</string>
     <string name="mictest_source_device">%1$s, nur Gerät Nr. %2$d</string>
     <string name="mictest_source_towards">%1$s, Richtung zum Bildschirm</string>
     <string name="mictest_source_away">%1$s, Richtung zur Rückseite</string>

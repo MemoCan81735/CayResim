@@ -39,6 +39,12 @@ sealed interface SourceOutcome {
 
 data class SourceResult(val request: MicRequest, val outcome: SourceOutcome)
 
+/**
+ * S-020: zwei Aufnahmen gleichzeitig. [probe]: wie viele verschiedene Mikrofone in beiden zusammen stecken; null, wenn
+ * eine der beiden scheiterte ([failure] nennt den ersten Grund).
+ */
+data class PairResult(val first: MicRequest, val second: MicRequest, val probe: AudioMath.PairProbe?, val failure: MicFailure? = null)
+
 data class ClapResult(val phase: ClapPhase, val claps: List<AudioMath.Clap>, val fileUri: String?, val failure: MicFailure? = null)
 
 /** Ergebnis eines Laufs; nur Zahlen, Schluessel und Enums (R23). */
@@ -61,11 +67,15 @@ data class MicTestReport(
     val calibration: AudioMath.Calibration? = null,
     /** Warum nicht geeicht wurde; null, wenn geeicht oder keine Klatsch-Probe lief. */
     val calibrationFailure: AudioMath.CalibrationFailure? = null,
+    /** S-020: Proben mit zwei Aufnahmen gleichzeitig. */
+    val pairs: List<PairResult> = emptyList(),
 )
 
 sealed interface MicTestEvent {
     data object Inventory : MicTestEvent
     data class Source(val index: Int, val total: Int, val request: MicRequest) : MicTestEvent
+    /** S-020: Probe mit zwei Aufnahmen gleichzeitig laeuft. */
+    data class Pairing(val index: Int, val total: Int) : MicTestEvent
     /** Vorbereitung ohne Aufnahme (S-009): Zeit, um sich hinzustellen; Klatscher der vorigen Phase fallen so heraus. */
     data class ClapPrepare(val phase: ClapPhase, val millis: Long) : MicTestEvent
     data class ClapPrompt(val phase: ClapPhase, val seconds: Int) : MicTestEvent
@@ -111,6 +121,19 @@ class MicTestUseCase @Inject constructor(
                 }
             }
         }
+        // S-020: zwei Aufnahmen gleichzeitig, noch in der stillen Phase vor der Klatsch-Probe
+        val pairs = mutableListOf<PairResult>()
+        for ((i, p) in PAIRS.withIndex()) {
+            emit(MicTestEvent.Pairing(i, PAIRS.size))
+            val a = MicRequest(p.first, millis = PAIR_MILLIS); val b = MicRequest(p.second, millis = PAIR_MILLIS)
+            val r = mic.recordPair(a, b)
+            val ca = (r.first as? MicRecordResult.Ok)?.capture; val cb = (r.second as? MicRecordResult.Ok)?.capture
+            for ((n, c) in listOf(ca, cb).withIndex()) if (c != null && folder != null) {
+                if (files.saveWav(folder, "paar${i + 1}-${n + 1}-${c.request.source.name}-$FORMAT.wav", Wav.encode(c.pcm, c.sampleRate, c.channels)) == null) storageFailed = true
+            }
+            pairs += if (ca != null && cb != null) PairResult(a, b, AudioMath.pairProbe(ca.pcm, ca.channels, cb.pcm, cb.channels, ca.sampleRate))
+            else PairResult(a, b, null, (r.first as? MicRecordResult.Failed)?.reason ?: (r.second as? MicRecordResult.Failed)?.reason)
+        }
         val sourcesMillis = clock.nowMillis() - t0
         val clapSource = chooseClapSource(sources)
         val (spacing, measured) = spacing(inv)
@@ -133,7 +156,7 @@ class MicTestUseCase @Inject constructor(
         }
         val (calibrated, calibration, calibrationFailure) = calibrate(claps)
         emit(MicTestEvent.Done(MicTestReport(inv, sources, clapSource, calibrated, spacing, measured, sourcesMillis, folder, null, storageFailed,
-            calibration, calibrationFailure)))
+            calibration, calibrationFailure, pairs)))
     }.flowOn(compute)
 
     companion object {
@@ -146,14 +169,23 @@ class MicTestUseCase @Inject constructor(
         /** S-019: angefragte Kanalzahlen ueber Stereo hinaus, je 1 s (der Lauf bleibt unter 30 s, S-008 K14). */
         val MULTI_CHANNELS = listOf(3, 4)
         const val MULTI_MILLIS = 1_000
+        /** Die vier Quellen aus S-008 in ihrer festen Reihenfolge. */
+        val BASE_SOURCES = listOf(AudioSourceKey.MIC, AudioSourceKey.CAMCORDER, AudioSourceKey.VOICE_RECOGNITION, AudioSourceKey.UNPROCESSED)
+        /** S-020: weitere Quellen, die ein anderes Mikrofon nutzen koennten. */
+        val EXTRA_SOURCES = listOf(AudioSourceKey.VOICE_COMMUNICATION, AudioSourceKey.VOICE_PERFORMANCE)
+        /** S-020: Paare, die gleichzeitig aufgenommen werden; die erste Quelle liefert die Gegenprobe (Mikrofone 16 und 17). */
+        val PAIRS = listOf(AudioSourceKey.MIC to AudioSourceKey.CAMCORDER, AudioSourceKey.MIC to AudioSourceKey.VOICE_COMMUNICATION)
+        const val PAIR_MILLIS = 1_000
 
         /** Feste Reihenfolge: Quellen, dann Richtungen, dann jedes eingebaute Mikrofon einzeln (hoechstens 4), dann Mehrkanal (S-019). */
         fun plan(inv: MicInventorySnapshot): List<MicRequest> =
-            AudioSourceKey.entries.map { MicRequest(it) } +
+            BASE_SOURCES.map { MicRequest(it) } +
                 listOf(MicDirectionKey.TOWARDS_USER, MicDirectionKey.AWAY_FROM_USER).map { MicRequest(AudioSourceKey.MIC, direction = it) } +
                 inv.devices.filter { it.kind == InputDeviceKind.BUILTIN_MIC }.take(MAX_DEVICES).map { MicRequest(AudioSourceKey.MIC, deviceId = it.id) } +
                 // S-019: liefert das Geraet mehr als zwei Mikrofone? Am Ende, damit die bisherigen Dateien ihre Nummern behalten
-                listOf(AudioSourceKey.MIC, AudioSourceKey.CAMCORDER).flatMap { s -> MULTI_CHANNELS.map { MicRequest(s, millis = MULTI_MILLIS, channels = it) } }
+                listOf(AudioSourceKey.MIC, AudioSourceKey.CAMCORDER).flatMap { s -> MULTI_CHANNELS.map { MicRequest(s, millis = MULTI_MILLIS, channels = it) } } +
+                // S-020: Telefonie und Buehnenton, ebenfalls am Ende
+                EXTRA_SOURCES.map { MicRequest(it, millis = MULTI_MILLIS) }
 
         /** Erste Quelle mit zwei verschiedenen Kanaelen, roh zuerst (K11). */
         fun chooseClapSource(sources: List<SourceResult>): MicRequest? =
