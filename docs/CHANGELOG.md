@@ -2,7 +2,7 @@
 
 Neueste Version oben. Je Version: was sich für Arslan ändert, warum, was auf dem Gerät noch zu prüfen ist.
 
-## Schallbild und Mikrofon-Kanäle (9. November 2026, S-018 und S-019, Version folgt beim Release)
+## 0.1.143 Schallbild und Mikrofon-Kanäle (9. November 2026, S-018 und S-019)
 - Neu unter Einstellungen: "Schallbild". Es zeigt live, aus welcher Richtung Töne kommen: je Tonhöhen-Bereich ein
   Streifen zwischen links und rechts, Farbe nach Tonhöhe, Helligkeit nach Lautstärke, dazu Hauptrichtung und Zahlen.
   Handy quer halten. Das ist Stufe 1 der akustischen Kamera (F11), noch ohne Kamerabild. Gespeichert wird nichts.

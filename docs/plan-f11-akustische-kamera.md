@@ -20,7 +20,7 @@ Farbe nach Tonhöhe, Helligkeit nach Lautstärke.
 ## Stufen
 | Stufe | Inhalt | Braucht | Stand |
 |---|---|---|---|
-| 1 | **Schallbild ohne Kamera** (S-018): laufender Ton, Streifen je Frequenzband auf dunkler Fläche, Zahlen je Band, Quelle `MIC` oder `CAMCORDER` wählbar. Misst zugleich, welche Bänder auf dem Gerät brauchbar sind und ob links und rechts stimmen | Tonstrom in der Mikrofon-Boundary; kein Speichern, keine Kamera, keine neue Berechtigung | in Arbeit |
+| 1 | **Schallbild ohne Kamera** (S-018): laufender Ton, Streifen je Frequenzband auf dunkler Fläche, Zahlen je Band, Quelle `MIC` oder `CAMCORDER` wählbar. Misst zugleich, welche Bänder auf dem Gerät brauchbar sind und ob links und rechts stimmen | Tonstrom in der Mikrofon-Boundary; kein Speichern, keine Kamera, keine neue Berechtigung | umgesetzt in v0.1.143 (9.11.), Gerätetest offen |
 | 2 | **Mikrofon bei laufender Kamera** messen: bleibt das Schallbild gleich, wenn die Kamera läuft (Samsung kann das Mikrofon dann anders schalten)? | Kamera und Mikrofon gleichzeitig: **Freigabe** (Ergänzung zu R28, Berechtigung im Kamera-Screen) | offen |
 | 3 | **Einblendung im Sucher:** Streifen über dem Kamerabild, Winkel zu Bildpunkt über den Bildwinkel der Kamera; Quellen außerhalb des Bilds als Pfeil am Rand | Stufe 2; neuer Modus im Sucher | offen |
 | 4 | **Foto mit Schallbild** speichern (Streifen ins Foto gerechnet, Original bleibt) | Änderung am Bildergebnis: **Freigabe** | offen |

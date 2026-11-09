@@ -1,6 +1,6 @@
 # S-018: Schallbild ohne Kamera (Stufe 1 der akustischen Kamera, F11)
 
-**Stand:** 9.11.2026 · **Status:** umgesetzt, Release und Gerätetest offen; Auftrag von Arslan am 9.11.2026, 20:06 Uhr
+**Stand:** 9.11.2026 · **Status:** umgesetzt in v0.1.143, Gerätetest offen; Auftrag von Arslan am 9.11.2026, 20:06 Uhr
 ("Fange die umfangreiche Bearbeitung an"), Release gewünscht am 9.11.2026, 20:39 Uhr ("Ja bitte", zusammen mit S-019).
 Kein Punkt aus CLAUDE.md Abschnitt 1 Nr. 3 trifft zu (keine Regeländerung, kein Speichern, keine Kamera-Sitzung, keine
 neue Berechtigung, ein Release).
@@ -114,3 +114,5 @@ Kriterium (K11 gekürzt, K15b, K20, K21 ergänzt). Offen bleibt: K18 läuft erst
 Konstante für das Vorzeichen der Achse kann nur K19 bestätigen.
 
 Eigene Fehler: Der Einstieg stand in der Spec im Mikrofon-Test, gebaut wurde er in den Einstellungen (Spec angepasst).
+
+Lauf auf main 42689855066 (9.11.): alle Jobs grün, auch der Emulator; Release v0.1.143. Emulator: Tonstrom lieferte Stücke und gab frei (K18). Gerätetest offen.

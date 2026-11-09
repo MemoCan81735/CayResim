@@ -1,6 +1,6 @@
 # S-019: Mikrofon-Test fragt drei und vier Kanäle an
 
-**Stand:** 9.11.2026 · **Status:** freigegeben von Arslan am 9.11.2026, 20:39 Uhr ("Ja bitte", mit ins Release von S-018)
+**Stand:** 9.11.2026 · **Status:** umgesetzt in v0.1.143, Gerätetest offen; freigegeben von Arslan am 9.11.2026, 20:39 Uhr ("Ja bitte", mit ins Release von S-018)
 **Anlass:** Prüfung des Stands der akustischen Kamera (`docs/plan-f11-akustische-kamera.md`, 9.11.). Das S24+ hat drei
 Mikrofone (unten, oben, verstecktes neben der Ultraweitwinkel-Kamera). Der Mikrofon-Test (S-008) fragt nur ein und zwei
 Kanäle an und bekam am 10.10. die Mikrofone 16 (bottom) und 17 (back). Mit drei Mikrofonen, die nicht auf einer Linie
@@ -50,4 +50,6 @@ Zahl dabei. Rückweg: vier Einträge aus dem Plan nehmen.
 Im Lauf und Release von S-018 enthalten; Vergleichsbilder des Mikrofon-Tests ändern sich (vier Zeilen mehr).
 
 ## Ergebnis
-(nach der Umsetzung)
+Lokal: K1 und K2 grün (`AudioMathTest`, `MicTestUseCaseTest`). Vergleichsbilder des Mikrofon-Tests übernommen (vier Zeilen mehr).
+
+Lauf auf main 42689855066 (9.11.): alle Jobs grün, auch der Emulator; Release v0.1.143. Emulator: drei Kanäle angefragt, 3 geliefert (K4); was das S24+ liefert, zeigt K5. Gerätetest offen.
