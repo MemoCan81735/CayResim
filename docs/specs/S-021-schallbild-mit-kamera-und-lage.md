@@ -189,4 +189,10 @@ Ergänzt: Dauer der Messung, Art der Sitzung und Schlüssel des Kamerafehlers im
 über neue Aufrufe, die Lint als neue Funde meldete; beides fand erst CI. Ein deutsches Wort ("wich") hielt Lint für
 einen englischen Tippfehler.
 
-**Offen:** Gerätetest K15. Der Emulator-Test K13 läuft erst im Lauf auf main.
+**Emulator (Release-Lauf 153, 10.11.):** K13 grün. Fünf Messungen mit Kamera und Mikrofon zusammen, je 7,0 s bei sechs
+Phasen zu 0,6 s: Start und Stopp der Kamera kosten zusammen 3,4 s je Messung. Auf dem Gerät ergibt das etwa 27,5 s
+(Grenze 30 s; der echte Wert steht im Ergebnis). Bilder je Sekunde ohne Sucher 29 bis 31, Bildwinkel 51,7° und 40,0°
+(Emulator-Kamera), kein Kamerafehler, Mikrofon und Sensoren danach frei. Der Emulator liefert Stille und keine Lage,
+deshalb dort das Urteil "kein Ton". Vertrag "ohne Sucher" am Adapter grün (1,8 s).
+
+**Offen:** Gerätetest K15.
